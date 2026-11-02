@@ -751,6 +751,9 @@ var SubagentPolicyAckDoc = defineDoc2({
 });
 
 // packages/core/src/bridge/durable-contracts.ts
+import "@earendil-works/pi-durable";
+
+// packages/core/src/bridge/watch-events-compat.ts
 import { NestedCallDoc } from "@earendil-works/pi-durable";
 
 // packages/core/src/bridge/tool-result-presentation.ts

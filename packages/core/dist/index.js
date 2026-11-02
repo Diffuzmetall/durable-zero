@@ -2563,6 +2563,9 @@ async function openDurable(options = {}) {
 }
 
 // packages/core/src/bridge/durable-contracts.ts
+import "@earendil-works/pi-durable";
+
+// packages/core/src/bridge/watch-events-compat.ts
 import { NestedCallDoc } from "@earendil-works/pi-durable";
 async function watchEvents(harness, conversationId, context) {
   const conversation = await harness.conversation(conversationId, context);
@@ -2686,6 +2689,8 @@ async function watchEvents(harness, conversationId, context) {
     }
   };
 }
+
+// packages/core/src/bridge/durable-contracts.ts
 function isAgentDocument(doc) {
   return typeof doc === "object" && doc !== null;
 }
