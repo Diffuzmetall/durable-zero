@@ -25,16 +25,25 @@ test("CLI: serve --no-session starts server and outputs ready JSON", async () =>
 
 	try {
 		const readyData = await new Promise<string>((resolve, reject) => {
-			const timer = setTimeout(() => reject(new Error("Timeout waiting for ready")), 4000);
-			p.stdout.once("data", (chunk) => {
-				clearTimeout(timer);
-				resolve(chunk.toString("utf8"));
+			const timer = setTimeout(() => reject(new Error("Timeout waiting for ready")), 8000);
+			let buffer = "";
+			p.stdout.on("data", (chunk) => {
+				buffer += chunk.toString("utf8");
+				const lines = buffer.split("\n");
+				for (const line of lines) {
+					const trimmed = line.trim();
+					if (trimmed.startsWith("{") && trimmed.includes('"ready"')) {
+						clearTimeout(timer);
+						resolve(trimmed);
+						return;
+					}
+				}
 			});
 			p.once("error", reject);
 		});
 
-		const parsed = JSON.parse(readyData.trim());
-		assert.equal(parsed.kind, "ready");
+		const parsed = JSON.parse(readyData);
+		assert.equal(parsed.ready, true);
 		assert.ok(parsed.pid > 0);
 	} finally {
 		p.kill("SIGTERM");

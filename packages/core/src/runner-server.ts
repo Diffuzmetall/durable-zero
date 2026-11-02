@@ -69,8 +69,9 @@ async function main() {
 	process.on("SIGINT", () => { void handleExit("SIGINT").then(() => process.exit(0)); });
 
 	if (args.noSession) {
-		const { modelRuntime } = await setupRunnerModels();
-		output({ type: "ready", ready: true, mode: "probe" });
+		const cwd = args.cwd ?? process.cwd();
+		const { modelRuntime } = await setupRunnerModels(cwd, args);
+		output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe" });
 		const scopedList = modelRuntime.getAvailableSnapshot();
 		const scopedModelIds = scopedList.map((m) => `${m.provider}/${m.id}`);
 		const defaultModel = modelRuntime.findDefaultModel();
