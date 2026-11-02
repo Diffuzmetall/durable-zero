@@ -12,4 +12,4 @@ export * from "./watcher-compat.ts";
 export * from "./bridge/view-stream-projector.ts";
 export * from "./bridge/durable-contracts.ts";
 export * from "./version.ts";
-export * from "./subsystems/index.ts";
+export * from "./builtin-extensions/index.ts";

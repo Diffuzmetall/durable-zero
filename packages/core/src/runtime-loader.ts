@@ -121,7 +121,7 @@ export async function loadHarnessEnvironment(
 		getSubagentPolicy,
 		{ ...options.prompt, resourceLoader, dynamicSections },
 		dynamicNamespaces,
-		options.subsystems ?? options.plugins,
+		options.builtins ?? options.plugins,
 	);
 	const registry = codingRegistry;
 
@@ -159,8 +159,8 @@ export async function loadHarnessEnvironment(
 
 	let harness: Harness | undefined;
 	const sessionCleanup = async () => {
-		await codingRegistry.subsystemRegistry.teardownAll().catch((err) => {
-			console.warn("[RuntimeLoader] Subsystem teardown error:", err);
+		await codingRegistry.builtinRegistry.teardownAll().catch((err) => {
+			console.warn("[RuntimeLoader] Built-in extension teardown error:", err);
 		});
 		await mounted.cleanup?.();
 	};

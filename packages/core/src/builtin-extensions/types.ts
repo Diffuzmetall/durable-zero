@@ -4,7 +4,7 @@ import type { SubagentPolicyRecord } from "../policy/types.ts";
 import type { PromptOptions } from "../prompt.ts";
 import type { DynamicCodemodeNamespaces } from "../codemode-namespaces.ts";
 
-export interface SubsystemContext {
+export interface BuiltinExtensionContext {
 	cwd: string;
 	storageDir?: string;
 	registry?: Registry;
@@ -14,10 +14,10 @@ export interface SubsystemContext {
 	dynamicNamespaces?: DynamicCodemodeNamespaces;
 }
 
-export interface EngineSubsystem {
+export interface BuiltinExtension {
 	readonly id: string;
 	readonly name: string;
 	readonly version: string;
-	register(ctx: SubsystemContext): Promise<void> | void;
+	register(ctx: BuiltinExtensionContext): Promise<void> | void;
 	teardown?(): Promise<void> | void;
 }

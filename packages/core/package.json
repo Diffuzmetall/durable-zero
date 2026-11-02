@@ -5,11 +5,15 @@
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
+  "scripts": {
+    "build:runner": "node scripts/build-runner.mjs"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./src/index.ts"
-    }
+    },
+    "./runner": "./dist/runner.js"
   },
   "dependencies": {
     "@durable-zero/contracts": "workspace:*",

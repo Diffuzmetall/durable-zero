@@ -89,8 +89,8 @@ export interface OpenDurableOptions {
 		readonly noGlobalExtensions?: boolean;
 	};
 	readonly prompt?: PromptOptions;
-	readonly subsystems?: import("./subsystems/types.ts").EngineSubsystem[];
-	readonly plugins?: import("./subsystems/types.ts").EngineSubsystem[];
+	readonly builtins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
+	readonly plugins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 }
 
 export interface SubagentWatcherController {

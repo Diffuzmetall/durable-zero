@@ -1,12 +1,12 @@
 import { createCodingTools, CodingTools } from "@earendil-works/pi-durable/tools";
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
-import type { EngineSubsystem, SubsystemContext } from "../types.ts";
+import type { BuiltinExtension, BuiltinExtensionContext } from "./types.ts";
 
-export const codingToolsSubsystem: EngineSubsystem = {
+export const codingToolsExtension: BuiltinExtension = {
 	id: "coding-tools",
 	name: "Coding Tools",
 	version: "1.0.0",
-	async register(ctx: SubsystemContext): Promise<void> {
+	async register(ctx: BuiltinExtensionContext): Promise<void> {
 		if (!ctx.registry) return;
 		let tools = CodingTools;
 		try {
@@ -19,4 +19,4 @@ export const codingToolsSubsystem: EngineSubsystem = {
 	},
 };
 
-export default codingToolsSubsystem;
+export default codingToolsExtension;

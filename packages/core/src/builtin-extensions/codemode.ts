@@ -1,14 +1,14 @@
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
-import type { EngineSubsystem, SubsystemContext } from "../types.ts";
+import type { BuiltinExtension, BuiltinExtensionContext } from "./types.ts";
 
 let activeSandbox: CodemodeSandbox | undefined;
 
-export const codemodeSubsystem: EngineSubsystem = {
+export const codemodeExtension: BuiltinExtension = {
 	id: "codemode",
 	name: "Codemode",
 	version: "1.0.0",
-	register(ctx: SubsystemContext): void {
+	register(ctx: BuiltinExtensionContext): void {
 		if (!ctx.registry) return;
 		activeSandbox = new CodemodeSandbox();
 		const ext = createCodemodeExtension({
@@ -32,4 +32,4 @@ export const codemodeSubsystem: EngineSubsystem = {
 	},
 };
 
-export default codemodeSubsystem;
+export default codemodeExtension;

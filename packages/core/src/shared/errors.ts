@@ -52,17 +52,17 @@ export class InvalidCommandPayloadError extends DurableCommandError {
 	}
 }
 
-export class EngineSubsystemError extends DurableHarnessError {
-	readonly subsystemId: string;
+export class BuiltinExtensionError extends DurableHarnessError {
+	readonly extensionId: string;
 
 	constructor(
-		subsystemId: string,
+		extensionId: string,
 		message: string,
 		options?: { cause?: unknown },
 	) {
-		super(`[Subsystem ${subsystemId}] ${message}`, "SUBSYSTEM_ERROR", options?.cause);
-		this.name = "EngineSubsystemError";
-		this.subsystemId = subsystemId;
+		super(`[Built-in Extension ${extensionId}] ${message}`, "SUBSYSTEM_ERROR", options?.cause);
+		this.name = "BuiltinExtensionError";
+		this.extensionId = extensionId;
 	}
 }
 
