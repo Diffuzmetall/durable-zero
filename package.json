@@ -8,18 +8,22 @@
   "exports": {
     ".": {
       "import": "./packages/core/dist/index.js",
+      "default": "./packages/core/dist/index.js",
       "types": "./packages/core/src/index.ts"
     },
     "./core": {
       "import": "./packages/core/dist/index.js",
+      "default": "./packages/core/dist/index.js",
       "types": "./packages/core/src/index.ts"
     },
     "./contracts": {
       "import": "./packages/contracts/dist/index.js",
+      "default": "./packages/contracts/dist/index.js",
       "types": "./packages/contracts/src/index.ts"
     },
     "./runner": {
       "import": "./packages/core/dist/runner.js",
+      "default": "./packages/core/dist/runner.js",
       "types": "./packages/core/src/runner-server.ts"
     }
   },
