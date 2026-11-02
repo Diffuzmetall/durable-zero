@@ -8,8 +8,8 @@ import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import lockfile from "proper-lockfile";
 
-import { getAgentDir } from "./shared/agent-dir.ts";
-import { DurableStorageError } from "./shared/errors.ts";
+import { getAgentDir } from "../shared/agent-dir.ts";
+import { DurableStorageError } from "../shared/errors.ts";
 export { getAgentDir };
 
 export interface SessionOwnerInfo {
@@ -180,3 +180,15 @@ export async function selectSession(
 	const release = await acquireSessionLock(directory, cwd, id);
 	return { id, directory, database: join(directory, "session.sqlite"), cwd, created, release };
 }
+
+/** Defensively clones records to prevent mutations on frozen objects from Group Commit. */
+export function safeCloneRecord<T>(record: T): T {
+	if (record === null || typeof record !== "object") {
+		return record;
+	}
+	if (Array.isArray(record)) {
+		return [...record] as unknown as T;
+	}
+	return { ...record };
+}
+
