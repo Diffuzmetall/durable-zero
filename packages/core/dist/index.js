@@ -1143,6 +1143,73 @@ async function runCompactionSideEffect(operation, action, notice) {
 
 // packages/core/src/runtime-controller.ts
 import { clampThinkingLevel, getSupportedThinkingLevels as getSupportedThinkingLevels2 } from "@earendil-works/pi-ai";
+
+// packages/core/src/runtime-hydration.ts
+function hydrateSessionActiveTools(rootAgent, activeEnvState) {
+  if (Array.isArray(rootAgent.tools)) {
+    activeEnvState.setActiveTools?.(rootAgent.tools.map((t) => t.name));
+  }
+}
+async function createConversationBinding(conversation, ctx = runtimeContext) {
+  if (typeof conversation.viewState === "function") {
+    return conversation.viewState(ctx);
+  }
+  const watch = await conversation.watch(ctx);
+  let currentVal = watch.value;
+  const subscribers = /* @__PURE__ */ new Set();
+  watch.start(async ({ value }) => {
+    currentVal = value;
+    for (const sub of subscribers) sub(value);
+  });
+  return {
+    get value() {
+      return currentVal;
+    },
+    subscribe(listener) {
+      subscribers.add(listener);
+      return () => subscribers.delete(listener);
+    },
+    dispose() {
+      void watch.stop(ctx);
+    }
+  };
+}
+async function createTaskGraphBinding(harness, ctx = runtimeContext) {
+  if (typeof harness.taskGraph === "function") {
+    return harness.taskGraph(ctx);
+  }
+  const watch = await harness.watchTaskGraph(ctx);
+  let currentVal = watch.value;
+  const subscribers = /* @__PURE__ */ new Set();
+  watch.start(async ({ value }) => {
+    currentVal = value;
+    for (const sub of subscribers) sub(value);
+  });
+  return {
+    get value() {
+      return currentVal;
+    },
+    subscribe(listener) {
+      subscribers.add(listener);
+      return () => subscribers.delete(listener);
+    },
+    dispose() {
+      void watch.stop(ctx);
+    }
+  };
+}
+async function loadSummaries(harness, rootId) {
+  const summaries = [];
+  let cursor;
+  do {
+    const page = await harness.commit((tx) => tx.scanConversations({}, 256, cursor), runtimeContext);
+    for (const { id } of page.items) summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...await firstInput(harness, id) });
+    cursor = page.next;
+  } while (cursor !== void 0);
+  return summaries;
+}
+
+// packages/core/src/runtime-controller.ts
 function createDurableController(ctx) {
   let queue = Promise.resolve();
   const command = (operation) => {
@@ -1303,133 +1370,15 @@ function createDurableController(ctx) {
     }),
     toggleTasks: () => command(async () => {
       if (ctx.bindings.tasksOpen) return ctx.bindings.closeTasks();
-      ctx.bindings.attachTasks(await ctx.opened.taskGraph(runtimeContext));
+      ctx.bindings.attachTasks(await createTaskGraphBinding(ctx.opened, runtimeContext));
     }),
     switchConversation: (id) => command(async () => {
       const next = await ctx.opened.conversation(id, runtimeContext);
       if (next === void 0) throw new Error(`Conversation ${id} does not exist`);
-      ctx.bindings.bindConversation(next, await next.viewState(runtimeContext));
+      ctx.bindings.bindConversation(next, await createConversationBinding(next, runtimeContext));
     })
   };
 }
-
-// packages/core/src/runtime-bindings.ts
-var RuntimeBindings = class {
-  conversation;
-  view;
-  unsubscribe;
-  tasks;
-  unsubscribeTasks;
-  epoch = 0;
-  taskEpoch = 0;
-  closed = false;
-  update;
-  constructor(conversation, view, update) {
-    this.conversation = conversation;
-    this.view = view;
-    this.update = update;
-    try {
-      this.unsubscribe = view.subscribe((value) => {
-        if (!this.closed && this.epoch === 0) this.update({ conversation: value });
-      });
-    } catch (cause) {
-      try {
-        view.dispose();
-      } catch (cleanup) {
-        throw new AggregateError([cause, cleanup], "SUBSCRIBE_FAILED");
-      }
-      throw new Error("SUBSCRIBE_FAILED", { cause });
-    }
-  }
-  get current() {
-    return this.conversation;
-  }
-  get tasksOpen() {
-    return this.tasks !== void 0;
-  }
-  bindConversation(conversation, view) {
-    if (this.closed) {
-      view.dispose();
-      throw new Error("BINDING_CLOSED");
-    }
-    if (this.view === view) return;
-    const epoch = this.epoch + 1;
-    let unsubscribe;
-    try {
-      unsubscribe = view.subscribe((value) => {
-        if (!this.closed && this.epoch === epoch) this.update({ conversation: value });
-      });
-    } catch (cause) {
-      view.dispose();
-      throw new Error("SUBSCRIBE_FAILED", { cause });
-    }
-    const previous = this.view, previousUnsubscribe = this.unsubscribe;
-    this.view = view;
-    this.conversation = conversation;
-    this.unsubscribe = unsubscribe;
-    this.epoch = epoch;
-    try {
-      previousUnsubscribe();
-    } finally {
-      previous.dispose();
-    }
-    this.update({ conversation: view.value });
-  }
-  attachTasks(view) {
-    if (this.closed) {
-      view.dispose();
-      throw new Error("BINDING_CLOSED");
-    }
-    if (this.tasks === view) return;
-    const epoch = this.taskEpoch + 1;
-    let unsubscribe;
-    try {
-      unsubscribe = view.subscribe((value) => {
-        if (!this.closed && this.taskEpoch === epoch) this.update({ tasks: value });
-      });
-    } catch (cause) {
-      view.dispose();
-      throw new Error("SUBSCRIBE_FAILED", { cause });
-    }
-    const previous = this.tasks, previousUnsubscribe = this.unsubscribeTasks;
-    this.tasks = view;
-    this.unsubscribeTasks = unsubscribe;
-    this.taskEpoch = epoch;
-    try {
-      previousUnsubscribe?.();
-    } finally {
-      previous?.dispose();
-    }
-    this.update({ tasks: view.value });
-  }
-  closeTasks() {
-    if (!this.tasks) return;
-    this.taskEpoch++;
-    const previous = this.tasks, unsubscribe = this.unsubscribeTasks;
-    this.tasks = void 0;
-    this.unsubscribeTasks = void 0;
-    try {
-      unsubscribe?.();
-    } finally {
-      previous.dispose();
-    }
-    if (!this.closed) this.update({ tasks: void 0 });
-  }
-  close() {
-    if (this.closed) return;
-    this.closed = true;
-    this.epoch++;
-    try {
-      this.unsubscribe();
-    } finally {
-      try {
-        this.view.dispose();
-      } finally {
-        this.closeTasks();
-      }
-    }
-  }
-};
 
 // packages/core/src/runtime-cleanup.ts
 async function closeRuntimeResources(operations) {
@@ -2328,23 +2277,6 @@ async function loadHarnessEnvironment(location, options, envs) {
   };
 }
 
-// packages/core/src/runtime-hydration.ts
-function hydrateSessionActiveTools(rootAgent, activeEnvState) {
-  if (Array.isArray(rootAgent.tools)) {
-    activeEnvState.setActiveTools?.(rootAgent.tools.map((t) => t.name));
-  }
-}
-async function loadSummaries(harness, rootId) {
-  const summaries = [];
-  let cursor;
-  do {
-    const page = await harness.commit((tx) => tx.scanConversations({}, 256, cursor), runtimeContext);
-    for (const { id } of page.items) summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...await firstInput(harness, id) });
-    cursor = page.next;
-  } while (cursor !== void 0);
-  return summaries;
-}
-
 // packages/core/src/runtime.ts
 async function openDurable(options = {}) {
   const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session);
@@ -2380,7 +2312,7 @@ async function openDurable(options = {}) {
       }
     }
     const summaries = await loadSummaries(harness, root.id);
-    const conversation = await root.viewState(runtimeContext);
+    const conversation = await createConversationBinding(root, runtimeContext);
     const enabled = settingsManager.getEnabledModels();
     const scoped = enabled?.length ? await resolveModelScopeWithDiagnostics(enabled, modelRuntime) : void 0;
     const scopedList = scoped?.scopedModels?.length ? scoped.scopedModels.map((sm) => sm.model) : modelRuntime.getAvailableSnapshot();
@@ -2417,10 +2349,9 @@ async function openDurable(options = {}) {
       }
     }
     activeEnvState.setNoticeForwarder?.((level, message) => notice(level, message));
-    const bindings = new RuntimeBindings(root, conversation, update);
-    const unsubscribeCommits = harness.subscribeCommits((pub) => {
+    const handlePublication = (pub) => {
       let convs = state.conversations;
-      for (const ch of pub.changes) {
+      for (const ch of pub.changes ?? []) {
         if (ch.type === "conversation") {
           convs = [...convs, { id: ch.value.id, label: ch.value.id === root.id ? "main" : `subagent ${ch.value.id}` }];
         } else if (ch.type === "entry" && ch.value.kind === "pi.user") {
@@ -2429,7 +2360,10 @@ async function openDurable(options = {}) {
         }
       }
       if (convs !== state.conversations) update({ conversations: convs });
-    });
+    };
+    const observation = typeof harness.observeCommits === "function" ? harness.observeCommits({ advance: handlePublication, end: () => {
+    } }) : void 0;
+    const unsubscribeCommits = observation ? () => observation.detach?.() : harness.subscribeCommits?.(handlePublication);
     const opened = harness;
     const controller = createDurableController({
       bindings,
