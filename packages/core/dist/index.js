@@ -301,7 +301,7 @@ var codemodePlugin = {
 };
 
 // packages/core/src/subagent.ts
-import { Type } from "@earendil-works/pi-ai";
+import { Type } from "@sinclair/typebox";
 import {
   configure,
   defineExtension as defineExtension2,

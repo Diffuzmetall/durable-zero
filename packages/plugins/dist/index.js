@@ -106,7 +106,7 @@ import { createCodemodeExtension as createCodemodeExtension2 } from "@earendil-w
 import { CodemodeSandbox as CodemodeSandbox2 } from "@earendil-works/pi-codemode";
 
 // packages/core/src/subagent.ts
-import { Type } from "@earendil-works/pi-ai";
+import { Type } from "@sinclair/typebox";
 import {
   configure,
   defineExtension as defineExtension2,
