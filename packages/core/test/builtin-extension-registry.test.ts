@@ -41,7 +41,7 @@ test("BuiltinExtensionRegistry: throws on duplicate extension id", () => {
 		() => registry.register(e2),
 		(err: unknown) => {
 			assert.ok(err instanceof BuiltinExtensionError);
-			assert.equal((err as BuiltinExtensionError).code, "SUBSYSTEM_ERROR");
+			assert.equal((err as BuiltinExtensionError).code, "BUILTIN_EXTENSION_ERROR");
 			return true;
 		},
 	);

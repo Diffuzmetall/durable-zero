@@ -76,13 +76,13 @@ function buildRules(tools) {
   if (tools.some((t) => t.name === "bash")) {
     addRule("Use bash for file operations like ls, rg, find");
   }
-  for (const tool of tools) {
-    const def = CANONICAL_TOOL_DEFS[tool.name];
+  for (const tool2 of tools) {
+    const def = CANONICAL_TOOL_DEFS[tool2.name];
     if (def?.promptGuidelines) {
       for (const guideline of def.promptGuidelines) addRule(guideline);
     }
-    if (tool.promptGuidelines) {
-      for (const guideline of tool.promptGuidelines) addRule(guideline);
+    if (tool2.promptGuidelines) {
+      for (const guideline of tool2.promptGuidelines) addRule(guideline);
     }
   }
   addRule("Be concise in your responses");
@@ -190,56 +190,65 @@ var DurableStorageError = class extends DurableHarnessError {
     super(message, code, cause);
   }
 };
-var DurablePluginError = class extends DurableHarnessError {
-  pluginId;
-  constructor(pluginId, message, cause) {
-    super(message ?? `Plugin failure: ${pluginId}`, "PLUGIN_ERROR", cause);
-    this.pluginId = pluginId;
+var DurableCommandError = class extends DurableHarnessError {
+  constructor(message, cause, code = "COMMAND_ERROR") {
+    super(message, code, cause);
+  }
+};
+var InvalidCommandPayloadError = class extends DurableCommandError {
+  command;
+  constructor(command, message, cause) {
+    super(message ?? `Invalid payload for command: ${command}`, cause, "INVALID_COMMAND_PAYLOAD");
+    this.command = command;
+  }
+};
+var BuiltinExtensionError = class extends DurableHarnessError {
+  extensionId;
+  constructor(extensionId, message, options) {
+    super(`[Built-in Extension ${extensionId}] ${message}`, "BUILTIN_EXTENSION_ERROR", options?.cause);
+    this.name = "BuiltinExtensionError";
+    this.extensionId = extensionId;
   }
 };
 
-// packages/core/src/plugins/registry.ts
-var DurablePluginRegistry = class {
-  #plugins = /* @__PURE__ */ new Map();
-  register(plugin) {
-    if (this.#plugins.has(plugin.id)) {
-      throw new DurablePluginError(
-        plugin.id,
-        `Plugin with id '${plugin.id}' is already registered`
+// packages/core/src/builtin-extensions/registry.ts
+var BuiltinExtensionRegistry = class {
+  #extensions = /* @__PURE__ */ new Map();
+  register(extension) {
+    if (this.#extensions.has(extension.id)) {
+      throw new BuiltinExtensionError(
+        extension.id,
+        `Built-in extension with id '${extension.id}' is already registered`
       );
     }
-    this.#plugins.set(plugin.id, plugin);
+    this.#extensions.set(extension.id, extension);
   }
   get(id) {
-    return this.#plugins.get(id);
+    return this.#extensions.get(id);
   }
-  list(category) {
-    const all = Array.from(this.#plugins.values());
-    if (!category) return all;
-    return all.filter((p) => p.category === category);
+  list() {
+    return Array.from(this.#extensions.values());
   }
   async initAll(ctx) {
-    for (const plugin of this.#plugins.values()) {
+    for (const extension of this.#extensions.values()) {
       try {
-        await plugin.register(ctx);
+        await extension.register(ctx);
       } catch (err) {
-        if (err instanceof DurablePluginError) {
-          throw err;
-        }
-        throw new DurablePluginError(
-          plugin.id,
-          `Failed to initialize plugin '${plugin.id}': ${err instanceof Error ? err.message : String(err)}`,
-          err
+        if (err instanceof BuiltinExtensionError) throw err;
+        throw new BuiltinExtensionError(
+          extension.id,
+          `Failed to initialize built-in extension '${extension.id}': ${err instanceof Error ? err.message : String(err)}`,
+          { cause: err }
         );
       }
     }
   }
   async teardownAll() {
-    const plugins = Array.from(this.#plugins.values()).reverse();
-    for (const plugin of plugins) {
-      if (typeof plugin.teardown === "function") {
+    const extensions = Array.from(this.#extensions.values()).reverse();
+    for (const extension of extensions) {
+      if (typeof extension.teardown === "function") {
         try {
-          await plugin.teardown();
+          await extension.teardown();
         } catch {
         }
       }
@@ -247,13 +256,12 @@ var DurablePluginRegistry = class {
   }
 };
 
-// packages/core/src/plugins/built-in/coding-tools.ts
+// packages/core/src/builtin-extensions/coding-tools.ts
 import { createCodingTools, CodingTools } from "@earendil-works/pi-durable/tools";
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
-var codingToolsPlugin = {
+var codingToolsExtension = {
   id: "coding-tools",
   name: "Coding Tools",
-  category: "built-in",
   version: "1.0.0",
   async register(ctx) {
     if (!ctx.registry) return;
@@ -267,14 +275,13 @@ var codingToolsPlugin = {
   }
 };
 
-// packages/core/src/plugins/built-in/codemode.ts
-import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
+// packages/core/src/builtin-extensions/codemode.ts
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
+import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 var activeSandbox;
-var codemodePlugin = {
+var codemodeExtension = {
   id: "codemode",
   name: "Codemode",
-  category: "built-in",
   version: "1.0.0",
   register(ctx) {
     if (!ctx.registry) return;
@@ -668,7 +675,8 @@ function createSubagentExtension(getPolicy) {
           )
         }),
         replay: "safe",
-        execute: async (args, api, context) => {
+        execute: async (rawArgs, api, context) => {
+          const args = rawArgs;
           if (api.conversationId !== void 0 && Number(api.conversationId) > 1) {
             return {
               output: [
@@ -810,11 +818,10 @@ function createSubagentExtension(getPolicy) {
   });
 }
 
-// packages/core/src/plugins/built-in/subagents.ts
-var subagentsPlugin = {
+// packages/core/src/builtin-extensions/subagents.ts
+var subagentsExtension = {
   id: "subagents",
   name: "Subagents",
-  category: "built-in",
   version: "1.0.0",
   register(ctx) {
     if (!ctx.registry) return;
@@ -868,14 +875,14 @@ function createHarnessSettings(settingsManager, getActiveModel) {
     }
   };
 }
-async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, promptOptions, dynamicNamespaces, customPlugins = []) {
+async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, promptOptions, dynamicNamespaces, customBuiltins = []) {
   const registry = createRegistry();
-  const pluginRegistry = new DurablePluginRegistry();
-  pluginRegistry.register(codingToolsPlugin);
-  pluginRegistry.register(codemodePlugin);
-  pluginRegistry.register(subagentsPlugin);
-  for (const plugin of customPlugins) {
-    pluginRegistry.register(plugin);
+  const builtinRegistry = new BuiltinExtensionRegistry();
+  builtinRegistry.register(codingToolsExtension);
+  builtinRegistry.register(codemodeExtension);
+  builtinRegistry.register(subagentsExtension);
+  for (const builtin of customBuiltins) {
+    builtinRegistry.register(builtin);
   }
   const ctx = {
     registry,
@@ -886,10 +893,10 @@ async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, pro
     prompt: promptOptions,
     dynamicNamespaces
   };
-  await pluginRegistry.initAll(ctx);
+  await builtinRegistry.initAll(ctx);
   registry.install(createToolSearchExtension());
   registry.install(createPiPrompt(settingsManager, cwd, promptOptions));
-  return Object.assign(registry, { pluginRegistry });
+  return Object.assign(registry, { builtinRegistry });
 }
 var ExecutionEnvs = class {
   #defaultCwd;
@@ -1157,9 +1164,11 @@ async function createConversationBinding(conversation, ctx = runtimeContext) {
   const watch = await conversation.watch(ctx);
   let currentVal = watch.value;
   const subscribers = /* @__PURE__ */ new Set();
-  watch.start(async ({ value }) => {
-    currentVal = value;
-    for (const sub of subscribers) sub(value);
+  watch.start(async (call) => {
+    if (call && "value" in call) {
+      currentVal = call.value;
+      for (const sub of subscribers) sub(call.value);
+    }
   });
   return {
     get value() {
@@ -1170,7 +1179,7 @@ async function createConversationBinding(conversation, ctx = runtimeContext) {
       return () => subscribers.delete(listener);
     },
     dispose() {
-      void watch.stop(ctx);
+      void watch.stop();
     }
   };
 }
@@ -1181,9 +1190,11 @@ async function createTaskGraphBinding(harness, ctx = runtimeContext) {
   const watch = await harness.watchTaskGraph(ctx);
   let currentVal = watch.value;
   const subscribers = /* @__PURE__ */ new Set();
-  watch.start(async ({ value }) => {
-    currentVal = value;
-    for (const sub of subscribers) sub(value);
+  watch.start(async (call) => {
+    if (call && "value" in call) {
+      currentVal = call.value;
+      for (const sub of subscribers) sub(call.value);
+    }
   });
   return {
     get value() {
@@ -1194,7 +1205,7 @@ async function createTaskGraphBinding(harness, ctx = runtimeContext) {
       return () => subscribers.delete(listener);
     },
     dispose() {
-      void watch.stop(ctx);
+      void watch.stop();
     }
   };
 }
@@ -1391,10 +1402,10 @@ var RuntimeBindings = class {
   taskEpoch = 0;
   closed = false;
   update;
-  constructor(conversation, view, update) {
+  constructor(conversation, view, update2) {
     this.conversation = conversation;
     this.view = view;
-    this.update = update;
+    this.update = update2;
     try {
       this.unsubscribe = view.subscribe((value) => {
         if (!this.closed && this.epoch === 0) this.update({ conversation: value });
@@ -1808,16 +1819,16 @@ function adaptExtensionTool(toolDef, executeToolFn, createToolContext, getExtens
           };
         }
       }
-      const base = createToolContext?.(api.callId);
+      const base2 = createToolContext?.(api.callId);
       const descriptors = {
-        ...Object.getOwnPropertyDescriptors(base ?? {}),
+        ...Object.getOwnPropertyDescriptors(base2 ?? {}),
         tools: {
-          get: () => base?.tools ?? [],
+          get: () => base2?.tools ?? [],
           configurable: true,
           enumerable: true
         },
         executeTool: {
-          value: async (name, nestedArgs, options) => base?.executeTool ? base.executeTool(name, nestedArgs, options) : executeToolFn(api.callId, name, nestedArgs, options),
+          value: async (name, nestedArgs, options) => base2?.executeTool ? base2.executeTool(name, nestedArgs, options) : executeToolFn(api.callId, name, nestedArgs, options),
           configurable: true,
           enumerable: true,
           writable: true
@@ -1830,9 +1841,9 @@ function adaptExtensionTool(toolDef, executeToolFn, createToolContext, getExtens
           api.callId,
           coercedArgs,
           abortSignal,
-          (update) => {
-            if (update?.content && hasOutput(api)) {
-              const textChunks = update.content.filter((c) => c.type === "text").map((c) => c.text).join("");
+          (update2) => {
+            if (update2?.content && hasOutput(api)) {
+              const textChunks = update2.content.filter((c) => c.type === "text").map((c) => c.text).join("");
               if (textChunks.length > 0) api.output(textChunks);
             }
           },
@@ -2314,7 +2325,7 @@ async function loadHarnessEnvironment(location, options, envs) {
     getSubagentPolicy,
     { ...options.prompt, resourceLoader, dynamicSections },
     dynamicNamespaces,
-    options.plugins
+    options.builtins ?? options.plugins
   );
   const registry = codingRegistry;
   const pendingReports = [];
@@ -2349,8 +2360,8 @@ async function loadHarnessEnvironment(location, options, envs) {
   runnerRef = mounted.extensionRunner;
   let harness;
   const sessionCleanup = async () => {
-    await codingRegistry.pluginRegistry.teardownAll().catch((err) => {
-      console.warn("[RuntimeLoader] Plugin teardown error:", err);
+    await codingRegistry.builtinRegistry.teardownAll().catch((err) => {
+      console.warn("[RuntimeLoader] Built-in extension teardown error:", err);
     });
     await mounted.cleanup?.();
   };
@@ -2397,7 +2408,7 @@ async function loadHarnessEnvironment(location, options, envs) {
 
 // packages/core/src/runtime.ts
 async function openDurable(options = {}) {
-  const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session);
+  const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
   const envs = new ExecutionEnvs(location.cwd);
   let harness;
   let envState;
@@ -2444,7 +2455,7 @@ async function openDurable(options = {}) {
     };
     const listeners = /* @__PURE__ */ new Set();
     let notifying = false;
-    const update = (patch) => {
+    const update2 = (patch) => {
       state = { ...state, ...patch };
       if (notifying) return;
       notifying = true;
@@ -2455,7 +2466,7 @@ async function openDurable(options = {}) {
     };
     let nextNotice = 1;
     const notice = (level, message) => {
-      update({ notices: [...state.notices, { id: nextNotice++, level, message }].slice(-20) });
+      update2({ notices: [...state.notices, { id: nextNotice++, level, message }].slice(-20) });
     };
     const fail = (err) => notice("error", err instanceof Error ? err.message : String(err));
     for (const report of activeEnvState.pendingReports) {
@@ -2467,7 +2478,7 @@ async function openDurable(options = {}) {
       }
     }
     activeEnvState.setNoticeForwarder?.((level, message) => notice(level, message));
-    const bindings = new RuntimeBindings(root, conversation, update);
+    const bindings = new RuntimeBindings(root, conversation, update2);
     const handlePublication = (pub) => {
       let convs = state.conversations;
       for (const ch of pub.changes ?? []) {
@@ -2478,7 +2489,7 @@ async function openDurable(options = {}) {
           convs = convs.map((s) => s.id === id && !s.title ? { ...s, ...titleOf(ch.value) } : s);
         }
       }
-      if (convs !== state.conversations) update({ conversations: convs });
+      if (convs !== state.conversations) update2({ conversations: convs });
     };
     const observation = typeof harness.observeCommits === "function" ? harness.observeCommits({ advance: handlePublication, end: () => {
     } }) : void 0;
@@ -3276,13 +3287,13 @@ var DurableChildEventAdapter = class {
         break;
       }
       case "tool_execution_update": {
-        const update = this.toolProjector.projectToolUpdate(
+        const update2 = this.toolProjector.projectToolUpdate(
           { ...event, toolCallId: `${this.parentRef}:${event.toolCallId}` },
           this.parentRef
         );
-        if (update) {
+        if (update2) {
           this.output({
-            ...update,
+            ...update2,
             ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
           });
         }
@@ -3356,6 +3367,48 @@ var DurableChildEventAdapter = class {
   }
 };
 
+// packages/core/src/bridge/tool-args-resolver.ts
+function resolveToolCallArgs(callId, current) {
+  const rawLive = current.conversation.docs["pi.live"];
+  const live = typeof rawLive === "object" && rawLive !== null ? rawLive : {};
+  const rawBlocks = Array.isArray(live.generation?.message?.content) ? live.generation.message.content : [];
+  const activeCalls = rawBlocks.filter(isToolCallBlock);
+  if (activeCalls.length > 0) {
+    const matched = activeCalls.find((c) => c.id === callId || c.callId === callId);
+    if (matched?.arguments && typeof matched.arguments === "object") {
+      return matched.arguments;
+    }
+  }
+  const entries = current.conversation.entries ?? [];
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i];
+    if (isConversationEntryRecord(entry) && entry.kind === "pi.assistant" && Array.isArray(entry.model)) {
+      for (const msg of entry.model) {
+        if (Array.isArray(msg?.content)) {
+          for (const part of msg.content) {
+            if (isToolCallBlock(part) && (part.id === callId || part.callId === callId)) {
+              if (part.arguments && typeof part.arguments === "object") {
+                return part.arguments;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  const rawTools = Array.isArray(live.tools) ? live.tools : [];
+  const slot = rawTools.find((s) => {
+    if (typeof s !== "object" || s === null) return false;
+    const candidate = s;
+    const sid = candidate.callId ?? (candidate.id !== void 0 ? String(candidate.id) : void 0);
+    return sid === callId;
+  });
+  if (slot?.args && typeof slot.args === "object") {
+    return slot.args;
+  }
+  return {};
+}
+
 // packages/core/src/bridge/durable-event-adapter.ts
 var DurableEventAdapter = class {
   output;
@@ -3394,15 +3447,15 @@ var DurableEventAdapter = class {
     if (summary.lastCheckpointId) this.lastCheckpointId = summary.lastCheckpointId;
     const isAborted = summary.isAborted;
     const isError = summary.isError && !isAborted;
-    const base = {
+    const base2 = {
       contextWindow: summary.cw,
       ...this.lastCheckpointId && { providerCheckpointId: this.lastCheckpointId },
       ...summary.cumulativeUsage && { cumulativeUsage: summary.cumulativeUsage },
       ...isAborted && { aborted: true, stopReason: "aborted" },
       ...isError && { stopReason: "error", ...summary.errorMessage && { errorMessage: summary.errorMessage } }
     };
-    if (type === "turn_end") this.output({ type: "turn_end", message: summary.finalMsg, ...base });
-    else this.output({ type: "agent_end", messages: [summary.finalMsg], ...base });
+    if (type === "turn_end") this.output({ type: "turn_end", message: summary.finalMsg, ...base2 });
+    else this.output({ type: "agent_end", messages: [summary.finalMsg], ...base2 });
   }
   handleBatch(batch, current) {
     for (const ev of batch) {
@@ -3460,8 +3513,8 @@ var DurableEventAdapter = class {
         break;
       }
       case "tool_execution_update": {
-        const update = this.toolProjector.projectToolUpdate(event, this.resolveParentRef(event.parentToolCallId));
-        if (update) this.output(update);
+        const update2 = this.toolProjector.projectToolUpdate(event, this.resolveParentRef(event.parentToolCallId));
+        if (update2) this.output(update2);
         break;
       }
       case "tool_execution_end": {
@@ -3545,6 +3598,9 @@ var BindingIndexDoc = defineDoc3({
   checkpointWhen: () => false,
   initial: () => ({ byIdentity: {}, byThreadId: {} })
 });
+function identityKey(identity) {
+  return JSON.stringify([identity.providerId, identity.sessionId, identity.threadId]);
+}
 
 // packages/core/src/subagent-watcher.ts
 function extractChildConversationId(event) {
@@ -3644,7 +3700,8 @@ var DurableEngine = class _DurableEngine {
         listener(event);
       }
     });
-    this.unsubscribeView = this.#instance.view.subscribe(this.eventAdapter.subscriber);
+    this.unsubscribeView = this.#instance.view.subscribe(() => {
+    });
   }
   static async open(options = {}) {
     const sessionDir = options.sessionDir ?? options.session ?? process.cwd();
@@ -3857,42 +3914,1136 @@ function getPiDurableVersion() {
   }
   return "1.0.0";
 }
+
+// packages/core/src/conversation-id.ts
+import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID3 } from "@earendil-works/pi-durable";
+function parseConversationId(id) {
+  if (id === void 0 || id === null) return ROOT_CONVERSATION_ID3;
+  const trimmed = typeof id === "string" ? id.trim() : id;
+  if (trimmed === "") {
+    throw new Error(`Invalid conversationId: ${String(id)}`);
+  }
+  const num = typeof trimmed === "number" ? trimmed : Number(trimmed);
+  if (!Number.isInteger(num) || num <= 0) {
+    throw new Error(`Invalid conversationId: ${String(id)}`);
+  }
+  return num;
+}
+
+// packages/core/src/cli-args.ts
+function parseCliArgs(argv) {
+  const args = {};
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--mode" && i + 1 < argv.length) args.mode = argv[++i];
+    else if (arg === "--session" && i + 1 < argv.length) args.session = argv[++i];
+    else if (arg === "--session-dir" && i + 1 < argv.length) args.sessionDir = argv[++i];
+    else if (arg === "--continue") args.continueSession = true;
+    else if (arg === "--no-session") args.noSession = true;
+    else if (arg === "--provider" && i + 1 < argv.length) args.provider = argv[++i];
+    else if (arg === "--model" && i + 1 < argv.length) args.model = argv[++i];
+    else if (arg === "--thinking" && i + 1 < argv.length) args.thinking = argv[++i];
+    else if (arg === "--system-prompt" && i + 1 < argv.length) args.systemPromptPath = argv[++i];
+    else if (arg === "--append-system-prompt" && i + 1 < argv.length) args.appendSystemPromptPath = argv[++i];
+    else if (arg === "--cwd" && i + 1 < argv.length) args.cwd = argv[++i];
+    else if (arg === "--extension" && i + 1 < argv.length) {
+      const ext = argv[++i];
+      args.extension = ext;
+      args.extensions ??= [];
+      args.extensions.push(ext);
+    } else if (arg === "--no-global-extensions") {
+      args.noGlobalExtensions = true;
+    } else if (arg === "--skill" && i + 1 < argv.length) {
+      args.skills ??= [];
+      args.skills.push(argv[++i]);
+    } else if (arg.startsWith("-")) {
+      if (i + 1 < argv.length && !argv[i + 1].startsWith("-")) {
+        i++;
+      }
+    } else if (!args.cwd) {
+      args.cwd = arg;
+    }
+  }
+  return args;
+}
+
+// packages/core/src/task-labels.ts
+var MAX_NAME = 48;
+var MAX_TARGET_HINT = 128;
+var MAX_TASK_NAMES = 512;
+var KIND_NAMES = {
+  "pi.generation": "assistant turn",
+  "pi.compaction": "compacting context"
+};
+var ARG_KEYS = ["command", "task", "path", "file_path", "pattern", "query", "url", "prompt"];
+function clip(text, max = MAX_NAME) {
+  const oneLine = text.replace(/\s+/g, " ").trim();
+  return oneLine.length <= max ? oneLine : `${oneLine.slice(0, max - 1)}\u2026`;
+}
+function sanitizeTargetHint(raw, max = MAX_TARGET_HINT) {
+  let s = raw.replace(/\s+/g, " ").trim();
+  s = s.replace(/bearer\s+[a-zA-Z0-9_\-\.]+/gi, "Bearer [redacted]");
+  s = s.replace(/(ghp|gho|ghu|ghs|ghr|sec)_[a-zA-Z0-9]+/g, "[redacted]");
+  s = s.replace(/(api[_-]?key|token|secret|password|passwd|auth)\s*[:=]\s*[^\s&]+/gi, "$1=[redacted]");
+  return clip(s, max);
+}
+function argumentHint(args) {
+  if (typeof args !== "object" || args === null) return void 0;
+  const record = args;
+  for (const key of ARG_KEYS) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim() !== "") return sanitizeTargetHint(value);
+  }
+  return void 0;
+}
+function liveOf(view) {
+  const raw = view?.conversation?.docs?.["pi.live"];
+  return typeof raw === "object" && raw !== null ? raw : {};
+}
+function isNested(slot) {
+  return "parentCallId" in slot;
+}
+var TaskNames = class {
+  names = /* @__PURE__ */ new Map();
+  details = /* @__PURE__ */ new Map();
+  learn(view) {
+    const live = liveOf(view);
+    for (const slot of [...live.tools ?? [], ...live.nestedTools ?? []]) {
+      if (slot.taskId === void 0) continue;
+      const key = String(slot.taskId);
+      if (this.names.has(key)) continue;
+      const args = isNested(slot) ? slot.arguments : resolveToolCallArgs(slot.callId, view);
+      const hint = argumentHint(args);
+      const toolName = slot.name ? clip(slot.name, MAX_NAME) : void 0;
+      const preview = clip(hint === void 0 ? slot.name : `${slot.name}: ${hint}`, MAX_NAME);
+      if (this.names.size >= MAX_TASK_NAMES) {
+        const oldest = this.names.keys().next().value;
+        if (oldest !== void 0) {
+          this.names.delete(oldest);
+          this.details.delete(oldest);
+        }
+      }
+      this.names.set(key, preview);
+      this.details.set(key, { toolName, targetHint: hint, preview });
+    }
+  }
+  get(taskId) {
+    return this.names.get(taskId);
+  }
+  getDetails(taskId) {
+    return this.details.get(taskId);
+  }
+};
+function taskLabel(node, names, modelLabel) {
+  const state = node.state;
+  const call = names?.get(String(node.id));
+  const plain = node.kind === "pi.generation" && modelLabel ? modelLabel : KIND_NAMES[node.kind];
+  const kind = call ?? plain ?? (node.kind.startsWith("pi.") ? node.kind.slice(3) : node.kind);
+  if (state.status === "waiting") return `${kind} \xB7 waiting on ${state.on.length}`;
+  if (state.status === "completing") {
+    const outcome = typeof state.outcome === "object" && state.outcome !== null && "status" in state.outcome ? state.outcome.status : state.outcome;
+    return `${kind} \xB7 completing (${String(outcome ?? "completed")})`;
+  }
+  return call !== void 0 || plain !== void 0 ? kind : `${kind} \xB7 ${state.phase}`;
+}
+
+// packages/core/src/task-tokens.ts
+function normalizeUsage(raw) {
+  if (!raw || typeof raw !== "object") return void 0;
+  const u = raw;
+  const total = typeof u.totalTokens === "number" ? u.totalTokens : typeof u.total === "number" ? u.total : void 0;
+  const input = typeof u.input === "number" ? u.input : typeof u.inputTokens === "number" ? u.inputTokens : void 0;
+  const output = typeof u.output === "number" ? u.output : typeof u.outputTokens === "number" ? u.outputTokens : void 0;
+  const reasoning = typeof u.reasoning === "number" ? u.reasoning : void 0;
+  const cacheRead = typeof u.cacheRead === "number" ? u.cacheRead : typeof u.cachedInputTokens === "number" ? u.cachedInputTokens : void 0;
+  const computedTotal = total ?? (input ?? 0) + (output ?? 0);
+  if (computedTotal <= 0 && (output ?? 0) <= 0) return void 0;
+  return {
+    total: computedTotal,
+    input,
+    output,
+    reasoning,
+    cacheRead
+  };
+}
+function extractLiveTokens(node, current) {
+  if (node.kind !== "pi.generation") return void 0;
+  const cur = current;
+  if (!cur || typeof cur !== "object") return void 0;
+  const liveDoc = cur?.conversation?.docs?.["pi.live"];
+  if (liveDoc?.generation?.message?.usage) {
+    const usage = normalizeUsage(liveDoc.generation.message.usage);
+    if (usage) return usage;
+  }
+  return void 0;
+}
+function extractTerminalTokens(task, current, recentEntries) {
+  if (task.kind !== "pi.generation") return void 0;
+  const state = task.state;
+  const outcome = state?.outcome;
+  const entryId = outcome?.result?.entryId;
+  if (entryId === void 0) return void 0;
+  const entryIdNum = Number(entryId);
+  if (recentEntries) {
+    const rawEntry = recentEntries.get(entryIdNum);
+    const usage = rawEntry?.record?.model?.[0]?.usage ?? rawEntry?.model?.[0]?.usage;
+    if (usage) {
+      const normalized = normalizeUsage(usage);
+      if (normalized) return normalized;
+    }
+  }
+  const cur = current;
+  const entries = cur?.conversation?.entries;
+  if (Array.isArray(entries)) {
+    const target = entries.find((e) => Number(e?.id) === entryIdNum);
+    if (target?.model?.[0]?.usage) {
+      return normalizeUsage(target.model[0].usage);
+    }
+  }
+  return void 0;
+}
+
+// packages/contracts/dist/index.js
+import { z as z2 } from "zod";
+import { z as z22 } from "zod";
+import { z as z4 } from "zod";
+import { z as z3 } from "zod";
+import { z as z9 } from "zod";
+import { z as z5 } from "zod";
+import { z as z6 } from "zod";
+import { z as z8 } from "zod";
+import { z as z7 } from "zod";
+import { z as z10 } from "zod";
+var piPathStatusSchema = z2.object({
+  path: z2.string(),
+  exists: z2.boolean(),
+  type: z2.enum(["file", "directory"]),
+  required: z2.boolean()
+});
+var extensionDiagnosticSchema = z2.object({
+  path: z2.string(),
+  resolvedPath: z2.string(),
+  tools: z2.array(z2.string()),
+  commands: z2.array(z2.string()),
+  supportedHooks: z2.array(z2.string()),
+  unsupportedHooks: z2.array(z2.string())
+});
+var count = z2.number().int().nonnegative();
+var strings = z2.array(z2.string());
+var piDiagnosticsReportSchema = z2.object({
+  version: z2.string(),
+  durableVersion: z2.string(),
+  agentDir: z2.string(),
+  paths: z2.record(z2.string(), piPathStatusSchema),
+  settings: z2.object({
+    defaultProvider: z2.string().optional(),
+    defaultModel: z2.string().optional(),
+    thinkingLevel: z2.string().optional(),
+    packages: strings,
+    extensions: strings
+  }),
+  models: z2.object({ total: count, providers: strings, defaultModelAvailable: z2.boolean() }),
+  extensions: z2.object({
+    total: count,
+    errors: z2.array(z2.object({ path: z2.string(), error: z2.string() })),
+    warnings: z2.array(z2.object({ path: z2.string(), warning: z2.string() })),
+    items: z2.array(extensionDiagnosticSchema)
+  }),
+  skills: z2.object({ total: count, sample: strings }),
+  tools: z2.object({ total: count, system: strings, custom: strings, mcp: strings }),
+  status: z2.enum(["healthy", "warning", "error"]),
+  summary: z2.string()
+});
+var runnerChannelSchema = z22.discriminatedUnion("kind", [
+  z22.object({ kind: z22.literal("ready"), ready: z22.boolean().optional() }).passthrough(),
+  z22.object({ kind: z22.literal("model-scope"), scopedModelIds: z22.array(z22.string()).optional(), defaultModelId: z22.string().optional() }).passthrough(),
+  z22.object({ kind: z22.literal("reply"), id: z22.union([z22.string(), z22.number()]), result: z22.unknown().optional(), error: z22.unknown().optional() }).passthrough(),
+  z22.object({
+    kind: z22.literal("tool_call_request"),
+    callId: z22.string(),
+    toolName: z22.string(),
+    arguments: z22.unknown().default({})
+  }).passthrough(),
+  z22.object({
+    kind: z22.literal("tool_call_response"),
+    callId: z22.string(),
+    result: z22.unknown().optional(),
+    isError: z22.boolean().optional()
+  }).passthrough(),
+  z22.object({
+    kind: z22.literal("interaction_request"),
+    id: z22.union([z22.string(), z22.number()]),
+    interactionKind: z22.string().optional(),
+    dialogKind: z22.string().optional(),
+    title: z22.string().optional(),
+    message: z22.string().optional(),
+    data: z22.unknown().optional()
+  }).passthrough(),
+  z22.object({
+    kind: z22.literal("interaction_response"),
+    id: z22.union([z22.string(), z22.number()]),
+    result: z22.unknown().optional(),
+    error: z22.unknown().optional()
+  }).passthrough()
+]);
+var runnerBridgeRequestSchema = z22.object({
+  kind: z22.literal("request"),
+  id: z22.union([z22.string(), z22.number()]),
+  method: z22.string(),
+  params: z22.unknown().optional()
+}).passthrough();
+var knownChannelKinds = new Set(runnerChannelSchema.options.map((schema) => schema.shape.kind.value));
+var conversationIdSchema = z3.union([z3.number().int().positive(), z3.string().regex(/^[1-9]\d*$/)]);
+var cumulativeUsageSchema = z3.object({
+  totalTokens: z3.number(),
+  inputTokens: z3.number(),
+  outputTokens: z3.number(),
+  cachedInputTokens: z3.number().optional(),
+  cacheWriteInputTokens: z3.number().optional()
+}).passthrough();
+var wireContextSchema = z3.object({
+  parentRef: z3.string().optional(),
+  conversationId: conversationIdSchema.optional(),
+  providerCheckpointId: z3.string().optional(),
+  cumulativeUsage: cumulativeUsageSchema.optional(),
+  aborted: z3.boolean().optional(),
+  stopReason: z3.string().optional(),
+  errorMessage: z3.string().optional()
+}).passthrough();
+var runnerCommandSchema = z4.object({
+  type: z4.enum(["prompt", "steer", "abort", "abort_task", "compact", "set_subagent_policy", "get_available_models", "set_model", "set_thinking_level", "get_state", "get_session_stats", "register_binding", "get_all_bindings"]),
+  id: z4.string().optional(),
+  message: z4.string().optional(),
+  images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
+  streamingBehavior: z4.enum(["steer", "followUp"]).optional(),
+  provider: z4.string().optional(),
+  modelId: z4.string().optional(),
+  instructions: z4.string().optional(),
+  level: z4.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
+  conversationId: conversationIdSchema.optional(),
+  threadId: z4.string().optional(),
+  parentThreadId: z4.string().optional(),
+  sessionId: z4.string().optional(),
+  policyRecord: z4.unknown().optional(),
+  taskId: z4.number().int().positive().optional()
+}).passthrough();
+var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
+var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
+var number = z5.number().optional();
+var assistantUsageSchema = z5.object({
+  input: number,
+  output: number,
+  cacheRead: number,
+  cacheWrite: number,
+  totalTokens: number,
+  cost: z5.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
+}).passthrough();
+var assistantMessageSchema = z5.object({
+  role: z5.literal("assistant"),
+  content: z5.array(z5.discriminatedUnion("type", [
+    z5.object({ type: z5.literal("text"), text: z5.string() }),
+    z5.object({ type: z5.literal("thinking"), thinking: z5.string() }),
+    z5.object({ type: z5.literal("toolCall"), id: z5.string(), name: z5.string(), arguments: z5.record(z5.string(), z5.unknown()) })
+  ])),
+  stopReason: z5.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
+  errorMessage: z5.string().optional(),
+  usage: assistantUsageSchema.optional()
+}).passthrough();
+var contentIndex = z5.number().int().nonnegative();
+var update = z5.discriminatedUnion("type", [
+  z5.object({ type: z5.literal("thinking_delta"), contentIndex, delta: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("thinking_end"), contentIndex, content: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("text_delta"), contentIndex, delta: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("thinking_start"), contentIndex }).passthrough(),
+  z5.object({ type: z5.literal("text_start"), contentIndex }).passthrough(),
+  z5.object({ type: z5.literal("text_end"), contentIndex, content: z5.string() }).passthrough()
+]);
+var messageUpdateSchema = wireContextSchema.extend({ type: z5.literal("message_update"), assistantMessageEvent: update });
+var messageSchemas = [
+  messageUpdateSchema,
+  wireContextSchema.extend({ type: z5.literal("message_end"), message: assistantMessageSchema })
+];
+var tool = wireContextSchema.extend({
+  toolCallId: z6.union([z6.string().min(1), z6.number().int().nonnegative()]),
+  toolName: z6.string().min(1)
+});
+var toolStartSchema = tool.extend({ type: z6.literal("tool_execution_start"), args: z6.record(z6.string(), z6.unknown()) });
+var toolUpdateSchema = tool.extend({
+  type: z6.literal("tool_execution_update"),
+  partialResult: z6.string(),
+  trimStart: z6.number().optional(),
+  details: z6.unknown().optional()
+});
+var toolEndSchema = tool.extend({
+  type: z6.literal("tool_execution_end"),
+  result: z6.string(),
+  isError: z6.boolean(),
+  details: z6.unknown().optional()
+});
+var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema];
+var MAX_LIVE_NODES = 512;
+var MAX_RECEIPTS = 128;
+var MAX_LABEL_LENGTH = 160;
+var MAX_PREVIEW_LENGTH = 500;
+var MAX_SNAPSHOT_BYTES = 1048576;
+var TASK_OUTCOMES = ["completed", "failed", "aborted", "faulted", "orphaned"];
+var taskOutcomeSchema = z7.enum(TASK_OUTCOMES);
+var LIVE_TASK_STATUSES = ["pending", "running", "waiting", "sleeping", "completing"];
+var liveTaskStatusSchema = z7.enum(LIVE_TASK_STATUSES);
+var BLOCKED_REASONS = ["missing_task", "task_too_old", "migration_failed", "restart_limit"];
+var blockedReasonSchema = z7.enum(BLOCKED_REASONS);
+var graphScopeSchema = z7.object({
+  sessionId: z7.string().min(1).max(256),
+  rootConversationId: z7.string().min(1).max(64),
+  buildId: z7.string().min(1).max(64)
+});
+var graphObservationSchema = z7.object({
+  epoch: z7.string().min(1).max(64),
+  revision: z7.number().int().nonnegative(),
+  observedAt: z7.number().int().positive(),
+  completeness: z7.enum(["complete", "limited"])
+});
+var runtimeTaskStateSchema = z7.discriminatedUnion("status", [
+  z7.object({
+    status: z7.literal("pending"),
+    phase: z7.string().max(64).optional()
+  }),
+  z7.object({
+    status: z7.literal("running"),
+    phase: z7.string().max(64).optional()
+  }),
+  z7.object({
+    status: z7.literal("waiting"),
+    phase: z7.string().max(64).optional(),
+    on: z7.array(z7.number().int().positive()).max(MAX_LIVE_NODES),
+    policy: z7.enum(["failFast", "allSettled", "all", "first"]).optional()
+  }),
+  z7.object({
+    status: z7.literal("sleeping"),
+    phase: z7.string().max(64).optional(),
+    until: z7.number().int().positive()
+  }),
+  z7.object({
+    status: z7.literal("completing"),
+    outcome: taskOutcomeSchema
+  })
+]);
+var taskTokensUsageSchema = z7.object({
+  total: z7.number().int().nonnegative().optional(),
+  input: z7.number().int().nonnegative().optional(),
+  output: z7.number().int().nonnegative().optional(),
+  reasoning: z7.number().int().nonnegative().optional(),
+  cacheRead: z7.number().int().nonnegative().optional()
+});
+var runtimeTaskNodeSchema = z7.object({
+  id: z7.number().int().positive(),
+  kind: z7.string().min(1).max(64),
+  conversationId: z7.number().int().positive(),
+  owner: z7.number().int().positive().optional(),
+  background: z7.boolean(),
+  abortRequested: z7.boolean(),
+  state: runtimeTaskStateSchema,
+  blocked: blockedReasonSchema.optional(),
+  label: z7.string().min(1).max(MAX_LABEL_LENGTH),
+  startedAt: z7.number().int().positive().optional(),
+  endedAt: z7.number().int().positive().optional(),
+  durationMs: z7.number().int().nonnegative().optional(),
+  toolName: z7.string().max(64).optional(),
+  targetHint: z7.string().max(128).optional(),
+  model: z7.object({
+    provider: z7.string().max(64),
+    modelId: z7.string().max(128)
+  }).optional(),
+  thinkingLevel: z7.string().max(32).optional(),
+  tokens: taskTokensUsageSchema.optional()
+});
+var runtimeConversationNodeSchema = z7.object({
+  id: z7.number().int().positive(),
+  owner: z7.object({
+    conversationId: z7.number().int().positive(),
+    taskId: z7.number().int().positive()
+  }).optional(),
+  parent: z7.object({
+    conversationId: z7.number().int().positive(),
+    at: z7.number().int().positive()
+  }).optional()
+});
+var runtimeTaskReceiptSchema = z7.object({
+  taskId: z7.number().int().positive(),
+  conversationId: z7.number().int().positive(),
+  owner: z7.number().int().positive().optional(),
+  kind: z7.string().min(1).max(64),
+  outcome: taskOutcomeSchema,
+  isToolError: z7.boolean().optional(),
+  error: z7.object({
+    message: z7.string().max(1024),
+    code: z7.string().max(64).optional()
+  }).optional(),
+  endedAt: z7.number().int().positive(),
+  durationMs: z7.number().int().nonnegative().optional(),
+  preview: z7.string().max(MAX_PREVIEW_LENGTH).optional(),
+  toolName: z7.string().max(64).optional(),
+  targetHint: z7.string().max(128).optional(),
+  startedAt: z7.number().int().positive().optional(),
+  tokens: taskTokensUsageSchema.optional()
+});
+var runtimeGraphStatsSchema = z7.object({
+  liveCount: z7.number().int().nonnegative(),
+  terminalCount: z7.number().int().nonnegative(),
+  totalCount: z7.number().int().nonnegative()
+});
+function getUtf8ByteLength(str) {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.byteLength(str, "utf8");
+  }
+  if (typeof TextEncoder !== "undefined") {
+    return new TextEncoder().encode(str).length;
+  }
+  let bytes = 0;
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code <= 127) bytes += 1;
+    else if (code <= 2047) bytes += 2;
+    else if (code >= 55296 && code <= 56319) {
+      bytes += 4;
+      i++;
+    } else bytes += 3;
+  }
+  return bytes;
+}
+var runtimeGraphSnapshotSchema = z7.object({
+  version: z7.literal(1),
+  scope: graphScopeSchema,
+  observation: graphObservationSchema,
+  nodes: z7.record(z7.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
+    message: `Live nodes exceed maximum of ${MAX_LIVE_NODES}`
+  }),
+  conversations: z7.record(z7.string(), runtimeConversationNodeSchema),
+  receipts: z7.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
+  stats: runtimeGraphStatsSchema
+}).refine(
+  (snapshot) => {
+    try {
+      const json = JSON.stringify(snapshot);
+      return getUtf8ByteLength(json) <= MAX_SNAPSHOT_BYTES;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Runtime graph snapshot exceeds 1 MiB payload limit" }
+);
+var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
+  type: z8.literal("runtime_graph_snapshot"),
+  snapshot: runtimeGraphSnapshotSchema
+});
+var lifecycleSchemas = [
+  wireContextSchema.extend({ type: z8.literal("agent_start") }),
+  wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
+  wireContextSchema.extend({ type: z8.literal("turn_start") }),
+  wireContextSchema.extend({ type: z8.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("agent_end"), messages: z8.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("compaction_start"), reason: z8.enum(["manual", "threshold"]) }),
+  wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
+  wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
+  runtimeGraphSnapshotEventSchema
+];
+var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
+var runnerEventSchema = z9.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
+var knownEventTypes = new Set(runnerEventSchema.options.map((schema) => schema.shape.type.value));
+var base = z10.object({ id: z10.string().optional(), type: z10.literal("response"), command: z10.string().min(1) });
+var runnerResponseSchema = z10.discriminatedUnion("success", [
+  base.extend({ success: z10.literal(true), data: z10.unknown().optional() }).passthrough(),
+  base.extend({ success: z10.literal(false), error: z10.string() }).passthrough()
+]);
+
+// packages/core/src/runtime-graph-state.ts
+function extractTaskGraph(current) {
+  if (!current || typeof current !== "object") return { tasks: {} };
+  const obj = current;
+  if ("tasks" in obj && obj.tasks && typeof obj.tasks === "object") {
+    const inner = obj.tasks;
+    if ("tasks" in inner && inner.tasks && typeof inner.tasks === "object") {
+      return inner;
+    }
+    return current;
+  }
+  return { tasks: {} };
+}
+function mapTaskGraphNodeState(state) {
+  switch (state.status) {
+    case "pending":
+    case "running":
+      return { status: state.status, phase: state.phase };
+    case "waiting":
+      return {
+        status: "waiting",
+        phase: state.phase,
+        on: state.on ? state.on.map(Number) : [],
+        policy: state.policy
+      };
+    case "sleeping":
+      return { status: "sleeping", phase: state.phase, until: state.until };
+    case "completing": {
+      const outcome = typeof state.outcome === "object" && state.outcome !== null && "status" in state.outcome ? state.outcome.status : state.outcome;
+      return { status: "completing", outcome: outcome ?? "completed" };
+    }
+  }
+}
+
+// packages/core/src/runtime-graph-mapper.ts
+function extractTaskModelMeta(node, current, rootConvId) {
+  if (node.kind !== "pi.generation") return {};
+  const cp = node.state?.checkpoint ?? node.checkpoint;
+  let provider;
+  let modelId;
+  let thinkingLevel;
+  if (cp && typeof cp === "object" && cp.model && typeof cp.model === "object") {
+    if (cp.model.provider && (cp.model.modelId || cp.model.id)) {
+      provider = String(cp.model.provider);
+      modelId = String(cp.model.modelId ?? cp.model.id);
+    }
+    if (cp.thinkingLevel !== void 0 && cp.thinkingLevel !== null) thinkingLevel = String(cp.thinkingLevel);
+  }
+  if (!provider || !modelId) {
+    const convId = Number(node.conversationId);
+    if (convId === rootConvId) {
+      const doc = current?.conversation?.docs?.["pi.agent"];
+      if (doc?.model?.provider) {
+        provider = String(doc.model.provider);
+        modelId = String(doc.model.modelId ?? doc.model.id);
+      }
+      if (doc?.thinkingLevel !== void 0 && doc?.thinkingLevel !== null) thinkingLevel = String(doc.thinkingLevel);
+    } else {
+      const doc = current?.conversation?.docs?.["durable.subagents"];
+      const sub = doc?.agents ? Object.values(doc.agents).find((a) => Number(a?.conversationId) === convId) : void 0;
+      if (sub?.actualModel?.provider) {
+        provider = String(sub.actualModel.provider);
+        modelId = String(sub.actualModel.modelId ?? sub.actualModel.id);
+      }
+      if (sub?.thinkingLevel !== void 0 && sub?.thinkingLevel !== null) thinkingLevel = String(sub.thinkingLevel);
+    }
+  }
+  if (!provider || !modelId) return {};
+  const model = { provider, modelId };
+  const modelLabel = thinkingLevel && thinkingLevel !== "off" ? `assistant turn \xB7 ${modelId} (${thinkingLevel})` : `assistant turn \xB7 ${modelId}`;
+  return { model, thinkingLevel, modelLabel };
+}
+function recordSubagentOwnership(conversations, current, rootConvId) {
+  const doc = current?.conversation?.docs?.["durable.subagents"];
+  if (!doc?.agents) return;
+  for (const a of Object.values(doc.agents)) {
+    if (a?.conversationId && a?.ownerTaskId) {
+      conversations.recordLogicalOwner(Number(a.conversationId), Number(rootConvId), Number(a.ownerTaskId));
+    }
+  }
+}
+function findSubagentMeta(current, taskId) {
+  const doc = current?.conversation?.docs?.["durable.subagents"];
+  if (!doc?.agents) return void 0;
+  for (const a of Object.values(doc.agents)) {
+    if (Number(a?.anchorTaskId) === taskId || Number(a?.ownerTaskId) === taskId) {
+      return { name: a.name, task: a.task };
+    }
+  }
+  return void 0;
+}
+function buildMappedNode(node, current, rootConvId, names, nativeStartedAt, clock) {
+  const id = Number(node.id);
+  const convId = Number(node.conversationId);
+  const meta = extractTaskModelMeta(node, current, rootConvId);
+  const callDetails = names.getDetails(String(id));
+  const subMeta = findSubagentMeta(current, id);
+  let label = taskLabel(node, names, meta.modelLabel);
+  if (node.kind === "durable.subagent-anchor" && subMeta?.name) {
+    label = `durable.subagent-anchor \xB7 subagent: ${subMeta.name}`;
+  }
+  if (label.length > MAX_LABEL_LENGTH) label = label.slice(0, MAX_LABEL_LENGTH);
+  const startedAt = node.startedAt !== void 0 && node.startedAt !== null ? Number(node.startedAt) : nativeStartedAt.get(id);
+  const durationMs = startedAt !== void 0 ? Math.max(0, clock() - startedAt) : void 0;
+  return {
+    id,
+    kind: node.kind,
+    conversationId: convId,
+    owner: node.owner !== void 0 ? Number(node.owner) : void 0,
+    background: Boolean(node.background),
+    abortRequested: Boolean(node.abortRequested),
+    state: mapTaskGraphNodeState(node.state),
+    blocked: node.blocked,
+    label,
+    startedAt,
+    durationMs,
+    toolName: callDetails?.toolName ?? (subMeta ? "subagent" : void 0),
+    targetHint: callDetails?.targetHint ?? (subMeta ? subMeta.name || subMeta.task : void 0),
+    model: meta.model,
+    thinkingLevel: meta.thinkingLevel,
+    tokens: extractLiveTokens(node, current)
+  };
+}
+function recordTerminalWithDetails(receipts, task, names, nativeStartedAt, current, recentEntries) {
+  const id = Number(task.id);
+  const details = names.getDetails(String(id));
+  const subMeta = findSubagentMeta(current, id);
+  const toolName = details?.toolName ?? (subMeta ? "subagent" : void 0);
+  const targetHint = details?.targetHint ?? (subMeta ? subMeta.name || subMeta.task : void 0);
+  const preview = subMeta?.task ?? details?.preview ?? names.get(String(id));
+  const state = task.state;
+  const rawEntryId = state?.outcome?.result?.entryId;
+  const entryId = rawEntryId !== void 0 ? Number(rawEntryId) : void 0;
+  receipts.recordTerminal(task, {
+    preview,
+    toolName,
+    targetHint,
+    entryId,
+    startedAt: nativeStartedAt.get(id),
+    tokens: extractTerminalTokens(task, current, recentEntries)
+  });
+}
+
+// packages/core/src/session-commands.ts
+import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID5 } from "@earendil-works/pi-durable";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
+
+// packages/core/src/binding-commands.ts
+function toConversationId(id) {
+  if (typeof id === "number" && Number.isInteger(id) && id > 0) {
+    return id;
+  }
+  if (typeof id === "string" && id.trim()) {
+    const num = Number(id.trim());
+    if (Number.isInteger(num) && num > 0) {
+      return num;
+    }
+  }
+  return void 0;
+}
+async function handleBindingCommand(cmd, durable, responder) {
+  if (cmd.type === "register_binding") {
+    try {
+      if (typeof cmd.threadId !== "string" || !cmd.threadId.trim() || cmd.conversationId === void 0 || cmd.conversationId === null) {
+        throw new InvalidCommandPayloadError("register_binding", "Missing threadId or conversationId");
+      }
+      const threadId = cmd.threadId.trim();
+      const convId = toConversationId(cmd.conversationId);
+      if (convId === void 0) {
+        throw new InvalidCommandPayloadError("register_binding", `Invalid conversationId: ${String(cmd.conversationId)}`);
+      }
+      await durable.harness.commit(async (tx) => {
+        const index = await tx.doc(BindingIndexDoc);
+        const state = await tx.doc(BindingDoc, convId);
+        const sessionId = durable.view.current()?.session?.id ?? "default";
+        const parentThreadId = typeof cmd.parentThreadId === "string" && cmd.parentThreadId.trim() ? cmd.parentThreadId.trim() : null;
+        const record = {
+          providerId: "pi-durable",
+          sessionId,
+          conversationId: convId,
+          threadId,
+          parentThreadId,
+          createdAt: Date.now()
+        };
+        state.binding = record;
+        index.byThreadId[threadId] = convId;
+        const key = identityKey(record);
+        index.byIdentity[key] = convId;
+      }, runtimeContext);
+      responder.success(cmd.id, "register_binding", { registered: true });
+    } catch (err) {
+      responder.error(cmd.id, "register_binding", err instanceof Error ? err.message : String(err));
+    }
+    return true;
+  }
+  if (cmd.type === "get_all_bindings") {
+    try {
+      const index = await durable.harness.snapshot(BindingIndexDoc, runtimeContext);
+      const bindings = [];
+      if (index?.byThreadId) {
+        const convIds = new Set(Object.values(index.byThreadId));
+        for (const convId of convIds) {
+          try {
+            const state = await durable.harness.snapshot(BindingDoc, convId, runtimeContext);
+            if (state?.binding) {
+              bindings.push(state.binding);
+            }
+          } catch (err) {
+            console.warn(`[BindingCommands] Failed to read BindingDoc for conversation ${convId}: ${err}`);
+          }
+        }
+      }
+      responder.success(cmd.id, "get_all_bindings", { bindings });
+    } catch (err) {
+      responder.error(cmd.id, "get_all_bindings", err instanceof Error ? err.message : String(err));
+    }
+    return true;
+  }
+  return false;
+}
+
+// packages/core/src/session-state-commands.ts
+import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
+import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
+async function handleSessionStateCommand(cmd, durable, modelRuntime, args, respond) {
+  if (cmd.type === "get_state") {
+    const targetId = parseConversationId(cmd.conversationId);
+    let agentDoc;
+    if (targetId !== ROOT_CONVERSATION_ID4) {
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      if (!conv) {
+        respond.error(cmd.id, "get_state", `Conversation not found: ${cmd.conversationId}`);
+        return true;
+      }
+      const agentState = await conv.agent(BACKGROUND_CONTEXT3);
+      agentDoc = agentState;
+    } else {
+      const current = durable.view.current();
+      agentDoc = current.conversation.docs["pi.agent"] ?? {};
+    }
+    const modelObj = agentDoc.model ? {
+      provider: agentDoc.model.provider,
+      id: agentDoc.model.id ?? agentDoc.model.modelId,
+      modelId: agentDoc.model.modelId ?? agentDoc.model.id
+    } : null;
+    respond.success(cmd.id, "get_state", {
+      model: modelObj,
+      thinkingLevel: agentDoc.thinkingLevel ?? "none",
+      cwd: args.cwd ?? process.cwd(),
+      sessionId: args.session ?? "default"
+    });
+    return true;
+  }
+  if (cmd.type === "get_session_stats") {
+    const targetId = parseConversationId(cmd.conversationId);
+    let agentDoc;
+    if (targetId !== ROOT_CONVERSATION_ID4) {
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      const agentState = conv ? await conv.agent(BACKGROUND_CONTEXT3) : void 0;
+      agentDoc = agentState ?? {};
+    } else {
+      const current = durable.view.current();
+      agentDoc = current.conversation.docs["pi.agent"] ?? {};
+    }
+    let contextWindow = 128e3;
+    const provider = agentDoc.model?.provider ?? args.provider;
+    const modelId = agentDoc.model?.modelId ?? args.model;
+    if (provider && modelId) {
+      const m = modelRuntime.getModel(provider, modelId);
+      if (m?.contextWindow) contextWindow = m.contextWindow;
+    }
+    let tokens = null;
+    try {
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      if (conv) {
+        const ctxView = await conv.context(BACKGROUND_CONTEXT3);
+        const estimate = estimateContextTokens(ctxView.messages);
+        tokens = estimate.tokens;
+      }
+    } catch (err) {
+      console.error(`Error estimating context tokens: ${err}`);
+    }
+    respond.success(cmd.id, "get_session_stats", {
+      contextUsage: {
+        tokens,
+        contextWindow
+      }
+    });
+    return true;
+  }
+  return false;
+}
+
+// packages/core/src/session-commands.ts
+function toDurableInput(message, images) {
+  const msg = message ?? "";
+  const imgs = Array.isArray(images) ? images : [];
+  if (!msg && imgs.length === 0) return null;
+  if (imgs.length === 0) return msg;
+  return [...msg ? [{ type: "text", text: msg }] : [], ...imgs];
+}
+async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, respond) {
+  if (await handleBindingCommand(cmd, durable, respond)) {
+    return;
+  }
+  if (await handleSessionStateCommand(cmd, durable, modelRuntime, args, respond)) {
+    return;
+  }
+  switch (cmd.type) {
+    case "prompt": {
+      const content = toDurableInput(cmd.message, cmd.images);
+      if (!content) {
+        respond.error(cmd.id, "prompt", "Missing message or images");
+        return;
+      }
+      respond.success(cmd.id, "prompt");
+      const behavior = cmd.streamingBehavior || "followUp";
+      const targetId = parseConversationId(cmd.conversationId);
+      if (targetId !== ROOT_CONVERSATION_ID5) {
+        if (durable.watcher) await durable.watcher.ensureAttached(targetId);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        if (!conv) {
+          respond.error(cmd.id, "prompt", `Conversation not found: ${cmd.conversationId}`);
+          return;
+        }
+        await conv.submit({ type: "input", content, whenBusy: behavior }, BACKGROUND_CONTEXT4);
+      } else {
+        await durable.controller.submit(content, behavior);
+      }
+      break;
+    }
+    case "steer": {
+      const content = toDurableInput(cmd.message, cmd.images);
+      if (!content) {
+        respond.error(cmd.id, "steer", "Missing message or images");
+        return;
+      }
+      respond.success(cmd.id, "steer");
+      const targetId = parseConversationId(cmd.conversationId);
+      if (targetId !== ROOT_CONVERSATION_ID5) {
+        if (durable.watcher) await durable.watcher.ensureAttached(targetId);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        if (!conv) {
+          respond.error(cmd.id, "steer", `Conversation not found: ${cmd.conversationId}`);
+          return;
+        }
+        await conv.submit({ type: "input", content, whenBusy: "steer" }, BACKGROUND_CONTEXT4);
+      } else {
+        await durable.controller.submit(content, "steer");
+      }
+      break;
+    }
+    case "abort": {
+      const targetId = parseConversationId(cmd.conversationId);
+      if (targetId !== ROOT_CONVERSATION_ID5) {
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        if (conv) {
+          await conv.abort(BACKGROUND_CONTEXT4, { background: true });
+        }
+      } else {
+        await durable.controller.abort();
+      }
+      respond.success(cmd.id, "abort");
+      break;
+    }
+    case "abort_task": {
+      if (typeof cmd.taskId !== "number") {
+        respond.error(cmd.id, "abort_task", "Missing taskId");
+        return;
+      }
+      await durable.harness.abortTask(cmd.taskId, BACKGROUND_CONTEXT4);
+      respond.success(cmd.id, "abort_task", { ok: true });
+      break;
+    }
+    case "compact": {
+      await durable.controller.compact(cmd.instructions);
+      respond.success(cmd.id, "compact");
+      break;
+    }
+    case "set_subagent_policy": {
+      try {
+        const record = subagentPolicyRecordSchema.parse(cmd.policyRecord);
+        await durable.subagentPolicyHolder.setRecord(record);
+        respond.success(cmd.id, "set_subagent_policy");
+      } catch (err) {
+        respond.error(cmd.id, "set_subagent_policy", err instanceof Error ? err.message : String(err));
+      }
+      break;
+    }
+    case "get_available_models": {
+      const currentModels = modelRuntime.getAvailableSnapshot();
+      respond.success(cmd.id, "get_available_models", { models: currentModels });
+      break;
+    }
+    case "set_model": {
+      if (!cmd.provider || !cmd.modelId) {
+        respond.error(cmd.id, "set_model", "Missing provider or modelId");
+        return;
+      }
+      await durable.controller.setModel({ provider: cmd.provider, modelId: cmd.modelId });
+      respond.success(cmd.id, "set_model");
+      break;
+    }
+    case "set_thinking_level": {
+      if (!cmd.level) {
+        respond.error(cmd.id, "set_thinking_level", "Missing thinking level");
+        return;
+      }
+      await durable.controller.setThinkingLevel(cmd.level);
+      respond.success(cmd.id, "set_thinking_level");
+      break;
+    }
+    default: {
+      respond.error(cmd.id, cmd.type ?? "unknown", `Unknown command: ${cmd.type}`);
+      break;
+    }
+  }
+}
+
+// packages/core/src/stdout-guard.ts
+import { getPackageDir } from "@earendil-works/pi-coding-agent";
+import { join as join4 } from "node:path";
+import { pathToFileURL } from "node:url";
+import { existsSync as existsSync3, readFileSync as readFileSync3 } from "node:fs";
+var SUPPORTED_PI_VERSION_PREFIXES = ["1.4.", "1.5."];
+var EXPECTED_GUARD_RELATIVE_PATH = "dist/core/output-guard.js";
+var UpstreamStdoutGuardPortError = class extends Error {
+  reason;
+  constructor(message, reason) {
+    super(`[UpstreamStdoutGuardPortError] ${message} (reason: ${reason})`);
+    this.name = "UpstreamStdoutGuardPortError";
+    this.reason = reason;
+  }
+};
+var activeGuard = null;
+function validateUpstreamGuardVersion(version) {
+  if (!SUPPORTED_PI_VERSION_PREFIXES.some((prefix) => version.startsWith(prefix))) {
+    throw new UpstreamStdoutGuardPortError(
+      `Incompatible @earendil-works/pi-coding-agent version: "${version}". Expected 1.4.x or 1.5.x`,
+      "INCOMPATIBLE_VERSION"
+    );
+  }
+}
+function validateUpstreamGuardShape(mod) {
+  if (!mod || typeof mod !== "object") {
+    throw new UpstreamStdoutGuardPortError("Loaded upstream output-guard module is not an object", "INVALID_MODULE");
+  }
+  const candidate = mod;
+  const requiredFunctions = ["takeOverStdout", "restoreStdout", "isStdoutTakenOver", "writeRawStdout", "flushRawStdout"];
+  for (const fn of requiredFunctions) {
+    if (typeof candidate[fn] !== "function") {
+      throw new UpstreamStdoutGuardPortError(`Missing required upstream output-guard export: ${fn}`, "INVALID_SHAPE");
+    }
+  }
+}
+async function loadUpstreamGuard() {
+  if (activeGuard) return activeGuard;
+  const pkgDir = getPackageDir();
+  const pkgJsonPath = join4(pkgDir, "package.json");
+  if (!existsSync3(pkgJsonPath)) {
+    throw new UpstreamStdoutGuardPortError(`Cannot locate package.json at ${pkgJsonPath}`, "MISSING_PACKAGE_JSON");
+  }
+  let version;
+  try {
+    const pkgJson = JSON.parse(readFileSync3(pkgJsonPath, "utf8"));
+    version = pkgJson.version ?? "";
+  } catch (err) {
+    throw new UpstreamStdoutGuardPortError(
+      `Failed to parse @earendil-works/pi-coding-agent package.json: ${err instanceof Error ? err.message : String(err)}`,
+      "PARSE_FAILURE"
+    );
+  }
+  validateUpstreamGuardVersion(version);
+  const guardPath = join4(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
+  if (!existsSync3(guardPath)) {
+    throw new UpstreamStdoutGuardPortError(`Missing upstream output guard artifact at ${guardPath}`, "MISSING_ARTIFACT");
+  }
+  let mod;
+  try {
+    mod = await import(pathToFileURL(guardPath).href);
+  } catch (err) {
+    throw new UpstreamStdoutGuardPortError(
+      `Failed to dynamically import output guard: ${err instanceof Error ? err.message : String(err)}`,
+      "IMPORT_FAILURE"
+    );
+  }
+  validateUpstreamGuardShape(mod);
+  activeGuard = mod;
+  return mod;
+}
+async function setupRunnerStdoutGuard() {
+  const guard = await loadUpstreamGuard();
+  guard.takeOverStdout();
+  if (!guard.isStdoutTakenOver()) {
+    throw new UpstreamStdoutGuardPortError("takeOverStdout() failed to activate takeover state", "ACTIVATION_FAILED");
+  }
+}
+function writeWireStdout(text) {
+  if (activeGuard) {
+    activeGuard.writeRawStdout(text);
+  } else {
+    process.stdout.write(text);
+  }
+}
+async function flushWireStdout() {
+  if (activeGuard?.flushRawStdout) {
+    await activeGuard.flushRawStdout();
+  }
+}
+function isStdoutGuarded() {
+  return activeGuard?.isStdoutTakenOver() ?? false;
+}
+function restoreRunnerStdout() {
+  if (activeGuard) {
+    activeGuard.restoreStdout();
+  }
+}
 export {
   Anchor,
   BACKGROUND,
+  BuiltinExtensionRegistry,
   DefaultCourier,
   DefaultReporter,
+  DurableChildEventAdapter,
   DurableEngine,
   DynamicCodemodeNamespaces,
+  DynamicPromptSections,
+  EXPECTED_GUARD_RELATIVE_PATH,
+  SUPPORTED_PI_VERSION_PREFIXES,
   SchemaPort,
   SessionDaemon,
   SubagentTasksExtension,
+  TaskNames,
+  UpstreamStdoutGuardPortError,
   ViewStreamProjector,
   adaptExtensionTool,
   agentOf,
   answerText,
+  buildMappedNode,
   clearDeliveryHold,
+  codemodeExtension,
+  codingToolsExtension,
   courierFor,
   courierIsIdle,
   createNestedToolExecutor,
+  createPiPrompt,
   createStandardExtensionFactories2 as createStandardExtensionFactories,
   createSubagentExtension,
+  extractLiveTokens,
+  extractTaskGraph,
+  extractTaskModelMeta,
+  extractTerminalTokens,
+  findSubagentMeta,
   firstInput,
+  flushWireStdout,
   getPiDurableVersion,
+  handleActiveSessionCommand,
   hasOutput,
   hydrateSessionActiveTools,
   installExtensionTools,
   isAgentDocument,
   isConversationEntryRecord,
+  isStdoutGuarded,
   isToolCallBlock,
   isUsageDocument,
   isWatchCall,
+  mapTaskGraphNodeState,
   mountExtensionBridge,
+  normalizeUsage,
   openDurable,
+  parseCliArgs,
+  parseConversationId,
+  recordSubagentOwnership,
+  recordTerminalWithDetails,
   reporterFor,
+  restoreRunnerStdout,
   runtimeContext,
+  sanitizeTargetHint,
+  setupRunnerStdoutGuard,
+  subagentsExtension,
+  taskLabel,
   titleOf,
   unwrapWatchValue,
-  watchEvents
+  validateUpstreamGuardShape,
+  validateUpstreamGuardVersion,
+  watchEvents,
+  writeWireStdout
 };
 //# sourceMappingURL=index.js.map

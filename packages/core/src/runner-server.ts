@@ -68,18 +68,55 @@ async function main() {
 	process.on("SIGTERM", () => { void handleExit("SIGTERM").then(() => process.exit(0)); });
 	process.on("SIGINT", () => { void handleExit("SIGINT").then(() => process.exit(0)); });
 
+	const success = (id: string | undefined, command: string, data?: unknown) => {
+		output({ id, type: "response", command, success: true, data });
+	};
+
+	const error = (id: string | undefined, command: string, message: string) => {
+		output({ id, type: "response", command, success: false, error: message });
+	};
+
 	if (args.noSession) {
 		const cwd = args.cwd ?? process.cwd();
-		const { modelScope } = await setupRunnerModels(cwd, args);
+		const { scopedModelList, defaultModel, defaultThinkingLevel, modelScope } = await setupRunnerModels(cwd, args);
 		output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe" });
-		sendToBridge({ kind: "model-scope", ...modelScope });
+		sendToBridge({ ready: true, kind: "ready", pid: process.pid, ...modelScope });
 		initBridgeInboundChannel(modelScope, sendToBridge);
+		attachJsonlLineReader(process.stdin, (line) => {
+			if (!line.trim()) return;
+			try {
+				const cmd = parseRunnerCommand(line);
+				if (cmd.type === "get_available_models") {
+					success(cmd.id, "get_available_models", { models: scopedModelList });
+				} else if (cmd.type === "get_state") {
+					success(cmd.id, "get_state", {
+						model: defaultModel ? { provider: defaultModel.provider, id: defaultModel.id, modelId: defaultModel.id } : null,
+						thinkingLevel: defaultThinkingLevel,
+						isStreaming: false,
+						isCompacting: false,
+						steeringMode: "one-at-a-time",
+						followUpMode: "one-at-a-time",
+						sessionId: "catalog",
+						autoCompactionEnabled: true,
+						messageCount: 0,
+						pendingMessageCount: 0,
+					});
+				} else {
+					success(cmd.id, cmd.type, {});
+				}
+			} catch (err) {
+				error(undefined, "unknown", "INVALID_COMMAND");
+			}
+		});
 		return;
 	}
 
 	const adapter = new DurableEventAdapter((event: RunnerEvent) => {
 		output(event);
 	});
+
+	const cwd = args.cwd ?? process.cwd();
+	const { modelRuntime } = await setupRunnerModels(cwd, args);
 
 	const durable = await openDurable({
 		cwd: args.cwd,
@@ -105,7 +142,7 @@ async function main() {
 	const graphScope = {
 		sessionId: String(durable.view.current().session?.id ?? "unknown"),
 		rootConversationId: "1",
-		buildId: String(durable.view.current().session?.directory ?? "unknown"),
+		buildId: getPiDurableVersion(),
 	};
 	activeGraphSource = new RuntimeGraphSource(durable.view, graphScope, {
 		harness: durable.harness,
@@ -114,20 +151,18 @@ async function main() {
 		output({ type: "runtime_graph_snapshot", snapshot });
 	});
 
-	activeWatcher = startSubagentWatcher({
-		harness: durable.harness,
-		runtimeContext: durable.runtimeContext,
-		parentAdapter: adapter,
-		createChildAdapter: (parentRef: string, conversationId: string | number) =>
-			adapter.createChildAdapter(parentRef, conversationId),
-		onNotice: (level, message) => {
-			output({ type: "notice", level, message });
-		},
-	});
+	activeWatcher = await startSubagentWatcher(
+		durable.harness,
+		adapter,
+		() => durable.view.current(),
+	);
 
+	sendToBridge({ ready: true, kind: "ready", pid: process.pid, ...modelScope });
 	output({
 		type: "ready",
+		kind: "ready",
 		ready: true,
+		pid: process.pid,
 		session: durable.view.current().session,
 		conversations: durable.view.current().conversations,
 		activeConversationId: ROOT_CONVERSATION_ID,
@@ -139,17 +174,25 @@ async function main() {
 
 		let cmd: RunnerCommandPayload;
 		try {
-			cmd = parseRunnerCommand(JSON.parse(trimmed));
+			cmd = parseRunnerCommand(trimmed);
 		} catch (err) {
+			let fallbackId: string | undefined;
+			try {
+				const parsed = JSON.parse(trimmed);
+				if (typeof parsed?.id === "string") fallbackId = parsed.id;
+			} catch {}
 			output({
-				id: typeof (JSON.parse(trimmed) as { id?: unknown })?.id === "string" ? (JSON.parse(trimmed) as { id: string }).id : undefined,
+				id: fallbackId,
+				type: "response",
+				command: "unknown",
 				success: false,
 				error: `INVALID_COMMAND_PAYLOAD: ${err instanceof Error ? err.message : String(err)}`,
 			});
 			return;
 		}
 
-		await handleActiveSessionCommand(cmd, durable, output);
+		const respond: CommandResponder = { success, error };
+		await handleActiveSessionCommand(cmd, durable, modelRuntime, args, respond);
 		await flushWireStdout();
 	});
 }

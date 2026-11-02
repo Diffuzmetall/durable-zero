@@ -44,7 +44,8 @@ export async function handleActiveSessionCommand(
 				if (durable.watcher) await durable.watcher.ensureAttached(targetId);
 				const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT);
 				if (!conv) {
-					throw new Error(`Conversation not found: ${cmd.conversationId}`);
+					respond.error(cmd.id, "prompt", `Conversation not found: ${cmd.conversationId}`);
+					return;
 				}
 				await conv.submit({ type: "input", content, whenBusy: behavior }, BACKGROUND_CONTEXT);
 			} else {
@@ -64,7 +65,8 @@ export async function handleActiveSessionCommand(
 				if (durable.watcher) await durable.watcher.ensureAttached(targetId);
 				const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT);
 				if (!conv) {
-					throw new Error(`Conversation not found: ${cmd.conversationId}`);
+					respond.error(cmd.id, "steer", `Conversation not found: ${cmd.conversationId}`);
+					return;
 				}
 				await conv.submit({ type: "input", content, whenBusy: "steer" }, BACKGROUND_CONTEXT);
 			} else {

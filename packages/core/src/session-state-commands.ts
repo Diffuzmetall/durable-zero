@@ -26,7 +26,8 @@ export async function handleSessionStateCommand(
 		if (targetId !== ROOT_CONVERSATION_ID) {
 			const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT);
 			if (!conv) {
-				throw new Error(`Conversation not found: ${cmd.conversationId}`);
+				respond.error(cmd.id, "get_state", `Conversation not found: ${cmd.conversationId}`);
+				return true;
 			}
 			const agentState = await conv.agent(BACKGROUND_CONTEXT);
 			agentDoc = agentState as SessionAgentDoc;

@@ -20,4 +20,5 @@ export * from "./runtime-graph-mapper.ts";
 export * from "./session-commands.ts";
 export * from "./bridge/durable-child-event-adapter.ts";
 export * from "./stdout-guard.ts";
+export * from "./prompt.ts";
 export * from "./builtin-extensions/index.ts";
