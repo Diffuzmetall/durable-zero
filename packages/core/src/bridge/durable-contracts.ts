@@ -107,7 +107,7 @@ export type AgentEvent =
 			details?: unknown;
 			diagnostics?: readonly unknown[];
 	  } & ToolEventCall)
-	| ({ type: "tool_execution_end"; entry?: ConversationEntryRecord; result?: NestedToolExecutionResult } & ToolEventCall)
+	| ({ type: "tool_execution_end"; entry?: ConversationEntryRecord; result?: NestedToolExecutionResult; args?: Record<string, unknown> } & ToolEventCall)
 	| { type: "inbox_update"; items: readonly unknown[] }
 	| { type: "submission"; record: unknown }
 	| { type: "auto_retry_start"; attempt: number; at: number; errorMessage: string }
