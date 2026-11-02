@@ -16,7 +16,7 @@ import { hydrateSessionActiveTools, loadSummaries, createConversationBinding } f
 export { hydrateSessionActiveTools } from "./runtime-hydration.ts";
 
 export async function openDurable(options: OpenDurableOptions = {}): Promise<OpenDurableResult> {
-	const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session);
+	const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
 	const envs = new ExecutionEnvs(location.cwd);
 	let harness: Harness | undefined;
 	let envState: LoadedHarnessEnvironment | undefined;

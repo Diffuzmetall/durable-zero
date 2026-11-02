@@ -34,7 +34,7 @@ const externals = [
 
 console.log("Building durable-zero packages...");
 
-const packages = ["contracts", "sdk", "plugins", "core"];
+const packages = ["contracts", "core"];
 
 for (const pkg of packages) {
 	await build({

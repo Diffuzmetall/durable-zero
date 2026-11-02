@@ -31,7 +31,9 @@ export class DurableEngine {
 				listener(event);
 			}
 		});
-		this.unsubscribeView = this.#instance.view.subscribe(this.eventAdapter.subscriber);
+		this.unsubscribeView = this.#instance.view.subscribe(() => {
+			// View updated
+		});
 	}
 
 	public static async open(options: DurableEngineOptions = {}): Promise<DurableEngine> {

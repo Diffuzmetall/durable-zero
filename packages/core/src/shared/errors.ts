@@ -4,7 +4,9 @@ export type DurableErrorCode =
 	| "STORAGE_CORRUPTED"
 	| "COMMAND_ERROR"
 	| "INVALID_COMMAND_PAYLOAD"
-	| "PLUGIN_ERROR";
+	| "PLUGIN_ERROR"
+	| "SUBSYSTEM_ERROR"
+	| "BUILTIN_EXTENSION_ERROR";
 
 export class DurableHarnessError extends Error {
 	readonly code: DurableErrorCode;
@@ -60,7 +62,7 @@ export class BuiltinExtensionError extends DurableHarnessError {
 		message: string,
 		options?: { cause?: unknown },
 	) {
-		super(`[Built-in Extension ${extensionId}] ${message}`, "SUBSYSTEM_ERROR", options?.cause);
+		super(`[Built-in Extension ${extensionId}] ${message}`, "BUILTIN_EXTENSION_ERROR", options?.cause);
 		this.name = "BuiltinExtensionError";
 		this.extensionId = extensionId;
 	}

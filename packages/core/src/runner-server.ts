@@ -52,7 +52,7 @@ async function main() {
 		try { activeGraphSource?.teardown(); } catch (err) {
 			console.warn(`[Runner] Error closing runtime graph source on ${signalOrReason}: ${err instanceof Error ? err.message : String(err)}`);
 		}
-		try { activeWatcher?.close(); } catch (err) {
+		try { if (typeof activeWatcher?.close === "function") activeWatcher.close(); } catch (err) {
 			console.warn(`[Runner] Error closing subagent watcher on ${signalOrReason}: ${err instanceof Error ? err.message : String(err)}`);
 		}
 		if (activeDurable) {
@@ -102,10 +102,17 @@ async function main() {
 		output({ type: "session_fault", fault: fault.message });
 	});
 
-	activeGraphSource = new RuntimeGraphSource(durable.harness, durable.runtimeContext, (evt) => {
-		output(evt);
+	const graphScope = {
+		sessionId: String(durable.view.current().session?.id ?? "unknown"),
+		rootConversationId: "1",
+		buildId: String(durable.view.current().session?.directory ?? "unknown"),
+	};
+	activeGraphSource = new RuntimeGraphSource(durable.view, graphScope, {
+		harness: durable.harness,
 	});
-	activeGraphSource.start();
+	activeGraphSource.subscribe((snapshot) => {
+		output({ type: "runtime_graph_snapshot", snapshot });
+	});
 
 	activeWatcher = startSubagentWatcher({
 		harness: durable.harness,

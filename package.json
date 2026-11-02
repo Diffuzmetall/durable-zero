@@ -18,14 +18,6 @@
       "import": "./packages/contracts/dist/index.js",
       "types": "./packages/contracts/src/index.ts"
     },
-    "./sdk": {
-      "import": "./packages/sdk/dist/index.js",
-      "types": "./packages/sdk/src/index.ts"
-    },
-    "./plugins": {
-      "import": "./packages/plugins/dist/index.js",
-      "types": "./packages/plugins/src/index.ts"
-    },
     "./runner": {
       "import": "./packages/core/dist/runner.js",
       "types": "./packages/core/src/runner-server.ts"
@@ -38,12 +30,6 @@
       ],
       "contracts": [
         "./packages/contracts/src/index.ts"
-      ],
-      "sdk": [
-        "./packages/sdk/src/index.ts"
-      ],
-      "plugins": [
-        "./packages/plugins/src/index.ts"
       ]
     }
   },

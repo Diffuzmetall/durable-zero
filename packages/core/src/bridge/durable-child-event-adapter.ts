@@ -1,4 +1,4 @@
-import type { AgentEvent } from "@earendil-works/pi-durable";
+import type { AgentEvent } from "./durable-contracts.ts";
 import type { DurableView } from "../runtime-types.ts";
 import type { RunnerEvent } from "./contracts.ts";
 import { ToolEventProjector } from "./tool-result-extractor.ts";

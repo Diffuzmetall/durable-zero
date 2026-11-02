@@ -75,8 +75,8 @@ export function adaptExtensionTool(
 		...(isDeferred ? { deferred: true } : {}),
 		...(toolDef.outputSchema
 			? {
-					outputSchema: toolDef.outputSchema as import("typebox").TSchema,
-					structuredOutputSchema: toolDef.outputSchema as import("typebox").TSchema,
+					outputSchema: toolDef.outputSchema as import("@sinclair/typebox").TSchema,
+					structuredOutputSchema: toolDef.outputSchema as import("@sinclair/typebox").TSchema,
 				}
 			: {}),
 		async execute(args, api, runtimeContext) {

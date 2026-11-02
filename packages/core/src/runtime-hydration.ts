@@ -20,9 +20,11 @@ export async function createConversationBinding(
 	const watch = await conversation.watch(ctx);
 	let currentVal = watch.value;
 	const subscribers = new Set<(val: ConversationView) => void>();
-	watch.start(async ({ value }: { value: ConversationView }) => {
-		currentVal = value;
-		for (const sub of subscribers) sub(value);
+	watch.start(async (call: any) => {
+		if (call && "value" in call) {
+			currentVal = call.value;
+			for (const sub of subscribers) sub(call.value);
+		}
 	});
 	return {
 		get value() { return currentVal; },
@@ -31,7 +33,7 @@ export async function createConversationBinding(
 			return () => subscribers.delete(listener);
 		},
 		dispose() {
-			void watch.stop(ctx);
+			void watch.stop();
 		},
 	};
 }
@@ -46,9 +48,11 @@ export async function createTaskGraphBinding(
 	const watch = await harness.watchTaskGraph(ctx);
 	let currentVal = watch.value;
 	const subscribers = new Set<(val: TaskGraph) => void>();
-	watch.start(async ({ value }: { value: TaskGraph }) => {
-		currentVal = value;
-		for (const sub of subscribers) sub(value);
+	watch.start(async (call: any) => {
+		if (call && "value" in call) {
+			currentVal = call.value;
+			for (const sub of subscribers) sub(call.value);
+		}
 	});
 	return {
 		get value() { return currentVal; },
@@ -57,7 +61,7 @@ export async function createTaskGraphBinding(
 			return () => subscribers.delete(listener);
 		},
 		dispose() {
-			void watch.stop(ctx);
+			void watch.stop();
 		},
 	};
 }

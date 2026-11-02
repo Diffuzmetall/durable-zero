@@ -79,6 +79,7 @@ export interface OpenDurableOptions {
 	readonly cwd?: string;
 	readonly continueSession?: boolean;
 	readonly session?: string;
+	readonly sessionDir?: string;
 	readonly cli?: {
 		readonly provider?: string;
 		readonly model?: string;

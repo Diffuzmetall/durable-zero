@@ -35,7 +35,8 @@ export function createSubagentExtension(
 					),
 				}),
 				replay: "safe",
-				execute: async (args, api, context) => {
+				execute: async (rawArgs, api, context) => {
+					const args = rawArgs as { task: string; background?: boolean };
 					if (api.conversationId !== undefined && Number(api.conversationId) > 1) {
 						return {
 							output: [

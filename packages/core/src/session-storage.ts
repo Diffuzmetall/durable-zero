@@ -6,6 +6,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
+// @ts-expect-error proper-lockfile has untyped default export in some tsconfig settings
 import lockfile from "proper-lockfile";
 
 import { getAgentDir } from "./shared/agent-dir.ts";
@@ -64,16 +65,16 @@ async function readOwnerFile(directory: string): Promise<SessionOwnerInfo | null
 }
 
 async function removeOwnerFile(directory: string): Promise<void> {
-	await rm(join(directory, "session.owner.json"), { force: true }).catch((err) =>
+	await rm(join(directory, "session.owner.json"), { force: true }).catch((err: unknown) =>
 		logUnexpectedErr(err, "ENOENT", `Failed to remove owner file in ${directory}`)
 	);
 }
 
 async function forceUnlock(directory: string): Promise<void> {
-	await lockfile.unlock(directory, { realpath: false }).catch((err) =>
+	await lockfile.unlock(directory, { realpath: false }).catch((err: unknown) =>
 		logUnexpectedErr(err, "ENOENT", `unlock warning for ${directory}`)
 	);
-	await rm(`${directory}.lock`, { recursive: true, force: true }).catch((err) =>
+	await rm(`${directory}.lock`, { recursive: true, force: true }).catch((err: unknown) =>
 		logUnexpectedErr(err, "ENOENT", `lockfile cleanup warning for ${directory}`)
 	);
 }
