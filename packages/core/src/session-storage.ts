@@ -8,8 +8,8 @@ import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import lockfile from "proper-lockfile";
 
-import { getAgentDir } from "../shared/agent-dir.ts";
-import { DurableStorageError } from "../shared/errors.ts";
+import { getAgentDir } from "./shared/agent-dir.ts";
+import { DurableStorageError } from "./shared/errors.ts";
 export { getAgentDir };
 
 export interface SessionOwnerInfo {
