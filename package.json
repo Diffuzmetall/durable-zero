@@ -6,6 +6,36 @@
   "private": true,
   "license": "MIT",
   "author": "Ivan Arc",
+  "exports": {
+    ".": {
+      "import": "./packages/core/src/index.ts",
+      "types": "./packages/core/src/index.ts"
+    },
+    "./core": {
+      "import": "./packages/core/src/index.ts",
+      "types": "./packages/core/src/index.ts"
+    },
+    "./contracts": {
+      "import": "./packages/contracts/src/index.ts",
+      "types": "./packages/contracts/src/index.ts"
+    },
+    "./sdk": {
+      "import": "./packages/sdk/src/index.ts",
+      "types": "./packages/sdk/src/index.ts"
+    },
+    "./plugins": {
+      "import": "./packages/plugins/src/index.ts",
+      "types": "./packages/plugins/src/index.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "core": ["./packages/core/src/index.ts"],
+      "contracts": ["./packages/contracts/src/index.ts"],
+      "sdk": ["./packages/sdk/src/index.ts"],
+      "plugins": ["./packages/plugins/src/index.ts"]
+    }
+  },
   "scripts": {
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
