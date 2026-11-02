@@ -1,11 +1,13 @@
 import {
-	type AgentEvent,
-	type AgentEventStream,
 	type ConversationId,
 	type Harness,
 	ROOT_CONVERSATION_ID,
-	watchEvents as defaultWatchEvents,
 } from "@earendil-works/pi-durable";
+import {
+	type AgentEvent,
+	type AgentEventStream,
+	watchEvents as defaultWatchEvents,
+} from "./bridge/durable-contracts.ts";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import type { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import type { DurableChildEventAdapter } from "./bridge/durable-child-event-adapter.ts";
