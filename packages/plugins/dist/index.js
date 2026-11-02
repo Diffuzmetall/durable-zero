@@ -750,6 +750,9 @@ var SubagentPolicyAckDoc = defineDoc2({
   initial: () => ({ record: null })
 });
 
+// packages/core/src/bridge/durable-contracts.ts
+import { NestedCallDoc } from "@earendil-works/pi-durable";
+
 // packages/core/src/bridge/tool-result-presentation.ts
 import {
   DEFAULT_MAX_BYTES,

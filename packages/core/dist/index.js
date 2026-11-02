@@ -2563,6 +2563,7 @@ async function openDurable(options = {}) {
 }
 
 // packages/core/src/bridge/durable-contracts.ts
+import { NestedCallDoc } from "@earendil-works/pi-durable";
 async function watchEvents(harness, conversationId, context) {
   const conversation = await harness.conversation(conversationId, context);
   if (!conversation) throw new Error(`Conversation not found: ${conversationId}`);
@@ -2583,10 +2584,65 @@ async function watchEvents(harness, conversationId, context) {
     snapshot,
     start(listener) {
       let seenEntriesCount = initial?.entries?.length ?? 0;
+      const emittedToolEnds = /* @__PURE__ */ new Set();
+      const seenNestedTools = /* @__PURE__ */ new Map();
       watch.start(async (call, ctx) => {
         const val = call?.value ?? call;
         if (!val) return;
         const events = [];
+        const nested = val.docs?.["pi.live"]?.nestedTools ?? [];
+        for (const n of nested) {
+          if (n.callId && !seenNestedTools.has(n.callId)) {
+            seenNestedTools.set(n.callId, n);
+          }
+          if (n.callId && n.status === "done" && !emittedToolEnds.has(n.callId)) {
+            emittedToolEnds.add(n.callId);
+            const toolName = n.name ?? n.toolName ?? "tool";
+            let nestedResult;
+            if (n.parentTaskId && typeof harness.snapshot === "function") {
+              const key = n.callId.split("/").pop();
+              try {
+                const stored = await harness.snapshot(NestedCallDoc, n.parentTaskId, key, context);
+                nestedResult = stored?.result;
+              } catch {
+              }
+            }
+            events.push({
+              type: "tool_execution_end",
+              toolCallId: n.callId,
+              toolName,
+              taskId: n.taskId,
+              parentToolCallId: n.parentCallId,
+              parentTaskId: n.parentTaskId,
+              result: nestedResult ?? {
+                isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
+                output: n.output,
+                details: n.details
+              }
+            });
+          }
+        }
+        if (!val.docs?.["pi.live"]?.nestedTools && seenNestedTools.size > 0) {
+          for (const [callId, n] of seenNestedTools) {
+            if (!emittedToolEnds.has(callId)) {
+              emittedToolEnds.add(callId);
+              const toolName = n.name ?? n.toolName ?? "tool";
+              events.push({
+                type: "tool_execution_end",
+                toolCallId: callId,
+                toolName,
+                taskId: n.taskId,
+                parentToolCallId: n.parentCallId,
+                parentTaskId: n.parentTaskId,
+                result: n.result ?? {
+                  isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
+                  output: n.output,
+                  details: n.details
+                }
+              });
+            }
+          }
+        }
         if (val.entries?.length && val.entries.length > seenEntriesCount) {
           for (let i = seenEntriesCount; i < val.entries.length; i++) {
             const entry = val.entries[i];
@@ -2605,12 +2661,16 @@ async function watchEvents(harness, conversationId, context) {
                   }
                 }
               }
-              events.push({
-                type: "tool_execution_end",
-                toolCallId: modelMsg.toolCallId ?? String(entry.id),
-                toolName,
-                entry
-              });
+              const callId = modelMsg.toolCallId ?? String(entry.id);
+              if (!emittedToolEnds.has(callId)) {
+                emittedToolEnds.add(callId);
+                events.push({
+                  type: "tool_execution_end",
+                  toolCallId: callId,
+                  toolName,
+                  entry
+                });
+              }
             }
             events.push({ type: "entry_appended", entry });
           }
@@ -2842,7 +2902,7 @@ function decodeResult(result) {
   return {
     status: "result",
     isError: Boolean(result.isError),
-    rawOutput: result.structuredOutput,
+    rawOutput: result.output ?? result.structuredOutput,
     details: "details" in result ? result.details : void 0,
     diagnostics: result.diagnostics ?? []
   };

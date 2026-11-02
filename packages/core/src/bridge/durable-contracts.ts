@@ -1,6 +1,7 @@
 /**
  * Durable SQLite Document Schemas & Type Guards (AP-026, AP-029).
  */
+import { NestedCallDoc } from "@earendil-works/pi-durable";
 
 export interface AgentDocument {
 	model?: { provider?: string; modelId?: string };
@@ -151,10 +152,70 @@ export async function watchEvents(
 		snapshot,
 		start(listener) {
 			let seenEntriesCount = initial?.entries?.length ?? 0;
+			const emittedToolEnds = new Set<string>();
+			const seenNestedTools = new Map<string, any>();
+
 			watch.start(async (call: any, ctx: any) => {
 				const val = call?.value ?? call;
 				if (!val) return;
 				const events: AgentEvent[] = [];
+
+				// Track nested tools from pi.live
+				const nested = val.docs?.["pi.live"]?.nestedTools ?? [];
+				for (const n of nested) {
+					if (n.callId && !seenNestedTools.has(n.callId)) {
+						seenNestedTools.set(n.callId, n);
+					}
+					if (n.callId && n.status === "done" && !emittedToolEnds.has(n.callId)) {
+						emittedToolEnds.add(n.callId);
+						const toolName = n.name ?? n.toolName ?? "tool";
+						let nestedResult: any;
+						if (n.parentTaskId && typeof harness.snapshot === "function") {
+							const key = n.callId.split("/").pop();
+							try {
+								const stored = await harness.snapshot(NestedCallDoc, n.parentTaskId, key, context);
+								nestedResult = stored?.result;
+							} catch {}
+						}
+						events.push({
+							type: "tool_execution_end",
+							toolCallId: n.callId,
+							toolName,
+							taskId: n.taskId,
+							parentToolCallId: n.parentCallId,
+							parentTaskId: n.parentTaskId,
+							result: nestedResult ?? {
+								isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
+								output: n.output,
+								details: n.details,
+							},
+						});
+					}
+				}
+
+				// Check any nested tools that finished when live.nestedTools cleared
+				if (!val.docs?.["pi.live"]?.nestedTools && seenNestedTools.size > 0) {
+					for (const [callId, n] of seenNestedTools) {
+						if (!emittedToolEnds.has(callId)) {
+							emittedToolEnds.add(callId);
+							const toolName = n.name ?? n.toolName ?? "tool";
+							events.push({
+								type: "tool_execution_end",
+								toolCallId: callId,
+								toolName,
+								taskId: n.taskId,
+								parentToolCallId: n.parentCallId,
+								parentTaskId: n.parentTaskId,
+								result: n.result ?? {
+									isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
+									output: n.output,
+									details: n.details,
+								},
+							});
+						}
+					}
+				}
+
 				if (val.entries?.length && val.entries.length > seenEntriesCount) {
 					for (let i = seenEntriesCount; i < val.entries.length; i++) {
 						const entry = val.entries[i];
@@ -173,12 +234,16 @@ export async function watchEvents(
 									}
 								}
 							}
-							events.push({
-								type: "tool_execution_end",
-								toolCallId: modelMsg.toolCallId ?? String(entry.id),
-								toolName,
-								entry,
-							});
+							const callId = modelMsg.toolCallId ?? String(entry.id);
+							if (!emittedToolEnds.has(callId)) {
+								emittedToolEnds.add(callId);
+								events.push({
+									type: "tool_execution_end",
+									toolCallId: callId,
+									toolName,
+									entry,
+								});
+							}
 						}
 						events.push({ type: "entry_appended", entry });
 					}
