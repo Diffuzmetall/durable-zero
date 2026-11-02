@@ -148,7 +148,8 @@ var runnerCommandSchema = z4.object({
   callId: z4.string().optional(),
   result: z4.unknown().optional(),
   isError: z4.boolean().optional(),
-  dialogKind: z4.string().optional()
+  dialogKind: z4.string().optional(),
+  interactionId: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
 var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
@@ -396,6 +397,7 @@ var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
 var hostInteractionRequestSchema = wireContextSchema.extend({
   type: z8.literal("host_interaction_request"),
   id: z8.union([z8.string().min(1), z8.number().int()]),
+  interactionId: z8.string().min(1).optional(),
   dialogKind: z8.string().min(1),
   interactionKind: z8.string().optional(),
   title: z8.string().optional(),

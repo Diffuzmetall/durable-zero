@@ -1,4 +1,5 @@
 import { openDurable } from "./runtime.ts";
+import type { AdmissionReceipt } from "./runtime-types.ts";
 import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";
 import type { RunnerEvent } from "@durable-zero/contracts";
@@ -61,8 +62,8 @@ export class DurableEngine {
 		return this.#instance.view.current();
 	}
 
-	public async prompt(content: string, options?: { deliverAs?: "steer" | "followUp" }): Promise<void> {
-		await this.#instance.controller.submit(content, options?.deliverAs ?? "followUp");
+	public async prompt(content: string, options?: { deliverAs?: "steer" | "followUp" }): Promise<AdmissionReceipt> {
+		return await this.#instance.controller.submit(content, options?.deliverAs ?? "followUp");
 	}
 
 	public events(callback: (event: RunnerEvent) => void): () => void {

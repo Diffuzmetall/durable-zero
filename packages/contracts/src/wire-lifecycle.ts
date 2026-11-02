@@ -12,6 +12,7 @@ export type RuntimeGraphSnapshotEvent = z.infer<typeof runtimeGraphSnapshotEvent
 export const hostInteractionRequestSchema = wireContextSchema.extend({
 	type: z.literal("host_interaction_request"),
 	id: z.union([z.string().min(1), z.number().int()]),
+	interactionId: z.string().min(1).optional(),
 	dialogKind: z.string().min(1),
 	interactionKind: z.string().optional(),
 	title: z.string().optional(),

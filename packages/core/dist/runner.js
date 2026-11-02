@@ -1,10 +1,10 @@
 import { createRequire as __createRequire } from "node:module";
 const require = __createRequire(import.meta.url);
 
-// packages/core/src/runtime.ts
+// src/runtime.ts
 import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agent";
 
-// packages/core/src/harness-setup.ts
+// src/harness-setup.ts
 import {
   createRegistry
 } from "@earendil-works/pi-durable";
@@ -14,7 +14,7 @@ import {
   resolveCliModel
 } from "@earendil-works/pi-coding-agent";
 
-// packages/core/src/prompt.ts
+// src/prompt.ts
 import { existsSync, readFileSync } from "node:fs";
 import { defineExtension, section } from "@earendil-works/pi-durable";
 import {
@@ -179,7 +179,7 @@ ${text}
   });
 }
 
-// packages/core/src/shared/errors.ts
+// src/shared/errors.ts
 var DurableHarnessError = class extends Error {
   code;
   constructor(message, code, cause) {
@@ -214,7 +214,7 @@ var BuiltinExtensionError = class extends DurableHarnessError {
   }
 };
 
-// packages/core/src/builtin-extensions/registry.ts
+// src/builtin-extensions/registry.ts
 var BuiltinExtensionRegistry = class {
   #extensions = /* @__PURE__ */ new Map();
   register(extension) {
@@ -259,7 +259,7 @@ var BuiltinExtensionRegistry = class {
   }
 };
 
-// packages/core/src/builtin-extensions/coding-tools.ts
+// src/builtin-extensions/coding-tools.ts
 import { createCodingTools, CodingTools } from "@earendil-works/pi-durable/tools";
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
 var codingToolsExtension = {
@@ -278,39 +278,56 @@ var codingToolsExtension = {
   }
 };
 
-// packages/core/src/builtin-extensions/codemode.ts
+// src/builtin-extensions/codemode.ts
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
-var activeSandbox;
-var codemodeExtension = {
-  id: "codemode",
-  name: "Codemode",
-  version: "1.0.0",
+var CodemodeExtension = class {
+  id = "codemode";
+  name = "Codemode";
+  version = "1.0.0";
+  #activeSandbox;
+  #sandboxes = /* @__PURE__ */ new Set();
+  #contextSandboxes = /* @__PURE__ */ new WeakMap();
+  get sandbox() {
+    return this.#activeSandbox;
+  }
+  getSandboxFor(ctx) {
+    return this.#contextSandboxes.get(ctx);
+  }
   register(ctx) {
     if (!ctx.registry) return;
-    activeSandbox = new CodemodeSandbox();
+    const sandbox = new CodemodeSandbox();
+    this.#activeSandbox = sandbox;
+    this.#sandboxes.add(sandbox);
+    this.#contextSandboxes.set(ctx, sandbox);
     const ext = createCodemodeExtension({
-      sandbox: activeSandbox,
+      sandbox,
       get namespaces() {
         return ctx.dynamicNamespaces?.getNamespaces?.() ?? [];
       }
     });
     ctx.registry.install(ext);
-  },
+  }
   async teardown() {
-    if (activeSandbox) {
-      const sb = activeSandbox;
-      if (typeof sb.close === "function") {
-        await sb.close();
-      } else if (typeof sb.dispose === "function") {
-        await sb.dispose();
+    const sandboxes = Array.from(this.#sandboxes);
+    this.#sandboxes.clear();
+    this.#activeSandbox = void 0;
+    for (const sb of sandboxes) {
+      const target = sb;
+      if (typeof target.close === "function") {
+        await target.close();
+      } else if (typeof target.dispose === "function") {
+        await target.dispose();
       }
-      activeSandbox = void 0;
     }
   }
 };
+function createCodemodeBuiltinExtension() {
+  return new CodemodeExtension();
+}
+var codemodeExtension = new CodemodeExtension();
 
-// packages/core/src/subagent.ts
+// src/subagent.ts
 import { Type } from "@sinclair/typebox";
 import {
   configure,
@@ -318,7 +335,7 @@ import {
   defineTool
 } from "@earendil-works/pi-durable";
 
-// packages/core/src/subagent-docs.ts
+// src/subagent-docs.ts
 import {
   AssistantEntry,
   defineDoc
@@ -346,16 +363,16 @@ async function answerText(api, answer, context) {
   return extractAssistantText(entry);
 }
 
-// packages/core/src/subagent-delivery.ts
+// src/subagent-delivery.ts
 import {
   AssistantEntry as AssistantEntry2,
   defineTask as defineTask2
 } from "@earendil-works/pi-durable";
 
-// packages/core/src/subagent-courier.ts
+// src/subagent-courier.ts
 import { defineTask } from "@earendil-works/pi-durable";
 
-// packages/core/src/watcher-compat.ts
+// src/watcher-compat.ts
 function isWatchCall(item) {
   return typeof item === "object" && item !== null && "kind" in item && item.kind === "value" && "value" in item;
 }
@@ -366,7 +383,7 @@ function unwrapWatchValue(item) {
   return item;
 }
 
-// packages/core/src/subagent-courier.ts
+// src/subagent-courier.ts
 var GATHER_MS = 50;
 var DEFAULT_HOLD_TIMEOUT_MS = 5e3;
 function courierIsIdle(active) {
@@ -477,7 +494,7 @@ ${prompt}`;
   return asExtensionTask(task, "durable.subagent-courier");
 }
 
-// packages/core/src/subagent-delivery.ts
+// src/subagent-delivery.ts
 var BACKGROUND = { ownership: { kind: "conversation" }, background: true };
 var Anchor = asExtensionTask(
   defineTask2({
@@ -542,7 +559,7 @@ function reporterFor(courier, admit) {
 var DefaultCourier = courierFor();
 var DefaultReporter = reporterFor(DefaultCourier);
 
-// packages/core/src/subagent-role.ts
+// src/subagent-role.ts
 function buildTechnicalWorkerRole() {
   return [
     "You are an isolated worker subagent.",
@@ -551,10 +568,10 @@ function buildTechnicalWorkerRole() {
   ].join("\n");
 }
 
-// packages/core/src/policy/resolver.ts
+// src/policy/resolver.ts
 import { getSupportedThinkingLevels } from "@earendil-works/pi-ai/models";
 
-// packages/core/src/shared/model-ref.ts
+// src/shared/model-ref.ts
 function normalizeModelReference(raw, defaultProvider) {
   if (!raw || typeof raw !== "object") return void 0;
   const r = raw;
@@ -566,7 +583,7 @@ function normalizeModelReference(raw, defaultProvider) {
   return { provider, modelId: cleanModelId };
 }
 
-// packages/core/src/policy/errors.ts
+// src/policy/errors.ts
 var SubagentPolicyError = class extends Error {
   cause;
   constructor(message, options) {
@@ -600,7 +617,7 @@ var SubagentRevisionConflictError = class extends SubagentPolicyError {
   }
 };
 
-// packages/core/src/policy/resolver.ts
+// src/policy/resolver.ts
 function mapBbReasoningToNativeThinking(level) {
   if (level === "none" || level === void 0) {
     return "off";
@@ -653,7 +670,7 @@ function resolveSubagentModelConfiguration(record, parentContext, availableModel
   };
 }
 
-// packages/core/src/subagent.ts
+// src/subagent.ts
 function createSubagentExtension(getPolicy) {
   return defineExtension2({
     name: "subagent",
@@ -814,7 +831,7 @@ function createSubagentExtension(getPolicy) {
   });
 }
 
-// packages/core/src/builtin-extensions/subagents.ts
+// src/builtin-extensions/subagents.ts
 var subagentsExtension = {
   id: "subagents",
   name: "Subagents",
@@ -832,7 +849,7 @@ var subagentsExtension = {
   }
 };
 
-// packages/core/src/harness-setup.ts
+// src/harness-setup.ts
 function configureHarnessHttp(settingsManager) {
   const proxy = settingsManager.getGlobalSettings()?.httpProxy?.trim();
   if (proxy) {
@@ -875,7 +892,7 @@ async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, pro
   const registry = createRegistry();
   const builtinRegistry = new BuiltinExtensionRegistry();
   builtinRegistry.register(codingToolsExtension);
-  builtinRegistry.register(codemodeExtension);
+  builtinRegistry.register(createCodemodeBuiltinExtension());
   builtinRegistry.register(subagentsExtension);
   for (const builtin of customBuiltins) {
     builtinRegistry.register(builtin);
@@ -948,7 +965,7 @@ async function findInitialAgentModel(settingsManager, modelRuntime, cli) {
   return {};
 }
 
-// packages/core/src/session-storage.ts
+// src/session-storage.ts
 import { execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
@@ -956,7 +973,7 @@ import "node:os";
 import { basename, join as join2, resolve as resolve2 } from "node:path";
 import lockfile from "proper-lockfile";
 
-// packages/core/src/shared/agent-dir.ts
+// src/shared/agent-dir.ts
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 function getAgentDir(env = process.env) {
@@ -965,7 +982,7 @@ function getAgentDir(env = process.env) {
   return join(homedir(), ".pi", "agent");
 }
 
-// packages/core/src/session-storage.ts
+// src/session-storage.ts
 function isProcessAlive(pid) {
   if (!pid || pid <= 0) return false;
   try {
@@ -1094,7 +1111,7 @@ async function selectSession(cwdInput, continueSession, targetSession) {
   return { id, directory, database: join2(directory, "session.sqlite"), cwd, created, release };
 }
 
-// packages/core/src/runtime-types.ts
+// src/runtime-types.ts
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import {
   ROOT_CONVERSATION_ID
@@ -1122,7 +1139,7 @@ async function firstInput(harness, id) {
   return titleOf(first);
 }
 
-// packages/core/src/compaction-hooks.ts
+// src/compaction-hooks.ts
 var CompactionSideEffectError = class extends Error {
   code;
   operation;
@@ -1144,10 +1161,10 @@ async function runCompactionSideEffect(operation, action, notice) {
   }
 }
 
-// packages/core/src/runtime-controller.ts
+// src/runtime-controller.ts
 import { clampThinkingLevel, getSupportedThinkingLevels as getSupportedThinkingLevels2 } from "@earendil-works/pi-ai";
 
-// packages/core/src/runtime-hydration.ts
+// src/runtime-hydration.ts
 function hydrateSessionActiveTools(rootAgent, activeEnvState) {
   if (Array.isArray(rootAgent.tools)) {
     activeEnvState.setActiveTools?.(rootAgent.tools.map((t) => t.name));
@@ -1216,12 +1233,14 @@ async function loadSummaries(harness, rootId) {
   return summaries;
 }
 
-// packages/core/src/runtime-controller.ts
+// src/runtime-controller.ts
 function createDurableController(ctx) {
   let queue = Promise.resolve();
   const command = (operation) => {
-    queue = queue.then(operation).catch(ctx.fail);
-    return queue;
+    const next = queue.then(operation);
+    queue = next.then(() => {
+    }, ctx.fail);
+    return next;
   };
   const watchAnswer = (submission) => {
     void submission.wait(runtimeContext).then(async (settled) => {
@@ -1283,7 +1302,15 @@ function createDurableController(ctx) {
           );
         }
       }
-      return watchAnswer(await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext));
+      const submission = await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext);
+      watchAnswer(submission);
+      const seq = typeof submission.id === "number" ? submission.id : !isNaN(Number(submission.id)) ? Number(submission.id) : void 0;
+      return {
+        requestId: String(submission.id),
+        conversationId: String(ctx.bindings.current.id),
+        status: "accepted",
+        ...seq !== void 0 ? { sequence: seq } : {}
+      };
     }),
     compact: (instructions) => command(async () => {
       const extensionRunner = ctx.extensionRunner;
@@ -1387,7 +1414,7 @@ function createDurableController(ctx) {
   };
 }
 
-// packages/core/src/runtime-bindings.ts
+// src/runtime-bindings.ts
 var RuntimeBindings = class {
   conversation;
   view;
@@ -1505,7 +1532,7 @@ var RuntimeBindings = class {
   }
 };
 
-// packages/core/src/runtime-cleanup.ts
+// src/runtime-cleanup.ts
 async function closeRuntimeResources(operations) {
   const failures = [];
   for (const operation of operations) {
@@ -1518,7 +1545,7 @@ async function closeRuntimeResources(operations) {
   if (failures.length) throw new AggregateError(failures, "RUNTIME_CLEANUP_FAILED");
 }
 
-// packages/core/src/runtime-loader.ts
+// src/runtime-loader.ts
 import {
   DefaultResourceLoader,
   ModelRuntime,
@@ -1526,7 +1553,7 @@ import {
   initTheme
 } from "@earendil-works/pi-coding-agent";
 
-// packages/core/src/shared/extension-runner.ts
+// src/shared/extension-runner.ts
 import {
   createMcpExtension,
   ExtensionRunner,
@@ -1534,12 +1561,104 @@ import {
   SessionManager
 } from "@earendil-works/pi-coding-agent";
 
-// packages/core/src/shared/extension-ui-context.ts
-function createExtensionUIContext(onNotice) {
+// src/host-rpc.ts
+var HostRpcManager = class {
+  pendingToolCalls = /* @__PURE__ */ new Map();
+  pendingInteractions = /* @__PURE__ */ new Map();
+  nextCallSeq = 0;
+  nextInteractionSeq = 0;
+  output;
+  constructor(output2) {
+    this.output = output2;
+  }
+  forwardToolCall = (toolName, args2) => {
+    const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
+    return new Promise((resolve4) => {
+      const timer = setTimeout(() => {
+        this.pendingToolCalls.delete(callId);
+        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+      }, 12e4);
+      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
+      this.output({ type: "host_tool_call", callId, toolName, arguments: args2 ?? {} });
+    });
+  };
+  requestInteraction = (kind, payload) => {
+    const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
+    return new Promise((resolve4) => {
+      const timer = setTimeout(() => {
+        this.pendingInteractions.delete(id);
+        resolve4(null);
+      }, 18e4);
+      this.pendingInteractions.set(id, { resolve: resolve4, timer });
+      this.output({
+        type: "host_interaction_request",
+        id,
+        interactionId: id,
+        interactionKind: kind,
+        dialogKind: kind,
+        title: payload.title,
+        message: payload.message,
+        data: payload.data
+      });
+    });
+  };
+  handleHostToolResult(cmd) {
+    const callId = String(cmd.callId ?? "");
+    const pending = this.pendingToolCalls.get(callId);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pendingToolCalls.delete(callId);
+    let content;
+    if (Array.isArray(cmd.result)) {
+      content = cmd.result;
+    } else if (cmd.result && typeof cmd.result === "object" && "content" in cmd.result && Array.isArray(cmd.result.content)) {
+      content = cmd.result.content;
+    } else {
+      content = [{ type: "text", text: typeof cmd.result === "string" ? cmd.result : JSON.stringify(cmd.result ?? "") }];
+    }
+    pending.resolve({ content, isError: Boolean(cmd.isError) });
+    return true;
+  }
+  handleHostInteractionResponse(cmd) {
+    const id = cmd.interactionId ?? cmd.id ?? "";
+    const pending = this.pendingInteractions.get(id);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pendingInteractions.delete(id);
+    pending.resolve(cmd.result ?? null);
+    return true;
+  }
+};
+var activeToolForwarder = null;
+var activeInteractionRequester = null;
+function setHostToolForwarder(fn) {
+  activeToolForwarder = fn;
+}
+function setHostInteractionRequester(fn) {
+  activeInteractionRequester = fn;
+}
+function requestHostInteraction(kind, payload) {
+  if (!activeInteractionRequester) {
+    return Promise.resolve(null);
+  }
+  return activeInteractionRequester(kind, payload);
+}
+
+// src/shared/extension-ui-context.ts
+function createExtensionUIContext(onNotice, requestInteraction = requestHostInteraction) {
   return {
-    select: async () => void 0,
-    confirm: async () => false,
-    input: async () => void 0,
+    select: async (title, options) => {
+      const res = await requestInteraction("select", { title, data: { options } });
+      return typeof res === "string" ? res : void 0;
+    },
+    confirm: async (title, message) => {
+      const res = await requestInteraction("confirm", { title, message });
+      return Boolean(res);
+    },
+    input: async (title, placeholder) => {
+      const res = await requestInteraction("input", { title, message: placeholder });
+      return typeof res === "string" ? res : void 0;
+    },
     notify: (message, type = "info") => {
       onNotice?.(type, message);
     },
@@ -1585,7 +1704,7 @@ function createExtensionUIContext(onNotice) {
   };
 }
 
-// packages/core/src/shared/extension-runner.ts
+// src/shared/extension-runner.ts
 function createStandardExtensionFactories() {
   return [createMcpExtension()];
 }
@@ -1724,7 +1843,7 @@ async function setupExtensionRunner(options) {
   return runner;
 }
 
-// packages/core/src/tool-adapter.ts
+// src/tool-adapter.ts
 import {
   createMcpExtension as createMcpExtension2
 } from "@earendil-works/pi-coding-agent";
@@ -1733,7 +1852,7 @@ import {
   defineTool as defineTool2
 } from "@earendil-works/pi-durable";
 
-// packages/core/src/schema-port.ts
+// src/schema-port.ts
 import { Value } from "@sinclair/typebox/value";
 var SchemaPort = class {
   coerce(schema, value) {
@@ -1773,7 +1892,7 @@ var SchemaPort = class {
   }
 };
 
-// packages/core/src/tool-adapter.ts
+// src/tool-adapter.ts
 var schemaPort = new SchemaPort();
 function hasOutput(api) {
   return typeof api === "object" && api !== null && "output" in api && typeof api.output === "function";
@@ -1887,7 +2006,7 @@ function installExtensionTools(registry, tools) {
   registry.install(defineExtension3({ name: "extension-tools", tools }));
 }
 
-// packages/core/src/extension-mount.ts
+// src/extension-mount.ts
 import "@earendil-works/pi-coding-agent";
 function createNestedToolExecutor(registry, getExtensionRunner, getEnv) {
   return async (callerId, name, args2, options) => {
@@ -2057,11 +2176,11 @@ async function mountExtensionBridge(location, modelRuntime, extensionsResult, re
   };
 }
 
-// packages/core/src/runtime-loader.ts
+// src/runtime-loader.ts
 import { Harness } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 
-// packages/core/src/codemode-namespaces.ts
+// src/codemode-namespaces.ts
 var DynamicCodemodeNamespaces = class {
   list = [];
   seen = /* @__PURE__ */ new Set();
@@ -2111,10 +2230,10 @@ var DynamicCodemodeNamespaces = class {
   }
 };
 
-// packages/core/src/subagent-policy-ack.ts
+// src/subagent-policy-ack.ts
 import { defineDoc as defineDoc2 } from "@earendil-works/pi-durable";
 
-// packages/core/src/policy/schema.ts
+// src/policy/schema.ts
 import { z } from "zod";
 var subagentThinkingLevelSchema = z.enum([
   "off",
@@ -2160,7 +2279,7 @@ var subagentPolicySetOutputSchema = z.object({
   record: subagentPolicyRecordSchema
 }).strict();
 
-// packages/core/src/subagent-policy-state.ts
+// src/subagent-policy-state.ts
 function createSubagentPolicyHolder(options) {
   let currentRecord = options.initialRecord ? subagentPolicyRecordSchema.parse(options.initialRecord) : {
     version: 1,
@@ -2206,7 +2325,7 @@ function createSubagentPolicyHolder(options) {
   };
 }
 
-// packages/core/src/subagent-policy-ack.ts
+// src/subagent-policy-ack.ts
 var SubagentPolicyAckDoc = defineDoc2({
   kind: "durable.subagent-policy-ack",
   version: 1,
@@ -2239,7 +2358,7 @@ async function loadSubagentPolicyHolder(harness) {
   });
 }
 
-// packages/core/src/runtime-loader.ts
+// src/runtime-loader.ts
 function logRegError(kind, identifier, err) {
   const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
   if (!msg.includes("already registered") && !msg.includes("duplicate")) {
@@ -2399,7 +2518,7 @@ async function loadHarnessEnvironment(location, options, envs) {
   };
 }
 
-// packages/core/src/runtime.ts
+// src/runtime.ts
 async function openDurable(options = {}) {
   const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
   const envs = new ExecutionEnvs(location.cwd);
@@ -2529,7 +2648,8 @@ async function openDurable(options = {}) {
     }
     if (activeEnvState.fallbackMessage) notice("info", activeEnvState.fallbackMessage);
     await controller.toggleTasks();
-    harness.resume();
+    await options.beforeResume?.(harness);
+    await harness.resume();
     let closing;
     return {
       view: {
@@ -2566,10 +2686,10 @@ async function openDurable(options = {}) {
   }
 }
 
-// packages/core/src/bridge/durable-contracts.ts
+// src/bridge/durable-contracts.ts
 import "@earendil-works/pi-durable";
 
-// packages/core/src/bridge/watch-events-compat.ts
+// src/bridge/watch-events-compat.ts
 import { NestedCallDoc } from "@earendil-works/pi-durable";
 async function watchEvents(harness, conversationId, context) {
   const conversation = await harness.conversation(conversationId, context);
@@ -2694,7 +2814,7 @@ async function watchEvents(harness, conversationId, context) {
   };
 }
 
-// packages/core/src/bridge/durable-contracts.ts
+// src/bridge/durable-contracts.ts
 function isAgentDocument(doc) {
   return typeof doc === "object" && doc !== null;
 }
@@ -2708,7 +2828,7 @@ function isConversationEntryRecord(entry) {
   return typeof entry === "object" && entry !== null;
 }
 
-// packages/core/src/bridge/assistant-message-builder.ts
+// src/bridge/assistant-message-builder.ts
 function extractCumulativeUsage(current) {
   const rawUsageDoc = current?.conversation?.docs?.["pi.usage"];
   if (!rawUsageDoc || typeof rawUsageDoc !== "object") {
@@ -2814,7 +2934,7 @@ function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingTex
   };
 }
 
-// packages/core/src/bridge/turn-summary.ts
+// src/bridge/turn-summary.ts
 function findSubmissionFault(inputs, submissions, lastTaskError) {
   if (inputs && submissions) {
     for (const id of inputs) {
@@ -2873,7 +2993,7 @@ function resolveTurnSummary(current, currentText, currentThinking, lastAssistant
   return { finalMsg, cw, cumulativeUsage, isAborted, isError, errorMessage, lastCheckpointId };
 }
 
-// packages/core/src/bridge/native-tool-result.ts
+// src/bridge/native-tool-result.ts
 function extractCanonicalToolDetails(event) {
   if (typeof event !== "object" || event === null) return void 0;
   const rec = event;
@@ -2946,7 +3066,7 @@ function decodeNativeToolEnd(event) {
   };
 }
 
-// packages/core/src/bridge/tool-result-presentation.ts
+// src/bridge/tool-result-presentation.ts
 import {
   DEFAULT_MAX_BYTES,
   DEFAULT_MAX_LINES,
@@ -3029,7 +3149,7 @@ ${diagText}` : diagText;
   }).content;
 }
 
-// packages/core/src/bridge/tool-progress-state.ts
+// src/bridge/tool-progress-state.ts
 var ToolProgressState = class {
   active = /* @__PURE__ */ new Map();
   applyOutputUpdate(callId, output2) {
@@ -3085,7 +3205,7 @@ var ToolProgressState = class {
   }
 };
 
-// packages/core/src/bridge/tool-result-extractor.ts
+// src/bridge/tool-result-extractor.ts
 function buildTerminalError(event, decoded, canonicalDetails, parentRef) {
   return {
     type: "tool_execution_end",
@@ -3163,7 +3283,7 @@ var ToolEventProjector = class {
   }
 };
 
-// packages/core/src/bridge/child-run-outcome.ts
+// src/bridge/child-run-outcome.ts
 function resolveChildRunOutcome(inputs, submissions, lastTaskError) {
   if (inputs && submissions) {
     let hasDoneInput = false;
@@ -3197,7 +3317,7 @@ function resolveChildRunOutcome(inputs, submissions, lastTaskError) {
   return { status: "completed" };
 }
 
-// packages/core/src/bridge/durable-child-event-adapter.ts
+// src/bridge/durable-child-event-adapter.ts
 var DurableChildEventAdapter = class {
   output;
   parentRef;
@@ -3360,7 +3480,7 @@ var DurableChildEventAdapter = class {
   }
 };
 
-// packages/core/src/bridge/tool-args-resolver.ts
+// src/bridge/tool-args-resolver.ts
 function resolveToolCallArgs(callId, current) {
   const rawLive = current.conversation.docs["pi.live"];
   const live = typeof rawLive === "object" && rawLive !== null ? rawLive : {};
@@ -3402,7 +3522,7 @@ function resolveToolCallArgs(callId, current) {
   return {};
 }
 
-// packages/core/src/bridge/durable-event-adapter.ts
+// src/bridge/durable-event-adapter.ts
 var DurableEventAdapter = class {
   output;
   resolveContextWindow;
@@ -3567,13 +3687,13 @@ var DurableEventAdapter = class {
   }
 };
 
-// packages/core/src/subagent-watcher.ts
+// src/subagent-watcher.ts
 import {
   ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID2
 } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
 
-// packages/core/src/binding-docs.ts
+// src/binding-docs.ts
 import { defineDoc as defineDoc3 } from "@earendil-works/pi-durable";
 var BindingDoc = defineDoc3({
   kind: "durable.binding",
@@ -3595,7 +3715,7 @@ function identityKey(identity) {
   return JSON.stringify([identity.providerId, identity.sessionId, identity.threadId]);
 }
 
-// packages/core/src/subagent-watcher.ts
+// src/subagent-watcher.ts
 function extractChildConversationId(event) {
   if (event.type === "tool_execution_update" || event.type === "tool_execution_end") {
     const details = extractCanonicalToolDetails(event);
@@ -3677,7 +3797,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
   };
 }
 
-// packages/core/src/engine.ts
+// src/engine.ts
 var DurableEngine = class _DurableEngine {
   #instance;
   sessionDir;
@@ -3720,7 +3840,7 @@ var DurableEngine = class _DurableEngine {
     return this.#instance.view.current();
   }
   async prompt(content, options) {
-    await this.#instance.controller.submit(content, options?.deliverAs ?? "followUp");
+    return await this.#instance.controller.submit(content, options?.deliverAs ?? "followUp");
   }
   events(callback) {
     this.eventListeners.add(callback);
@@ -3737,7 +3857,7 @@ var DurableEngine = class _DurableEngine {
   }
 };
 
-// packages/core/src/model-setup.ts
+// src/model-setup.ts
 import {
   DefaultResourceLoader as DefaultResourceLoader2,
   ModelRuntime as ModelRuntime2,
@@ -3809,7 +3929,7 @@ async function setupRunnerModels(cwd, args2) {
   };
 }
 
-// packages/core/src/jsonl.ts
+// src/jsonl.ts
 import { StringDecoder } from "node:string_decoder";
 function serializeJsonLine(value) {
   return `${JSON.stringify(value)}
@@ -3847,7 +3967,7 @@ function attachJsonlLineReader(stream, onLine) {
   };
 }
 
-// packages/core/src/cli-args.ts
+// src/cli-args.ts
 function parseCliArgs(argv2) {
   const args2 = {};
   for (let i = 0; i < argv2.length; i++) {
@@ -3884,11 +4004,11 @@ function parseCliArgs(argv2) {
   return args2;
 }
 
-// packages/core/src/session-commands.ts
+// src/session-commands.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID5 } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
 
-// packages/core/src/binding-commands.ts
+// src/binding-commands.ts
 function toConversationId(id) {
   if (typeof id === "number" && Number.isInteger(id) && id > 0) {
     return id;
@@ -3962,12 +4082,12 @@ async function handleBindingCommand(cmd, durable, responder) {
   return false;
 }
 
-// packages/core/src/session-state-commands.ts
+// src/session-state-commands.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
 import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
 
-// packages/core/src/conversation-id.ts
+// src/conversation-id.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID3 } from "@earendil-works/pi-durable";
 function parseConversationId(id) {
   if (id === void 0 || id === null) return ROOT_CONVERSATION_ID3;
@@ -3982,7 +4102,7 @@ function parseConversationId(id) {
   return num;
 }
 
-// packages/core/src/session-state-commands.ts
+// src/session-state-commands.ts
 async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, respond) {
   if (cmd.type === "get_state") {
     const targetId = parseConversationId(cmd.conversationId);
@@ -4052,7 +4172,7 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
   return false;
 }
 
-// packages/core/src/session-fork.ts
+// src/session-fork.ts
 import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { join as join3, resolve as resolve3 } from "node:path";
@@ -4119,7 +4239,7 @@ function forkSessionDatabase(options) {
   }
 }
 
-// packages/core/src/session-commands.ts
+// src/session-commands.ts
 function toDurableInput(message, images) {
   const msg = message ?? "";
   const imgs = Array.isArray(images) ? images : [];
@@ -4260,7 +4380,7 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
   }
 }
 
-// packages/contracts/dist/index.js
+// ../contracts/dist/index.js
 import { z as z2 } from "zod";
 import { z as z22 } from "zod";
 import { z as z4 } from "zod";
@@ -4408,7 +4528,8 @@ var runnerCommandSchema = z4.object({
   callId: z4.string().optional(),
   result: z4.unknown().optional(),
   isError: z4.boolean().optional(),
-  dialogKind: z4.string().optional()
+  dialogKind: z4.string().optional(),
+  interactionId: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
 var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
@@ -4639,6 +4760,7 @@ var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
 var hostInteractionRequestSchema = wireContextSchema.extend({
   type: z8.literal("host_interaction_request"),
   id: z8.union([z8.string().min(1), z8.number().int()]),
+  interactionId: z8.string().min(1).optional(),
   dialogKind: z8.string().min(1),
   interactionKind: z8.string().optional(),
   title: z8.string().optional(),
@@ -4667,7 +4789,7 @@ var runnerResponseSchema = z10.discriminatedUnion("success", [
   base.extend({ success: z10.literal(false), error: z10.string() }).passthrough()
 ]);
 
-// packages/core/src/shared/version.ts
+// src/shared/version.ts
 import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join as join4 } from "node:path";
@@ -4703,75 +4825,7 @@ function getPiDurableVersion() {
   return "1.0.0";
 }
 
-// packages/core/src/host-rpc.ts
-var HostRpcManager = class {
-  pendingToolCalls = /* @__PURE__ */ new Map();
-  pendingInteractions = /* @__PURE__ */ new Map();
-  nextCallSeq = 0;
-  nextInteractionSeq = 0;
-  output;
-  constructor(output2) {
-    this.output = output2;
-  }
-  forwardToolCall = (toolName, args2) => {
-    const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
-    return new Promise((resolve4) => {
-      const timer = setTimeout(() => {
-        this.pendingToolCalls.delete(callId);
-        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
-      }, 12e4);
-      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
-      this.output({ type: "host_tool_call", callId, toolName, arguments: args2 ?? {} });
-    });
-  };
-  requestInteraction = (kind, payload) => {
-    const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
-    return new Promise((resolve4) => {
-      const timer = setTimeout(() => {
-        this.pendingInteractions.delete(id);
-        resolve4(null);
-      }, 18e4);
-      this.pendingInteractions.set(id, { resolve: resolve4, timer });
-      this.output({
-        type: "host_interaction_request",
-        id,
-        interactionKind: kind,
-        dialogKind: kind,
-        title: payload.title,
-        message: payload.message,
-        data: payload.data
-      });
-    });
-  };
-  handleHostToolResult(cmd) {
-    const callId = String(cmd.callId ?? "");
-    const pending = this.pendingToolCalls.get(callId);
-    if (!pending) return false;
-    clearTimeout(pending.timer);
-    this.pendingToolCalls.delete(callId);
-    let content;
-    if (Array.isArray(cmd.result)) {
-      content = cmd.result;
-    } else if (cmd.result && typeof cmd.result === "object" && "content" in cmd.result && Array.isArray(cmd.result.content)) {
-      content = cmd.result.content;
-    } else {
-      content = [{ type: "text", text: typeof cmd.result === "string" ? cmd.result : JSON.stringify(cmd.result ?? "") }];
-    }
-    pending.resolve({ content, isError: Boolean(cmd.isError) });
-    return true;
-  }
-  handleHostInteractionResponse(cmd) {
-    const id = cmd.id ?? "";
-    const pending = this.pendingInteractions.get(id);
-    if (!pending) return false;
-    clearTimeout(pending.timer);
-    this.pendingInteractions.delete(id);
-    pending.resolve(cmd.result ?? null);
-    return true;
-  }
-};
-
-// packages/core/src/task-tokens.ts
+// src/task-tokens.ts
 function normalizeUsage(raw) {
   if (!raw || typeof raw !== "object") return void 0;
   const u = raw;
@@ -4827,7 +4881,7 @@ function extractTerminalTokens(task, current, recentEntries) {
   return void 0;
 }
 
-// packages/core/src/runtime-graph-receipts.ts
+// src/runtime-graph-receipts.ts
 var MAX_ERROR_MESSAGE_LENGTH = 1024;
 var MAX_ERROR_CODE_LENGTH = 64;
 var RuntimeGraphReceiptsCollector = class {
@@ -4964,7 +5018,7 @@ var RuntimeGraphReceiptsCollector = class {
   }
 };
 
-// packages/core/src/runtime-graph-conversations.ts
+// src/runtime-graph-conversations.ts
 var RuntimeGraphConversations = class {
   known = /* @__PURE__ */ new Map();
   constructor(rootConversationId) {
@@ -5003,7 +5057,7 @@ var RuntimeGraphConversations = class {
   }
 };
 
-// packages/core/src/task-labels.ts
+// src/task-labels.ts
 var MAX_NAME = 48;
 var MAX_TARGET_HINT = 128;
 var MAX_TASK_NAMES = 512;
@@ -5083,7 +5137,7 @@ function taskLabel(node, names, modelLabel) {
   return call !== void 0 || plain !== void 0 ? kind : `${kind} \xB7 ${state.phase}`;
 }
 
-// packages/core/src/runtime-graph-state.ts
+// src/runtime-graph-state.ts
 function extractTaskGraph(current) {
   if (!current || typeof current !== "object") return { tasks: {} };
   const obj = current;
@@ -5117,7 +5171,7 @@ function mapTaskGraphNodeState(state) {
   }
 }
 
-// packages/core/src/runtime-graph-mapper.ts
+// src/runtime-graph-mapper.ts
 function extractTaskModelMeta(node, current, rootConvId) {
   if (node.kind !== "pi.generation") return {};
   const cp = node.state?.checkpoint ?? node.checkpoint;
@@ -5226,7 +5280,7 @@ function recordTerminalWithDetails(receipts, task, names, nativeStartedAt, curre
   });
 }
 
-// packages/core/src/runtime-graph-source.ts
+// src/runtime-graph-source.ts
 var RuntimeGraphSource = class {
   viewSource;
   scope;
@@ -5402,10 +5456,10 @@ var RuntimeGraphSource = class {
   }
 };
 
-// packages/core/src/runner-server.ts
+// src/runner-server.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID6 } from "@earendil-works/pi-durable";
 
-// packages/core/src/stdout-guard.ts
+// src/stdout-guard.ts
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
 import { join as join5 } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -5496,7 +5550,7 @@ async function flushWireStdout() {
   }
 }
 
-// packages/core/src/control-channel.ts
+// src/control-channel.ts
 import { existsSync as existsSync5, readFileSync as readFileSync4, watch } from "node:fs";
 import { join as join6 } from "node:path";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
@@ -5557,7 +5611,7 @@ function startRunnerControlChannel(sessionDir, harness, onNotice) {
   };
 }
 
-// packages/core/src/runner-server.ts
+// src/runner-server.ts
 var argv = process.argv.slice(2);
 if (argv.includes("--version") || argv.includes("-v")) {
   console.log(getPiDurableVersion());
@@ -5568,8 +5622,8 @@ function output(data) {
   writeWireStdout(serializeJsonLine(data));
 }
 var hostRpc = new HostRpcManager(output);
-var forwardToolCall = hostRpc.forwardToolCall;
-var requestInteraction = hostRpc.requestInteraction;
+setHostToolForwarder(hostRpc.forwardToolCall);
+setHostInteractionRequester(hostRpc.requestInteraction);
 async function main() {
   await setupRunnerStdoutGuard();
   let activeDurable = null;
@@ -5658,10 +5712,7 @@ async function main() {
     continueSession: args.continueSession,
     session: args.session,
     cli: { provider: args.provider, model: args.model, thinking: args.thinking, skills: args.skills, extension: args.extension },
-    prompt: { systemPromptPath: args.systemPromptPath, appendSystemPromptPath: args.appendSystemPromptPath },
-    toolsFilePath: args.toolsFilePath,
-    forwardToolCall,
-    requestInteraction
+    prompt: { systemPromptPath: args.systemPromptPath, appendSystemPromptPath: args.appendSystemPromptPath }
   });
   activeDurable = durable;
   activeControlChannel = startRunnerControlChannel(durable.view.current().session.directory, durable.harness);

@@ -9,7 +9,7 @@ import { parseCliArgs } from "./cli-args.ts";
 import { handleActiveSessionCommand } from "./session-commands.ts";
 import { parseRunnerCommand, type RunnerCommandPayload } from "@durable-zero/contracts";
 import { getPiDurableVersion } from "./version.ts";
-import { HostRpcManager } from "./host-rpc.ts";
+import { HostRpcManager, setHostToolForwarder, setHostInteractionRequester } from "./host-rpc.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";
 import { RuntimeGraphSource } from "./runtime-graph-source.ts";
 import { ROOT_CONVERSATION_ID } from "@earendil-works/pi-durable";
@@ -31,8 +31,8 @@ function output(data: unknown): void {
 }
 
 const hostRpc = new HostRpcManager(output);
-const forwardToolCall = hostRpc.forwardToolCall;
-const requestInteraction = hostRpc.requestInteraction;
+setHostToolForwarder(hostRpc.forwardToolCall);
+setHostInteractionRequester(hostRpc.requestInteraction);
 
 async function main() {
 	await setupRunnerStdoutGuard();
@@ -122,9 +122,6 @@ async function main() {
 		session: args.session,
 		cli: { provider: args.provider, model: args.model, thinking: args.thinking, skills: args.skills, extension: args.extension },
 		prompt: { systemPromptPath: args.systemPromptPath, appendSystemPromptPath: args.appendSystemPromptPath },
-		toolsFilePath: args.toolsFilePath,
-		forwardToolCall,
-		requestInteraction,
 	});
 	activeDurable = durable;
 	activeControlChannel = startRunnerControlChannel(durable.view.current().session.directory, durable.harness);

@@ -10,7 +10,7 @@ import type {
 	TaskGraph,
 } from "@earendil-works/pi-durable";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
-import { agentOf, type DurableController, type DurableView, type Notice, runtimeContext } from "./runtime-types.ts";
+import { agentOf, type AdmissionReceipt, type DurableController, type DurableView, type Notice, runtimeContext } from "./runtime-types.ts";
 import { SubagentsDoc } from "./subagent-docs.ts";
 import { createConversationBinding, createTaskGraphBinding } from "./runtime-hydration.ts";
 
@@ -30,10 +30,11 @@ export interface ControllerContext {
 }
 
 export function createDurableController(ctx: ControllerContext): DurableController {
-	let queue = Promise.resolve();
-	const command = (operation: () => Promise<void>): Promise<void> => {
-		queue = queue.then(operation).catch(ctx.fail);
-		return queue;
+	let queue: Promise<any> = Promise.resolve();
+	const command = <T = void>(operation: () => Promise<T>): Promise<T> => {
+		const next = queue.then(operation);
+		queue = next.then(() => {}, ctx.fail);
+		return next;
 	};
 
 	const watchAnswer = (submission: Submission): void => {
@@ -102,7 +103,15 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 						);
 					}
 				}
-				return watchAnswer(await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext));
+				const submission = await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext);
+				watchAnswer(submission);
+				const seq = typeof submission.id === "number" ? submission.id : !isNaN(Number(submission.id)) ? Number(submission.id) : undefined;
+				return {
+					requestId: String(submission.id),
+					conversationId: String(ctx.bindings.current.id),
+					status: "accepted",
+					...(seq !== undefined ? { sequence: seq } : {}),
+				};
 			}),
 
 		compact: (instructions) =>

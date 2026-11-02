@@ -20,7 +20,7 @@ import { createPiPrompt, type PromptOptions } from "./prompt.ts";
 import type { DynamicCodemodeNamespaces } from "./codemode-namespaces.ts";
 import { BuiltinExtensionRegistry } from "./builtin-extensions/registry.ts";
 import { codingToolsExtension } from "./builtin-extensions/coding-tools.ts";
-import { codemodeExtension } from "./builtin-extensions/codemode.ts";
+import { createCodemodeBuiltinExtension } from "./builtin-extensions/codemode.ts";
 import { subagentsExtension } from "./builtin-extensions/subagents.ts";
 import type { BuiltinExtension, BuiltinExtensionContext } from "./builtin-extensions/types.ts";
 
@@ -83,7 +83,7 @@ export async function createCodingRegistry(
 	const builtinRegistry = new BuiltinExtensionRegistry();
 
 	builtinRegistry.register(codingToolsExtension);
-	builtinRegistry.register(codemodeExtension);
+	builtinRegistry.register(createCodemodeBuiltinExtension());
 	builtinRegistry.register(subagentsExtension);
 
 	for (const builtin of customBuiltins) {

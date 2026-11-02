@@ -25,7 +25,7 @@ export const runnerCommandSchema = z.object({
 	checkpointId: z.union([z.number(), z.string()]).optional(),
 	sourceProviderThreadId: z.string().optional(), targetProviderThreadId: z.string().optional(),
 	callId: z.string().optional(), result: z.unknown().optional(), isError: z.boolean().optional(),
-	dialogKind: z.string().optional(),
+	dialogKind: z.string().optional(), interactionId: z.string().optional(),
 }).passthrough();
 export type RunnerCommandPayload = z.infer<typeof runnerCommandSchema>;
 export const knownCommandTypes: ReadonlySet<string> = new Set(runnerCommandSchema.shape.type.options);

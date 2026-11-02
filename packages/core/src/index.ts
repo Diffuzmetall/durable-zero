@@ -23,4 +23,5 @@ export * from "./stdout-guard.ts";
 export * from "./session-fork.ts";
 export * from "./session-storage.ts";
 export * from "./prompt.ts";
+export * from "./host-rpc.ts";
 export * from "./builtin-extensions/index.ts";

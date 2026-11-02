@@ -160,7 +160,8 @@ export async function openDurable(options: OpenDurableOptions = {}): Promise<Ope
 		if (activeEnvState.fallbackMessage) notice("info", activeEnvState.fallbackMessage);
 
 		await controller.toggleTasks();
-		harness.resume();
+		await options.beforeResume?.(harness);
+		await harness.resume();
 
 		let closing: Promise<void> | undefined;
 		return {

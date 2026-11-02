@@ -2,34 +2,57 @@ import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 import type { BuiltinExtension, BuiltinExtensionContext } from "./types.ts";
 
-let activeSandbox: CodemodeSandbox | undefined;
+export class CodemodeExtension implements BuiltinExtension {
+	readonly id = "codemode";
+	readonly name = "Codemode";
+	readonly version = "1.0.0";
+	#activeSandbox: CodemodeSandbox | undefined;
+	readonly #sandboxes = new Set<CodemodeSandbox>();
+	readonly #contextSandboxes = new WeakMap<BuiltinExtensionContext, CodemodeSandbox>();
 
-export const codemodeExtension: BuiltinExtension = {
-	id: "codemode",
-	name: "Codemode",
-	version: "1.0.0",
+	get sandbox(): CodemodeSandbox | undefined {
+		return this.#activeSandbox;
+	}
+
+	getSandboxFor(ctx: BuiltinExtensionContext): CodemodeSandbox | undefined {
+		return this.#contextSandboxes.get(ctx);
+	}
+
 	register(ctx: BuiltinExtensionContext): void {
 		if (!ctx.registry) return;
-		activeSandbox = new CodemodeSandbox();
+		const sandbox = new CodemodeSandbox();
+		this.#activeSandbox = sandbox;
+		this.#sandboxes.add(sandbox);
+		this.#contextSandboxes.set(ctx, sandbox);
+
 		const ext = createCodemodeExtension({
-			sandbox: activeSandbox,
+			sandbox,
 			get namespaces() {
 				return ctx.dynamicNamespaces?.getNamespaces?.() ?? [];
 			},
 		});
 		ctx.registry.install(ext);
-	},
-	async teardown(): Promise<void> {
-		if (activeSandbox) {
-			const sb = activeSandbox as { close?: () => Promise<void>; dispose?: () => Promise<void> };
-			if (typeof sb.close === "function") {
-				await sb.close();
-			} else if (typeof sb.dispose === "function") {
-				await sb.dispose();
-			}
-			activeSandbox = undefined;
-		}
-	},
-};
+	}
 
+	async teardown(): Promise<void> {
+		const sandboxes = Array.from(this.#sandboxes);
+		this.#sandboxes.clear();
+		this.#activeSandbox = undefined;
+
+		for (const sb of sandboxes) {
+			const target = sb as { close?: () => Promise<void>; dispose?: () => Promise<void> };
+			if (typeof target.close === "function") {
+				await target.close();
+			} else if (typeof target.dispose === "function") {
+				await target.dispose();
+			}
+		}
+	}
+}
+
+export function createCodemodeBuiltinExtension(): CodemodeExtension {
+	return new CodemodeExtension();
+}
+
+export const codemodeExtension: CodemodeExtension = new CodemodeExtension();
 export default codemodeExtension;

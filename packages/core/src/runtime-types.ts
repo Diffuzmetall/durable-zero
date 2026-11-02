@@ -64,8 +64,15 @@ export interface RuntimeBindingPort {
 	closeTasks(): void;
 }
 
+export interface AdmissionReceipt {
+	readonly requestId: string;
+	readonly conversationId: string;
+	readonly status: "accepted";
+	readonly sequence?: number;
+}
+
 export interface DurableController {
-	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp"): Promise<void>;
+	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp"): Promise<AdmissionReceipt>;
 	compact(instructions: string | undefined): Promise<void>;
 	abort(): Promise<void>;
 	cycleThinking(): Promise<void>;
@@ -92,6 +99,7 @@ export interface OpenDurableOptions {
 	readonly prompt?: PromptOptions;
 	readonly builtins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 	readonly plugins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
+	readonly beforeResume?: (harness: Harness) => Promise<void>;
 }
 
 export interface SubagentWatcherController {

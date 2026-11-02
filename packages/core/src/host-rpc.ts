@@ -53,6 +53,7 @@ export class HostRpcManager {
 			this.output({
 				type: "host_interaction_request",
 				id,
+				interactionId: id,
 				interactionKind: kind,
 				dialogKind: kind,
 				title: payload.title,
@@ -88,8 +89,8 @@ export class HostRpcManager {
 		return true;
 	}
 
-	public handleHostInteractionResponse(cmd: { id?: string | number; result?: unknown }): boolean {
-		const id = (cmd.id ?? "");
+	public handleHostInteractionResponse(cmd: { id?: string | number; interactionId?: string | number; result?: unknown }): boolean {
+		const id = (cmd.interactionId ?? cmd.id ?? "");
 		const pending = this.pendingInteractions.get(id);
 		if (!pending) return false;
 
@@ -98,4 +99,35 @@ export class HostRpcManager {
 		pending.resolve(cmd.result ?? null);
 		return true;
 	}
+}
+
+let activeToolForwarder: ((toolName: string, args: unknown) => Promise<{ content: Array<{ type: "text"; text: string }>; isError: boolean }>) | null = null;
+let activeInteractionRequester: ExtensionUIDialogRequester | null = null;
+
+export function setHostToolForwarder(fn: typeof activeToolForwarder): void {
+	activeToolForwarder = fn;
+}
+
+export function forwardHostToolCall(toolName: string, args: unknown): Promise<{ content: Array<{ type: "text"; text: string }>; isError: boolean }> {
+	if (!activeToolForwarder) {
+		return Promise.resolve({
+			content: [{ type: "text", text: `Host tool forwarder not configured for ${toolName}` }],
+			isError: true,
+		});
+	}
+	return activeToolForwarder(toolName, args);
+}
+
+export function setHostInteractionRequester(fn: typeof activeInteractionRequester): void {
+	activeInteractionRequester = fn;
+}
+
+export function requestHostInteraction(
+	kind: string,
+	payload: { title?: string; message?: string; data?: unknown },
+): Promise<unknown> {
+	if (!activeInteractionRequester) {
+		return Promise.resolve(null);
+	}
+	return activeInteractionRequester(kind, payload);
 }

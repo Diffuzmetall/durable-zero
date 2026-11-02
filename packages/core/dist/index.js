@@ -278,34 +278,51 @@ var codingToolsExtension = {
 // packages/core/src/builtin-extensions/codemode.ts
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
-var activeSandbox;
-var codemodeExtension = {
-  id: "codemode",
-  name: "Codemode",
-  version: "1.0.0",
+var CodemodeExtension = class {
+  id = "codemode";
+  name = "Codemode";
+  version = "1.0.0";
+  #activeSandbox;
+  #sandboxes = /* @__PURE__ */ new Set();
+  #contextSandboxes = /* @__PURE__ */ new WeakMap();
+  get sandbox() {
+    return this.#activeSandbox;
+  }
+  getSandboxFor(ctx) {
+    return this.#contextSandboxes.get(ctx);
+  }
   register(ctx) {
     if (!ctx.registry) return;
-    activeSandbox = new CodemodeSandbox();
+    const sandbox = new CodemodeSandbox();
+    this.#activeSandbox = sandbox;
+    this.#sandboxes.add(sandbox);
+    this.#contextSandboxes.set(ctx, sandbox);
     const ext = createCodemodeExtension({
-      sandbox: activeSandbox,
+      sandbox,
       get namespaces() {
         return ctx.dynamicNamespaces?.getNamespaces?.() ?? [];
       }
     });
     ctx.registry.install(ext);
-  },
+  }
   async teardown() {
-    if (activeSandbox) {
-      const sb = activeSandbox;
-      if (typeof sb.close === "function") {
-        await sb.close();
-      } else if (typeof sb.dispose === "function") {
-        await sb.dispose();
+    const sandboxes = Array.from(this.#sandboxes);
+    this.#sandboxes.clear();
+    this.#activeSandbox = void 0;
+    for (const sb of sandboxes) {
+      const target = sb;
+      if (typeof target.close === "function") {
+        await target.close();
+      } else if (typeof target.dispose === "function") {
+        await target.dispose();
       }
-      activeSandbox = void 0;
     }
   }
 };
+function createCodemodeBuiltinExtension() {
+  return new CodemodeExtension();
+}
+var codemodeExtension = new CodemodeExtension();
 
 // packages/core/src/subagent.ts
 import { Type } from "@sinclair/typebox";
@@ -879,7 +896,7 @@ async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, pro
   const registry = createRegistry();
   const builtinRegistry = new BuiltinExtensionRegistry();
   builtinRegistry.register(codingToolsExtension);
-  builtinRegistry.register(codemodeExtension);
+  builtinRegistry.register(createCodemodeBuiltinExtension());
   builtinRegistry.register(subagentsExtension);
   for (const builtin of customBuiltins) {
     builtinRegistry.register(builtin);
@@ -1233,8 +1250,10 @@ async function loadSummaries(harness, rootId) {
 function createDurableController(ctx) {
   let queue = Promise.resolve();
   const command = (operation) => {
-    queue = queue.then(operation).catch(ctx.fail);
-    return queue;
+    const next = queue.then(operation);
+    queue = next.then(() => {
+    }, ctx.fail);
+    return next;
   };
   const watchAnswer = (submission) => {
     void submission.wait(runtimeContext).then(async (settled) => {
@@ -1296,7 +1315,15 @@ function createDurableController(ctx) {
           );
         }
       }
-      return watchAnswer(await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext));
+      const submission = await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext);
+      watchAnswer(submission);
+      const seq = typeof submission.id === "number" ? submission.id : !isNaN(Number(submission.id)) ? Number(submission.id) : void 0;
+      return {
+        requestId: String(submission.id),
+        conversationId: String(ctx.bindings.current.id),
+        status: "accepted",
+        ...seq !== void 0 ? { sequence: seq } : {}
+      };
     }),
     compact: (instructions) => command(async () => {
       const extensionRunner = ctx.extensionRunner;
@@ -1547,12 +1574,113 @@ import {
   SessionManager
 } from "@earendil-works/pi-coding-agent";
 
+// packages/core/src/host-rpc.ts
+var HostRpcManager = class {
+  pendingToolCalls = /* @__PURE__ */ new Map();
+  pendingInteractions = /* @__PURE__ */ new Map();
+  nextCallSeq = 0;
+  nextInteractionSeq = 0;
+  output;
+  constructor(output) {
+    this.output = output;
+  }
+  forwardToolCall = (toolName, args) => {
+    const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
+    return new Promise((resolve4) => {
+      const timer = setTimeout(() => {
+        this.pendingToolCalls.delete(callId);
+        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+      }, 12e4);
+      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
+      this.output({ type: "host_tool_call", callId, toolName, arguments: args ?? {} });
+    });
+  };
+  requestInteraction = (kind, payload) => {
+    const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
+    return new Promise((resolve4) => {
+      const timer = setTimeout(() => {
+        this.pendingInteractions.delete(id);
+        resolve4(null);
+      }, 18e4);
+      this.pendingInteractions.set(id, { resolve: resolve4, timer });
+      this.output({
+        type: "host_interaction_request",
+        id,
+        interactionId: id,
+        interactionKind: kind,
+        dialogKind: kind,
+        title: payload.title,
+        message: payload.message,
+        data: payload.data
+      });
+    });
+  };
+  handleHostToolResult(cmd) {
+    const callId = String(cmd.callId ?? "");
+    const pending = this.pendingToolCalls.get(callId);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pendingToolCalls.delete(callId);
+    let content;
+    if (Array.isArray(cmd.result)) {
+      content = cmd.result;
+    } else if (cmd.result && typeof cmd.result === "object" && "content" in cmd.result && Array.isArray(cmd.result.content)) {
+      content = cmd.result.content;
+    } else {
+      content = [{ type: "text", text: typeof cmd.result === "string" ? cmd.result : JSON.stringify(cmd.result ?? "") }];
+    }
+    pending.resolve({ content, isError: Boolean(cmd.isError) });
+    return true;
+  }
+  handleHostInteractionResponse(cmd) {
+    const id = cmd.interactionId ?? cmd.id ?? "";
+    const pending = this.pendingInteractions.get(id);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pendingInteractions.delete(id);
+    pending.resolve(cmd.result ?? null);
+    return true;
+  }
+};
+var activeToolForwarder = null;
+var activeInteractionRequester = null;
+function setHostToolForwarder(fn) {
+  activeToolForwarder = fn;
+}
+function forwardHostToolCall(toolName, args) {
+  if (!activeToolForwarder) {
+    return Promise.resolve({
+      content: [{ type: "text", text: `Host tool forwarder not configured for ${toolName}` }],
+      isError: true
+    });
+  }
+  return activeToolForwarder(toolName, args);
+}
+function setHostInteractionRequester(fn) {
+  activeInteractionRequester = fn;
+}
+function requestHostInteraction(kind, payload) {
+  if (!activeInteractionRequester) {
+    return Promise.resolve(null);
+  }
+  return activeInteractionRequester(kind, payload);
+}
+
 // packages/core/src/shared/extension-ui-context.ts
-function createExtensionUIContext(onNotice) {
+function createExtensionUIContext(onNotice, requestInteraction = requestHostInteraction) {
   return {
-    select: async () => void 0,
-    confirm: async () => false,
-    input: async () => void 0,
+    select: async (title, options) => {
+      const res = await requestInteraction("select", { title, data: { options } });
+      return typeof res === "string" ? res : void 0;
+    },
+    confirm: async (title, message) => {
+      const res = await requestInteraction("confirm", { title, message });
+      return Boolean(res);
+    },
+    input: async (title, placeholder) => {
+      const res = await requestInteraction("input", { title, message: placeholder });
+      return typeof res === "string" ? res : void 0;
+    },
     notify: (message, type = "info") => {
       onNotice?.(type, message);
     },
@@ -2545,7 +2673,8 @@ async function openDurable(options = {}) {
     }
     if (activeEnvState.fallbackMessage) notice("info", activeEnvState.fallbackMessage);
     await controller.toggleTasks();
-    harness.resume();
+    await options.beforeResume?.(harness);
+    await harness.resume();
     let closing;
     return {
       view: {
@@ -3736,7 +3865,7 @@ var DurableEngine = class _DurableEngine {
     return this.#instance.view.current();
   }
   async prompt(content, options) {
-    await this.#instance.controller.submit(content, options?.deliverAs ?? "followUp");
+    return await this.#instance.controller.submit(content, options?.deliverAs ?? "followUp");
   }
   events(callback) {
     this.eventListeners.add(callback);
@@ -4260,7 +4389,8 @@ var runnerCommandSchema = z4.object({
   callId: z4.string().optional(),
   result: z4.unknown().optional(),
   isError: z4.boolean().optional(),
-  dialogKind: z4.string().optional()
+  dialogKind: z4.string().optional(),
+  interactionId: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
 var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
@@ -4480,6 +4610,7 @@ var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
 var hostInteractionRequestSchema = wireContextSchema.extend({
   type: z8.literal("host_interaction_request"),
   id: z8.union([z8.string().min(1), z8.number().int()]),
+  interactionId: z8.string().min(1).optional(),
   dialogKind: z8.string().min(1),
   interactionKind: z8.string().optional(),
   title: z8.string().optional(),
@@ -5112,6 +5243,7 @@ export {
   Anchor,
   BACKGROUND,
   BuiltinExtensionRegistry,
+  CodemodeExtension,
   DefaultCourier,
   DefaultReporter,
   DurableChildEventAdapter,
@@ -5119,6 +5251,7 @@ export {
   DynamicCodemodeNamespaces,
   DynamicPromptSections,
   EXPECTED_GUARD_RELATIVE_PATH,
+  HostRpcManager,
   SUPPORTED_PI_VERSION_PREFIXES,
   SchemaPort,
   SessionDaemon,
@@ -5135,6 +5268,7 @@ export {
   codingToolsExtension,
   courierFor,
   courierIsIdle,
+  createCodemodeBuiltinExtension,
   createNestedToolExecutor,
   createPiPrompt,
   createStandardExtensionFactories2 as createStandardExtensionFactories,
@@ -5147,6 +5281,7 @@ export {
   firstInput,
   flushWireStdout,
   forkSessionDatabase,
+  forwardHostToolCall,
   getAgentDir,
   getPiDurableVersion,
   handleActiveSessionCommand,
@@ -5170,11 +5305,14 @@ export {
   recordSubagentOwnership,
   recordTerminalWithDetails,
   reporterFor,
+  requestHostInteraction,
   restoreRunnerStdout,
   runtimeContext,
   safeCloneRecord,
   sanitizeTargetHint,
   selectSession,
+  setHostInteractionRequester,
+  setHostToolForwarder,
   setupRunnerStdoutGuard,
   subagentsExtension,
   taskLabel,
