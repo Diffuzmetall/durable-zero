@@ -96,6 +96,8 @@ export async function openDurable(options: OpenDurableOptions = {}): Promise<Ope
 		}
 		activeEnvState.setNoticeForwarder?.((level, message) => notice(level, message));
 
+		const bindings = new RuntimeBindings(root, conversation, update);
+
 		const handlePublication = (pub: any) => {
 			let convs = state.conversations;
 			for (const ch of pub.changes ?? []) {

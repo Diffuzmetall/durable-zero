@@ -1380,6 +1380,124 @@ function createDurableController(ctx) {
   };
 }
 
+// packages/core/src/runtime-bindings.ts
+var RuntimeBindings = class {
+  conversation;
+  view;
+  unsubscribe;
+  tasks;
+  unsubscribeTasks;
+  epoch = 0;
+  taskEpoch = 0;
+  closed = false;
+  update;
+  constructor(conversation, view, update) {
+    this.conversation = conversation;
+    this.view = view;
+    this.update = update;
+    try {
+      this.unsubscribe = view.subscribe((value) => {
+        if (!this.closed && this.epoch === 0) this.update({ conversation: value });
+      });
+    } catch (cause) {
+      try {
+        view.dispose();
+      } catch (cleanup) {
+        throw new AggregateError([cause, cleanup], "SUBSCRIBE_FAILED");
+      }
+      throw new Error("SUBSCRIBE_FAILED", { cause });
+    }
+  }
+  get current() {
+    return this.conversation;
+  }
+  get tasksOpen() {
+    return this.tasks !== void 0;
+  }
+  bindConversation(conversation, view) {
+    if (this.closed) {
+      view.dispose();
+      throw new Error("BINDING_CLOSED");
+    }
+    if (this.view === view) return;
+    const epoch = this.epoch + 1;
+    let unsubscribe;
+    try {
+      unsubscribe = view.subscribe((value) => {
+        if (!this.closed && this.epoch === epoch) this.update({ conversation: value });
+      });
+    } catch (cause) {
+      view.dispose();
+      throw new Error("SUBSCRIBE_FAILED", { cause });
+    }
+    const previous = this.view, previousUnsubscribe = this.unsubscribe;
+    this.view = view;
+    this.conversation = conversation;
+    this.unsubscribe = unsubscribe;
+    this.epoch = epoch;
+    try {
+      previousUnsubscribe();
+    } finally {
+      previous.dispose();
+    }
+    this.update({ conversation: view.value });
+  }
+  attachTasks(view) {
+    if (this.closed) {
+      view.dispose();
+      throw new Error("BINDING_CLOSED");
+    }
+    if (this.tasks === view) return;
+    const epoch = this.taskEpoch + 1;
+    let unsubscribe;
+    try {
+      unsubscribe = view.subscribe((value) => {
+        if (!this.closed && this.taskEpoch === epoch) this.update({ tasks: value });
+      });
+    } catch (cause) {
+      view.dispose();
+      throw new Error("SUBSCRIBE_FAILED", { cause });
+    }
+    const previous = this.tasks, previousUnsubscribe = this.unsubscribeTasks;
+    this.tasks = view;
+    this.unsubscribeTasks = unsubscribe;
+    this.taskEpoch = epoch;
+    try {
+      previousUnsubscribe?.();
+    } finally {
+      previous?.dispose();
+    }
+    this.update({ tasks: view.value });
+  }
+  closeTasks() {
+    if (!this.tasks) return;
+    this.taskEpoch++;
+    const previous = this.tasks, unsubscribe = this.unsubscribeTasks;
+    this.tasks = void 0;
+    this.unsubscribeTasks = void 0;
+    try {
+      unsubscribe?.();
+    } finally {
+      previous.dispose();
+    }
+    if (!this.closed) this.update({ tasks: void 0 });
+  }
+  close() {
+    if (this.closed) return;
+    this.closed = true;
+    this.epoch++;
+    try {
+      this.unsubscribe();
+    } finally {
+      try {
+        this.view.dispose();
+      } finally {
+        this.closeTasks();
+      }
+    }
+  }
+};
+
 // packages/core/src/runtime-cleanup.ts
 async function closeRuntimeResources(operations) {
   const failures = [];
@@ -2349,6 +2467,7 @@ async function openDurable(options = {}) {
       }
     }
     activeEnvState.setNoticeForwarder?.((level, message) => notice(level, message));
+    const bindings = new RuntimeBindings(root, conversation, update);
     const handlePublication = (pub) => {
       let convs = state.conversations;
       for (const ch of pub.changes ?? []) {
