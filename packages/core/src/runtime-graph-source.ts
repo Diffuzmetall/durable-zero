@@ -1,6 +1,6 @@
 import type { DurableView } from "./runtime-types.ts";
-import type { GraphScope, RuntimeGraphSnapshot, RuntimeTaskNode } from "@durable-zero/contracts";
-import { MAX_LIVE_NODES } from "@durable-zero/contracts";
+import type { GraphScope, RuntimeGraphSnapshot, RuntimeTaskNode } from "../../contracts/src/index.ts";
+import { MAX_LIVE_NODES } from "../../contracts/src/index.ts";
 import { RuntimeGraphReceiptsCollector } from "./runtime-graph-receipts.ts";
 import { RuntimeGraphConversations } from "./runtime-graph-conversations.ts";
 import { TaskNames } from "./task-labels.ts";

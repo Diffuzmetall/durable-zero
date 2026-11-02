@@ -7,24 +7,24 @@
   "author": "Ivan Arc",
   "exports": {
     ".": {
+      "types": "./packages/core/src/index.ts",
       "import": "./packages/core/dist/index.js",
-      "default": "./packages/core/dist/index.js",
-      "types": "./packages/core/src/index.ts"
+      "default": "./packages/core/dist/index.js"
     },
     "./core": {
+      "types": "./packages/core/src/index.ts",
       "import": "./packages/core/dist/index.js",
-      "default": "./packages/core/dist/index.js",
-      "types": "./packages/core/src/index.ts"
+      "default": "./packages/core/dist/index.js"
     },
     "./contracts": {
+      "types": "./packages/contracts/src/index.ts",
       "import": "./packages/contracts/dist/index.js",
-      "default": "./packages/contracts/dist/index.js",
-      "types": "./packages/contracts/src/index.ts"
+      "default": "./packages/contracts/dist/index.js"
     },
     "./runner": {
+      "types": "./packages/core/src/runner-server.ts",
       "import": "./packages/core/dist/runner.js",
-      "default": "./packages/core/dist/runner.js",
-      "types": "./packages/core/src/runner-server.ts"
+      "default": "./packages/core/dist/runner.js"
     }
   },
   "typesVersions": {

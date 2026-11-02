@@ -2716,6 +2716,22 @@ import "@earendil-works/pi-durable";
 
 // packages/core/src/bridge/watch-events-compat.ts
 import { NestedCallDoc } from "@earendil-works/pi-durable";
+function findToolCallInEntries(entries, callId) {
+  if (!Array.isArray(entries)) return {};
+  for (let j = entries.length - 1; j >= 0; j--) {
+    const prevMsg = entries[j]?.model?.[0];
+    if (prevMsg?.role === "assistant" && Array.isArray(prevMsg.content)) {
+      const call = prevMsg.content.find((c) => c.type === "toolCall" && (c.id === callId || c.callId === callId));
+      if (call) {
+        return {
+          toolName: call.name,
+          args: call.arguments && typeof call.arguments === "object" ? call.arguments : {}
+        };
+      }
+    }
+  }
+  return {};
+}
 async function watchEvents(harness, conversationId, context) {
   const conversation = await harness.conversation(conversationId, context);
   if (!conversation) throw new Error(`Conversation not found: ${conversationId}`);
@@ -2736,16 +2752,79 @@ async function watchEvents(harness, conversationId, context) {
     snapshot,
     start(listener) {
       let seenEntriesCount = initial?.entries?.length ?? 0;
+      const emittedToolStarts = /* @__PURE__ */ new Set();
       const emittedToolEnds = /* @__PURE__ */ new Set();
       const seenNestedTools = /* @__PURE__ */ new Map();
       watch.start(async (call, ctx) => {
         const val = call?.value ?? call;
         if (!val) return;
         const events = [];
+        const liveTools = val.docs?.["pi.live"]?.tools ?? [];
+        for (const t of liveTools) {
+          if (t.callId && !emittedToolStarts.has(t.callId)) {
+            let toolName = t.name ?? "tool";
+            let args = {};
+            const genContent = val.docs?.["pi.live"]?.generation?.message?.content;
+            if (Array.isArray(genContent)) {
+              const match = genContent.find((c) => c.type === "toolCall" && (c.id === t.callId || c.callId === t.callId));
+              if (match) {
+                if (match.name) toolName = match.name;
+                if (match.arguments && typeof match.arguments === "object") args = match.arguments;
+              }
+            }
+            if (Object.keys(args).length === 0) {
+              const fromEntries = findToolCallInEntries(val.entries, t.callId);
+              if (fromEntries.toolName) toolName = fromEntries.toolName;
+              if (fromEntries.args) args = fromEntries.args;
+            }
+            emittedToolStarts.add(t.callId);
+            events.push({
+              type: "tool_execution_start",
+              toolCallId: t.callId,
+              toolName,
+              args
+            });
+          }
+          if (t.callId && t.status === "running" && typeof t.output === "string") {
+            events.push({
+              type: "tool_execution_update",
+              toolCallId: t.callId,
+              toolName: t.name ?? "tool",
+              output: { set: t.output },
+              details: t.details,
+              diagnostics: t.diagnostics
+            });
+          }
+        }
         const nested = val.docs?.["pi.live"]?.nestedTools ?? [];
         for (const n of nested) {
           if (n.callId && !seenNestedTools.has(n.callId)) {
             seenNestedTools.set(n.callId, n);
+          }
+          if (n.callId && !emittedToolStarts.has(n.callId)) {
+            emittedToolStarts.add(n.callId);
+            const toolName = n.name ?? n.toolName ?? "tool";
+            events.push({
+              type: "tool_execution_start",
+              toolCallId: n.callId,
+              toolName,
+              taskId: n.taskId,
+              parentToolCallId: n.parentCallId,
+              parentTaskId: n.parentTaskId,
+              args: n.arguments && typeof n.arguments === "object" ? n.arguments : {}
+            });
+          }
+          if (n.callId && n.status === "running" && typeof n.output === "string") {
+            events.push({
+              type: "tool_execution_update",
+              toolCallId: n.callId,
+              toolName: n.name ?? n.toolName ?? "tool",
+              parentToolCallId: n.parentCallId,
+              parentTaskId: n.parentTaskId,
+              output: { set: n.output },
+              details: n.details,
+              diagnostics: n.diagnostics
+            });
           }
           if (n.callId && n.status === "done" && !emittedToolEnds.has(n.callId)) {
             emittedToolEnds.add(n.callId);
@@ -2770,7 +2849,8 @@ async function watchEvents(harness, conversationId, context) {
                 isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
                 output: n.output,
                 details: n.details
-              }
+              },
+              args: n.arguments && typeof n.arguments === "object" ? n.arguments : {}
             });
           }
         }
@@ -2790,7 +2870,8 @@ async function watchEvents(harness, conversationId, context) {
                   isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
                   output: n.output,
                   details: n.details
-                }
+                },
+                args: n.arguments && typeof n.arguments === "object" ? n.arguments : {}
               });
             }
           }
@@ -2799,28 +2880,43 @@ async function watchEvents(harness, conversationId, context) {
           for (let i = seenEntriesCount; i < val.entries.length; i++) {
             const entry = val.entries[i];
             const modelMsg = entry?.model?.[0];
-            if (modelMsg?.role === "toolResult") {
-              let toolName = modelMsg.toolName ?? "tool";
-              if (!modelMsg.toolName) {
-                for (let j = i - 1; j >= 0; j--) {
-                  const prevMsg = val.entries[j]?.model?.[0];
-                  if (prevMsg?.role === "assistant" && Array.isArray(prevMsg.content)) {
-                    const call2 = prevMsg.content.find((c) => c.type === "toolCall" && c.id === modelMsg.toolCallId);
-                    if (call2?.name) {
-                      toolName = call2.name;
-                      break;
-                    }
-                  }
+            if (modelMsg?.role === "assistant" && Array.isArray(modelMsg.content)) {
+              for (const part of modelMsg.content) {
+                if (part.type === "toolCall" && part.id && !emittedToolStarts.has(part.id)) {
+                  emittedToolStarts.add(part.id);
+                  events.push({
+                    type: "tool_execution_start",
+                    toolCallId: part.id,
+                    toolName: part.name ?? "tool",
+                    args: part.arguments && typeof part.arguments === "object" ? part.arguments : {}
+                  });
                 }
               }
+            }
+            if (modelMsg?.role === "toolResult") {
+              let toolName = modelMsg.toolName ?? "tool";
+              let toolArgs = {};
+              const found = findToolCallInEntries(val.entries, modelMsg.toolCallId ?? String(entry.id));
+              if (found.toolName && !modelMsg.toolName) toolName = found.toolName;
+              if (found.args) toolArgs = found.args;
               const callId = modelMsg.toolCallId ?? String(entry.id);
+              if (!emittedToolStarts.has(callId)) {
+                emittedToolStarts.add(callId);
+                events.push({
+                  type: "tool_execution_start",
+                  toolCallId: callId,
+                  toolName,
+                  args: toolArgs
+                });
+              }
               if (!emittedToolEnds.has(callId)) {
                 emittedToolEnds.add(callId);
                 events.push({
                   type: "tool_execution_end",
                   toolCallId: callId,
                   toolName,
-                  entry
+                  entry,
+                  args: toolArgs
                 });
               }
             }
@@ -3238,6 +3334,7 @@ function buildTerminalError(event, decoded, canonicalDetails, parentRef) {
     toolName: event.toolName,
     result: decoded.errorMessage,
     isError: true,
+    ..."args" in event && typeof event.args === "object" && event.args !== null ? { args: event.args } : {},
     ...canonicalDetails !== void 0 ? { details: canonicalDetails } : {},
     ...parentRef !== void 0 ? { parentRef } : {}
   };
@@ -3257,6 +3354,7 @@ function buildTerminalSuccess(event, decoded, scoped, canonicalDetails, parentRe
     toolName: event.toolName,
     result,
     isError: decoded.isError,
+    ..."args" in event && typeof event.args === "object" && event.args !== null ? { args: event.args } : {},
     ...details !== void 0 ? { details } : {},
     ...parentRef !== void 0 ? { parentRef } : {}
   };
@@ -4241,17 +4339,8 @@ function extractTerminalTokens(task, current, recentEntries) {
   return void 0;
 }
 
-// packages/contracts/dist/index.js
+// packages/contracts/src/diagnostics.ts
 import { z as z2 } from "zod";
-import { z as z22 } from "zod";
-import { z as z4 } from "zod";
-import { z as z3 } from "zod";
-import { z as z9 } from "zod";
-import { z as z5 } from "zod";
-import { z as z6 } from "zod";
-import { z as z8 } from "zod";
-import { z as z7 } from "zod";
-import { z as z10 } from "zod";
 var piPathStatusSchema = z2.object({
   path: z2.string(),
   exists: z2.boolean(),
@@ -4292,64 +4381,75 @@ var piDiagnosticsReportSchema = z2.object({
   status: z2.enum(["healthy", "warning", "error"]),
   summary: z2.string()
 });
-var runnerChannelSchema = z22.discriminatedUnion("kind", [
-  z22.object({ kind: z22.literal("ready"), ready: z22.boolean().optional() }).passthrough(),
-  z22.object({ kind: z22.literal("model-scope"), scopedModelIds: z22.array(z22.string()).optional(), defaultModelId: z22.string().optional() }).passthrough(),
-  z22.object({ kind: z22.literal("reply"), id: z22.union([z22.string(), z22.number()]), result: z22.unknown().optional(), error: z22.unknown().optional() }).passthrough(),
-  z22.object({
-    kind: z22.literal("tool_call_request"),
-    callId: z22.string(),
-    toolName: z22.string(),
-    arguments: z22.unknown().default({})
+
+// packages/contracts/src/runner-channel.ts
+import { z as z3 } from "zod";
+var runnerChannelSchema = z3.discriminatedUnion("kind", [
+  z3.object({ kind: z3.literal("ready"), ready: z3.boolean().optional() }).passthrough(),
+  z3.object({ kind: z3.literal("model-scope"), scopedModelIds: z3.array(z3.string()).optional(), defaultModelId: z3.string().optional() }).passthrough(),
+  z3.object({ kind: z3.literal("reply"), id: z3.union([z3.string(), z3.number()]), result: z3.unknown().optional(), error: z3.unknown().optional() }).passthrough(),
+  z3.object({
+    kind: z3.literal("tool_call_request"),
+    callId: z3.string(),
+    toolName: z3.string(),
+    arguments: z3.unknown().default({})
   }).passthrough(),
-  z22.object({
-    kind: z22.literal("tool_call_response"),
-    callId: z22.string(),
-    result: z22.unknown().optional(),
-    isError: z22.boolean().optional()
+  z3.object({
+    kind: z3.literal("tool_call_response"),
+    callId: z3.string(),
+    result: z3.unknown().optional(),
+    isError: z3.boolean().optional()
   }).passthrough(),
-  z22.object({
-    kind: z22.literal("interaction_request"),
-    id: z22.union([z22.string(), z22.number()]),
-    interactionKind: z22.string().optional(),
-    dialogKind: z22.string().optional(),
-    title: z22.string().optional(),
-    message: z22.string().optional(),
-    data: z22.unknown().optional()
+  z3.object({
+    kind: z3.literal("interaction_request"),
+    id: z3.union([z3.string(), z3.number()]),
+    interactionKind: z3.string().optional(),
+    dialogKind: z3.string().optional(),
+    title: z3.string().optional(),
+    message: z3.string().optional(),
+    data: z3.unknown().optional()
   }).passthrough(),
-  z22.object({
-    kind: z22.literal("interaction_response"),
-    id: z22.union([z22.string(), z22.number()]),
-    result: z22.unknown().optional(),
-    error: z22.unknown().optional()
+  z3.object({
+    kind: z3.literal("interaction_response"),
+    id: z3.union([z3.string(), z3.number()]),
+    result: z3.unknown().optional(),
+    error: z3.unknown().optional()
   }).passthrough()
 ]);
-var runnerBridgeRequestSchema = z22.object({
-  kind: z22.literal("request"),
-  id: z22.union([z22.string(), z22.number()]),
-  method: z22.string(),
-  params: z22.unknown().optional()
+var runnerBridgeRequestSchema = z3.object({
+  kind: z3.literal("request"),
+  id: z3.union([z3.string(), z3.number()]),
+  method: z3.string(),
+  params: z3.unknown().optional()
 }).passthrough();
 var knownChannelKinds = new Set(runnerChannelSchema.options.map((schema) => schema.shape.kind.value));
-var conversationIdSchema = z3.union([z3.number().int().positive(), z3.string().regex(/^[1-9]\d*$/)]);
-var cumulativeUsageSchema = z3.object({
-  totalTokens: z3.number(),
-  inputTokens: z3.number(),
-  outputTokens: z3.number(),
-  cachedInputTokens: z3.number().optional(),
-  cacheWriteInputTokens: z3.number().optional()
+
+// packages/contracts/src/runner-command.ts
+import { z as z5 } from "zod";
+
+// packages/contracts/src/wire-context.ts
+import { z as z4 } from "zod";
+var conversationIdSchema = z4.union([z4.number().int().positive(), z4.string().regex(/^[1-9]\d*$/)]);
+var cumulativeUsageSchema = z4.object({
+  totalTokens: z4.number(),
+  inputTokens: z4.number(),
+  outputTokens: z4.number(),
+  cachedInputTokens: z4.number().optional(),
+  cacheWriteInputTokens: z4.number().optional()
 }).passthrough();
-var wireContextSchema = z3.object({
-  parentRef: z3.string().optional(),
+var wireContextSchema = z4.object({
+  parentRef: z4.string().optional(),
   conversationId: conversationIdSchema.optional(),
-  providerCheckpointId: z3.string().optional(),
+  providerCheckpointId: z4.string().optional(),
   cumulativeUsage: cumulativeUsageSchema.optional(),
-  aborted: z3.boolean().optional(),
-  stopReason: z3.string().optional(),
-  errorMessage: z3.string().optional()
+  aborted: z4.boolean().optional(),
+  stopReason: z4.string().optional(),
+  errorMessage: z4.string().optional()
 }).passthrough();
-var runnerCommandSchema = z4.object({
-  type: z4.enum([
+
+// packages/contracts/src/runner-command.ts
+var runnerCommandSchema = z5.object({
+  type: z5.enum([
     "prompt",
     "steer",
     "abort",
@@ -4367,201 +4467,217 @@ var runnerCommandSchema = z4.object({
     "host_tool_result",
     "host_interaction_response"
   ]),
-  id: z4.string().optional(),
-  message: z4.string().optional(),
-  images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
-  streamingBehavior: z4.enum(["steer", "followUp"]).optional(),
-  provider: z4.string().optional(),
-  modelId: z4.string().optional(),
-  instructions: z4.string().optional(),
-  level: z4.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
+  id: z5.string().optional(),
+  message: z5.string().optional(),
+  images: z5.array(z5.object({ type: z5.literal("image"), data: z5.string(), mimeType: z5.string() })).optional(),
+  streamingBehavior: z5.enum(["steer", "followUp"]).optional(),
+  provider: z5.string().optional(),
+  modelId: z5.string().optional(),
+  instructions: z5.string().optional(),
+  level: z5.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
   conversationId: conversationIdSchema.optional(),
-  threadId: z4.string().optional(),
-  parentThreadId: z4.string().optional(),
-  sessionId: z4.string().optional(),
-  policyRecord: z4.unknown().optional(),
-  taskId: z4.number().int().positive().optional(),
-  sourceDir: z4.string().optional(),
-  targetDir: z4.string().optional(),
-  checkpointId: z4.union([z4.number(), z4.string()]).optional(),
-  sourceProviderThreadId: z4.string().optional(),
-  targetProviderThreadId: z4.string().optional(),
-  callId: z4.string().optional(),
-  result: z4.unknown().optional(),
-  isError: z4.boolean().optional(),
-  dialogKind: z4.string().optional(),
-  interactionId: z4.string().optional()
+  threadId: z5.string().optional(),
+  parentThreadId: z5.string().optional(),
+  sessionId: z5.string().optional(),
+  policyRecord: z5.unknown().optional(),
+  taskId: z5.number().int().positive().optional(),
+  sourceDir: z5.string().optional(),
+  targetDir: z5.string().optional(),
+  checkpointId: z5.union([z5.number(), z5.string()]).optional(),
+  sourceProviderThreadId: z5.string().optional(),
+  targetProviderThreadId: z5.string().optional(),
+  callId: z5.string().optional(),
+  result: z5.unknown().optional(),
+  isError: z5.boolean().optional(),
+  dialogKind: z5.string().optional(),
+  interactionId: z5.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
-var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
-var number = z5.number().optional();
-var assistantUsageSchema = z5.object({
+var runnerRequestHeaderSchema = z5.object({ type: z5.string().min(1), id: z5.string().optional() }).passthrough();
+
+// packages/contracts/src/runner-event.ts
+import { z as z10 } from "zod";
+
+// packages/contracts/src/wire-message.ts
+import { z as z6 } from "zod";
+var number = z6.number().optional();
+var assistantUsageSchema = z6.object({
   input: number,
   output: number,
   cacheRead: number,
   cacheWrite: number,
   totalTokens: number,
-  cost: z5.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
+  cost: z6.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
 }).passthrough();
-var assistantMessageSchema = z5.object({
-  role: z5.literal("assistant"),
-  content: z5.array(z5.discriminatedUnion("type", [
-    z5.object({ type: z5.literal("text"), text: z5.string() }),
-    z5.object({ type: z5.literal("thinking"), thinking: z5.string() }),
-    z5.object({ type: z5.literal("toolCall"), id: z5.string(), name: z5.string(), arguments: z5.record(z5.string(), z5.unknown()) })
+var assistantMessageSchema = z6.object({
+  role: z6.literal("assistant"),
+  content: z6.array(z6.discriminatedUnion("type", [
+    z6.object({ type: z6.literal("text"), text: z6.string() }),
+    z6.object({ type: z6.literal("thinking"), thinking: z6.string() }),
+    z6.object({ type: z6.literal("toolCall"), id: z6.string(), name: z6.string(), arguments: z6.record(z6.string(), z6.unknown()) })
   ])),
-  stopReason: z5.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
-  errorMessage: z5.string().optional(),
+  stopReason: z6.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
+  errorMessage: z6.string().optional(),
   usage: assistantUsageSchema.optional()
 }).passthrough();
-var contentIndex = z5.number().int().nonnegative();
-var update = z5.discriminatedUnion("type", [
-  z5.object({ type: z5.literal("thinking_delta"), contentIndex, delta: z5.string() }).passthrough(),
-  z5.object({ type: z5.literal("thinking_end"), contentIndex, content: z5.string() }).passthrough(),
-  z5.object({ type: z5.literal("text_delta"), contentIndex, delta: z5.string() }).passthrough(),
-  z5.object({ type: z5.literal("thinking_start"), contentIndex }).passthrough(),
-  z5.object({ type: z5.literal("text_start"), contentIndex }).passthrough(),
-  z5.object({ type: z5.literal("text_end"), contentIndex, content: z5.string() }).passthrough()
+var contentIndex = z6.number().int().nonnegative();
+var update = z6.discriminatedUnion("type", [
+  z6.object({ type: z6.literal("thinking_delta"), contentIndex, delta: z6.string() }).passthrough(),
+  z6.object({ type: z6.literal("thinking_end"), contentIndex, content: z6.string() }).passthrough(),
+  z6.object({ type: z6.literal("text_delta"), contentIndex, delta: z6.string() }).passthrough(),
+  z6.object({ type: z6.literal("thinking_start"), contentIndex }).passthrough(),
+  z6.object({ type: z6.literal("text_start"), contentIndex }).passthrough(),
+  z6.object({ type: z6.literal("text_end"), contentIndex, content: z6.string() }).passthrough()
 ]);
-var messageUpdateSchema = wireContextSchema.extend({ type: z5.literal("message_update"), assistantMessageEvent: update });
+var messageUpdateSchema = wireContextSchema.extend({ type: z6.literal("message_update"), assistantMessageEvent: update });
 var messageSchemas = [
   messageUpdateSchema,
-  wireContextSchema.extend({ type: z5.literal("message_end"), message: assistantMessageSchema })
+  wireContextSchema.extend({ type: z6.literal("message_end"), message: assistantMessageSchema })
 ];
+
+// packages/contracts/src/wire-tool.ts
+import { z as z7 } from "zod";
 var tool = wireContextSchema.extend({
-  toolCallId: z6.union([z6.string().min(1), z6.number().int().nonnegative()]),
-  toolName: z6.string().min(1)
+  toolCallId: z7.union([z7.string().min(1), z7.number().int().nonnegative()]),
+  toolName: z7.string().min(1)
 });
-var toolStartSchema = tool.extend({ type: z6.literal("tool_execution_start"), args: z6.record(z6.string(), z6.unknown()) });
+var toolStartSchema = tool.extend({ type: z7.literal("tool_execution_start"), args: z7.record(z7.string(), z7.unknown()) });
 var toolUpdateSchema = tool.extend({
-  type: z6.literal("tool_execution_update"),
-  partialResult: z6.string(),
-  trimStart: z6.number().optional(),
-  details: z6.unknown().optional()
+  type: z7.literal("tool_execution_update"),
+  partialResult: z7.string(),
+  trimStart: z7.number().optional(),
+  details: z7.unknown().optional()
 });
 var toolEndSchema = tool.extend({
-  type: z6.literal("tool_execution_end"),
-  result: z6.string(),
-  isError: z6.boolean(),
-  details: z6.unknown().optional()
+  type: z7.literal("tool_execution_end"),
+  result: z7.string(),
+  isError: z7.boolean(),
+  args: z7.record(z7.string(), z7.unknown()).optional(),
+  details: z7.unknown().optional()
 });
 var hostToolCallSchema = wireContextSchema.extend({
-  type: z6.literal("host_tool_call"),
-  callId: z6.string().min(1),
-  toolName: z6.string().min(1),
-  arguments: z6.record(z6.string(), z6.unknown()).default({})
+  type: z7.literal("host_tool_call"),
+  callId: z7.string().min(1),
+  toolName: z7.string().min(1),
+  arguments: z7.record(z7.string(), z7.unknown()).default({})
 });
 var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema];
+
+// packages/contracts/src/wire-lifecycle.ts
+import { z as z9 } from "zod";
+
+// packages/contracts/src/runtime-graph/schema.ts
+import { z as z8 } from "zod";
 var MAX_LIVE_NODES = 512;
 var MAX_RECEIPTS = 128;
 var MAX_LABEL_LENGTH = 160;
 var MAX_PREVIEW_LENGTH = 500;
 var MAX_SNAPSHOT_BYTES = 1048576;
 var TASK_OUTCOMES = ["completed", "failed", "aborted", "faulted", "orphaned"];
-var taskOutcomeSchema = z7.enum(TASK_OUTCOMES);
+var taskOutcomeSchema = z8.enum(TASK_OUTCOMES);
 var LIVE_TASK_STATUSES = ["pending", "running", "waiting", "sleeping", "completing"];
-var liveTaskStatusSchema = z7.enum(LIVE_TASK_STATUSES);
+var liveTaskStatusSchema = z8.enum(LIVE_TASK_STATUSES);
 var BLOCKED_REASONS = ["missing_task", "task_too_old", "migration_failed", "restart_limit"];
-var blockedReasonSchema = z7.enum(BLOCKED_REASONS);
-var graphScopeSchema = z7.object({
-  sessionId: z7.string().min(1).max(256),
-  rootConversationId: z7.string().min(1).max(64),
-  buildId: z7.string().min(1).max(64)
+var blockedReasonSchema = z8.enum(BLOCKED_REASONS);
+var graphScopeSchema = z8.object({
+  sessionId: z8.string().min(1).max(256),
+  rootConversationId: z8.string().min(1).max(64),
+  buildId: z8.string().min(1).max(64)
 });
-var graphObservationSchema = z7.object({
-  epoch: z7.string().min(1).max(64),
-  revision: z7.number().int().nonnegative(),
-  observedAt: z7.number().int().positive(),
-  completeness: z7.enum(["complete", "limited"])
+var graphObservationSchema = z8.object({
+  epoch: z8.string().min(1).max(64),
+  revision: z8.number().int().nonnegative(),
+  observedAt: z8.number().int().positive(),
+  completeness: z8.enum(["complete", "limited"])
 });
-var runtimeTaskStateSchema = z7.discriminatedUnion("status", [
-  z7.object({
-    status: z7.literal("pending"),
-    phase: z7.string().max(64).optional()
+var runtimeTaskStateSchema = z8.discriminatedUnion("status", [
+  z8.object({
+    status: z8.literal("pending"),
+    phase: z8.string().max(64).optional()
   }),
-  z7.object({
-    status: z7.literal("running"),
-    phase: z7.string().max(64).optional()
+  z8.object({
+    status: z8.literal("running"),
+    phase: z8.string().max(64).optional()
   }),
-  z7.object({
-    status: z7.literal("waiting"),
-    phase: z7.string().max(64).optional(),
-    on: z7.array(z7.number().int().positive()).max(MAX_LIVE_NODES),
-    policy: z7.enum(["failFast", "allSettled", "all", "first"]).optional()
+  z8.object({
+    status: z8.literal("waiting"),
+    phase: z8.string().max(64).optional(),
+    on: z8.array(z8.number().int().positive()).max(MAX_LIVE_NODES),
+    policy: z8.enum(["failFast", "allSettled", "all", "first"]).optional()
   }),
-  z7.object({
-    status: z7.literal("sleeping"),
-    phase: z7.string().max(64).optional(),
-    until: z7.number().int().positive()
+  z8.object({
+    status: z8.literal("sleeping"),
+    phase: z8.string().max(64).optional(),
+    until: z8.number().int().positive()
   }),
-  z7.object({
-    status: z7.literal("completing"),
+  z8.object({
+    status: z8.literal("completing"),
     outcome: taskOutcomeSchema
   })
 ]);
-var taskTokensUsageSchema = z7.object({
-  total: z7.number().int().nonnegative().optional(),
-  input: z7.number().int().nonnegative().optional(),
-  output: z7.number().int().nonnegative().optional(),
-  reasoning: z7.number().int().nonnegative().optional(),
-  cacheRead: z7.number().int().nonnegative().optional()
+var taskTokensUsageSchema = z8.object({
+  total: z8.number().int().nonnegative().optional(),
+  input: z8.number().int().nonnegative().optional(),
+  output: z8.number().int().nonnegative().optional(),
+  reasoning: z8.number().int().nonnegative().optional(),
+  cacheRead: z8.number().int().nonnegative().optional()
 });
-var runtimeTaskNodeSchema = z7.object({
-  id: z7.number().int().positive(),
-  kind: z7.string().min(1).max(64),
-  conversationId: z7.number().int().positive(),
-  owner: z7.number().int().positive().optional(),
-  background: z7.boolean(),
-  abortRequested: z7.boolean(),
+var runtimeTaskNodeSchema = z8.object({
+  id: z8.number().int().positive(),
+  kind: z8.string().min(1).max(64),
+  conversationId: z8.number().int().positive(),
+  owner: z8.number().int().positive().optional(),
+  background: z8.boolean(),
+  abortRequested: z8.boolean(),
   state: runtimeTaskStateSchema,
   blocked: blockedReasonSchema.optional(),
-  label: z7.string().min(1).max(MAX_LABEL_LENGTH),
-  startedAt: z7.number().int().positive().optional(),
-  endedAt: z7.number().int().positive().optional(),
-  durationMs: z7.number().int().nonnegative().optional(),
-  toolName: z7.string().max(64).optional(),
-  targetHint: z7.string().max(128).optional(),
-  model: z7.object({
-    provider: z7.string().max(64),
-    modelId: z7.string().max(128)
+  label: z8.string().min(1).max(MAX_LABEL_LENGTH),
+  startedAt: z8.number().int().positive().optional(),
+  endedAt: z8.number().int().positive().optional(),
+  durationMs: z8.number().int().nonnegative().optional(),
+  toolName: z8.string().max(64).optional(),
+  targetHint: z8.string().max(128).optional(),
+  model: z8.object({
+    provider: z8.string().max(64),
+    modelId: z8.string().max(128)
   }).optional(),
-  thinkingLevel: z7.string().max(32).optional(),
+  thinkingLevel: z8.string().max(32).optional(),
   tokens: taskTokensUsageSchema.optional()
 });
-var runtimeConversationNodeSchema = z7.object({
-  id: z7.number().int().positive(),
-  owner: z7.object({
-    conversationId: z7.number().int().positive(),
-    taskId: z7.number().int().positive()
+var runtimeConversationNodeSchema = z8.object({
+  id: z8.number().int().positive(),
+  owner: z8.object({
+    conversationId: z8.number().int().positive(),
+    taskId: z8.number().int().positive()
   }).optional(),
-  parent: z7.object({
-    conversationId: z7.number().int().positive(),
-    at: z7.number().int().positive()
+  parent: z8.object({
+    conversationId: z8.number().int().positive(),
+    at: z8.number().int().positive()
   }).optional()
 });
-var runtimeTaskReceiptSchema = z7.object({
-  taskId: z7.number().int().positive(),
-  conversationId: z7.number().int().positive(),
-  owner: z7.number().int().positive().optional(),
-  kind: z7.string().min(1).max(64),
+var runtimeTaskReceiptSchema = z8.object({
+  taskId: z8.number().int().positive(),
+  conversationId: z8.number().int().positive(),
+  owner: z8.number().int().positive().optional(),
+  kind: z8.string().min(1).max(64),
   outcome: taskOutcomeSchema,
-  isToolError: z7.boolean().optional(),
-  error: z7.object({
-    message: z7.string().max(1024),
-    code: z7.string().max(64).optional()
+  isToolError: z8.boolean().optional(),
+  error: z8.object({
+    message: z8.string().max(1024),
+    code: z8.string().max(64).optional()
   }).optional(),
-  endedAt: z7.number().int().positive(),
-  durationMs: z7.number().int().nonnegative().optional(),
-  preview: z7.string().max(MAX_PREVIEW_LENGTH).optional(),
-  toolName: z7.string().max(64).optional(),
-  targetHint: z7.string().max(128).optional(),
-  startedAt: z7.number().int().positive().optional(),
+  endedAt: z8.number().int().positive(),
+  durationMs: z8.number().int().nonnegative().optional(),
+  preview: z8.string().max(MAX_PREVIEW_LENGTH).optional(),
+  toolName: z8.string().max(64).optional(),
+  targetHint: z8.string().max(128).optional(),
+  startedAt: z8.number().int().positive().optional(),
   tokens: taskTokensUsageSchema.optional()
 });
-var runtimeGraphStatsSchema = z7.object({
-  liveCount: z7.number().int().nonnegative(),
-  terminalCount: z7.number().int().nonnegative(),
-  totalCount: z7.number().int().nonnegative()
+var runtimeGraphStatsSchema = z8.object({
+  liveCount: z8.number().int().nonnegative(),
+  terminalCount: z8.number().int().nonnegative(),
+  totalCount: z8.number().int().nonnegative()
 });
 function getUtf8ByteLength(str) {
   if (typeof Buffer !== "undefined") {
@@ -4582,15 +4698,15 @@ function getUtf8ByteLength(str) {
   }
   return bytes;
 }
-var runtimeGraphSnapshotSchema = z7.object({
-  version: z7.literal(1),
+var runtimeGraphSnapshotSchema = z8.object({
+  version: z8.literal(1),
   scope: graphScopeSchema,
   observation: graphObservationSchema,
-  nodes: z7.record(z7.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
+  nodes: z8.record(z8.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
     message: `Live nodes exceed maximum of ${MAX_LIVE_NODES}`
   }),
-  conversations: z7.record(z7.string(), runtimeConversationNodeSchema),
-  receipts: z7.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
+  conversations: z8.record(z8.string(), runtimeConversationNodeSchema),
+  receipts: z8.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
   stats: runtimeGraphStatsSchema
 }).refine(
   (snapshot) => {
@@ -4603,40 +4719,47 @@ var runtimeGraphSnapshotSchema = z7.object({
   },
   { message: "Runtime graph snapshot exceeds 1 MiB payload limit" }
 );
+
+// packages/contracts/src/wire-lifecycle.ts
 var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
-  type: z8.literal("runtime_graph_snapshot"),
+  type: z9.literal("runtime_graph_snapshot"),
   snapshot: runtimeGraphSnapshotSchema
 });
 var hostInteractionRequestSchema = wireContextSchema.extend({
-  type: z8.literal("host_interaction_request"),
-  id: z8.union([z8.string().min(1), z8.number().int()]),
-  interactionId: z8.string().min(1).optional(),
-  dialogKind: z8.string().min(1),
-  interactionKind: z8.string().optional(),
-  title: z8.string().optional(),
-  message: z8.string().optional(),
-  data: z8.unknown().optional()
+  type: z9.literal("host_interaction_request"),
+  id: z9.union([z9.string().min(1), z9.number().int()]),
+  interactionId: z9.string().min(1).optional(),
+  dialogKind: z9.string().min(1),
+  interactionKind: z9.string().optional(),
+  title: z9.string().optional(),
+  message: z9.string().optional(),
+  data: z9.unknown().optional()
 });
 var lifecycleSchemas = [
-  wireContextSchema.extend({ type: z8.literal("agent_start") }),
-  wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
-  wireContextSchema.extend({ type: z8.literal("turn_start") }),
-  wireContextSchema.extend({ type: z8.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
-  wireContextSchema.extend({ type: z8.literal("agent_end"), messages: z8.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
-  wireContextSchema.extend({ type: z8.literal("compaction_start"), reason: z8.enum(["manual", "threshold"]) }),
-  wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
-  wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
-  wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
+  wireContextSchema.extend({ type: z9.literal("agent_start") }),
+  wireContextSchema.extend({ type: z9.literal("context_window"), usedTokens: z9.number().nullable().optional(), contextWindow: z9.number() }),
+  wireContextSchema.extend({ type: z9.literal("turn_start") }),
+  wireContextSchema.extend({ type: z9.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z9.number().optional() }),
+  wireContextSchema.extend({ type: z9.literal("agent_end"), messages: z9.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z9.number().optional() }),
+  wireContextSchema.extend({ type: z9.literal("compaction_start"), reason: z9.enum(["manual", "threshold"]) }),
+  wireContextSchema.extend({ type: z9.literal("compaction_end"), reason: z9.enum(["manual", "threshold"]), aborted: z9.boolean() }),
+  wireContextSchema.extend({ type: z9.literal("auto_retry_start"), attempt: z9.number(), at: z9.number().optional() }),
+  wireContextSchema.extend({ type: z9.literal("auto_retry_end"), attempt: z9.number(), success: z9.boolean().optional() }),
   runtimeGraphSnapshotEventSchema,
   hostInteractionRequestSchema
 ];
-var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
-var runnerEventSchema = z9.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
+var sessionStatsSchema = z9.object({ contextUsage: z9.object({ tokens: z9.number().nullable(), contextWindow: z9.number() }) });
+
+// packages/contracts/src/runner-event.ts
+var runnerEventSchema = z10.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
 var knownEventTypes = new Set(runnerEventSchema.options.map((schema) => schema.shape.type.value));
-var base = z10.object({ id: z10.string().optional(), type: z10.literal("response"), command: z10.string().min(1) });
-var runnerResponseSchema = z10.discriminatedUnion("success", [
-  base.extend({ success: z10.literal(true), data: z10.unknown().optional() }).passthrough(),
-  base.extend({ success: z10.literal(false), error: z10.string() }).passthrough()
+
+// packages/contracts/src/runner-response.ts
+import { z as z11 } from "zod";
+var base = z11.object({ id: z11.string().optional(), type: z11.literal("response"), command: z11.string().min(1) });
+var runnerResponseSchema = z11.discriminatedUnion("success", [
+  base.extend({ success: z11.literal(true), data: z11.unknown().optional() }).passthrough(),
+  base.extend({ success: z11.literal(false), error: z11.string() }).passthrough()
 ]);
 
 // packages/core/src/runtime-graph-state.ts

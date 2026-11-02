@@ -2,7 +2,7 @@ import { openDurable } from "./runtime.ts";
 import type { AdmissionReceipt } from "./runtime-types.ts";
 import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";
-import type { RunnerEvent } from "@durable-zero/contracts";
+import type { RunnerEvent } from "../../contracts/src/index.ts";
 
 export interface DurableEngineOptions {
 	sessionDir?: string;

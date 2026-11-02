@@ -222,6 +222,7 @@ var toolEndSchema = tool.extend({
   type: z6.literal("tool_execution_end"),
   result: z6.string(),
   isError: z6.boolean(),
+  args: z6.record(z6.string(), z6.unknown()).optional(),
   details: z6.unknown().optional()
 });
 var hostToolCallSchema = wireContextSchema.extend({

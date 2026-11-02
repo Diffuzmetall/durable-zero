@@ -7,7 +7,7 @@ import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import type { RunnerEvent } from "./bridge/contracts.ts";
 import { parseCliArgs } from "./cli-args.ts";
 import { handleActiveSessionCommand } from "./session-commands.ts";
-import { parseRunnerCommand, type RunnerCommandPayload } from "@durable-zero/contracts";
+import { parseRunnerCommand, type RunnerCommandPayload } from "../../contracts/src/index.ts";
 import { getPiDurableVersion } from "./version.ts";
 import { HostRpcManager, setHostToolForwarder, setHostInteractionRequester } from "./host-rpc.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";

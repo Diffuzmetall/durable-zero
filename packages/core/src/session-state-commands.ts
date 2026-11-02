@@ -4,7 +4,7 @@ import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
 import type { OpenDurableResult } from "./runtime-types.ts";
 import type { CliArgs } from "./cli-args.ts";
-import type { CommandResponder, RunnerCommandPayload } from "@durable-zero/contracts";
+import type { CommandResponder, RunnerCommandPayload } from "../../contracts/src/index.ts";
 import { parseConversationId } from "./conversation-id.ts";
 
 interface SessionAgentDoc {

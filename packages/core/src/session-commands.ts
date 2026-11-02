@@ -6,7 +6,7 @@ import type { CliArgs } from "./cli-args.ts";
 import { handleBindingCommand } from "./binding-commands.ts";
 import { handleSessionStateCommand } from "./session-state-commands.ts";
 import { subagentPolicyRecordSchema } from "./policy/schema.ts";
-import type { CommandResponder, RunnerCommandPayload } from "@durable-zero/contracts";
+import type { CommandResponder, RunnerCommandPayload } from "../../contracts/src/index.ts";
 import { parseConversationId } from "./conversation-id.ts";
 import { forkSessionDatabase } from "./session-fork.ts";
 

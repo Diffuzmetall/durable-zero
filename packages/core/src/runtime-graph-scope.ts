@@ -1,1 +1,1 @@
-export * from "@durable-zero/contracts";
+export * from "../../contracts/src/index.ts";
