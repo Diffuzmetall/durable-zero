@@ -8,6 +8,7 @@ import { handleSessionStateCommand } from "./session-state-commands.ts";
 import { subagentPolicyRecordSchema } from "./policy/schema.ts";
 import type { CommandResponder, RunnerCommandPayload } from "@durable-zero/contracts";
 import { parseConversationId } from "./conversation-id.ts";
+import { forkSessionDatabase } from "./session-fork.ts";
 
 function toDurableInput(message?: string, images?: import("@earendil-works/pi-ai").ImageContent[]): string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[] | null {
 	const msg = message ?? "";
@@ -132,6 +133,21 @@ export async function handleActiveSessionCommand(
 			}
 			await durable.controller.setThinkingLevel(cmd.level);
 			respond.success(cmd.id, "set_thinking_level");
+			break;
+		}
+		case "session_fork": {
+			const sourceDir = cmd.sourceDir ?? durable.view.current().session?.directory;
+			const targetDir = cmd.targetDir;
+			if (!sourceDir || !targetDir) {
+				respond.error(cmd.id, "session_fork", "Missing sourceDir or targetDir");
+				return;
+			}
+			try {
+				forkSessionDatabase({ sourceDir, targetDir, checkpointId: cmd.checkpointId });
+				respond.success(cmd.id, "session_fork", { sourceDir, targetDir, checkpointId: cmd.checkpointId });
+			} catch (err) {
+				respond.error(cmd.id, "session_fork", err instanceof Error ? err.message : String(err));
+			}
 			break;
 		}
 		default: {

@@ -9,6 +9,17 @@ export const runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
 });
 export type RuntimeGraphSnapshotEvent = z.infer<typeof runtimeGraphSnapshotEventSchema>;
 
+export const hostInteractionRequestSchema = wireContextSchema.extend({
+	type: z.literal("host_interaction_request"),
+	id: z.union([z.string().min(1), z.number().int()]),
+	dialogKind: z.string().min(1),
+	interactionKind: z.string().optional(),
+	title: z.string().optional(),
+	message: z.string().optional(),
+	data: z.unknown().optional(),
+});
+export type HostInteractionRequestEvent = z.infer<typeof hostInteractionRequestSchema>;
+
 export const lifecycleSchemas = [
 	wireContextSchema.extend({ type: z.literal("agent_start") }),
 	wireContextSchema.extend({ type: z.literal("context_window"), usedTokens: z.number().nullable().optional(), contextWindow: z.number() }),
@@ -20,6 +31,7 @@ export const lifecycleSchemas = [
 	wireContextSchema.extend({ type: z.literal("auto_retry_start"), attempt: z.number(), at: z.number().optional() }),
 	wireContextSchema.extend({ type: z.literal("auto_retry_end"), attempt: z.number(), success: z.boolean().optional() }),
 	runtimeGraphSnapshotEventSchema,
+	hostInteractionRequestSchema,
 ] as const;
 
 export const sessionStatsSchema = z.object({ contextUsage: z.object({ tokens: z.number().nullable(), contextWindow: z.number() }) });

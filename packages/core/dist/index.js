@@ -446,20 +446,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve3) => {
-            const timer = setTimeout(() => resolve3(), holdTimeoutMs);
+          await new Promise((resolve4) => {
+            const timer = setTimeout(() => resolve4(), holdTimeoutMs);
             timer.unref?.();
             watch.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve3();
+                resolve4();
               }
               return Promise.resolve();
             });
             void watch.closed.then(() => {
               clearTimeout(timer);
-              resolve3();
+              resolve4();
             });
           });
         } finally {
@@ -1096,6 +1096,15 @@ async function selectSession(cwdInput, continueSession, targetSession) {
   const id = basename(directory);
   const release = await acquireSessionLock(directory, cwd, id);
   return { id, directory, database: join2(directory, "session.sqlite"), cwd, created, release };
+}
+function safeCloneRecord(record) {
+  if (record === null || typeof record !== "object") {
+    return record;
+  }
+  if (Array.isArray(record)) {
+    return [...record];
+  }
+  return { ...record };
 }
 
 // packages/core/src/runtime-types.ts
@@ -2181,7 +2190,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve4, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2194,7 +2203,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve3();
+                resolve4();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2203,7 +2212,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve3();
+            resolve4();
           } catch (error) {
             reject(error);
           }
@@ -3763,7 +3772,7 @@ var SessionDaemon = class {
     if (!fs.existsSync(this.socketPath)) {
       return null;
     }
-    return new Promise((resolve3) => {
+    return new Promise((resolve4) => {
       let settled = false;
       const socket = net.createConnection({ path: this.socketPath });
       const cleanup = (result) => {
@@ -3779,14 +3788,14 @@ var SessionDaemon = class {
           } catch {
           }
         }
-        resolve3(result);
+        resolve4(result);
       };
       const timer = setTimeout(() => cleanup(null), timeoutMs);
       socket.once("connect", () => {
         clearTimeout(timer);
         if (!settled) {
           settled = true;
-          resolve3(socket);
+          resolve4(socket);
         }
       });
       socket.once("error", () => {
@@ -3805,7 +3814,7 @@ var SessionDaemon = class {
       } catch {
       }
     }
-    return new Promise((resolve3, reject) => {
+    return new Promise((resolve4, reject) => {
       const server = net.createServer((socket) => {
         this.activeSockets.add(socket);
         socket.on("close", () => this.activeSockets.delete(socket));
@@ -3817,7 +3826,7 @@ var SessionDaemon = class {
       });
       server.listen(this.socketPath, () => {
         this.server = server;
-        resolve3(true);
+        resolve4(true);
       });
     });
   }
@@ -3830,8 +3839,8 @@ var SessionDaemon = class {
     }
     this.activeSockets.clear();
     if (this.server) {
-      await new Promise((resolve3) => {
-        this.server.close(() => resolve3());
+      await new Promise((resolve4) => {
+        this.server.close(() => resolve4());
       });
       this.server = null;
     }
@@ -4211,7 +4220,24 @@ var wireContextSchema = z3.object({
   errorMessage: z3.string().optional()
 }).passthrough();
 var runnerCommandSchema = z4.object({
-  type: z4.enum(["prompt", "steer", "abort", "abort_task", "compact", "set_subagent_policy", "get_available_models", "set_model", "set_thinking_level", "get_state", "get_session_stats", "register_binding", "get_all_bindings"]),
+  type: z4.enum([
+    "prompt",
+    "steer",
+    "abort",
+    "abort_task",
+    "compact",
+    "set_subagent_policy",
+    "get_available_models",
+    "set_model",
+    "set_thinking_level",
+    "get_state",
+    "get_session_stats",
+    "register_binding",
+    "get_all_bindings",
+    "session_fork",
+    "host_tool_result",
+    "host_interaction_response"
+  ]),
   id: z4.string().optional(),
   message: z4.string().optional(),
   images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
@@ -4225,7 +4251,16 @@ var runnerCommandSchema = z4.object({
   parentThreadId: z4.string().optional(),
   sessionId: z4.string().optional(),
   policyRecord: z4.unknown().optional(),
-  taskId: z4.number().int().positive().optional()
+  taskId: z4.number().int().positive().optional(),
+  sourceDir: z4.string().optional(),
+  targetDir: z4.string().optional(),
+  checkpointId: z4.union([z4.number(), z4.string()]).optional(),
+  sourceProviderThreadId: z4.string().optional(),
+  targetProviderThreadId: z4.string().optional(),
+  callId: z4.string().optional(),
+  result: z4.unknown().optional(),
+  isError: z4.boolean().optional(),
+  dialogKind: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
 var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
@@ -4280,7 +4315,13 @@ var toolEndSchema = tool.extend({
   isError: z6.boolean(),
   details: z6.unknown().optional()
 });
-var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema];
+var hostToolCallSchema = wireContextSchema.extend({
+  type: z6.literal("host_tool_call"),
+  callId: z6.string().min(1),
+  toolName: z6.string().min(1),
+  arguments: z6.record(z6.string(), z6.unknown()).default({})
+});
+var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema];
 var MAX_LIVE_NODES = 512;
 var MAX_RECEIPTS = 128;
 var MAX_LABEL_LENGTH = 160;
@@ -4436,6 +4477,15 @@ var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
   type: z8.literal("runtime_graph_snapshot"),
   snapshot: runtimeGraphSnapshotSchema
 });
+var hostInteractionRequestSchema = wireContextSchema.extend({
+  type: z8.literal("host_interaction_request"),
+  id: z8.union([z8.string().min(1), z8.number().int()]),
+  dialogKind: z8.string().min(1),
+  interactionKind: z8.string().optional(),
+  title: z8.string().optional(),
+  message: z8.string().optional(),
+  data: z8.unknown().optional()
+});
 var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("agent_start") }),
   wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
@@ -4446,7 +4496,8 @@ var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
-  runtimeGraphSnapshotEventSchema
+  runtimeGraphSnapshotEventSchema,
+  hostInteractionRequestSchema
 ];
 var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
 var runnerEventSchema = z9.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
@@ -4751,6 +4802,73 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args, respo
   return false;
 }
 
+// packages/core/src/session-fork.ts
+import { existsSync as existsSync3, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { join as join4, resolve as resolve3 } from "node:path";
+function forkSessionDatabase(options) {
+  let sourceDir = resolve3(options.sourceDir);
+  if (sourceDir.endsWith(".sqlite")) {
+    sourceDir = resolve3(sourceDir, "..");
+  }
+  const sourceDb = join4(sourceDir, "session.sqlite");
+  if (!existsSync3(sourceDir) || !existsSync3(sourceDb)) {
+    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
+  }
+  let targetDir = resolve3(options.targetDir);
+  if (targetDir.endsWith(".sqlite")) {
+    targetDir = resolve3(targetDir, "..");
+  }
+  mkdirSync(targetDir, { recursive: true });
+  const targetDb = join4(targetDir, "session.sqlite");
+  for (const suffix of ["", "-wal", "-shm"]) {
+    const targetFile = `${targetDb}${suffix}`;
+    if (existsSync3(targetFile)) rmSync(targetFile, { force: true });
+  }
+  const sourceConn = new DatabaseSync(sourceDb);
+  try {
+    try {
+      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    } catch {
+    }
+    const escapedTarget = targetDb.replace(/'/g, "''");
+    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
+  } finally {
+    sourceConn.close();
+  }
+  const db = new DatabaseSync(targetDb);
+  try {
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    if (options.checkpointId !== void 0) {
+      const entryId = Number(options.checkpointId);
+      if (Number.isFinite(entryId) && entryId > 0) {
+        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
+        if (hasEntries) {
+          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
+        }
+        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
+        if (hasTasks) {
+          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
+        }
+      }
+    }
+  } finally {
+    db.close();
+  }
+  const targetLockDir = `${targetDir}.lock`;
+  if (existsSync3(targetLockDir)) {
+    rmSync(targetLockDir, { recursive: true, force: true });
+  }
+  if (existsSync3(targetDir)) {
+    const entries = readdirSync(targetDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
+        rmSync(join4(targetDir, entry.name), { recursive: true, force: true });
+      }
+    }
+  }
+}
+
 // packages/core/src/session-commands.ts
 function toDurableInput(message, images) {
   const msg = message ?? "";
@@ -4870,6 +4988,21 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
       respond.success(cmd.id, "set_thinking_level");
       break;
     }
+    case "session_fork": {
+      const sourceDir = cmd.sourceDir ?? durable.view.current().session?.directory;
+      const targetDir = cmd.targetDir;
+      if (!sourceDir || !targetDir) {
+        respond.error(cmd.id, "session_fork", "Missing sourceDir or targetDir");
+        return;
+      }
+      try {
+        forkSessionDatabase({ sourceDir, targetDir, checkpointId: cmd.checkpointId });
+        respond.success(cmd.id, "session_fork", { sourceDir, targetDir, checkpointId: cmd.checkpointId });
+      } catch (err) {
+        respond.error(cmd.id, "session_fork", err instanceof Error ? err.message : String(err));
+      }
+      break;
+    }
     default: {
       respond.error(cmd.id, cmd.type ?? "unknown", `Unknown command: ${cmd.type}`);
       break;
@@ -4879,9 +5012,9 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
 
 // packages/core/src/stdout-guard.ts
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join4 } from "node:path";
+import { join as join5 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync3, readFileSync as readFileSync3 } from "node:fs";
+import { existsSync as existsSync4, readFileSync as readFileSync3 } from "node:fs";
 var SUPPORTED_PI_VERSION_PREFIXES = ["1.4.", "1.5."];
 var EXPECTED_GUARD_RELATIVE_PATH = "dist/core/output-guard.js";
 var UpstreamStdoutGuardPortError = class extends Error {
@@ -4916,8 +5049,8 @@ function validateUpstreamGuardShape(mod) {
 async function loadUpstreamGuard() {
   if (activeGuard) return activeGuard;
   const pkgDir = getPackageDir();
-  const pkgJsonPath = join4(pkgDir, "package.json");
-  if (!existsSync3(pkgJsonPath)) {
+  const pkgJsonPath = join5(pkgDir, "package.json");
+  if (!existsSync4(pkgJsonPath)) {
     throw new UpstreamStdoutGuardPortError(`Cannot locate package.json at ${pkgJsonPath}`, "MISSING_PACKAGE_JSON");
   }
   let version;
@@ -4931,8 +5064,8 @@ async function loadUpstreamGuard() {
     );
   }
   validateUpstreamGuardVersion(version);
-  const guardPath = join4(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
-  if (!existsSync3(guardPath)) {
+  const guardPath = join5(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
+  if (!existsSync4(guardPath)) {
     throw new UpstreamStdoutGuardPortError(`Missing upstream output guard artifact at ${guardPath}`, "MISSING_ARTIFACT");
   }
   let mod;
@@ -5013,6 +5146,8 @@ export {
   findSubagentMeta,
   firstInput,
   flushWireStdout,
+  forkSessionDatabase,
+  getAgentDir,
   getPiDurableVersion,
   handleActiveSessionCommand,
   hasOutput,
@@ -5020,9 +5155,11 @@ export {
   installExtensionTools,
   isAgentDocument,
   isConversationEntryRecord,
+  isProcessAlive,
   isStdoutGuarded,
   isToolCallBlock,
   isUsageDocument,
+  isVerifiedRunnerProcess,
   isWatchCall,
   mapTaskGraphNodeState,
   mountExtensionBridge,
@@ -5035,7 +5172,9 @@ export {
   reporterFor,
   restoreRunnerStdout,
   runtimeContext,
+  safeCloneRecord,
   sanitizeTargetHint,
+  selectSession,
   setupRunnerStdoutGuard,
   subagentsExtension,
   taskLabel,

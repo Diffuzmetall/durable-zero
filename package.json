@@ -35,7 +35,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test packages/cli/test/*.test.ts packages/core/test/*.test.ts",
+    "test": "node --test packages/contracts/test/*.test.ts packages/cli/test/*.test.ts packages/core/test/*.test.ts",
     "lint": "pnpm -r run lint"
   },
   "dependencies": {

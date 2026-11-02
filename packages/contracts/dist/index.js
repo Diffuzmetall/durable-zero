@@ -108,7 +108,24 @@ var wireContextSchema = z3.object({
 
 // packages/contracts/src/runner-command.ts
 var runnerCommandSchema = z4.object({
-  type: z4.enum(["prompt", "steer", "abort", "abort_task", "compact", "set_subagent_policy", "get_available_models", "set_model", "set_thinking_level", "get_state", "get_session_stats", "register_binding", "get_all_bindings"]),
+  type: z4.enum([
+    "prompt",
+    "steer",
+    "abort",
+    "abort_task",
+    "compact",
+    "set_subagent_policy",
+    "get_available_models",
+    "set_model",
+    "set_thinking_level",
+    "get_state",
+    "get_session_stats",
+    "register_binding",
+    "get_all_bindings",
+    "session_fork",
+    "host_tool_result",
+    "host_interaction_response"
+  ]),
   id: z4.string().optional(),
   message: z4.string().optional(),
   images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
@@ -122,7 +139,16 @@ var runnerCommandSchema = z4.object({
   parentThreadId: z4.string().optional(),
   sessionId: z4.string().optional(),
   policyRecord: z4.unknown().optional(),
-  taskId: z4.number().int().positive().optional()
+  taskId: z4.number().int().positive().optional(),
+  sourceDir: z4.string().optional(),
+  targetDir: z4.string().optional(),
+  checkpointId: z4.union([z4.number(), z4.string()]).optional(),
+  sourceProviderThreadId: z4.string().optional(),
+  targetProviderThreadId: z4.string().optional(),
+  callId: z4.string().optional(),
+  result: z4.unknown().optional(),
+  isError: z4.boolean().optional(),
+  dialogKind: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
 var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
@@ -197,7 +223,13 @@ var toolEndSchema = tool.extend({
   isError: z6.boolean(),
   details: z6.unknown().optional()
 });
-var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema];
+var hostToolCallSchema = wireContextSchema.extend({
+  type: z6.literal("host_tool_call"),
+  callId: z6.string().min(1),
+  toolName: z6.string().min(1),
+  arguments: z6.record(z6.string(), z6.unknown()).default({})
+});
+var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema];
 
 // packages/contracts/src/wire-lifecycle.ts
 import { z as z8 } from "zod";
@@ -361,6 +393,15 @@ var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
   type: z8.literal("runtime_graph_snapshot"),
   snapshot: runtimeGraphSnapshotSchema
 });
+var hostInteractionRequestSchema = wireContextSchema.extend({
+  type: z8.literal("host_interaction_request"),
+  id: z8.union([z8.string().min(1), z8.number().int()]),
+  dialogKind: z8.string().min(1),
+  interactionKind: z8.string().optional(),
+  title: z8.string().optional(),
+  message: z8.string().optional(),
+  data: z8.unknown().optional()
+});
 var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("agent_start") }),
   wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
@@ -371,7 +412,8 @@ var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
-  runtimeGraphSnapshotEventSchema
+  runtimeGraphSnapshotEventSchema,
+  hostInteractionRequestSchema
 ];
 var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
 
@@ -558,6 +600,8 @@ export {
   getUtf8ByteLength,
   graphObservationSchema,
   graphScopeSchema,
+  hostInteractionRequestSchema,
+  hostToolCallSchema,
   isConversationInScope,
   knownChannelKinds,
   knownCommandTypes,

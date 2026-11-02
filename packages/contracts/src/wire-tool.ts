@@ -18,7 +18,14 @@ export const toolEndSchema = tool.extend({
 	isError: z.boolean(),
 	details: z.unknown().optional(),
 });
-export const toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema] as const;
+export const hostToolCallSchema = wireContextSchema.extend({
+	type: z.literal("host_tool_call"),
+	callId: z.string().min(1),
+	toolName: z.string().min(1),
+	arguments: z.record(z.string(), z.unknown()).default({}),
+});
+export const toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema] as const;
 export type ToolExecutionStartEvent = z.infer<typeof toolStartSchema>;
 export type ToolExecutionUpdateEvent = z.infer<typeof toolUpdateSchema>;
 export type ToolExecutionEndEvent = z.infer<typeof toolEndSchema>;
+export type HostToolCallEvent = z.infer<typeof hostToolCallSchema>;

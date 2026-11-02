@@ -7,7 +7,12 @@ export interface CommandResponder {
 }
 
 export const runnerCommandSchema = z.object({
-	type: z.enum(["prompt", "steer", "abort", "abort_task", "compact", "set_subagent_policy", "get_available_models", "set_model", "set_thinking_level", "get_state", "get_session_stats", "register_binding", "get_all_bindings"]),
+	type: z.enum([
+		"prompt", "steer", "abort", "abort_task", "compact", "set_subagent_policy",
+		"get_available_models", "set_model", "set_thinking_level", "get_state",
+		"get_session_stats", "register_binding", "get_all_bindings",
+		"session_fork", "host_tool_result", "host_interaction_response"
+	]),
 	id: z.string().optional(), message: z.string().optional(),
 	images: z.array(z.object({ type: z.literal("image"), data: z.string(), mimeType: z.string() })).optional(),
 	streamingBehavior: z.enum(["steer", "followUp"]).optional(),
@@ -16,6 +21,11 @@ export const runnerCommandSchema = z.object({
 	conversationId: conversationIdSchema.optional(), threadId: z.string().optional(),
 	parentThreadId: z.string().optional(), sessionId: z.string().optional(), policyRecord: z.unknown().optional(),
 	taskId: z.number().int().positive().optional(),
+	sourceDir: z.string().optional(), targetDir: z.string().optional(),
+	checkpointId: z.union([z.number(), z.string()]).optional(),
+	sourceProviderThreadId: z.string().optional(), targetProviderThreadId: z.string().optional(),
+	callId: z.string().optional(), result: z.unknown().optional(), isError: z.boolean().optional(),
+	dialogKind: z.string().optional(),
 }).passthrough();
 export type RunnerCommandPayload = z.infer<typeof runnerCommandSchema>;
 export const knownCommandTypes: ReadonlySet<string> = new Set(runnerCommandSchema.shape.type.options);

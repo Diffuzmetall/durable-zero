@@ -9,7 +9,7 @@ import { parseCliArgs } from "./cli-args.ts";
 import { handleActiveSessionCommand } from "./session-commands.ts";
 import { parseRunnerCommand, type RunnerCommandPayload } from "@durable-zero/contracts";
 import { getPiDurableVersion } from "./version.ts";
-import { createBridgeSender, initBridgeInboundChannel, createForwardToolCall, createRequestInteraction } from "./bridge-channel.ts";
+import { HostRpcManager } from "./host-rpc.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";
 import { RuntimeGraphSource } from "./runtime-graph-source.ts";
 import { ROOT_CONVERSATION_ID } from "@earendil-works/pi-durable";
@@ -30,9 +30,9 @@ function output(data: unknown): void {
 	writeWireStdout(serializeJsonLine(data));
 }
 
-const sendToBridge = createBridgeSender();
-const forwardToolCall = createForwardToolCall(sendToBridge);
-const requestInteraction = createRequestInteraction(sendToBridge);
+const hostRpc = new HostRpcManager(output);
+const forwardToolCall = hostRpc.forwardToolCall;
+const requestInteraction = hostRpc.requestInteraction;
 
 async function main() {
 	await setupRunnerStdoutGuard();
@@ -79,9 +79,7 @@ async function main() {
 	if (args.noSession) {
 		const cwd = args.cwd ?? process.cwd();
 		const { scopedModelList, defaultModel, defaultThinkingLevel, modelScope } = await setupRunnerModels(cwd, args);
-		output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe" });
-		sendToBridge({ ready: true, kind: "ready", pid: process.pid, ...modelScope });
-		initBridgeInboundChannel(modelScope, sendToBridge);
+		output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe", ...modelScope });
 		attachJsonlLineReader(process.stdin, (line) => {
 			if (!line.trim()) return;
 			try {
@@ -135,9 +133,6 @@ async function main() {
 		scopedModelIds: durable.view.current().models.map((m) => `${m.provider}/${m.modelId}`),
 		defaultModelId: durable.view.current().models[0] ? `${durable.view.current().models[0].provider}/${durable.view.current().models[0].modelId}` : undefined,
 	};
-	initBridgeInboundChannel(modelScope, sendToBridge, (fault) => {
-		output({ type: "session_fault", fault: fault.message });
-	});
 
 	const graphScope = {
 		sessionId: String(durable.view.current().session?.id ?? "unknown"),
@@ -157,12 +152,12 @@ async function main() {
 		() => durable.view.current(),
 	);
 
-	sendToBridge({ ready: true, kind: "ready", pid: process.pid, ...modelScope });
 	output({
 		type: "ready",
 		kind: "ready",
 		ready: true,
 		pid: process.pid,
+		...modelScope,
 		session: durable.view.current().session,
 		conversations: durable.view.current().conversations,
 		activeConversationId: ROOT_CONVERSATION_ID,
@@ -188,6 +183,28 @@ async function main() {
 				success: false,
 				error: `INVALID_COMMAND_PAYLOAD: ${err instanceof Error ? err.message : String(err)}`,
 			});
+			return;
+		}
+
+		if (cmd.type === "host_tool_result") {
+			const handled = hostRpc.handleHostToolResult(cmd);
+			if (handled) {
+				success(cmd.id, "host_tool_result", { ok: true });
+			} else {
+				error(cmd.id, "host_tool_result", `No pending tool call found for callId: ${cmd.callId}`);
+			}
+			await flushWireStdout();
+			return;
+		}
+
+		if (cmd.type === "host_interaction_response") {
+			const handled = hostRpc.handleHostInteractionResponse(cmd);
+			if (handled) {
+				success(cmd.id, "host_interaction_response", { ok: true });
+			} else {
+				error(cmd.id, "host_interaction_response", `No pending interaction found for id: ${cmd.id}`);
+			}
+			await flushWireStdout();
 			return;
 		}
 

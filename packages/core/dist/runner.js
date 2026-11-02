@@ -446,20 +446,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve3) => {
-            const timer = setTimeout(() => resolve3(), holdTimeoutMs);
+          await new Promise((resolve4) => {
+            const timer = setTimeout(() => resolve4(), holdTimeoutMs);
             timer.unref?.();
             watch2.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve3();
+                resolve4();
               }
               return Promise.resolve();
             });
             void watch2.closed.then(() => {
               clearTimeout(timer);
-              resolve3();
+              resolve4();
             });
           });
         } finally {
@@ -2174,7 +2174,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve4, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2187,7 +2187,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve3();
+                resolve4();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2196,7 +2196,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve3();
+            resolve4();
           } catch (error) {
             reject(error);
           }
@@ -4052,6 +4052,73 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
   return false;
 }
 
+// packages/core/src/session-fork.ts
+import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { join as join3, resolve as resolve3 } from "node:path";
+function forkSessionDatabase(options) {
+  let sourceDir = resolve3(options.sourceDir);
+  if (sourceDir.endsWith(".sqlite")) {
+    sourceDir = resolve3(sourceDir, "..");
+  }
+  const sourceDb = join3(sourceDir, "session.sqlite");
+  if (!existsSync2(sourceDir) || !existsSync2(sourceDb)) {
+    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
+  }
+  let targetDir = resolve3(options.targetDir);
+  if (targetDir.endsWith(".sqlite")) {
+    targetDir = resolve3(targetDir, "..");
+  }
+  mkdirSync(targetDir, { recursive: true });
+  const targetDb = join3(targetDir, "session.sqlite");
+  for (const suffix of ["", "-wal", "-shm"]) {
+    const targetFile = `${targetDb}${suffix}`;
+    if (existsSync2(targetFile)) rmSync(targetFile, { force: true });
+  }
+  const sourceConn = new DatabaseSync(sourceDb);
+  try {
+    try {
+      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    } catch {
+    }
+    const escapedTarget = targetDb.replace(/'/g, "''");
+    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
+  } finally {
+    sourceConn.close();
+  }
+  const db = new DatabaseSync(targetDb);
+  try {
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    if (options.checkpointId !== void 0) {
+      const entryId = Number(options.checkpointId);
+      if (Number.isFinite(entryId) && entryId > 0) {
+        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
+        if (hasEntries) {
+          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
+        }
+        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
+        if (hasTasks) {
+          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
+        }
+      }
+    }
+  } finally {
+    db.close();
+  }
+  const targetLockDir = `${targetDir}.lock`;
+  if (existsSync2(targetLockDir)) {
+    rmSync(targetLockDir, { recursive: true, force: true });
+  }
+  if (existsSync2(targetDir)) {
+    const entries = readdirSync(targetDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
+        rmSync(join3(targetDir, entry.name), { recursive: true, force: true });
+      }
+    }
+  }
+}
+
 // packages/core/src/session-commands.ts
 function toDurableInput(message, images) {
   const msg = message ?? "";
@@ -4171,6 +4238,21 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
       respond.success(cmd.id, "set_thinking_level");
       break;
     }
+    case "session_fork": {
+      const sourceDir = cmd.sourceDir ?? durable.view.current().session?.directory;
+      const targetDir = cmd.targetDir;
+      if (!sourceDir || !targetDir) {
+        respond.error(cmd.id, "session_fork", "Missing sourceDir or targetDir");
+        return;
+      }
+      try {
+        forkSessionDatabase({ sourceDir, targetDir, checkpointId: cmd.checkpointId });
+        respond.success(cmd.id, "session_fork", { sourceDir, targetDir, checkpointId: cmd.checkpointId });
+      } catch (err) {
+        respond.error(cmd.id, "session_fork", err instanceof Error ? err.message : String(err));
+      }
+      break;
+    }
     default: {
       respond.error(cmd.id, cmd.type ?? "unknown", `Unknown command: ${cmd.type}`);
       break;
@@ -4286,7 +4368,24 @@ var wireContextSchema = z3.object({
   errorMessage: z3.string().optional()
 }).passthrough();
 var runnerCommandSchema = z4.object({
-  type: z4.enum(["prompt", "steer", "abort", "abort_task", "compact", "set_subagent_policy", "get_available_models", "set_model", "set_thinking_level", "get_state", "get_session_stats", "register_binding", "get_all_bindings"]),
+  type: z4.enum([
+    "prompt",
+    "steer",
+    "abort",
+    "abort_task",
+    "compact",
+    "set_subagent_policy",
+    "get_available_models",
+    "set_model",
+    "set_thinking_level",
+    "get_state",
+    "get_session_stats",
+    "register_binding",
+    "get_all_bindings",
+    "session_fork",
+    "host_tool_result",
+    "host_interaction_response"
+  ]),
   id: z4.string().optional(),
   message: z4.string().optional(),
   images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
@@ -4300,7 +4399,16 @@ var runnerCommandSchema = z4.object({
   parentThreadId: z4.string().optional(),
   sessionId: z4.string().optional(),
   policyRecord: z4.unknown().optional(),
-  taskId: z4.number().int().positive().optional()
+  taskId: z4.number().int().positive().optional(),
+  sourceDir: z4.string().optional(),
+  targetDir: z4.string().optional(),
+  checkpointId: z4.union([z4.number(), z4.string()]).optional(),
+  sourceProviderThreadId: z4.string().optional(),
+  targetProviderThreadId: z4.string().optional(),
+  callId: z4.string().optional(),
+  result: z4.unknown().optional(),
+  isError: z4.boolean().optional(),
+  dialogKind: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
 var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
@@ -4366,7 +4474,13 @@ var toolEndSchema = tool.extend({
   isError: z6.boolean(),
   details: z6.unknown().optional()
 });
-var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema];
+var hostToolCallSchema = wireContextSchema.extend({
+  type: z6.literal("host_tool_call"),
+  callId: z6.string().min(1),
+  toolName: z6.string().min(1),
+  arguments: z6.record(z6.string(), z6.unknown()).default({})
+});
+var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema];
 var MAX_LIVE_NODES = 512;
 var MAX_RECEIPTS = 128;
 var MAX_LABEL_LENGTH = 160;
@@ -4522,6 +4636,15 @@ var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
   type: z8.literal("runtime_graph_snapshot"),
   snapshot: runtimeGraphSnapshotSchema
 });
+var hostInteractionRequestSchema = wireContextSchema.extend({
+  type: z8.literal("host_interaction_request"),
+  id: z8.union([z8.string().min(1), z8.number().int()]),
+  dialogKind: z8.string().min(1),
+  interactionKind: z8.string().optional(),
+  title: z8.string().optional(),
+  message: z8.string().optional(),
+  data: z8.unknown().optional()
+});
 var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("agent_start") }),
   wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
@@ -4532,7 +4655,8 @@ var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
-  runtimeGraphSnapshotEventSchema
+  runtimeGraphSnapshotEventSchema,
+  hostInteractionRequestSchema
 ];
 var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
 var runnerEventSchema = z9.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
@@ -4544,16 +4668,16 @@ var runnerResponseSchema = z10.discriminatedUnion("success", [
 ]);
 
 // packages/core/src/shared/version.ts
-import { existsSync as existsSync2, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join as join3 } from "node:path";
+import { dirname, join as join4 } from "node:path";
 import { fileURLToPath } from "node:url";
 var esmRequire = createRequire(import.meta.url);
 var currentDir = dirname(fileURLToPath(import.meta.url));
 function getPiDurableVersion() {
   try {
     const durablePkg = esmRequire.resolve("@earendil-works/pi-durable/package.json");
-    if (existsSync2(durablePkg)) {
+    if (existsSync3(durablePkg)) {
       const parsed = JSON.parse(readFileSync2(durablePkg, "utf8"));
       if (parsed.version) return parsed.version;
     }
@@ -4564,8 +4688,8 @@ function getPiDurableVersion() {
     }
   }
   try {
-    const pluginPkg = join3(currentDir, "..", "..", "package.json");
-    if (existsSync2(pluginPkg)) {
+    const pluginPkg = join4(currentDir, "..", "..", "package.json");
+    if (existsSync3(pluginPkg)) {
       const parsed = JSON.parse(readFileSync2(pluginPkg, "utf8"));
       const dep = parsed.dependencies?.["@earendil-works/pi-durable"]?.replace(/^[\^~]/, "");
       if (dep) return dep;
@@ -4579,57 +4703,37 @@ function getPiDurableVersion() {
   return "1.0.0";
 }
 
-// packages/core/src/bridge-channel.ts
-import { Socket } from "node:net";
-import { writeSync } from "node:fs";
-var CHILD_TO_BRIDGE_FD = 3;
-var BRIDGE_TO_CHILD_FD = 4;
-function createBridgeSender() {
-  try {
-    const bridgeOut = new Socket({ fd: CHILD_TO_BRIDGE_FD });
-    return (msg) => {
-      try {
-        bridgeOut.write(JSON.stringify(msg) + "\n");
-      } catch {
-      }
-    };
-  } catch {
-    return (msg) => {
-      try {
-        writeSync(CHILD_TO_BRIDGE_FD, JSON.stringify(msg) + "\n");
-      } catch {
-      }
-    };
+// packages/core/src/host-rpc.ts
+var HostRpcManager = class {
+  pendingToolCalls = /* @__PURE__ */ new Map();
+  pendingInteractions = /* @__PURE__ */ new Map();
+  nextCallSeq = 0;
+  nextInteractionSeq = 0;
+  output;
+  constructor(output2) {
+    this.output = output2;
   }
-}
-var pendingToolCalls = /* @__PURE__ */ new Map();
-var pendingInteractions = /* @__PURE__ */ new Map();
-var nextCallSeq = 0;
-function createForwardToolCall(sendToBridge2) {
-  return (toolName, args2) => {
-    const callId = `call_${Date.now()}_${++nextCallSeq}`;
-    return new Promise((resolve3) => {
+  forwardToolCall = (toolName, args2) => {
+    const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
+    return new Promise((resolve4) => {
       const timer = setTimeout(() => {
-        pendingToolCalls.delete(callId);
-        resolve3({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+        this.pendingToolCalls.delete(callId);
+        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
       }, 12e4);
-      pendingToolCalls.set(callId, { resolve: resolve3, timer });
-      sendToBridge2({ kind: "tool_call_request", callId, toolName, arguments: args2 ?? {} });
+      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
+      this.output({ type: "host_tool_call", callId, toolName, arguments: args2 ?? {} });
     });
   };
-}
-var nextInteractionSeq = 0;
-function createRequestInteraction(sendToBridge2) {
-  return (kind, payload) => {
-    const id = `interact_${Date.now()}_${++nextInteractionSeq}`;
-    return new Promise((resolve3) => {
+  requestInteraction = (kind, payload) => {
+    const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
+    return new Promise((resolve4) => {
       const timer = setTimeout(() => {
-        pendingInteractions.delete(id);
-        resolve3(null);
+        this.pendingInteractions.delete(id);
+        resolve4(null);
       }, 18e4);
-      pendingInteractions.set(id, { resolve: resolve3, timer });
-      sendToBridge2({
-        kind: "interaction_request",
+      this.pendingInteractions.set(id, { resolve: resolve4, timer });
+      this.output({
+        type: "host_interaction_request",
         id,
         interactionKind: kind,
         dialogKind: kind,
@@ -4639,77 +4743,33 @@ function createRequestInteraction(sendToBridge2) {
       });
     });
   };
-}
-function dispatchBridgeInboundFrame(value, sendToBridge2, modelScope) {
-  if (!value || typeof value !== "object") return;
-  const frame = value;
-  if (frame.kind === "request" && sendToBridge2) {
-    const result = runnerBridgeRequestSchema.safeParse(value);
-    if (!result.success) return;
-    const req = result.data;
-    if (req.method === "model-scope") {
-      sendToBridge2({ kind: "reply", id: req.id, result: modelScope });
-    } else if (req.method === "refresh-models") {
-      sendToBridge2({ kind: "reply", id: req.id, result: { refreshed: true } });
-    } else if (req.method === "leaf") {
-      sendToBridge2({ kind: "reply", id: req.id, result: { leafId: null } });
+  handleHostToolResult(cmd) {
+    const callId = String(cmd.callId ?? "");
+    const pending = this.pendingToolCalls.get(callId);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pendingToolCalls.delete(callId);
+    let content;
+    if (Array.isArray(cmd.result)) {
+      content = cmd.result;
+    } else if (cmd.result && typeof cmd.result === "object" && "content" in cmd.result && Array.isArray(cmd.result.content)) {
+      content = cmd.result.content;
     } else {
-      sendToBridge2({ kind: "reply", id: req.id, result: {} });
+      content = [{ type: "text", text: typeof cmd.result === "string" ? cmd.result : JSON.stringify(cmd.result ?? "") }];
     }
-    return;
+    pending.resolve({ content, isError: Boolean(cmd.isError) });
+    return true;
   }
-  if (frame.kind === "tool_call_response") {
-    const callId = String(frame.callId ?? "");
-    const pending = pendingToolCalls.get(callId);
-    if (pending) {
-      clearTimeout(pending.timer);
-      pendingToolCalls.delete(callId);
-      let content;
-      if (Array.isArray(frame.result)) {
-        content = frame.result;
-      } else if (frame.result && typeof frame.result === "object" && "content" in frame.result && Array.isArray(frame.result.content)) {
-        content = frame.result.content;
-      } else {
-        content = [{ type: "text", text: typeof frame.result === "string" ? frame.result : JSON.stringify(frame.result ?? "") }];
-      }
-      pending.resolve({ content, isError: Boolean(frame.isError) });
-    }
-    return;
+  handleHostInteractionResponse(cmd) {
+    const id = cmd.id ?? "";
+    const pending = this.pendingInteractions.get(id);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pendingInteractions.delete(id);
+    pending.resolve(cmd.result ?? null);
+    return true;
   }
-  if (frame.kind === "interaction_response") {
-    const id = frame.id;
-    const pending = pendingInteractions.get(id);
-    if (pending) {
-      clearTimeout(pending.timer);
-      pendingInteractions.delete(id);
-      pending.resolve(frame.result ?? null);
-    }
-  }
-}
-function initBridgeInboundChannel(modelScope, sendToBridge2, onProtocolFault) {
-  try {
-    const bridgeIn = new Socket({ fd: BRIDGE_TO_CHILD_FD });
-    bridgeIn.setEncoding("utf8");
-    attachJsonlLineReader(bridgeIn, (line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-      try {
-        const value = JSON.parse(trimmed);
-        dispatchBridgeInboundFrame(value, sendToBridge2, modelScope);
-      } catch (err) {
-        console.error(JSON.stringify({ component: "RunnerBridgeChannel", operation: "inbound_request", code: "INVALID_MESSAGE", severity: "error", outcome: "failed" }));
-        bridgeIn.destroy();
-        onProtocolFault?.(err instanceof Error ? err : new Error(String(err)));
-      }
-    });
-    bridgeIn.on("error", (err) => {
-      console.error(`[BridgeIn] Socket error: ${err.message}`);
-    });
-    return bridgeIn;
-  } catch (err) {
-    return null;
-  }
-}
+};
 
 // packages/core/src/task-tokens.ts
 function normalizeUsage(raw) {
@@ -5347,9 +5407,9 @@ import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID6 } from "@earendil-works/p
 
 // packages/core/src/stdout-guard.ts
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join4 } from "node:path";
+import { join as join5 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync3, readFileSync as readFileSync3 } from "node:fs";
+import { existsSync as existsSync4, readFileSync as readFileSync3 } from "node:fs";
 var SUPPORTED_PI_VERSION_PREFIXES = ["1.4.", "1.5."];
 var EXPECTED_GUARD_RELATIVE_PATH = "dist/core/output-guard.js";
 var UpstreamStdoutGuardPortError = class extends Error {
@@ -5384,8 +5444,8 @@ function validateUpstreamGuardShape(mod) {
 async function loadUpstreamGuard() {
   if (activeGuard) return activeGuard;
   const pkgDir = getPackageDir();
-  const pkgJsonPath = join4(pkgDir, "package.json");
-  if (!existsSync3(pkgJsonPath)) {
+  const pkgJsonPath = join5(pkgDir, "package.json");
+  if (!existsSync4(pkgJsonPath)) {
     throw new UpstreamStdoutGuardPortError(`Cannot locate package.json at ${pkgJsonPath}`, "MISSING_PACKAGE_JSON");
   }
   let version;
@@ -5399,8 +5459,8 @@ async function loadUpstreamGuard() {
     );
   }
   validateUpstreamGuardVersion(version);
-  const guardPath = join4(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
-  if (!existsSync3(guardPath)) {
+  const guardPath = join5(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
+  if (!existsSync4(guardPath)) {
     throw new UpstreamStdoutGuardPortError(`Missing upstream output guard artifact at ${guardPath}`, "MISSING_ARTIFACT");
   }
   let mod;
@@ -5437,16 +5497,16 @@ async function flushWireStdout() {
 }
 
 // packages/core/src/control-channel.ts
-import { existsSync as existsSync4, readFileSync as readFileSync4, watch } from "node:fs";
-import { join as join5 } from "node:path";
+import { existsSync as existsSync5, readFileSync as readFileSync4, watch } from "node:fs";
+import { join as join6 } from "node:path";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
 function startRunnerControlChannel(sessionDir, harness, onNotice) {
-  const controlFile = join5(sessionDir, "control.jsonl");
+  const controlFile = join6(sessionDir, "control.jsonl");
   let fileOffset = 0;
   let isClosed = false;
   let watcher = null;
   const processPendingLines = async () => {
-    if (isClosed || !existsSync4(controlFile)) return;
+    if (isClosed || !existsSync5(controlFile)) return;
     try {
       const content = readFileSync4(controlFile, "utf8");
       if (content.length <= fileOffset) return;
@@ -5507,9 +5567,9 @@ var args = parseCliArgs(argv);
 function output(data) {
   writeWireStdout(serializeJsonLine(data));
 }
-var sendToBridge = createBridgeSender();
-var forwardToolCall = createForwardToolCall(sendToBridge);
-var requestInteraction = createRequestInteraction(sendToBridge);
+var hostRpc = new HostRpcManager(output);
+var forwardToolCall = hostRpc.forwardToolCall;
+var requestInteraction = hostRpc.requestInteraction;
 async function main() {
   await setupRunnerStdoutGuard();
   let activeDurable = null;
@@ -5559,9 +5619,7 @@ async function main() {
   if (args.noSession) {
     const cwd2 = args.cwd ?? process.cwd();
     const { scopedModelList, defaultModel, defaultThinkingLevel, modelScope: modelScope2 } = await setupRunnerModels(cwd2, args);
-    output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe" });
-    sendToBridge({ ready: true, kind: "ready", pid: process.pid, ...modelScope2 });
-    initBridgeInboundChannel(modelScope2, sendToBridge);
+    output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe", ...modelScope2 });
     attachJsonlLineReader(process.stdin, (line) => {
       if (!line.trim()) return;
       try {
@@ -5611,9 +5669,6 @@ async function main() {
     scopedModelIds: durable.view.current().models.map((m) => `${m.provider}/${m.modelId}`),
     defaultModelId: durable.view.current().models[0] ? `${durable.view.current().models[0].provider}/${durable.view.current().models[0].modelId}` : void 0
   };
-  initBridgeInboundChannel(modelScope, sendToBridge, (fault) => {
-    output({ type: "session_fault", fault: fault.message });
-  });
   const graphScope = {
     sessionId: String(durable.view.current().session?.id ?? "unknown"),
     rootConversationId: "1",
@@ -5630,12 +5685,12 @@ async function main() {
     adapter,
     () => durable.view.current()
   );
-  sendToBridge({ ready: true, kind: "ready", pid: process.pid, ...modelScope });
   output({
     type: "ready",
     kind: "ready",
     ready: true,
     pid: process.pid,
+    ...modelScope,
     session: durable.view.current().session,
     conversations: durable.view.current().conversations,
     activeConversationId: ROOT_CONVERSATION_ID6
@@ -5660,6 +5715,26 @@ async function main() {
         success: false,
         error: `INVALID_COMMAND_PAYLOAD: ${err instanceof Error ? err.message : String(err)}`
       });
+      return;
+    }
+    if (cmd.type === "host_tool_result") {
+      const handled = hostRpc.handleHostToolResult(cmd);
+      if (handled) {
+        success(cmd.id, "host_tool_result", { ok: true });
+      } else {
+        error(cmd.id, "host_tool_result", `No pending tool call found for callId: ${cmd.callId}`);
+      }
+      await flushWireStdout();
+      return;
+    }
+    if (cmd.type === "host_interaction_response") {
+      const handled = hostRpc.handleHostInteractionResponse(cmd);
+      if (handled) {
+        success(cmd.id, "host_interaction_response", { ok: true });
+      } else {
+        error(cmd.id, "host_interaction_response", `No pending interaction found for id: ${cmd.id}`);
+      }
+      await flushWireStdout();
       return;
     }
     const respond = { success, error };
