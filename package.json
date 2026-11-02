@@ -25,6 +25,10 @@
     "./plugins": {
       "import": "./packages/plugins/dist/index.js",
       "types": "./packages/plugins/src/index.ts"
+    },
+    "./runner": {
+      "import": "./packages/core/dist/runner.js",
+      "types": "./packages/core/src/runner-server.ts"
     }
   },
   "typesVersions": {
