@@ -1,6 +1,6 @@
 {
   "name": "durable-zero",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Sovereign, ACID-persisted agent runtime, task graph, QuickJS codemode sandbox, and CLI",
   "type": "module",
   "license": "MIT",

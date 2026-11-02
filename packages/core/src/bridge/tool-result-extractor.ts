@@ -28,6 +28,7 @@ function buildTerminalError(
 		toolName: event.toolName,
 		result: decoded.errorMessage,
 		isError: true,
+		...("args" in event && typeof (event as any).args === "object" && (event as any).args !== null ? { args: (event as any).args } : {}),
 		...(canonicalDetails !== undefined ? { details: canonicalDetails } : {}),
 		...(parentRef !== undefined ? { parentRef } : {}),
 	};
@@ -55,6 +56,7 @@ function buildTerminalSuccess(
 		toolName: event.toolName,
 		result,
 		isError: decoded.isError,
+		...("args" in event && typeof (event as any).args === "object" && (event as any).args !== null ? { args: (event as any).args } : {}),
 		...(details !== undefined ? { details } : {}),
 		...(parentRef !== undefined ? { parentRef } : {}),
 	};

@@ -16,6 +16,7 @@ export const toolEndSchema = tool.extend({
 	type: z.literal("tool_execution_end"),
 	result: z.string(),
 	isError: z.boolean(),
+	args: z.record(z.string(), z.unknown()).optional(),
 	details: z.unknown().optional(),
 });
 export const hostToolCallSchema = wireContextSchema.extend({
