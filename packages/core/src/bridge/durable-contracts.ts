@@ -150,15 +150,39 @@ export async function watchEvents(
 	return {
 		snapshot,
 		start(listener) {
+			let seenEntriesCount = initial?.entries?.length ?? 0;
 			watch.start(async (call: any, ctx: any) => {
 				const val = call?.value ?? call;
 				if (!val) return;
 				const events: AgentEvent[] = [];
-				if (val.entries?.length) {
-					const lastEntry = val.entries.at(-1);
-					if (lastEntry) {
-						events.push({ type: "entry_appended", entry: lastEntry });
+				if (val.entries?.length && val.entries.length > seenEntriesCount) {
+					for (let i = seenEntriesCount; i < val.entries.length; i++) {
+						const entry = val.entries[i];
+						const modelMsg = entry?.model?.[0];
+						if (modelMsg?.role === "toolResult") {
+							let toolName = modelMsg.toolName ?? "tool";
+							if (!modelMsg.toolName) {
+								for (let j = i - 1; j >= 0; j--) {
+									const prevMsg = val.entries[j]?.model?.[0];
+									if (prevMsg?.role === "assistant" && Array.isArray(prevMsg.content)) {
+										const call = prevMsg.content.find((c: any) => c.type === "toolCall" && c.id === modelMsg.toolCallId);
+										if (call?.name) {
+											toolName = call.name;
+											break;
+										}
+									}
+								}
+							}
+							events.push({
+								type: "tool_execution_end",
+								toolCallId: modelMsg.toolCallId ?? String(entry.id),
+								toolName,
+								entry,
+							});
+						}
+						events.push({ type: "entry_appended", entry });
 					}
+					seenEntriesCount = val.entries.length;
 				}
 				if (events.length > 0) {
 					await listener(events, ctx);
