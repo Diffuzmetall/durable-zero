@@ -46,7 +46,34 @@ import { z as z2 } from "zod";
 var runnerChannelSchema = z2.discriminatedUnion("kind", [
   z2.object({ kind: z2.literal("ready"), ready: z2.boolean().optional() }).passthrough(),
   z2.object({ kind: z2.literal("model-scope"), scopedModelIds: z2.array(z2.string()).optional(), defaultModelId: z2.string().optional() }).passthrough(),
-  z2.object({ kind: z2.literal("reply"), id: z2.union([z2.string(), z2.number()]), result: z2.unknown().optional(), error: z2.unknown().optional() }).passthrough()
+  z2.object({ kind: z2.literal("reply"), id: z2.union([z2.string(), z2.number()]), result: z2.unknown().optional(), error: z2.unknown().optional() }).passthrough(),
+  z2.object({
+    kind: z2.literal("tool_call_request"),
+    callId: z2.string(),
+    toolName: z2.string(),
+    arguments: z2.unknown().default({})
+  }).passthrough(),
+  z2.object({
+    kind: z2.literal("tool_call_response"),
+    callId: z2.string(),
+    result: z2.unknown().optional(),
+    isError: z2.boolean().optional()
+  }).passthrough(),
+  z2.object({
+    kind: z2.literal("interaction_request"),
+    id: z2.union([z2.string(), z2.number()]),
+    interactionKind: z2.string().optional(),
+    dialogKind: z2.string().optional(),
+    title: z2.string().optional(),
+    message: z2.string().optional(),
+    data: z2.unknown().optional()
+  }).passthrough(),
+  z2.object({
+    kind: z2.literal("interaction_response"),
+    id: z2.union([z2.string(), z2.number()]),
+    result: z2.unknown().optional(),
+    error: z2.unknown().optional()
+  }).passthrough()
 ]);
 var runnerBridgeRequestSchema = z2.object({
   kind: z2.literal("request"),
