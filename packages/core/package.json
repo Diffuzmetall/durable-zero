@@ -1,0 +1,28 @@
+{
+  "name": "@durable-zero/core",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/contracts": "workspace:*",
+    "@durable-zero/sdk": "workspace:*",
+    "@durable-zero/plugins": "workspace:*",
+    "@earendil-works/chord": "1.4.0",
+    "@earendil-works/pi-coding-agent": "1.4.0",
+    "@earendil-works/pi-durable": "1.4.0",
+    "@earendil-works/pi-codemode": "1.4.0",
+    "@earendil-works/pi-ai": "1.4.0",
+    "@sinclair/typebox": "^0.34.14",
+    "proper-lockfile": "^4.1.2",
+    "quickjs-wasi": "3.6.2",
+    "zod": "^3.24.1"
+  }
+}
