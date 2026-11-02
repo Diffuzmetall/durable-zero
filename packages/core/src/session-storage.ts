@@ -6,7 +6,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
-// @ts-expect-error proper-lockfile has untyped default export in some tsconfig settings
+// @ts-ignore proper-lockfile has untyped default export in some tsconfig settings
 import lockfile from "proper-lockfile";
 
 import { getAgentDir } from "./shared/agent-dir.ts";
