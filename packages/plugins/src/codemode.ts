@@ -1,6 +1,6 @@
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
-import type { DurablePlugin, DurablePluginContext } from "../types.ts";
+import type { DurablePlugin, DurablePluginContext } from "@durable-zero/sdk";
 
 let activeSandbox: CodemodeSandbox | undefined;
 

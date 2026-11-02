@@ -1,6 +1,6 @@
 import { createCodingTools, CodingTools } from "@earendil-works/pi-durable/tools";
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
-import type { DurablePlugin, DurablePluginContext } from "../types.ts";
+import type { DurablePlugin, DurablePluginContext } from "@durable-zero/sdk";
 
 export const codingToolsPlugin: DurablePlugin = {
 	id: "coding-tools",

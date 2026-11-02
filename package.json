@@ -7,40 +7,50 @@
   "author": "Ivan Arc",
   "exports": {
     ".": {
-      "import": "./packages/core/src/index.ts",
+      "import": "./packages/core/dist/index.js",
       "types": "./packages/core/src/index.ts"
     },
     "./core": {
-      "import": "./packages/core/src/index.ts",
+      "import": "./packages/core/dist/index.js",
       "types": "./packages/core/src/index.ts"
     },
     "./contracts": {
-      "import": "./packages/contracts/src/index.ts",
+      "import": "./packages/contracts/dist/index.js",
       "types": "./packages/contracts/src/index.ts"
     },
     "./sdk": {
-      "import": "./packages/sdk/src/index.ts",
+      "import": "./packages/sdk/dist/index.js",
       "types": "./packages/sdk/src/index.ts"
     },
     "./plugins": {
-      "import": "./packages/plugins/src/index.ts",
+      "import": "./packages/plugins/dist/index.js",
       "types": "./packages/plugins/src/index.ts"
     }
   },
   "typesVersions": {
     "*": {
-      "core": ["./packages/core/src/index.ts"],
-      "contracts": ["./packages/contracts/src/index.ts"],
-      "sdk": ["./packages/sdk/src/index.ts"],
-      "plugins": ["./packages/plugins/src/index.ts"]
+      "core": [
+        "./packages/core/src/index.ts"
+      ],
+      "contracts": [
+        "./packages/contracts/src/index.ts"
+      ],
+      "sdk": [
+        "./packages/sdk/src/index.ts"
+      ],
+      "plugins": [
+        "./packages/plugins/src/index.ts"
+      ]
     }
   },
   "scripts": {
-    "build": "pnpm -r run build",
-    "test": "pnpm -r run test",
+    "prepare": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.ts",
     "lint": "pnpm -r run lint"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "typescript": "^5.9.0"
   }
 }

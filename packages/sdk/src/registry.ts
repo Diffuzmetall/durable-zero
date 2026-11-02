@@ -1,4 +1,4 @@
-import { DurablePluginError } from "../errors.ts";
+import { DurablePluginError } from "./errors.ts";
 import type { DurablePlugin, DurablePluginContext, PluginCategory } from "./types.ts";
 
 export class DurablePluginRegistry {
