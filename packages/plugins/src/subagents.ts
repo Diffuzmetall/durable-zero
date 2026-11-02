@@ -1,5 +1,4 @@
-import { createSubagentExtension } from "@durable-zero/core";
-import { Anchor, DefaultCourier, DefaultReporter } from "@durable-zero/core";
+import { createSubagentExtension, Anchor, DefaultCourier, DefaultReporter } from "../../core/src/index.ts";
 import type { DurablePlugin, DurablePluginContext } from "@durable-zero/sdk";
 
 export const subagentsPlugin: DurablePlugin = {
