@@ -21,11 +21,16 @@
 ```text
 packages/
 ├── contracts/  # @durable-zero/contracts — Pure wire DTOs and Zod schemas
-├── sdk/        # @durable-zero/sdk — Plugin interfaces and PluginRegistry
-├── plugins/    # @durable-zero/plugins — Built-in coding tools, QuickJS codemode, subagents
-├── core/       # @durable-zero/core — DurableEngine, SQLite storage, SessionDaemon
+├── core/       # @durable-zero/core — DurableEngine, SQLite storage, SessionDaemon, Subsystems
 └── cli/        # durable-zero — Standalone executable binary (run, serve, doctor)
 ```
+
+---
+
+## Extensibility
+
+`durable-zero` uses standard **Pi Extensions** (`.pi/extensions/` or `--extension <path>`).
+There are no custom plugin manifests or separate plugin SDKs. Write standard extensions with `export default function(pi: ExtensionAPI)` and register tools, hooks, and MCP servers natively.
 
 ---
 

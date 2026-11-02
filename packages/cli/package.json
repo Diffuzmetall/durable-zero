@@ -9,10 +9,8 @@
   "main": "./bin/durable-zero.js",
   "dependencies": {
     "@durable-zero/contracts": "workspace:*",
-    "@durable-zero/sdk": "workspace:*",
-    "@durable-zero/plugins": "workspace:*",
     "@durable-zero/core": "workspace:*",
-    "@earendil-works/pi-coding-agent": "1.4.0",
-    "@earendil-works/pi-durable": "1.4.0"
+    "@earendil-works/pi-coding-agent": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0"
   }
 }

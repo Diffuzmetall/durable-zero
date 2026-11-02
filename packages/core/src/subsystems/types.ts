@@ -1,12 +1,10 @@
 import type { Registry } from "@earendil-works/pi-durable";
 import type { SettingsManager } from "@earendil-works/pi-coding-agent";
-import type { SubagentPolicyRecord } from "../../policy/types.ts";
+import type { SubagentPolicyRecord } from "../policy/types.ts";
 import type { PromptOptions } from "../prompt.ts";
 import type { DynamicCodemodeNamespaces } from "../codemode-namespaces.ts";
 
-export type PluginCategory = "built-in" | "external" | "custom";
-
-export interface DurablePluginContext {
+export interface SubsystemContext {
 	cwd: string;
 	storageDir?: string;
 	registry?: Registry;
@@ -16,11 +14,10 @@ export interface DurablePluginContext {
 	dynamicNamespaces?: DynamicCodemodeNamespaces;
 }
 
-export interface DurablePlugin {
-	id: string;
-	name: string;
-	category: PluginCategory;
-	version: string;
-	register(ctx: DurablePluginContext): Promise<void> | void;
+export interface EngineSubsystem {
+	readonly id: string;
+	readonly name: string;
+	readonly version: string;
+	register(ctx: SubsystemContext): Promise<void> | void;
 	teardown?(): Promise<void> | void;
 }

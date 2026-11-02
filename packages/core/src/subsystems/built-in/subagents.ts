@@ -1,13 +1,12 @@
 import { createSubagentExtension } from "../../subagent.ts";
 import { Anchor, DefaultCourier, DefaultReporter } from "../../subagent-delivery.ts";
-import type { DurablePlugin, DurablePluginContext } from "../types.ts";
+import type { EngineSubsystem, SubsystemContext } from "../types.ts";
 
-export const subagentsPlugin: DurablePlugin = {
+export const subagentsSubsystem: EngineSubsystem = {
 	id: "subagents",
 	name: "Subagents",
-	category: "built-in",
 	version: "1.0.0",
-	register(ctx: DurablePluginContext): void {
+	register(ctx: SubsystemContext): void {
 		if (!ctx.registry) return;
 		if (typeof ctx.getSubagentPolicy === "function") {
 			ctx.registry.install(createSubagentExtension(ctx.getSubagentPolicy));
@@ -17,8 +16,8 @@ export const subagentsPlugin: DurablePlugin = {
 		ctx.registry.install(DefaultReporter);
 	},
 	teardown(): void {
-		// Clean lifecycle teardown hook for subagents plugin
+		// Clean lifecycle teardown hook for subagents subsystem
 	},
 };
 
-export default subagentsPlugin;
+export default subagentsSubsystem;

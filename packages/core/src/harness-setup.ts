@@ -18,11 +18,11 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { createPiPrompt, type PromptOptions } from "./prompt.ts";
 import type { DynamicCodemodeNamespaces } from "./codemode-namespaces.ts";
-import { DurablePluginRegistry } from "./plugins/registry.ts";
-import { codingToolsPlugin } from "./plugins/built-in/coding-tools.ts";
-import { codemodePlugin } from "./plugins/built-in/codemode.ts";
-import { subagentsPlugin } from "./plugins/built-in/subagents.ts";
-import type { DurablePlugin, DurablePluginContext } from "./plugins/types.ts";
+import { SubsystemRegistry } from "./subsystems/registry.ts";
+import { codingToolsSubsystem } from "./subsystems/built-in/coding-tools.ts";
+import { codemodeSubsystem } from "./subsystems/built-in/codemode.ts";
+import { subagentsSubsystem } from "./subsystems/built-in/subagents.ts";
+import type { EngineSubsystem, SubsystemContext } from "./subsystems/types.ts";
 
 export function configureHarnessHttp(settingsManager: SettingsManager): void {
 	const proxy = settingsManager.getGlobalSettings()?.httpProxy?.trim();
@@ -69,7 +69,7 @@ export function createHarnessSettings(
 	};
 }
 
-export type CodingRegistry = Registry & { pluginRegistry: DurablePluginRegistry };
+export type CodingRegistry = Registry & { subsystemRegistry: SubsystemRegistry };
 
 export async function createCodingRegistry(
 	settingsManager: SettingsManager,
@@ -77,20 +77,20 @@ export async function createCodingRegistry(
 	getSubagentPolicy: () => SubagentPolicyRecord,
 	promptOptions?: PromptOptions,
 	dynamicNamespaces?: DynamicCodemodeNamespaces,
-	customPlugins: DurablePlugin[] = [],
+	customSubsystems: EngineSubsystem[] = [],
 ): Promise<CodingRegistry> {
 	const registry = createRegistry();
-	const pluginRegistry = new DurablePluginRegistry();
+	const subsystemRegistry = new SubsystemRegistry();
 
-	pluginRegistry.register(codingToolsPlugin);
-	pluginRegistry.register(codemodePlugin);
-	pluginRegistry.register(subagentsPlugin);
+	subsystemRegistry.register(codingToolsSubsystem);
+	subsystemRegistry.register(codemodeSubsystem);
+	subsystemRegistry.register(subagentsSubsystem);
 
-	for (const plugin of customPlugins) {
-		pluginRegistry.register(plugin);
+	for (const subsystem of customSubsystems) {
+		subsystemRegistry.register(subsystem);
 	}
 
-	const ctx: DurablePluginContext = {
+	const ctx: SubsystemContext = {
 		registry,
 		settingsManager,
 		cwd,
@@ -100,10 +100,10 @@ export async function createCodingRegistry(
 		dynamicNamespaces,
 	};
 
-	await pluginRegistry.initAll(ctx);
+	await subsystemRegistry.initAll(ctx);
 	registry.install(createToolSearchExtension());
 	registry.install(createPiPrompt(settingsManager, cwd, promptOptions));
-	return Object.assign(registry, { pluginRegistry });
+	return Object.assign(registry, { subsystemRegistry });
 }
 
 export class ExecutionEnvs {

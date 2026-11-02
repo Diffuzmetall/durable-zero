@@ -70,13 +70,9 @@ async function main() {
 
 	if (args.noSession) {
 		const cwd = args.cwd ?? process.cwd();
-		const { modelRuntime } = await setupRunnerModels(cwd, args);
+		const { modelScope } = await setupRunnerModels(cwd, args);
 		output({ type: "ready", kind: "ready", ready: true, pid: process.pid, mode: "probe" });
-		const scopedList = modelRuntime.getAvailableSnapshot();
-		const scopedModelIds = scopedList.map((m) => `${m.provider}/${m.id}`);
-		const defaultModel = modelRuntime.findDefaultModel();
-		const defaultModelId = defaultModel ? `${defaultModel.provider}/${defaultModel.id}` : undefined;
-		const modelScope = { scopedModelIds, defaultModelId };
+		sendToBridge({ kind: "model-scope", ...modelScope });
 		initBridgeInboundChannel(modelScope, sendToBridge);
 		return;
 	}

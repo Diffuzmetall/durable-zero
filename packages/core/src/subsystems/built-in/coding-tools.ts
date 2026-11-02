@@ -1,13 +1,12 @@
 import { createCodingTools, CodingTools } from "@earendil-works/pi-durable/tools";
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
-import type { DurablePlugin, DurablePluginContext } from "@durable-zero/sdk";
+import type { EngineSubsystem, SubsystemContext } from "../types.ts";
 
-export const codingToolsPlugin: DurablePlugin = {
+export const codingToolsSubsystem: EngineSubsystem = {
 	id: "coding-tools",
 	name: "Coding Tools",
-	category: "built-in",
 	version: "1.0.0",
-	async register(ctx: DurablePluginContext): Promise<void> {
+	async register(ctx: SubsystemContext): Promise<void> {
 		if (!ctx.registry) return;
 		let tools = CodingTools;
 		try {
@@ -20,4 +19,4 @@ export const codingToolsPlugin: DurablePlugin = {
 	},
 };
 
-export default codingToolsPlugin;
+export default codingToolsSubsystem;

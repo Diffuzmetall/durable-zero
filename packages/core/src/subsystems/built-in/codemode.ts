@@ -1,15 +1,14 @@
-import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
-import type { DurablePlugin, DurablePluginContext } from "@durable-zero/sdk";
+import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
+import type { EngineSubsystem, SubsystemContext } from "../types.ts";
 
 let activeSandbox: CodemodeSandbox | undefined;
 
-export const codemodePlugin: DurablePlugin = {
+export const codemodeSubsystem: EngineSubsystem = {
 	id: "codemode",
 	name: "Codemode",
-	category: "built-in",
 	version: "1.0.0",
-	register(ctx: DurablePluginContext): void {
+	register(ctx: SubsystemContext): void {
 		if (!ctx.registry) return;
 		activeSandbox = new CodemodeSandbox();
 		const ext = createCodemodeExtension({
@@ -33,4 +32,4 @@ export const codemodePlugin: DurablePlugin = {
 	},
 };
 
-export default codemodePlugin;
+export default codemodeSubsystem;
