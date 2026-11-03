@@ -104,7 +104,13 @@ To prevent accidental loss of mature, battle-tested domain logic (175 tests acro
 | 🔴 **Red: Bike Elimination** | `stdout-guard.ts` | DELETE (safe removal) | Custom stdout hijacking is unnecessary when using clean, framed stdio JSON-RPC transport. |
 
 ### Regression Defense Invariant
-At every step of each cycle, the full existing test suite (`npm test`) must pass (175 tests green). Tests are migrated or re-targeted alongside their modules, ensuring zero functional degradation.
+At every step of each cycle, the full existing test suite (`npm test`) must pass (177 tests green). Tests are migrated or re-targeted alongside their modules, ensuring zero functional degradation.
+
+### Refactoring Discipline: Preservation by Relocation & Upstream Adoption
+1. **Never Rewrite What Already Works:** Do not write naive replacements for `session-storage.ts`, `session-fork.ts`, `policy/*`, or `bridge/durable-event-adapter.ts`. Relocate these proven files to their target package/directory and update imports.
+2. **Backward-Compatible Workspace Re-exports during Migration:** During Cycle 1 and Cycle 2, `packages/contracts/src/index.ts` re-exports from `@durable-zero/protocol` and `@durable-zero/execution` so that existing consumers and tests continue to pass without a single regression.
+3. **Selective Upstream Replacement:** Only replace custom code where upstream Pi 1.5.0 provides a strictly superior, first-class alternative (`harness.watchTaskGraph()` for custom mappers; `ownership: { kind: "task" }` for couriers; `pi-agent-core` for agent loops; `pi-ai` for models). Keep custom business logic (policy store, CAS optimistic locking, tool argument reconstruction) intact.
+
 
 ---
 
