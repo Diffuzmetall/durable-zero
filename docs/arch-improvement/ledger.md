@@ -98,3 +98,22 @@
   2. Purge `NodeExecutionEnv` from `packages/core/src/harness-setup.ts`; require mandatory `ExecutionEnvFactory`.
   3. Run all tests with mandatory timeouts (`--test-timeout 10000`).
 - **GBrain Updated:** Facts persisted to `arch-rules` and `arch-improvement-loop`.
+
+### S9 Verify Gate: Dual-Circuit Review & Remediation Cycle 1.1 (2026-11-03)
+- **Circuit 1 (Arch Reviewer @thread:thr_y8cr8sdwe2):**
+  - Initial Verdict: FAIL (P1: `runtime.ts` relative import of `LocalNodeExecutionEnv` and hidden fallback; P2: `local-node-env.ts` exceeded 120 lines budget with 6 unused methods).
+  - Remediation (Cycle 1.1): Assigned directly to Reviewer thread `thr_y8cr8sdwe2`.
+  - Fixes Landed (commit `390bb5c`):
+    1. Purged `LocalNodeExecutionEnv` import and `defaultFactory` from `packages/core/src/runtime.ts`. `openDurable` strictly requires `options.executionEnvFactory` (AP-012, AP-072, AP-073).
+    2. Composition Root (`runner-server.ts`) explicitly injects `LocalNodeExecutionEnv`.
+    3. Unit tests inject in-memory `mockEnv` without side-effects.
+    4. Trimmed 6 unused methods from `local-node-env.ts` (115 lines, within <120 limit, AP-019/AP-070).
+    5. Monorepo builder `scripts/build.mjs` updated to build `contracts`, `protocol`, `core`, `execution`.
+  - Re-Review Verdict: **UNANIMOUS PASS**.
+- **Circuit 2 (Product Reviewer @thread:thr_vg2fk6e6n6):**
+  - Evaluated Three Golden Journeys (Happy Path, Empty State, Error Recovery) as a black box.
+  - Verdict: **UNANIMOUS PASS** (185/185 tests, full-duplex correlation, fail-fast on malformed JSON-RPC).
+- **Canonical Architecture Canon AP-074 Enforced:**
+  - Added `AP-074` to `/Users/vanya/Projects/arch-rules/arch-rules.md`: Prohibiting global mutable state, singleton defaults, and side-effecting imports (commit `37f1723`). All dependencies must flow top-down via Pure Dependency Injection from Composition Root.
+- **Verification Evidence:** All 186 tests passing with `--test-timeout 30000` (15.2s). All 4 packages successfully build to `dist/index.js`.
+
