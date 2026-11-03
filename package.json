@@ -35,6 +35,11 @@
       "types": "./packages/execution/src/index.ts",
       "import": "./packages/execution/dist/index.js",
       "default": "./packages/execution/dist/index.js"
+    },
+    "./adapter-pi-durable": {
+      "types": "./packages/adapter-pi-durable/src/index.ts",
+      "import": "./packages/adapter-pi-durable/dist/index.js",
+      "default": "./packages/adapter-pi-durable/dist/index.js"
     }
   },
   "typesVersions": {
@@ -50,6 +55,9 @@
       ],
       "execution": [
         "./packages/execution/src/index.ts"
+      ],
+      "adapter-pi-durable": [
+        "./packages/adapter-pi-durable/src/index.ts"
       ]
     }
   },

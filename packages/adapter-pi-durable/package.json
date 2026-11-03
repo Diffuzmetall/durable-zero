@@ -1,0 +1,20 @@
+{
+  "name": "@durable-zero/adapter-pi-durable",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/core": "workspace:*",
+    "@earendil-works/chord": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0",
+    "proper-lockfile": "^4.1.2"
+  }
+}
