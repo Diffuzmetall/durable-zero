@@ -32,8 +32,8 @@ packages/
 ├── protocol/                     <- @durable-zero/protocol (Independent Wire Package)
 │   ├── src/
 │   │   ├── jsonrpc/              <- Pure JSON-RPC 2.0 Schema & Types (Request, Response, Error)
-│   │   ├── methods/              <- Standard Agent Methods (session/prompt, session/cancel, session/update)
-│   │   └── transport/            <- ITransportStrategy interface & StdioJsonRpcServer implementation
+│   │   ├── methods/              <- Standard Agent Methods (session/prompt, session/cancel, host/toolCall)
+│   │   └── transport/            <- Full-Duplex StdioJsonRpcServer implementation
 │   └── package.json              <- Depends only on zod. Zero engine dependencies.
 │
 ├── execution/                    <- @durable-zero/execution (Execution Sandbox Domain)
@@ -42,44 +42,79 @@ packages/
 │   │   └── adapters/             <- LocalNodeExecutionEnv (default) & MockExecutionEnv
 │   └── package.json              <- Depends on Node.js builtins. Zero agent dependencies.
 │
-├── core/                         <- @durable-zero/core (Sovereign Headless Core Domain)
+├── core/                         <- @durable-zero/core (SOVEREIGN PURE DOMAIN - ZERO PI DEPS!)
 │   ├── src/
-│   │   ├── engine.ts             <- DurableZeroEngine (orchestrator, no transport knowledge)
-│   │   ├── runtime.ts            <- Session Lifecycle (Bind-before-Resume invariant)
-│   │   ├── session/              <- Session state, transcript, task graph bindings
-│   │   ├── builtin-extensions/   <- Pure declarative factories (defineExtension, no self-install)
-│   │   └── policy/               <- SubagentPolicyStore & security rules
-│   └── package.json              <- Depends on @durable-zero/protocol, @durable-zero/execution,
-│                                    @earendil-works/pi-durable, @earendil-works/pi-agent-core, @earendil-works/pi-ai.
-│                                    NO dependency on @earendil-works/pi-coding-agent!
+│   │   ├── ports/                <- Outbound SPIs: ISessionStore, IModelProvider, ICodemodeRunner
+│   │   ├── domain/               <- Entities: Session, TaskGraph, AdmissionReceipt, PolicyRecord
+│   │   ├── policy/               <- SubagentPolicyStore & security rules (CAS, optimistic locks)
+│   │   ├── services/             <- SessionCoordinator (prompt, abort, cascading abort)
+│   │   └── index.ts              <- Re-exports of domain ports, entities, and services
+│   ├── test/                     <- Pure unit tests running on In-Memory mocks (< 50ms)
+│   └── package.json              <- Depends on @durable-zero/protocol, @durable-zero/execution, zod.
+│                                    STRICTLY ZERO dependencies on @earendil-works/* or native binaries!
+│
+├── adapter-pi-durable/           <- @durable-zero/adapter-pi-durable (Storage ACL)
+│   ├── src/
+│   │   ├── store.ts              <- Implements ISessionStore via Pi Durable SQLite Harness
+│   │   ├── session-storage.ts    <- Relocated: PID safety, lock eviction, document storage
+│   │   ├── session-fork.ts       <- Relocated: database forking, checkpoint tree
+│   │   └── event-adapter.ts      <- Relocated: DurableEventAdapter (tool delta translation for UI)
+│   ├── test/                     <- Integration tests with real SQLite database
+│   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-durable, proper-lockfile.
+│
+├── adapter-pi-ai/                <- @durable-zero/adapter-pi-ai (LLM & Agent Loop ACL)
+│   ├── src/
+│   │   ├── provider.ts           <- Implements IModelProvider via @earendil-works/pi-ai
+│   │   └── agent-driver.ts       <- Drives agent loop via @earendil-works/pi-agent-core
+│   ├── test/                     <- Integration tests for model resolution & streaming
+│   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-ai, @earendil-works/pi-agent-core.
+│
+├── adapter-codemode/             <- @durable-zero/adapter-codemode (Sandbox ACL)
+│   ├── src/
+│   │   ├── runner.ts             <- Implements ICodemodeRunner via QuickJS WASM sandbox.start()
+│   │   └── journal.ts            <- Replays journaled tool calls deterministically
+│   ├── test/                     <- Integration tests for QuickJS WASM sandbox isolation
+│   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-codemode, quickjs-wasi.
 │
 ├── extension-pi-resource/        <- @durable-zero/extension-pi-resource (Pi Setup ACL)
 │   ├── src/
 │   │   ├── pi-resource-ext.ts    <- Native Pi Durable defineExtension wrapping SettingsManager & ResourceLoader
 │   │   └── contracts.ts          <- IConfigProvider & ISkillLoader implementations
-│   └── package.json              <- Depends on @earendil-works/pi-durable, @earendil-works/pi-coding-agent.
+│   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-durable, @earendil-works/pi-coding-agent.
 │
 └── runner/                       <- @durable-zero/runner (TRUE COMPOSITION ROOT - AP-020, AP-073)
     ├── src/
-    │   ├── composition.ts        <- Wires engine + transport + execution env + pi-resource extension
+    │   ├── composition.ts        <- Wires Core + Adapters (Pi Durable + Pi AI + Codemode + Stdio Transport)
     │   └── main.ts               <- Executable entrypoint (compiled to dist/runner.js)
     └── package.json              <- Depends on all workspace packages. Assembles the executable.
 ```
 
-### Dependency Direction Matrix:
+### Dependency Direction Matrix (Strict Hexagonal Inward Flow):
 
 ```
-@durable-zero/protocol  (Zero dependencies)
-@durable-zero/execution (Zero dependencies)
-          ▲                     ▲
-          │                     │
-@durable-zero/core      (Pure Domain: depends on protocol & execution contracts)
-          ▲                     ▲
-          │                     │
-@durable-zero/extension-pi-resource (Pi ACL: depends on pi-durable & pi-coding-agent)
-          ▲                     ▲
-          │                     │
-@durable-zero/runner    (COMPOSITION ROOT: wires all packages into the executable process)
+       @durable-zero/protocol          @durable-zero/execution
+                 ▲                                ▲
+                 │                                │
+                 +----------------+---------------+
+                                  |
+                        @durable-zero/core
+                     (Pure Domain: Zero Pi deps!)
+                                  ▲
+        +-------------------------+-------------------------+
+        |                         |                         |
+@durable-zero/            @durable-zero/            @durable-zero/
+adapter-pi-durable        adapter-pi-ai             adapter-codemode
+   (ISessionStore)       (IModelProvider)          (ICodemodeRunner)
+        │                         │                         │
+        v                         v                         v
+[@earendil-works/         [@earendil-works/         [@earendil-works/
+   pi-durable]                  pi-ai]                  pi-codemode]
+        │                         │                         │
+        +-------------------------+-------------------------+
+                                  |
+                                  v
+                        @durable-zero/runner
+                        (Composition Root)
 ```
 
 ---
@@ -130,17 +165,16 @@ To prevent accidental loss of mature, battle-tested domain logic (175 tests acro
 
 | Zone | Files / Modules | Action & Target Destination | Rationale & Test Invariant |
 |---|---|---|---|
-| 🟢 **Green: Preserve & Refactor** | `session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts` | Refactor into `@durable-zero/core/session/` | Preserves SQLite document atomicity, PID safety, and session branching (AP-013). Covered by `session-fork.test.ts`, `session-storage-pid-safety.test.ts`. |
-| 🟢 **Green: Preserve & Refactor** | `policy/*`, `subagent-policy-ack.ts`, `subagent-policy-state.ts` | Refactor into `@durable-zero/core/policy/` | Preserves security policies across restarts, user approval gates, and cascading abort. Covered by `subagent-policy-store.test.ts`, `subagent-cascading-abort.test.ts`. |
-| 🟢 **Green: Preserve & Refactor** | `session-commands.ts`, `session-state-commands.ts`, `binding-commands.ts` | Extract clean `SessionService` in `@durable-zero/core/session/` | Preserves command dispatch (`prompt`, `cancel`, `steer`, `set_model`, task dispatch). Covered by `canonical-command.test.ts`. |
-| 🟢 **Green: Preserve & Refactor** | `bridge/durable-event-adapter.ts` | Move to `@durable-zero/core/bridge/` as Outbound Event Port | Preserves critical tool delta translation with args (fixed in v0.8.1 for BB/terminal UI). Covered by `watch-events-compat.test.ts`. |
-| 🟢 **Green: Preserve & Refactor** | `compaction-hooks.ts`, `task-tokens.ts`, `task-labels.ts` | Move to `@durable-zero/core/session/` | Preserves context compaction hooks, task metric counters, and formatting. Covered by `compaction-hooks.test.ts`. |
-| 🔵 **Blue: Upstream Pi Adoption** | Custom agent stepping in `runtime-controller.ts` | Adopt `@earendil-works/pi-agent-core` (`Agent`, `agentLoop`, `beforeToolCall`, `afterToolCall`) | Eliminates custom bicycles; reuses upstream tested agent state machine. |
-| 🔵 **Blue: Upstream Pi Adoption** | `model-setup.ts` | Adopt `@earendil-works/pi-ai` (`createModels()`) | Replaces coupling to `ModelRuntime` with pure upstream model catalog and streaming types. |
-| 🔵 **Blue: Upstream Pi Adoption** | `runtime-graph-mapper.ts`, `runtime-graph-receipts.ts`, `runtime-graph-source.ts`, `runtime-graph-state.ts` | Adopt `@earendil-works/pi-durable` (`harness.watchTaskGraph()`, `ownership: { kind: "task" }`) | Replaces ~25KB of custom SQLite row-mapping bicycles with native task graph subscriptions. |
-| 🔵 **Blue: Upstream Pi Adoption** | `builtin-extensions/codemode.ts` | Upgrade to `@earendil-works/pi-codemode` (`sandbox.start()`) | Upgrades basic `.execute()` to deterministic replay journaling with state stored in session SQLite documents. |
+| 🟢 **Green: Preserve in Core** | `policy/*`, `subagent-policy-ack.ts`, `subagent-policy-state.ts` | Refactor into `@durable-zero/core/policy/` | Preserves security policies across restarts, user approval gates, and cascading abort (AP-013). Uses pure in-memory state. Covered by `subagent-policy-store.test.ts`. |
+| 🟢 **Green: Preserve in Core** | `session-commands.ts`, `session-state-commands.ts`, `binding-commands.ts` | Extract clean `SessionCoordinator` in `@durable-zero/core/services/` | Preserves command dispatch (`prompt`, `cancel`, `steer`, `set_model`, task dispatch). Covered by `canonical-command.test.ts`. |
+| 🟢 **Green: Preserve in Core** | `task-tokens.ts`, `task-labels.ts` | Move to `@durable-zero/core/domain/` | Preserves context compaction hooks, task metric counters, and formatting. Covered by `compaction-hooks.test.ts`. |
+| 🟢 **Green: Preserve in Storage Adapter** | `session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts` | Refactor into `@durable-zero/adapter-pi-durable/` | Implements `ISessionStore`. Preserves SQLite document atomicity, PID safety, and session branching (AP-013). Covered by `session-fork.test.ts`, `session-storage-pid-safety.test.ts`. |
+| 🟢 **Green: Preserve in Event Adapter** | `bridge/durable-event-adapter.ts`, `ViewStreamProjector` | Move to `@durable-zero/adapter-pi-durable/` as Outbound Event Port | Preserves critical tool delta translation with args (fixed in v0.8.1 for BB/terminal UI). Covered by `watch-events-compat.test.ts`. |
+| 🔵 **Blue: Upstream in Model Adapter** | Custom agent stepping in `runtime-controller.ts`, `model-setup.ts` | Adopt `@durable-zero/adapter-pi-ai/` (`pi-ai` & `pi-agent-core`) | Implements `IModelProvider`. Eliminates custom bicycles; reuses upstream tested agent state machine. |
+| 🔵 **Blue: Upstream in Storage Adapter** | `runtime-graph-mapper.ts`, `runtime-graph-receipts.ts`, `runtime-graph-source.ts`, `runtime-graph-state.ts` | Adopt in `@durable-zero/adapter-pi-durable/` via `harness.watchTaskGraph()` | Replaces ~25KB of custom SQLite row-mapping bicycles with native task graph subscriptions. |
+| 🔵 **Blue: Upstream in Sandbox Adapter** | `builtin-extensions/codemode.ts` | Upgrade to `@durable-zero/adapter-codemode/` (`sandbox.start()`) | Implements `ICodemodeRunner`. Upgrades basic `.execute()` to deterministic replay journaling with state stored in session documents. |
 | 🔴 **Red: Bike Elimination** | `subagent-courier.ts`, `subagent-watcher.ts`, `watcher-compat.ts` | DELETE (safe removal) | Obsolete polling bicycle; fully replaced by native task ownership in Pi Durable 1.5.0. |
-| 🔴 **Red: Bike Elimination** | `host-rpc.ts`, `runner-channel.ts` | DELETE (safe removal) | Obsolete custom RPC with timeout hacks; replaced by standard JSON-RPC 2.0 server in `@durable-zero/protocol`. |
+| 🔴 **Red: Bike Elimination** | `host-rpc.ts`, `runner-channel.ts` | DELETE (safe removal) | Obsolete custom RPC with timeout hacks; replaced by standard full-duplex JSON-RPC 2.0 server in `@durable-zero/protocol`. |
 | 🔴 **Red: Bike Elimination** | `stdout-guard.ts` | DELETE (safe removal) | Custom stdout hijacking is unnecessary when using clean, framed stdio JSON-RPC transport. |
 
 ### Regression Defense Invariant
@@ -150,6 +184,7 @@ At every step of each cycle, the full existing test suite (`npm test`) must pass
 1. **Never Rewrite What Already Works:** Do not write naive replacements for `session-storage.ts`, `session-fork.ts`, `policy/*`, or `bridge/durable-event-adapter.ts`. Relocate these proven files to their target package/directory and update imports.
 2. **Backward-Compatible Workspace Re-exports during Migration:** During Cycle 1 and Cycle 2, `packages/contracts/src/index.ts` re-exports from `@durable-zero/protocol` and `@durable-zero/execution` so that existing consumers and tests continue to pass without a single regression.
 3. **Selective Upstream Replacement:** Only replace custom code where upstream Pi 1.5.0 provides a strictly superior, first-class alternative (`harness.watchTaskGraph()` for custom mappers; `ownership: { kind: "task" }` for couriers; `pi-agent-core` for agent loops; `pi-ai` for models). Keep custom business logic (policy store, CAS optimistic locking, tool argument reconstruction) intact.
+4. **Test Separation Invariant:** Core unit tests run in `packages/core/test/` against in-memory mocks (`MemorySessionStore`, `MockModelProvider`) in milliseconds. Infrastructure tests involving real SQLite, locks, and WASM run in `packages/adapter-pi-durable/test/` and `packages/adapter-codemode/test/`.
 
 
 ---
@@ -169,29 +204,32 @@ At every step of each cycle, the full existing test suite (`npm test`) must pass
 
 **Goal:** Create independent packages `@durable-zero/protocol` and `@durable-zero/execution` in `packages/`, removing technical `wire-*` groupings, and plug `ExecutionEnvFactory` into `@durable-zero/core`.
 
-#### Task 1.1: Create `@durable-zero/protocol` Package
+#### Task 1.1: Create `@durable-zero/protocol` Package with Full-Duplex JSON-RPC 2.0
 
 **Files:**
 - Create: `packages/protocol/package.json`
 - Create: `packages/protocol/src/jsonrpc/schema.ts`
 - Create: `packages/protocol/src/jsonrpc/types.ts`
 - Create: `packages/protocol/src/transport/interface.ts`
+- Create: `packages/protocol/src/transport/stdio-server.ts`
 - Create: `packages/protocol/src/index.ts`
 - Test: `packages/protocol/test/protocol.test.ts`
 
-- [ ] **Step 1: Write failing test for `@durable-zero/protocol`**
+- [ ] **Step 1: Write failing test for full-duplex JSON-RPC 2.0 server**
 
 Create `packages/protocol/test/protocol.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { Readable, Writable } from "node:stream";
 import {
   jsonRpcRequestSchema,
   jsonRpcResponseSchema,
+  StdioJsonRpcServer,
   type ITransportStrategy,
 } from "../src/index.ts";
 
-describe("@durable-zero/protocol Package", () => {
+describe("@durable-zero/protocol Full-Duplex Server", () => {
   it("validates JSON-RPC 2.0 request envelope strictly", () => {
     const valid = jsonRpcRequestSchema.safeParse({
       jsonrpc: "2.0",
@@ -208,14 +246,54 @@ describe("@durable-zero/protocol Package", () => {
     assert.equal(valid.success, false);
   });
 
-  it("exports ITransportStrategy interface", () => {
-    const transport: ITransportStrategy = {
-      start: async () => {},
-      send: async () => {},
-      onMessage: () => {},
-      close: async () => {},
-    };
-    assert.equal(typeof transport.send, "function");
+  it("processes inbound client requests and responds with JSON-RPC 2.0 result", async () => {
+    const input = new Readable({ read() {} });
+    let outputBuffer = "";
+    const output = new Writable({
+      write(chunk, enc, cb) { outputBuffer += chunk.toString(); cb(); },
+    });
+
+    const server = new StdioJsonRpcServer({
+      stdin: input,
+      stdout: output,
+      handler: async (method, params) => {
+        if (method === "session/prompt") return { status: "accepted", prompt: params.content };
+        throw new Error(`Unknown method: ${method}`);
+      },
+    });
+    server.start();
+
+    input.push(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "session/prompt", params: { content: "test" } }) + "\n");
+    await new Promise((r) => setTimeout(r, 50));
+
+    const response = JSON.parse(outputBuffer.trim());
+    assert.equal(response.jsonrpc, "2.0");
+    assert.equal(response.id, 1);
+    assert.deepEqual(response.result, { status: "accepted", prompt: "test" });
+    server.stop();
+  });
+
+  it("supports outbound requests to client (host/toolCall) and resolves on response", async () => {
+    const input = new Readable({ read() {} });
+    let outputBuffer = "";
+    const output = new Writable({
+      write(chunk, enc, cb) { outputBuffer += chunk.toString(); cb(); },
+    });
+
+    const server = new StdioJsonRpcServer({ stdin: input, stdout: output, handler: async () => ({}) });
+    server.start();
+
+    const requestPromise = server.request("host/toolCall", { toolName: "ask_user", question: "continue?" });
+    await new Promise((r) => setTimeout(r, 20));
+
+    const sentRequest = JSON.parse(outputBuffer.trim());
+    assert.equal(sentRequest.method, "host/toolCall");
+    assert.ok(sentRequest.id);
+
+    input.push(JSON.stringify({ jsonrpc: "2.0", id: sentRequest.id, result: { answer: "yes" } }) + "\n");
+    const result = await requestPromise;
+    assert.deepEqual(result, { answer: "yes" });
+    server.stop();
   });
 });
 ```
@@ -297,10 +375,144 @@ Create `packages/protocol/src/transport/interface.ts`:
 import type { JsonRpcWireMessage } from "../jsonrpc/types.ts";
 
 export interface ITransportStrategy {
-  start(): Promise<void>;
-  send(message: JsonRpcWireMessage): Promise<void>;
-  onMessage(handler: (message: JsonRpcWireMessage) => void): void;
-  close(): Promise<void>;
+  start(): Promise<void> | void;
+  send(message: JsonRpcWireMessage): Promise<void> | void;
+  request(method: string, params: Record<string, unknown>, timeoutMs?: number): Promise<unknown>;
+  sendNotification(method: string, params: Record<string, unknown>): void;
+  close(): Promise<void> | void;
+}
+```
+
+Create `packages/protocol/src/transport/stdio-server.ts`:
+```typescript
+import { Readable, Writable } from "node:stream";
+import { StringDecoder } from "node:string_decoder";
+import { jsonRpcRequestSchema, jsonRpcResponseSchema } from "../jsonrpc/schema.ts";
+import type { ITransportStrategy } from "./interface.ts";
+import type { JsonRpcWireMessage } from "../jsonrpc/types.ts";
+
+export interface StdioJsonRpcServerOptions {
+  stdin?: Readable;
+  stdout?: Writable;
+  handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
+}
+
+interface PendingOutbound {
+  resolve: (res: unknown) => void;
+  reject: (err: Error) => void;
+  timer: NodeJS.Timeout;
+}
+
+export class StdioJsonRpcServer implements ITransportStrategy {
+  private stdin: Readable;
+  private stdout: Writable;
+  private handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
+  private decoder = new StringDecoder("utf8");
+  private buffer = "";
+  private nextRequestId = 0;
+  private pendingOutbound = new Map<string | number, PendingOutbound>();
+  private onDataHandler = (chunk: Buffer) => { void this.handleChunk(chunk); };
+
+  constructor(options: StdioJsonRpcServerOptions) {
+    this.stdin = options.stdin ?? process.stdin;
+    this.stdout = options.stdout ?? process.stdout;
+    this.handler = options.handler;
+  }
+
+  public start(): void {
+    this.stdin.on("data", this.onDataHandler);
+  }
+
+  public stop(): void {
+    this.stdin.off("data", this.onDataHandler);
+    for (const pending of this.pendingOutbound.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(new Error("Server stopped"));
+    }
+    this.pendingOutbound.clear();
+  }
+
+  public close(): void {
+    this.stop();
+  }
+
+  public send(message: JsonRpcWireMessage): void {
+    this.stdout.write(JSON.stringify(message) + "\n");
+  }
+
+  public sendNotification(method: string, params: Record<string, unknown>): void {
+    this.send({ jsonrpc: "2.0", method, params });
+  }
+
+  public request(method: string, params: Record<string, unknown>, timeoutMs = 120_000): Promise<unknown> {
+    const id = `req_${Date.now()}_${++this.nextRequestId}`;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingOutbound.delete(id);
+        reject(new Error(`Request ${method} (id: ${id}) timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      this.pendingOutbound.set(id, { resolve, reject, timer });
+      this.send({ jsonrpc: "2.0", id, method, params });
+    });
+  }
+
+  private async handleChunk(chunk: Buffer): Promise<void> {
+    this.buffer += this.decoder.write(chunk);
+    const lines = this.buffer.split("\n");
+    this.buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      await this.processLine(line);
+    }
+  }
+
+  private async processLine(line: string): Promise<void> {
+    try {
+      const parsed = JSON.parse(line);
+
+      // Check if this is a response to an outbound request
+      if ("id" in parsed && ("result" in parsed || "error" in parsed) && !("method" in parsed)) {
+        const responseVal = jsonRpcResponseSchema.safeParse(parsed);
+        if (responseVal.success) {
+          const { id, result, error } = responseVal.data;
+          if (id !== null && this.pendingOutbound.has(id)) {
+            const pending = this.pendingOutbound.get(id)!;
+            clearTimeout(pending.timer);
+            this.pendingOutbound.delete(id);
+            if (error) pending.reject(new Error(error.message));
+            else pending.resolve(result);
+            return;
+          }
+        }
+      }
+
+      // Handle inbound request
+      const validated = jsonRpcRequestSchema.safeParse(parsed);
+      if (!validated.success) {
+        this.sendError(parsed.id ?? null, -32600, "Invalid Request");
+        return;
+      }
+      const { id, method, params } = validated.data;
+      try {
+        const result = await this.handler(method, params ?? {});
+        this.sendResult(id, result);
+      } catch (err) {
+        this.sendError(id, -32603, err instanceof Error ? err.message : String(err));
+      }
+    } catch {
+      this.sendError(null, -32700, "Parse error");
+    }
+  }
+
+  private sendResult(id: string | number, result: unknown): void {
+    this.send({ jsonrpc: "2.0", id, result });
+  }
+
+  private sendError(id: string | number | null, code: number, message: string): void {
+    this.send({ jsonrpc: "2.0", id, error: { code, message } });
+  }
 }
 ```
 
@@ -309,18 +521,19 @@ Create `packages/protocol/src/index.ts`:
 export * from "./jsonrpc/schema.ts";
 export * from "./jsonrpc/types.ts";
 export * from "./transport/interface.ts";
+export * from "./transport/stdio-server.ts";
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test packages/protocol/test/protocol.test.ts`
-Expected: PASS (2 tests pass)
+Expected: PASS (3 tests pass)
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add packages/protocol/
-git commit -m "feat(protocol): create @durable-zero/protocol package with JSON-RPC 2.0 schemas"
+git commit -m "feat(protocol): create @durable-zero/protocol with full-duplex StdioJsonRpcServer"
 ```
 
 ---
@@ -609,11 +822,517 @@ git commit -m "refactor(core): inject ExecutionEnvFactory strategy from @durable
 
 ---
 
-### Cycle 2: Pi Resource Isolation via Dedicated Extension Package (`@durable-zero/extension-pi-resource`)
+---
 
-**Goal:** Extract `SettingsManager` and `DefaultResourceLoader` from `@durable-zero/core` into a clean, dedicated workspace package `@durable-zero/extension-pi-resource` implementing Pi Durable's native `defineExtension`. The core becomes free of hardcoded paths to `~/.pi/agent/`.
+### Cycle 2: Storage Anti-Corruption Layer (`@durable-zero/adapter-pi-durable`) & Core `ISessionStore` Port
 
-#### Task 2.1: Create `@durable-zero/extension-pi-resource` Package
+**Goal:** Create `@durable-zero/adapter-pi-durable` implementing `ISessionStore`. Relocate SQLite persistence, PID lock eviction (`session-lock-eviction.ts`), database forks (`session-fork.ts`), and task graph subscriptions into this adapter. Introduce the pure domain port `ISessionStore` with an In-Memory mock in `@durable-zero/core`, keeping domain logic decoupled from SQLite.
+
+#### Task 2.1: Define `ISessionStore` Port in Core with In-Memory Mock
+
+**Files:**
+- Create: `packages/core/src/ports/session-store.ts`
+- Create: `packages/core/test/mocks/memory-session-store.ts`
+- Create: `packages/core/test/session-store-port.test.ts`
+
+- [ ] **Step 1: Write failing test for ISessionStore contract using MemorySessionStore**
+
+Create `packages/core/test/session-store-port.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import type { ISessionStore } from "../src/ports/session-store.ts";
+import { MemorySessionStore } from "./mocks/memory-session-store.ts";
+
+describe("ISessionStore Domain Port (AP-010, AP-012)", () => {
+  it("provides in-memory session persistence without disk or native binaries", async () => {
+    const store: ISessionStore = new MemorySessionStore();
+    await store.acquireLock();
+    assert.equal(store.isLocked, true);
+
+    await store.saveDocument("settings", "active", { theme: "sovereign" });
+    const doc = await store.readDocument("settings", "active");
+    assert.deepEqual(doc, { theme: "sovereign" });
+
+    await store.releaseLock();
+    assert.equal(store.isLocked, false);
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test packages/core/test/session-store-port.test.ts`
+Expected: FAIL with "Cannot find module '../src/ports/session-store.ts'"
+
+- [ ] **Step 3: Define `ISessionStore` and implement `MemorySessionStore`**
+
+Create `packages/core/src/ports/session-store.ts`:
+```typescript
+export interface TaskRecord {
+  id: string | number;
+  conversationId: string | number;
+  status: "pending" | "running" | "completed" | "aborted" | "failed";
+  outcome?: unknown;
+}
+
+export interface ISessionStore {
+  readonly sessionDir: string;
+  readonly isLocked: boolean;
+  acquireLock(): Promise<void>;
+  releaseLock(): Promise<void>;
+  saveDocument(collection: string, docId: string, data: unknown): Promise<void>;
+  readDocument(collection: string, docId: string): Promise<unknown | undefined>;
+  forkSession(checkpointId: string | number, newSessionDir: string): Promise<void>;
+  watchTasks(onUpdate: (tasks: TaskRecord[]) => void): { close(): void };
+  close(): Promise<void>;
+}
+```
+
+Create `packages/core/test/mocks/memory-session-store.ts`:
+```typescript
+import type { ISessionStore, TaskRecord } from "../../src/ports/session-store.ts";
+
+export class MemorySessionStore implements ISessionStore {
+  public sessionDir = "/memory/session";
+  public isLocked = false;
+  private documents = new Map<string, Map<string, unknown>>();
+  private tasks: TaskRecord[] = [];
+  private taskWatchers = new Set<(tasks: TaskRecord[]) => void>();
+
+  async acquireLock(): Promise<void> {
+    if (this.isLocked) throw new Error("Lock already held");
+    this.isLocked = true;
+  }
+
+  async releaseLock(): Promise<void> {
+    this.isLocked = false;
+  }
+
+  async saveDocument(collection: string, docId: string, data: unknown): Promise<void> {
+    if (!this.documents.has(collection)) {
+      this.documents.set(collection, new Map());
+    }
+    this.documents.get(collection)!.set(docId, structuredClone(data));
+  }
+
+  async readDocument(collection: string, docId: string): Promise<unknown | undefined> {
+    const col = this.documents.get(collection);
+    if (!col) return undefined;
+    const val = col.get(docId);
+    return val !== undefined ? structuredClone(val) : undefined;
+  }
+
+  async forkSession(_checkpointId: string | number, _newSessionDir: string): Promise<void> {
+    // In-memory fork creates isolated clone
+  }
+
+  watchTasks(onUpdate: (tasks: TaskRecord[]) => void): { close(): void } {
+    this.taskWatchers.add(onUpdate);
+    onUpdate([...this.tasks]);
+    return {
+      close: () => { this.taskWatchers.delete(onUpdate); },
+    };
+  }
+
+  async close(): Promise<void> {
+    this.isLocked = false;
+    this.taskWatchers.clear();
+  }
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `node --test packages/core/test/session-store-port.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/core/src/ports/session-store.ts packages/core/test/session-store-port.test.ts packages/core/test/mocks/memory-session-store.ts
+git commit -m "feat(core): declare ISessionStore domain port with in-memory mock"
+```
+
+---
+
+#### Task 2.2: Create `@durable-zero/adapter-pi-durable` Package
+
+**Files:**
+- Create: `packages/adapter-pi-durable/package.json`
+- Create: `packages/adapter-pi-durable/src/store.ts`
+- Relocate: `packages/core/src/session-storage.ts` -> `packages/adapter-pi-durable/src/session-storage.ts`
+- Relocate: `packages/core/src/session-fork.ts` -> `packages/adapter-pi-durable/src/session-fork.ts`
+- Relocate: `packages/core/src/bridge/durable-event-adapter.ts` -> `packages/adapter-pi-durable/src/event-adapter.ts`
+- Create: `packages/adapter-pi-durable/src/index.ts`
+- Test: `packages/adapter-pi-durable/test/sqlite-storage.test.ts`
+
+- [ ] **Step 1: Write integration test for PiDurableSessionStore**
+
+Create `packages/adapter-pi-durable/test/sqlite-storage.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { PiDurableSessionStore } from "../src/index.ts";
+
+describe("@durable-zero/adapter-pi-durable (SQLite Storage Integration)", () => {
+  it("acquires lock, persists documents in SQLite, and releases lock safely", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dz-sqlite-test-"));
+    const store = new PiDurableSessionStore({ sessionDir: dir });
+
+    try {
+      await store.acquireLock();
+      assert.equal(store.isLocked, true);
+
+      await store.saveDocument("test_col", "doc1", { foo: "bar" });
+      const read = await store.readDocument("test_col", "doc1");
+      assert.deepEqual(read, { foo: "bar" });
+
+      await store.releaseLock();
+      assert.equal(store.isLocked, false);
+    } finally {
+      await store.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test packages/adapter-pi-durable/test/sqlite-storage.test.ts`
+Expected: FAIL with "Cannot find module '../src/index.ts'"
+
+- [ ] **Step 3: Implement `@durable-zero/adapter-pi-durable`**
+
+Create `packages/adapter-pi-durable/package.json`:
+```json
+{
+  "name": "@durable-zero/adapter-pi-durable",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/core": "workspace:*",
+    "@earendil-works/chord": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0",
+    "proper-lockfile": "^4.1.2"
+  }
+}
+```
+
+Implement `PiDurableSessionStore` in `packages/adapter-pi-durable/src/store.ts` wrapping `session-storage.ts`, `session-fork.ts`, and `Harness.open()`.
+Relocate `session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts` to `packages/adapter-pi-durable/src/`.
+Create `packages/adapter-pi-durable/src/index.ts`.
+
+- [ ] **Step 4: Re-export `forkSessionDatabase` from `@durable-zero/core` and `packages/contracts`**
+
+In `packages/core/src/index.ts` and `packages/contracts/src/index.ts`:
+```typescript
+export { forkSessionDatabase } from "@durable-zero/adapter-pi-durable";
+```
+This guarantees 100% backward compatibility for `bb-plugin-provider-pi-durable` (`thread-fork.ts`) and existing tests.
+
+- [ ] **Step 5: Run integration test and full test suite**
+
+Run: `node --test packages/adapter-pi-durable/test/sqlite-storage.test.ts`
+Expected: PASS
+Run: `npm test`
+Expected: 177 tests PASS!
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/adapter-pi-durable/ packages/core/ packages/contracts/
+git commit -m "feat(adapter-pi-durable): encapsulate SQLite storage, PID safety, and database forks"
+```
+
+---
+
+#### Task 2.3: Enforce Bind-before-Resume Invariant & Delete Redundant Task Graph Mappers
+
+**Files:**
+- Modify: `packages/adapter-pi-durable/src/store.ts` (ensure `beforeResume` hook runs strictly before `harness.resume()`)
+- Delete: `packages/core/src/runtime-graph-mapper.ts`
+- Delete: `packages/core/src/runtime-graph-receipts.ts`
+- Delete: `packages/core/src/runtime-graph-source.ts`
+- Delete: `packages/core/src/runtime-graph-state.ts`
+- Delete: `packages/core/src/runtime-graph-scope.ts`
+- Test: `packages/core/test/before-resume.test.ts`
+- Test: `packages/adapter-pi-durable/test/task-graph-watcher.test.ts`
+
+- [ ] **Step 1: Write test verifying native task graph watcher**
+
+Create `packages/adapter-pi-durable/test/task-graph-watcher.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { Harness, MemoryStorage, createRegistry } from "@earendil-works/pi-durable";
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import { createModels } from "@earendil-works/pi-ai";
+
+describe("Native Pi Durable Task Graph Watcher in Adapter", () => {
+  it("streams live task state updates without custom mappers", async () => {
+    const harness = await Harness.open(
+      new MemoryStorage(),
+      { models: createModels(), registry: createRegistry() },
+      BACKGROUND_CONTEXT
+    );
+    const graphWatch = await harness.watchTaskGraph(BACKGROUND_CONTEXT);
+    assert.ok(graphWatch.value);
+    assert.equal(typeof graphWatch.value.tasks, "object");
+    await harness.close(BACKGROUND_CONTEXT);
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it passes**
+
+Run: `node --test packages/adapter-pi-durable/test/task-graph-watcher.test.ts`
+Expected: PASS
+
+- [ ] **Step 3: Delete redundant custom graph mappers**
+
+```bash
+rm packages/core/src/runtime-graph-mapper.ts
+rm packages/core/src/runtime-graph-receipts.ts
+rm packages/core/src/runtime-graph-source.ts
+rm packages/core/src/runtime-graph-state.ts
+rm packages/core/src/runtime-graph-scope.ts
+```
+
+- [ ] **Step 4: Run full test suite and verify**
+
+Run: `npm test`
+Expected: PASS (all tests pass without dead graph mappers)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/core/ packages/adapter-pi-durable/
+git commit -m "refactor(storage): delete custom task graph mappers in favor of native harness.watchTaskGraph"
+```
+
+---
+
+### Cycle 3: Model & Codemode Adapters (`@durable-zero/adapter-pi-ai` & `@durable-zero/adapter-codemode`)
+
+**Goal:** Extract model generation and QuickJS WASM execution into separate ACL packages. Core declares port interfaces (`IModelProvider`, `ICodemodeRunner`), while adapters encapsulate `@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`, and `@earendil-works/pi-codemode`.
+
+#### Task 3.1: Create `@durable-zero/adapter-pi-ai`
+
+**Files:**
+- Create: `packages/core/src/ports/model-provider.ts`
+- Create: `packages/adapter-pi-ai/package.json`
+- Create: `packages/adapter-pi-ai/src/model-provider.ts`
+- Create: `packages/adapter-pi-ai/src/index.ts`
+- Relocate: `packages/core/src/model-setup.ts` -> `packages/adapter-pi-ai/src/model-setup.ts`
+- Test: `packages/adapter-pi-ai/test/model-provider.test.ts`
+
+- [ ] **Step 1: Write test for IModelProvider and PiAiModelProvider**
+
+Create `packages/adapter-pi-ai/test/model-provider.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { PiAiModelProvider } from "../src/index.ts";
+
+describe("@durable-zero/adapter-pi-ai (IModelProvider Adapter)", () => {
+  it("normalizes model references and maps thinking levels", async () => {
+    const provider = new PiAiModelProvider();
+    const resolved = await provider.resolveModel({ provider: "antigravity", modelId: "antigravity/gemini-3.8-flash" });
+    assert.equal(resolved.provider, "antigravity");
+    assert.equal(resolved.modelId, "gemini-3.8-flash");
+  });
+});
+```
+
+- [ ] **Step 2: Implement `IModelProvider` port in core and `PiAiModelProvider` in adapter**
+
+Create `packages/core/src/ports/model-provider.ts`:
+```typescript
+export interface ModelRef {
+  provider: string;
+  modelId: string;
+}
+
+export interface StreamDelta {
+  type: "text" | "tool_call" | "thought";
+  content?: string;
+  toolCall?: { id: string; name: string; args: unknown };
+}
+
+export interface IModelProvider {
+  resolveModel(ref?: ModelRef): Promise<ModelRef>;
+  generateStream(model: ModelRef, prompt: string, onDelta: (delta: StreamDelta) => void): Promise<{ output: string }>;
+}
+```
+
+Create `packages/adapter-pi-ai/package.json`:
+```json
+{
+  "name": "@durable-zero/adapter-pi-ai",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/core": "workspace:*",
+    "@earendil-works/pi-agent-core": "1.5.0",
+    "@earendil-works/pi-ai": "1.5.0"
+  }
+}
+```
+
+Implement `PiAiModelProvider` wrapping `createModels()` and streaming deltas.
+Relocate `packages/core/src/model-setup.ts` into `packages/adapter-pi-ai/src/model-setup.ts`.
+
+- [ ] **Step 3: Run test to verify it passes**
+
+Run: `node --test packages/adapter-pi-ai/test/model-provider.test.ts`
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/core/src/ports/model-provider.ts packages/adapter-pi-ai/
+git commit -m "feat(adapter-pi-ai): create LLM adapter implementing IModelProvider"
+```
+
+---
+
+#### Task 3.2: Create `@durable-zero/adapter-codemode` with Deterministic Replay
+
+**Files:**
+- Create: `packages/core/src/ports/codemode-runner.ts`
+- Create: `packages/adapter-codemode/package.json`
+- Create: `packages/adapter-codemode/src/codemode-runner.ts`
+- Create: `packages/adapter-codemode/src/index.ts`
+- Relocate: `packages/core/src/builtin-extensions/codemode.ts` -> `packages/adapter-codemode/src/codemode.ts`
+- Test: `packages/adapter-codemode/test/codemode-replay.test.ts`
+
+- [ ] **Step 1: Write failing test for deterministic codemode replay**
+
+Create `packages/adapter-codemode/test/codemode-replay.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { QuickJsCodemodeRunner } from "../src/index.ts";
+
+describe("@durable-zero/adapter-codemode (Deterministic Replay)", () => {
+  it("replays journaled tool calls without physically re-executing tools", async () => {
+    const runner = new QuickJsCodemodeRunner();
+    let executions = 0;
+    const tools = [
+      {
+        name: "test_tool",
+        execute: async () => {
+          executions++;
+          return "fresh-result";
+        },
+      },
+    ];
+
+    const result = await runner.run(`return await tools.test_tool();`, tools);
+    assert.equal(result.ok, true);
+    assert.equal(result.value, "fresh-result");
+    assert.equal(executions, 1);
+    await runner.close();
+  });
+});
+```
+
+- [ ] **Step 2: Implement `ICodemodeRunner` port in core and `QuickJsCodemodeRunner` in adapter**
+
+Create `packages/core/src/ports/codemode-runner.ts`:
+```typescript
+export interface CodemodeExecutionResult {
+  ok: boolean;
+  value?: unknown;
+  error?: string;
+}
+
+export interface ICodemodeRunner {
+  run(code: string, tools: Array<{ name: string; execute: (args: unknown) => Promise<unknown> }>): Promise<CodemodeExecutionResult>;
+  close(): Promise<void>;
+}
+```
+
+Create `packages/adapter-codemode/package.json`:
+```json
+{
+  "name": "@durable-zero/adapter-codemode",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/core": "workspace:*",
+    "@earendil-works/pi-codemode": "1.5.0",
+    "quickjs-wasi": "3.6.2"
+  }
+}
+```
+
+Implement `QuickJsCodemodeRunner` wrapping `sandbox.start()` with replay journaling and session documents.
+Relocate `codemode.ts` into `packages/adapter-codemode/src/`.
+
+- [ ] **Step 3: Run test to verify it passes**
+
+Run: `node --test packages/adapter-codemode/test/codemode-replay.test.ts`
+Expected: PASS
+
+- [ ] **Step 4: Delete redundant bike files**
+
+```bash
+rm packages/core/src/subagent-courier.ts
+rm packages/core/src/subagent-watcher.ts
+rm packages/core/src/watcher-compat.ts
+rm packages/core/src/stdout-guard.ts
+```
+
+- [ ] **Step 5: Run full test suite and commit**
+
+Run: `npm test`
+Expected: PASS
+
+```bash
+git add packages/core/ packages/adapter-codemode/
+git commit -m "feat(adapter-codemode): encapsulate QuickJS WASM sandbox and delete obsolete couriers"
+```
+
+---
+
+### Cycle 4: Pi Resource Extension (`@durable-zero/extension-pi-resource`) & Sovereign Core Purification
+
+**Goal:** Extract `SettingsManager` and `DefaultResourceLoader` into `@durable-zero/extension-pi-resource` via native `defineExtension`. Purify `@durable-zero/core`: strip all `@earendil-works/*` dependencies from `core/package.json`, extract clean `SessionCoordinator`, and verify fast In-Memory unit tests.
+
+#### Task 4.1: Create `@durable-zero/extension-pi-resource` Package
 
 **Files:**
 - Create: `packages/extension-pi-resource/package.json`
@@ -666,84 +1385,15 @@ Create `packages/extension-pi-resource/package.json`:
     }
   },
   "dependencies": {
+    "@durable-zero/core": "workspace:*",
     "@earendil-works/pi-coding-agent": "1.5.0",
     "@earendil-works/pi-durable": "1.5.0"
   }
 }
 ```
 
-Create `packages/extension-pi-resource/src/contracts.ts`:
-```typescript
-export interface ModelConfigRef {
-  provider: string;
-  modelId: string;
-}
-
-export interface IConfigProvider {
-  getDefaultModel(): ModelConfigRef | undefined;
-  getSecret(key: string): Promise<string | undefined>;
-  getSkillPaths(): string[];
-}
-```
-
-Create `packages/extension-pi-resource/src/pi-resource-ext.ts`:
-```typescript
-import { defineExtension, type Extension } from "@earendil-works/pi-durable";
-import { SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
-import type { IConfigProvider, ModelConfigRef } from "./contracts.ts";
-
-export interface PiResourceExtensionOptions {
-  cwd: string;
-  agentDir?: string;
-  additionalSkillPaths?: string[];
-}
-
-export interface PiResourceExtensionInstance extends Extension {
-  readonly configProvider: IConfigProvider;
-  readonly resourceLoader: DefaultResourceLoader;
-  readonly settingsManager: SettingsManager;
-}
-
-export function createPiResourceExtension(options: PiResourceExtensionOptions): PiResourceExtensionInstance {
-  const settingsManager = SettingsManager.create(options.cwd);
-  const resourceLoader = new DefaultResourceLoader({
-    cwd: options.cwd,
-    agentDir: options.agentDir,
-    settingsManager,
-    additionalSkillPaths: options.additionalSkillPaths,
-  });
-
-  const configProvider: IConfigProvider = {
-    getDefaultModel(): ModelConfigRef | undefined {
-      const p = settingsManager.getDefaultProvider();
-      const m = settingsManager.getDefaultModel();
-      return p && m ? { provider: p, modelId: m } : undefined;
-    },
-    async getSecret(key: string): Promise<string | undefined> {
-      return process.env[key];
-    },
-    getSkillPaths(): string[] {
-      return options.additionalSkillPaths ?? [];
-    },
-  };
-
-  const baseExt = defineExtension({
-    name: "pi-resource",
-  });
-
-  return Object.assign(baseExt, {
-    configProvider,
-    resourceLoader,
-    settingsManager,
-  });
-}
-```
-
-Create `packages/extension-pi-resource/src/index.ts`:
-```typescript
-export * from "./contracts.ts";
-export * from "./pi-resource-ext.ts";
-```
+Implement `createPiResourceExtension` using `defineExtension` (as declared in Cycle 2 of baseline plan).
+Create `packages/extension-pi-resource/src/index.ts`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -759,275 +1409,99 @@ git commit -m "feat(extension): create @durable-zero/extension-pi-resource packa
 
 ---
 
-### Cycle 3: Elimination of Pi Durable Duplicate Bikes (Zero Shims & Bind-before-Resume)
-
-**Goal:** Eliminate custom watcher/courier mechanisms (`subagent-courier.ts`, `subagent-watcher.ts`, `runtime-graph-*.ts`) in favor of native Pi Durable primitives (`ownership: { kind: "task" }`, `harness.watchTaskGraph()`, `ConversationTranscript`), while guaranteeing the `Bind-before-Resume` invariant.
-
-#### Task 3.1: Enforce Bind-before-Resume in `runtime.ts`
+#### Task 4.2: Purify `@durable-zero/core` (Zero Vendor Dependencies)
 
 **Files:**
-- Modify: `packages/core/src/runtime.ts:155-165`
-- Test: `packages/core/test/before-resume.test.ts`
+- Modify: `packages/core/package.json`
+- Create: `packages/core/src/services/session-coordinator.ts`
+- Create: `packages/core/test/pure-domain-engine.test.ts`
 
-- [ ] **Step 1: Write test verifying bind executes strictly before resume**
+- [ ] **Step 1: Write pure domain engine unit test with In-Memory mocks**
 
-Check `packages/core/test/before-resume.test.ts`:
-```typescript
-it("guarantees lifecycle.bind completes strictly before harness.resume", async () => {
-  let boundBeforeResume = false;
-  let resumed = false;
-  await openDurable({
-    beforeResume: async (harness) => {
-      boundBeforeResume = !resumed;
-    },
-  });
-  assert.equal(boundBeforeResume, true);
-});
-```
-
-- [ ] **Step 2: Run test to verify behavior**
-
-Run: `node --test packages/core/test/before-resume.test.ts`
-Expected: PASS
-
-- [ ] **Step 3: Commit verification lock**
-
-```bash
-git commit --allow-empty -m "chore(core): lock Bind-before-Resume execution invariant"
-```
-
----
-
-#### Task 3.2: Delete Custom Graph Mappers and Subagent Couriers
-
-**Files:**
-- Delete: `packages/core/src/runtime-graph-mapper.ts`
-- Delete: `packages/core/src/runtime-graph-receipts.ts`
-- Delete: `packages/core/src/runtime-graph-source.ts`
-- Delete: `packages/core/src/runtime-graph-state.ts`
-- Delete: `packages/core/src/runtime-graph-scope.ts`
-- Modify: `packages/core/src/subagent.ts` (redirect to native task ownership)
-- Test: `packages/core/test/native-task-graph.test.ts`
-
-- [ ] **Step 1: Write test verifying native task graph watcher**
-
-Create `packages/core/test/native-task-graph.test.ts`:
+Create `packages/core/test/pure-domain-engine.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { Harness, MemoryStorage, createRegistry } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { createModels } from "@earendil-works/pi-ai";
+import { SessionCoordinator } from "../src/services/session-coordinator.ts";
+import { MemorySessionStore } from "./mocks/memory-session-store.ts";
 
-describe("Native Pi Durable Task Graph Watcher", () => {
-  it("streams live task state updates without custom mappers", async () => {
-    const harness = await Harness.open(
-      new MemoryStorage(),
-      { models: createModels(), registry: createRegistry() },
-      BACKGROUND_CONTEXT
-    );
-    const graphWatch = await harness.watchTaskGraph(BACKGROUND_CONTEXT);
-    assert.ok(graphWatch.value);
-    assert.equal(typeof graphWatch.value.tasks, "object");
-    await harness.close(BACKGROUND_CONTEXT);
+describe("@durable-zero/core Sovereign Domain Engine", () => {
+  it("coordinates prompt admission, cascading abort, and lock release without external infrastructure", async () => {
+    const store = new MemorySessionStore();
+    const coordinator = new SessionCoordinator({
+      store,
+      modelProvider: {
+        resolveModel: async () => ({ provider: "mock", modelId: "mock-v1" }),
+        generateStream: async (_m, _p, onDelta) => {
+          onDelta({ type: "text", content: "Hello sovereign world" });
+          return { output: "Hello sovereign world" };
+        },
+      },
+    });
+
+    await coordinator.start();
+    const receipt = await coordinator.prompt("hi");
+    assert.equal(receipt.status, "accepted");
+
+    await coordinator.abort();
+    assert.equal(coordinator.isAborted, true);
+    await coordinator.close();
+    assert.equal(store.isLocked, false);
   });
 });
 ```
 
-- [ ] **Step 2: Run test to verify it passes**
+- [ ] **Step 2: Implement `SessionCoordinator` in Core**
 
-Run: `node --test packages/core/test/native-task-graph.test.ts`
-Expected: PASS
+Extract pure domain coordination from `session-commands.ts` into `packages/core/src/services/session-coordinator.ts`. It accepts `ISessionStore`, `IModelProvider`, `ICodemodeRunner`, and `IExecutionEnvironment` via constructor dependency injection (AP-012, AP-072).
 
-- [ ] **Step 3: Delete redundant bike files**
+- [ ] **Step 3: Clean `packages/core/package.json` to have ZERO `@earendil-works/*` dependencies**
 
-```bash
-rm packages/core/src/runtime-graph-mapper.ts
-rm packages/core/src/runtime-graph-receipts.ts
-rm packages/core/src/runtime-graph-source.ts
-rm packages/core/src/runtime-graph-state.ts
-rm packages/core/src/runtime-graph-scope.ts
+Edit `packages/core/package.json`:
+```json
+{
+  "name": "@durable-zero/core",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/execution": "workspace:*",
+    "@durable-zero/protocol": "workspace:*",
+    "zod": "^4.6.7"
+  }
+}
 ```
 
-- [ ] **Step 4: Run full test suite and verify**
+- [ ] **Step 4: Verify automated vendor isolation check**
 
-Run: `npm test`
-Expected: PASS (all tests pass without dead graph mappers)
+Run: `grep -rn "@earendil-works" packages/core/src/ || true`
+Expected: 0 matches!
+
+Run: `node --test packages/core/test/pure-domain-engine.test.ts`
+Expected: PASS in < 25ms!
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add packages/core/
-git commit -m "refactor(core): delete redundant custom task graph mappers in favor of native harness.watchTaskGraph"
+git commit -m "feat(core): achieve zero vendor dependencies in core with pure domain SessionCoordinator"
 ```
 
 ---
 
-### Cycle 4: True Composition Root in `@durable-zero/runner` & Single Stdio JSON-RPC 2.0 Transport
+### Cycle 5: True Composition Root (`@durable-zero/runner`) & Build Pipeline
 
-**Goal:** Create a dedicated `@durable-zero/runner` package that serves as the **TRUE COMPOSITION ROOT** (AP-020, AP-073), moving entrypoint wiring out of `@durable-zero/core`. Implement the single default `StdioJsonRpcServer` in `@durable-zero/protocol`.
+**Goal:** Establish `@durable-zero/runner` as the Composition Root (AP-020, AP-073), wiring Core with all Adapters (`adapter-pi-durable`, `adapter-pi-ai`, `adapter-codemode`, `extension-pi-resource`) and the full-duplex `StdioJsonRpcServer`. Update `scripts/build.mjs` and the root test glob.
 
-#### Task 4.1: Implement `StdioJsonRpcServer` in `@durable-zero/protocol`
-
-**Files:**
-- Create: `packages/protocol/src/transport/stdio-server.ts`
-- Modify: `packages/protocol/src/index.ts`
-- Test: `packages/protocol/test/stdio-server.test.ts`
-
-- [ ] **Step 1: Write failing test for StdioJsonRpcServer**
-
-Create `packages/protocol/test/stdio-server.test.ts`:
-```typescript
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { Readable, Writable } from "node:stream";
-import { StdioJsonRpcServer } from "../src/index.ts";
-
-describe("StdioJsonRpcServer (JSON-RPC 2.0 Standard)", () => {
-  it("processes session/prompt request and replies with jsonrpc 2.0 result", async () => {
-    const input = new Readable({ read() {} });
-    let outputBuffer = "";
-    const output = new Writable({
-      write(chunk, encoding, callback) {
-        outputBuffer += chunk.toString();
-        callback();
-      },
-    });
-
-    const server = new StdioJsonRpcServer({
-      stdin: input,
-      stdout: output,
-      handler: async (method, params) => {
-        if (method === "session/prompt") return { status: "accepted", prompt: params.content };
-        throw new Error(`Unknown method: ${method}`);
-      },
-    });
-    server.start();
-
-    input.push(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "session/prompt", params: { content: "test" } }) + "\n");
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    const response = JSON.parse(outputBuffer.trim());
-    assert.equal(response.jsonrpc, "2.0");
-    assert.equal(response.id, 1);
-    assert.deepEqual(response.result, { status: "accepted", prompt: "test" });
-    server.stop();
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test packages/protocol/test/stdio-server.test.ts`
-Expected: FAIL with "Cannot find module '../src/index.ts' or exported member StdioJsonRpcServer"
-
-- [ ] **Step 3: Implement `StdioJsonRpcServer`**
-
-Create `packages/protocol/src/transport/stdio-server.ts`:
-```typescript
-import { Readable, Writable } from "node:stream";
-import { StringDecoder } from "node:string_decoder";
-import { jsonRpcRequestSchema } from "../jsonrpc/schema.ts";
-
-export interface StdioJsonRpcServerOptions {
-  stdin?: Readable;
-  stdout?: Writable;
-  handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
-}
-
-export class StdioJsonRpcServer {
-  private stdin: Readable;
-  private stdout: Writable;
-  private handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
-  private decoder = new StringDecoder("utf8");
-  private buffer = "";
-  private onDataHandler = (chunk: Buffer) => { void this.handleChunk(chunk); };
-
-  constructor(options: StdioJsonRpcServerOptions) {
-    this.stdin = options.stdin ?? process.stdin;
-    this.stdout = options.stdout ?? process.stdout;
-    this.handler = options.handler;
-  }
-
-  public start(): void {
-    this.stdin.on("data", this.onDataHandler);
-  }
-
-  public stop(): void {
-    this.stdin.off("data", this.onDataHandler);
-  }
-
-  public sendNotification(method: string, params: Record<string, unknown>): void {
-    const payload = JSON.stringify({ jsonrpc: "2.0", method, params }) + "\n";
-    this.stdout.write(payload);
-  }
-
-  private async handleChunk(chunk: Buffer): Promise<void> {
-    this.buffer += this.decoder.write(chunk);
-    const lines = this.buffer.split("\n");
-    this.buffer = lines.pop() ?? "";
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      await this.processLine(line);
-    }
-  }
-
-  private async processLine(line: string): Promise<void> {
-    try {
-      const parsed = JSON.parse(line);
-      const validated = jsonRpcRequestSchema.safeParse(parsed);
-      if (!validated.success) {
-        this.sendError(parsed.id ?? null, -32600, "Invalid Request");
-        return;
-      }
-      const { id, method, params } = validated.data;
-      try {
-        const result = await this.handler(method, params ?? {});
-        this.sendResult(id, result);
-      } catch (err) {
-        this.sendError(id, -32603, err instanceof Error ? err.message : String(err));
-      }
-    } catch {
-      this.sendError(null, -32700, "Parse error");
-    }
-  }
-
-  private sendResult(id: string | number, result: unknown): void {
-    const payload = JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n";
-    this.stdout.write(payload);
-  }
-
-  private sendError(id: string | number | null, code: number, message: string): void {
-    const payload = JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }) + "\n";
-    this.stdout.write(payload);
-  }
-}
-```
-
-Update `packages/protocol/src/index.ts`:
-```typescript
-export * from "./jsonrpc/schema.ts";
-export * from "./jsonrpc/types.ts";
-export * from "./transport/interface.ts";
-export * from "./transport/stdio-server.ts";
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test packages/protocol/test/stdio-server.test.ts`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add packages/protocol/
-git commit -m "feat(protocol): implement StdioJsonRpcServer conforming to JSON-RPC 2.0"
-```
-
----
-
-#### Task 4.2: Create `@durable-zero/runner` (The True Composition Root - AP-020, AP-073)
+#### Task 5.1: Create `@durable-zero/runner` Composition Root
 
 **Files:**
 - Create: `packages/runner/package.json`
@@ -1035,7 +1509,7 @@ git commit -m "feat(protocol): implement StdioJsonRpcServer conforming to JSON-R
 - Create: `packages/runner/src/main.ts`
 - Test: `packages/runner/test/composition-root.test.ts`
 
-- [ ] **Step 1: Write test verifying runner wires engine and transport outside core**
+- [ ] **Step 1: Write test verifying runner wires engine and adapters outside core**
 
 Create `packages/runner/test/composition-root.test.ts`:
 ```typescript
@@ -1044,12 +1518,12 @@ import assert from "node:assert/strict";
 import { assembleDurableZero } from "../src/composition.ts";
 
 describe("Durable-Zero True Composition Root (AP-020, AP-073)", () => {
-  it("assembles engine, transport, execution environment, and extensions at root boundary", async () => {
+  it("assembles core engine, storage, models, sandbox, and transport at root boundary", async () => {
     const instance = await assembleDurableZero({
       cwd: process.cwd(),
       headless: true,
     });
-    assert.ok(instance.engine);
+    assert.ok(instance.coordinator);
     assert.ok(instance.transport);
     await instance.close();
   });
@@ -1070,9 +1544,12 @@ Create `packages/runner/package.json`:
   "version": "0.8.1",
   "type": "module",
   "license": "MIT",
-  "main": "./dist/main.js",
+  "main": "./dist/runner.js",
   "types": "./src/main.ts",
   "dependencies": {
+    "@durable-zero/adapter-codemode": "workspace:*",
+    "@durable-zero/adapter-pi-ai": "workspace:*",
+    "@durable-zero/adapter-pi-durable": "workspace:*",
     "@durable-zero/core": "workspace:*",
     "@durable-zero/execution": "workspace:*",
     "@durable-zero/extension-pi-resource": "workspace:*",
@@ -1083,38 +1560,59 @@ Create `packages/runner/package.json`:
 
 Create `packages/runner/src/composition.ts`:
 ```typescript
-import { DurableEngine } from "@durable-zero/core";
+import { SessionCoordinator } from "@durable-zero/core";
 import { LocalNodeExecutionEnv } from "@durable-zero/execution";
 import { StdioJsonRpcServer } from "@durable-zero/protocol";
+import { PiDurableSessionStore } from "@durable-zero/adapter-pi-durable";
+import { PiAiModelProvider } from "@durable-zero/adapter-pi-ai";
+import { QuickJsCodemodeRunner } from "@durable-zero/adapter-codemode";
 import { createPiResourceExtension } from "@durable-zero/extension-pi-resource";
 
 export interface AssembleOptions {
   cwd?: string;
+  sessionDir?: string;
   headless?: boolean;
 }
 
 export async function assembleDurableZero(options: AssembleOptions = {}) {
   const cwd = options.cwd ?? process.cwd();
+  const sessionDir = options.sessionDir ?? `${cwd}/.durable-session`;
+
   const env = new LocalNodeExecutionEnv({ cwd });
+  const store = new PiDurableSessionStore({ sessionDir });
+  const modelProvider = new PiAiModelProvider();
+  const codemodeRunner = new QuickJsCodemodeRunner();
   const piResource = options.headless ? undefined : createPiResourceExtension({ cwd });
 
-  const engine = new DurableEngine();
+  const coordinator = new SessionCoordinator({
+    store,
+    modelProvider,
+    codemodeRunner,
+    executionEnv: env,
+    piResourceExtension: piResource,
+  });
 
   const transport = new StdioJsonRpcServer({
     handler: async (method, params) => {
       if (method === "session/prompt") {
-        await engine.prompt(String(params.content ?? ""));
-        return { status: "completed" };
+        return coordinator.prompt(String(params.content ?? ""));
       }
-      return { status: "ignored" };
+      if (method === "session/cancel") {
+        await coordinator.abort();
+        return { status: "aborted" };
+      }
+      throw new Error(`Unknown method: ${method}`);
     },
   });
 
   return {
-    engine,
+    coordinator,
     transport,
     close: async () => {
       transport.stop();
+      await coordinator.close();
+      await codemodeRunner.close();
+      await store.close();
       await env.cleanup();
     },
   };
@@ -1129,8 +1627,13 @@ async function main() {
   const runner = await assembleDurableZero();
   runner.transport.start();
 
-  process.on("SIGINT", () => { void runner.close().then(() => process.exit(0)); });
-  process.on("SIGTERM", () => { void runner.close().then(() => process.exit(0)); });
+  const shutdown = async () => {
+    await runner.close();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", () => { void shutdown(); });
+  process.on("SIGTERM", () => { void shutdown(); });
 }
 
 void main();
@@ -1145,68 +1648,85 @@ Expected: PASS
 
 ```bash
 git add packages/runner/
-git commit -m "feat(runner): establish dedicated Composition Root package assembling zero packages"
+git commit -m "feat(runner): establish dedicated Composition Root assembling core with adapters"
 ```
 
 ---
 
-### Cycle 5: Deterministic Codemode Replay & Session Store
-
-**Goal:** Upgrade `CodemodeExtension` from basic `sandbox.execute()` to deterministic `sandbox.start()`, recording tool results into Pi Durable's journal so that process restarts replay finished calls without re-executing tools. Store script state via `store`/`load` in the session's SQLite documents.
-
-#### Task 5.1: Wire `sandbox.start()` Replay Journaling in Codemode
+#### Task 5.2: Update Build Pipeline & WASM Distribution
 
 **Files:**
-- Modify: `packages/core/src/builtin-extensions/codemode.ts`
-- Test: `packages/core/test/codemode-deterministic-replay.test.ts`
+- Modify: `scripts/build.mjs`
+- Modify: `package.json`
 
-- [ ] **Step 1: Write failing test for deterministic replay**
+- [ ] **Step 1: Update `scripts/build.mjs` to bundle all packages and copy `quickjs.wasm`**
 
-Create `packages/core/test/codemode-deterministic-replay.test.ts`:
-```typescript
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { CodemodeSandbox } from "@earendil-works/pi-codemode";
+Edit `scripts/build.mjs`:
+```javascript
+const packages = [
+  "protocol",
+  "execution",
+  "core",
+  "adapter-pi-durable",
+  "adapter-pi-ai",
+  "adapter-codemode",
+  "extension-pi-resource",
+  "runner",
+];
 
-describe("Deterministic Codemode Sandbox (sandbox.start)", () => {
-  it("replays journaled tool results deterministically across restarts", async () => {
-    const sandbox = new CodemodeSandbox();
-    let physicalCalls = 0;
-    const run = sandbox.start(
-      `const a = await tools.read({ path: "x" }); return a;`,
-      {
-        startedAt: 1000,
-        seed: 42,
-        tools: [{ name: "read", description: "Read file" }],
-        onCall: (call) => {
-          physicalCalls++;
-          run.deliver(1, 1005, call.id, { ok: true, value: "file-content" });
-        },
-      }
-    );
-    const result = await run.result;
-    assert.equal(result.ok, true);
-    assert.equal(result.value, "file-content");
-    assert.equal(physicalCalls, 1);
-    await sandbox.close();
+for (const pkg of packages) {
+  await build({
+    entryPoints: [resolve(root, `packages/${pkg}/src/index.ts`)],
+    bundle: true,
+    platform: "node",
+    target: "node22",
+    format: "esm",
+    outfile: resolve(root, `packages/${pkg}/dist/index.js`),
+    external: externals,
+    sourcemap: true,
   });
+  console.log(`- Built packages/${pkg}/dist/index.js`);
+}
+
+// Build standalone runner binary
+await build({
+  entryPoints: [resolve(root, "packages/runner/src/main.ts")],
+  bundle: true,
+  platform: "node",
+  target: "node22",
+  format: "esm",
+  outfile: resolve(root, "packages/runner/dist/runner.js"),
+  external: externals,
+  banner: {
+    js: `import { createRequire as __createRequire } from "node:module";\nconst require = __createRequire(import.meta.url);`,
+  },
+  sourcemap: true,
 });
+console.log("- Built packages/runner/dist/runner.js");
+
+// Copy WASM to runner distribution directory
+const wasmSource = resolve(root, "node_modules/.pnpm/quickjs-wasi@3.6.2/node_modules/quickjs-wasi/quickjs.wasm");
+const wasmDest = resolve(root, "packages/runner/dist/quickjs.wasm");
+await fs.copyFile(wasmSource, wasmDest);
+console.log("- Copied quickjs.wasm to packages/runner/dist/quickjs.wasm");
 ```
 
-- [ ] **Step 2: Run test to verify it passes**
+- [ ] **Step 2: Update root `package.json` test runner glob and subpath exports**
 
-Run: `node --test packages/core/test/codemode-deterministic-replay.test.ts`
-Expected: PASS
+In root `package.json`:
+- `"test": "node --test packages/*/test/*.test.ts"`
+- `"./runner": "./packages/runner/dist/runner.js"`
 
-- [ ] **Step 3: Update `CodemodeExtension` to use instance sandboxes and replay journals**
+- [ ] **Step 3: Run full build and test suite**
 
-Inspect `packages/core/src/builtin-extensions/codemode.ts`. Ensure each session context receives its own encapsulated sandbox without module-level `#activeSandbox` leaks.
+Run: `npm run build && npm test`
+Expected: Build succeeds, all tests pass!
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add packages/core/src/builtin-extensions/codemode.ts packages/core/test/codemode-deterministic-replay.test.ts
-git commit -m "feat(codemode): enforce deterministic replay journaling and session isolation"
+git add scripts/build.mjs package.json
+git commit -m "chore(build): update build pipeline for all packages and copy WASM to runner dist"
 ```
 
 ---
@@ -1218,7 +1738,9 @@ At the completion of each cycle, the orchestrator triggers two parallel review s
 
 1. **Circuit 1: Semantic Architecture Review (`arch-rules-implementation-review`)**
    - Evaluates modular integrity, loose coupling, absence of leaky abstractions.
-   - Verifies AP-010, AP-011, AP-012, AP-020, AP-072, AP-073.
+   - Verifies **Zero Vendor Invasions in Core**: `grep -rn "@earendil-works" packages/core/src/ || true` MUST return 0 matches.
+   - Verifies **Port Inversion**: All adapters implement core ports (`ISessionStore`, `IModelProvider`, `ICodemodeRunner`), never the reverse.
+   - Verifies AP-010, AP-011, AP-012, AP-013, AP-020, AP-072, AP-073.
    - Zero tolerance for P0, P1, P2 findings.
 2. **Circuit 2: Black-Box Synthetic Product Review (`arch-improvement-product-review`)**
    - Traverses the Three Golden Journeys (Happy Path, Empty State, Error Recovery) as an external operator without inspecting code.
