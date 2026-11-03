@@ -84,7 +84,47 @@ packages/
 
 ---
 
-## Migration Inventory Matrix: Preservation, Pi Adoption & Bike Elimination
+## Global System Blind Spots & Architectural Mitigations
+
+A deep cross-system audit against downstream consumers (`bb-plugin-provider-pi-durable`, `dpi-backend`, ACP/Zed clients) and build assets revealed 7 critical global blind spots:
+
+### 1. Full-Duplex Bidirectional JSON-RPC 2.0 (Host Tools & Dialog Callbacks)
+- **Blind Spot:** A naive JSON-RPC server only handles incoming requests and emits notifications. But when an agent calls host-provided tools (e.g. `AskUserQuestion`, browser automation, BB IDE tools), the agent must act as a caller, sending an outgoing request to the client (`method: "host/toolCall"`, `method: "host/interaction"`) and awaiting the client's result.
+- **Mitigation:** `StdioJsonRpcServer` in `@durable-zero/protocol` implements full duplex JSON-RPC 2.0:
+  * Inbound: `handler(method, params)` resolves incoming client requests (`session/prompt`, `session/cancel`).
+  * Outbound Requests: `request(method, params): Promise<unknown>` assigns correlation IDs, sets configurable timeouts (120s), and resolves upon receiving the client's matching response.
+  * Notifications: `sendNotification(method, params)` for fire-and-forget streaming (`session/event`).
+
+### 2. Downstream Host Contract & Subpath Exports Preservation
+- **Blind Spot:** `bb-plugin-provider-pi-durable` and `dpi-backend` rely on specific entrypoints:
+  * `esmRequire.resolve("durable-zero/runner")`
+  * `import { forkSessionDatabase } from "durable-zero/core"`
+  * `import { filterSnapshotForConversation } from "durable-zero/contracts"`
+  Breaking these subpath exports would break host orchestration without compiler warnings.
+- **Mitigation:** The root `package.json` maintains `./runner`, `./core`, and `./contracts` subpath exports mapping to the new modular packages, and `@durable-zero/core` preserves `forkSessionDatabase`.
+
+### 3. Build System (`scripts/build.mjs`) & WASM Asset Placement
+- **Blind Spot:** `quickjs-wasi` requires `quickjs.wasm` adjacent to the executed bundle. Currently `scripts/build.mjs` only copies it to `packages/core/dist/quickjs.wasm`. If the runner moves to `packages/runner/dist/runner.js`, codemode scripts will throw runtime WASM resolution errors.
+- **Mitigation:** `scripts/build.mjs` is updated to bundle all workspace packages (`protocol`, `execution`, `core`, `extension-pi-resource`, `runner`) and copies `quickjs.wasm` directly into `packages/runner/dist/quickjs.wasm`.
+
+### 4. Out-of-Band Control Channel (`control.jsonl`)
+- **Blind Spot:** In long-running background tasks or Docker containers where stdio might be saturated, the supervisor aborts hung tasks via `control.jsonl` (`startRunnerControlChannel`).
+- **Mitigation:** `control-channel.ts` is explicitly preserved in the Green Zone inside `@durable-zero/core/session/control-channel.ts`.
+
+### 5. Multi-Package Test Runner Configuration
+- **Blind Spot:** Root `package.json` had a hardcoded test glob targeting only `contracts`, `cli`, and `core`. New packages (`protocol`, `execution`, `runner`) would be silently skipped by `npm test`.
+- **Mitigation:** Root test script updated to `node --test packages/*/test/*.test.ts`, ensuring all 177+ tests across all packages run on every invocation.
+
+### 6. Acyclic Dependency Invariant
+- **Blind Spot:** Risk of circular dependencies between `@durable-zero/core` and `@durable-zero/runner`.
+- **Mitigation:** Strict acyclic DAG enforced by pnpm workspaces:
+  `protocol` & `execution` (0 dependencies) -> `core` (pure domain) -> `runner` (Composition Root).
+
+### 7. Codemode Session-Backed Store Persistence
+- **Blind Spot:** In codemode scripts, `store(key, value)` and `load(key)` must persist across process restarts.
+- **Mitigation:** Codemode state is mapped directly to Pi Durable SQLite documents via atomic `root.submit(tx, draft)` (AP-013).
+
+---
 
 To prevent accidental loss of mature, battle-tested domain logic (175 tests across 64 suites), all existing code is categorized into three explicit zones before refactoring:
 
