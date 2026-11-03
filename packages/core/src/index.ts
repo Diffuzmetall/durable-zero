@@ -26,5 +26,6 @@ export * from "./prompt.ts";
 export * from "./host-rpc.ts";
 export * from "./builtin-extensions/index.ts";
 export * from "./tools/execution-env.ts";
+export * from "./tools/sandbox.ts";
 export * from "./session/store.ts";
 export * from "./models/provider.ts";

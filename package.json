@@ -45,6 +45,11 @@
       "types": "./packages/adapter-pi-ai/src/index.ts",
       "import": "./packages/adapter-pi-ai/dist/index.js",
       "default": "./packages/adapter-pi-ai/dist/index.js"
+    },
+    "./adapter-codemode": {
+      "types": "./packages/adapter-codemode/src/index.ts",
+      "import": "./packages/adapter-codemode/dist/index.js",
+      "default": "./packages/adapter-codemode/dist/index.js"
     }
   },
   "typesVersions": {
@@ -66,6 +71,9 @@
       ],
       "adapter-pi-ai": [
         "./packages/adapter-pi-ai/src/index.ts"
+      ],
+      "adapter-codemode": [
+        "./packages/adapter-codemode/src/index.ts"
       ]
     }
   },
