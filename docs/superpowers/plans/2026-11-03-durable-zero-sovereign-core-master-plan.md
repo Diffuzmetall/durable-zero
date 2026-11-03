@@ -84,7 +84,29 @@ packages/
 
 ---
 
-## Factcheck: Why `@earendil-works/pi-mcp` is NOT our Inbound Client Transport
+## Migration Inventory Matrix: Preservation, Pi Adoption & Bike Elimination
+
+To prevent accidental loss of mature, battle-tested domain logic (175 tests across 64 suites), all existing code is categorized into three explicit zones before refactoring:
+
+| Zone | Files / Modules | Action & Target Destination | Rationale & Test Invariant |
+|---|---|---|---|
+| 🟢 **Green: Preserve & Refactor** | `session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts` | Refactor into `@durable-zero/core/session/` | Preserves SQLite document atomicity, PID safety, and session branching (AP-013). Covered by `session-fork.test.ts`, `session-storage-pid-safety.test.ts`. |
+| 🟢 **Green: Preserve & Refactor** | `policy/*`, `subagent-policy-ack.ts`, `subagent-policy-state.ts` | Refactor into `@durable-zero/core/policy/` | Preserves security policies across restarts, user approval gates, and cascading abort. Covered by `subagent-policy-store.test.ts`, `subagent-cascading-abort.test.ts`. |
+| 🟢 **Green: Preserve & Refactor** | `session-commands.ts`, `session-state-commands.ts`, `binding-commands.ts` | Extract clean `SessionService` in `@durable-zero/core/session/` | Preserves command dispatch (`prompt`, `cancel`, `steer`, `set_model`, task dispatch). Covered by `canonical-command.test.ts`. |
+| 🟢 **Green: Preserve & Refactor** | `bridge/durable-event-adapter.ts` | Move to `@durable-zero/core/bridge/` as Outbound Event Port | Preserves critical tool delta translation with args (fixed in v0.8.1 for BB/terminal UI). Covered by `watch-events-compat.test.ts`. |
+| 🟢 **Green: Preserve & Refactor** | `compaction-hooks.ts`, `task-tokens.ts`, `task-labels.ts` | Move to `@durable-zero/core/session/` | Preserves context compaction hooks, task metric counters, and formatting. Covered by `compaction-hooks.test.ts`. |
+| 🔵 **Blue: Upstream Pi Adoption** | Custom agent stepping in `runtime-controller.ts` | Adopt `@earendil-works/pi-agent-core` (`Agent`, `agentLoop`, `beforeToolCall`, `afterToolCall`) | Eliminates custom bicycles; reuses upstream tested agent state machine. |
+| 🔵 **Blue: Upstream Pi Adoption** | `model-setup.ts` | Adopt `@earendil-works/pi-ai` (`createModels()`) | Replaces coupling to `ModelRuntime` with pure upstream model catalog and streaming types. |
+| 🔵 **Blue: Upstream Pi Adoption** | `runtime-graph-mapper.ts`, `runtime-graph-receipts.ts`, `runtime-graph-source.ts`, `runtime-graph-state.ts` | Adopt `@earendil-works/pi-durable` (`harness.watchTaskGraph()`, `ownership: { kind: "task" }`) | Replaces ~25KB of custom SQLite row-mapping bicycles with native task graph subscriptions. |
+| 🔵 **Blue: Upstream Pi Adoption** | `builtin-extensions/codemode.ts` | Upgrade to `@earendil-works/pi-codemode` (`sandbox.start()`) | Upgrades basic `.execute()` to deterministic replay journaling with state stored in session SQLite documents. |
+| 🔴 **Red: Bike Elimination** | `subagent-courier.ts`, `subagent-watcher.ts`, `watcher-compat.ts` | DELETE (safe removal) | Obsolete polling bicycle; fully replaced by native task ownership in Pi Durable 1.5.0. |
+| 🔴 **Red: Bike Elimination** | `host-rpc.ts`, `runner-channel.ts` | DELETE (safe removal) | Obsolete custom RPC with timeout hacks; replaced by standard JSON-RPC 2.0 server in `@durable-zero/protocol`. |
+| 🔴 **Red: Bike Elimination** | `stdout-guard.ts` | DELETE (safe removal) | Custom stdout hijacking is unnecessary when using clean, framed stdio JSON-RPC transport. |
+
+### Regression Defense Invariant
+At every step of each cycle, the full existing test suite (`npm test`) must pass (175 tests green). Tests are migrated or re-targeted alongside their modules, ensuring zero functional degradation.
+
+---
 
 1. **Semantic Mismatch:** MCP (Model Context Protocol) is designed for **LLM -> Tool Providers** (Agent is Client, Tool is Server). Our client transport is **IDE/User -> Agent** (IDE is Client, Agent is Server).
 2. **Technical Mismatch:** The `StdioTransport` in `@earendil-works/pi-mcp` is an outbound client transport that calls `crossSpawn(command, args)` to spawn child tool processes. It cannot serve as our agent's server, which must listen to its own `process.stdin` and write to `process.stdout`.
