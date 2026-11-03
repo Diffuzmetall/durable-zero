@@ -20,12 +20,23 @@
 ### Architectural Roadmap Established
 - Master plan created: `docs/superpowers/plans/2026-11-03-durable-zero-sovereign-core-master-plan.md`
 - Master knowledge page committed to GBrain: `architecture/durable-zero-dip-and-improvement-roadmap`
+- Architectural package structure established:
+  * `@durable-zero/protocol` (independent wire package, JSON-RPC 2.0 schemas & stdio server)
+  * `@durable-zero/execution` (independent execution sandbox package, LocalNodeExecutionEnv)
+  * `@durable-zero/core` (pure sovereign domain engine, session lifecycle, policy store)
+  * `@durable-zero/extension-pi-resource` (native Pi Durable defineExtension wrapping settings & skills)
+  * `@durable-zero/runner` (TRUE COMPOSITION ROOT: wires all packages into the executable process)
+- Migration Inventory Matrix defined (Preservation of 177 tests, Upstream Pi 1.5 adoption, Safe bike deletion):
+  * 🟢 Preserve & Refactor: `session-storage`, `session-fork`, `policy/*`, `session-commands`, `bridge/durable-event-adapter` (with tool delta translation).
+  * 🔵 Upstream Adoption: `@earendil-works/pi-agent-core` (agent loop), `@earendil-works/pi-ai` (models), `@earendil-works/pi-durable` (`watchTaskGraph`, `ownership: { kind: "task" }`), `@earendil-works/pi-codemode` (`sandbox.start()`), `@earendil-works/pi-schema`.
+  * 🔴 Eliminate Bikes: `subagent-courier`, `subagent-watcher`, `host-rpc`, `stdout-guard`.
+- Inbound Transport Factcheck: `@earendil-works/pi-mcp` is an outbound tool client spawning child processes; client IDE transport uses a pure, independent `StdioJsonRpcServer` in `@durable-zero/protocol`.
 - 5 Sequential Arch Loop Cycles defined:
-  1. Cycle 1: DIP, Strategies & Composition Root (`IExecutionEnvPort`, `DurableHostBuilder`, `LocalNodeEnv`).
-  2. Cycle 2: Ruthless removal of Pi Durable duplicate bikes (subagents, graph, transcript).
-  3. Cycle 3: Decoupling from `pi-coding-agent` to pure `@earendil-works/pi-agent-core`.
-  4. Cycle 4: Clean JSON-RPC 2.0 over stdio + `@earendil-works/chord` Node IPC.
-  5. Cycle 5: Deterministic Codemode Replay (`sandbox.start()`) & session store persistence.
+  1. Cycle 1: Package extraction (`@durable-zero/protocol` & `@durable-zero/execution`) & `ExecutionEnvFactory` strategy.
+  2. Cycle 2: Dedicated Pi resource extension package (`@durable-zero/extension-pi-resource`) for `~/.pi/agent` isolation.
+  3. Cycle 3: Elimination of custom task graph mappers in favor of native `harness.watchTaskGraph()` & `Bind-before-Resume`.
+  4. Cycle 4: True Composition Root in `@durable-zero/runner` & unified `StdioJsonRpcServer`.
+  5. Cycle 5: Deterministic Codemode Replay (`sandbox.start()`) & SQLite session document store.
 
 ### Verification Circuit Protocol
 - In S9 of every cycle: Two parallel independent subagents on Gemini 3.8 Flash High (`--provider pi-durable --model antigravity/gemini-3.8-flash --reasoning-level high`).
