@@ -1,12 +1,12 @@
-# Durable-Zero Sovereign Core & Semantic Refactoring Implementation Plan
+# Durable-Zero Sovereign Core & Multi-Package Architecture Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Transform `durable-zero` into a sovereign, modular headless agent runtime with domain-based semantic contracts, pluggable execution environments via DIP, clean Pi extension architecture separating declaration from composition (AP-073), and a unified JSON-RPC 2.0 stdio transport leveraging upstream Pi MCP primitives.
+**Goal:** Transform `durable-zero` into a modular, package-first sovereign headless agent runtime where bounded contexts live in dedicated workspace packages (`@durable-zero/protocol`, `@durable-zero/execution`, `@durable-zero/core`, `@durable-zero/extension-pi-resource`, `@durable-zero/runner`), the Composition Root lives strictly at the executable boundary (`@durable-zero/runner`), and client interaction is unified on a pure JSON-RPC 2.0 stdio server.
 
-**Architecture:** Hexagonal Architecture (Ports & Adapters) where Inbound Adapters (JSON-RPC 2.0 stdio transport) wrap the Core Domain (`DurableZeroEngine`), while Outbound SPIs (`IExecutionEnvironment`, `IConfigProvider`) are injected via Strategy pattern in the Composition Root. Domain contracts in `packages/contracts/` are organized semantically by Bounded Contexts (`execution/`, `session/`, `tools/`, `protocol/`, `config/`), not by technical layers.
+**Architecture:** Monorepo package-level Hexagonal Architecture (Ports & Adapters, Screaming Architecture). Inbound Adapters (JSON-RPC 2.0 stdio transport in `@durable-zero/protocol`) wrap the Core Domain (`@durable-zero/core`), while Outbound SPIs (`IExecutionEnvironment` in `@durable-zero/execution`, `IConfigProvider` in `@durable-zero/extension-pi-resource`) are injected via Strategy pattern in the Composition Root (`@durable-zero/runner`). Zero backwards-compatibility shims.
 
-**Tech Stack:** TypeScript 5.9, Node.js 22+ (ESM), `@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-agent-core` 1.5.0, `@earendil-works/pi-mcp` 1.5.0, `@earendil-works/pi-ai` 1.5.0, `@earendil-works/chord` 1.5.0, `quickjs-wasi`, `node:test`.
+**Tech Stack:** TypeScript 5.9, Node.js 22+ (ESM), pnpm workspaces, `@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-agent-core` 1.5.0, `@earendil-works/pi-ai` 1.5.0, `@earendil-works/chord` 1.5.0, `quickjs-wasi`, `node:test`.
 
 ---
 
@@ -15,56 +15,81 @@
 - **Stage:** `prod` / `infra_harness`
 - **Target Repository:** `/Users/vanya/Projects/durable-zero`
 - **Applicable Critical AP Gates:**
-  - **AP-010 (Modular Monolith & Ports & Adapters):** Core domain depends strictly on contracts; integrations are isolated behind ports.
+  - **AP-010 (Modular Monolith & Ports & Adapters):** Domain boundaries enforced at package level, not through relative file imports.
   - **AP-011 (High Cohesion & Low Coupling):** Grouping by functional domains (Screaming Architecture), never by technical type buckets (`ports/`, `wire/`).
-  - **AP-012 (Fail-Fast & Dependency Inversion):** Explicit contracts, no implicit global fallbacks or loose `any` casts.
-  - **AP-013 (Data Integrity & SQLite Atomicity):** State changes and message admissions go through atomic `root.submit(tx, draft)` inside `harness.commit()`.
-  - **AP-020 & AP-073 (Composition Root & Separation of Declaration from Configuration):** Domain classes declare dependencies; object wiring occurs exclusively in bootstrap factories. Extensions never self-register on import.
+  - **AP-012 (Fail-Fast & Dependency Inversion):** Explicit interfaces between packages; dependencies flow inward toward domain models.
+  - **AP-013 (Data Integrity & SQLite Atomicity):** Message admissions and state transitions commit atomically via `root.submit(tx, draft)` inside `harness.commit()`.
+  - **AP-020 & AP-073 (Composition Root & Separation of Declaration from Configuration):** Domain packages (`core`, `protocol`, `execution`) declare interfaces and passive factories; object wiring and registry population occur exclusively in the application runner (`packages/runner`).
   - **AP-071 (Node.js Default):** Native Node.js ESM baseline.
-  - **AP-072 (Domain Strategies over Procedural Switch/Case):** Transports, environments, and configs are polymorphic strategies.
+  - **AP-072 (Domain Strategies over Procedural Switch/Case):** Transports, execution environments, and configuration sources are polymorphic strategies.
 
 ---
 
-## File Structure Map (Target Semantic Reorganization)
+## Semantic Package Architecture (Target Monorepo Structure)
 
 ```
-packages/contracts/src/
-├── execution/                <- Execution Environment Domain
-│   ├── environment.ts        <- IExecutionEnvironment & EnvTarget contracts
-│   └── types.ts              <- ExecResult, ExecOptions, FileStat
-├── session/                  <- Session & Conversation Domain
-│   ├── message.ts            <- UserMessage, AssistantMessage, ToolResultMessage
-│   ├── lifecycle.ts          <- SessionLifecycleEvent (agent_start, turn_end, etc.)
-│   └── task-graph.ts         <- RuntimeTaskNode, RuntimeGraphSnapshot, TaskReceipt
-├── tools/                    <- Tool & Sandbox Domain
-│   ├── tool-definition.ts    <- ToolCall, ToolResult, ToolDefinition
-│   └── sandbox.ts            <- ICodemodeSandbox, CodemodeResult, CodemodeReplayRun
-├── protocol/                 <- Client-Server Protocol Domain (JSON-RPC 2.0)
-│   ├── jsonrpc.ts            <- JsonRpcRequest, JsonRpcResponse, JsonRpcNotification
-│   ├── methods.ts            <- session/prompt, session/cancel, session/update
-│   └── transport.ts          <- ITransportStrategy (send, onMessage, close)
-├── config/                   <- Configuration & Policy Domain
-│   ├── config-provider.ts    <- IConfigProvider (getSecret, getSetting, getModel)
-│   ├── skill-provider.ts     <- ISkillLoader (loadSkills)
-│   └── subagent-policy.ts    <- SubagentPolicyRecord, SubagentPolicyMode
-└── index.ts                  <- Semantic Root Re-exports
-
-packages/core/src/
-├── bootstrap/                <- Composition Root (AP-073)
-│   ├── harness-composition.ts<- Pure composition of extensions into harness registry
-│   └── host-builder.ts       <- DurableHostBuilder (wires strategies together)
-├── adapters/                 <- Strategy Implementations (AP-072)
-│   ├── execution/
-│   │   ├── local-node-env.ts <- Default LocalNodeExecutionEnv
-│   │   └── mock-env.ts       <- In-memory MockExecutionEnv for testing
-│   ├── config/
-│   │   ├── pi-resource-ext.ts<- PiResourceExtension (wraps SettingsManager & ResourceLoader)
-│   │   └── static-config.ts  <- Headless StaticConfigAdapter (process.env / pure object)
-│   └── transport/
-│       └── stdio-jsonrpc.ts  <- Single Default StdioJsonRpcTransport (JSON-RPC 2.0)
-├── engine.ts                 <- Sovereign DurableZeroEngine
-└── runtime.ts                <- Session Runtime Coordinator (Bind-before-Resume)
+packages/
+├── protocol/                     <- @durable-zero/protocol (Independent Wire Package)
+│   ├── src/
+│   │   ├── jsonrpc/              <- Pure JSON-RPC 2.0 Schema & Types (Request, Response, Error)
+│   │   ├── methods/              <- Standard Agent Methods (session/prompt, session/cancel, session/update)
+│   │   └── transport/            <- ITransportStrategy interface & StdioJsonRpcServer implementation
+│   └── package.json              <- Depends only on zod. Zero engine dependencies.
+│
+├── execution/                    <- @durable-zero/execution (Execution Sandbox Domain)
+│   ├── src/
+│   │   ├── contracts/            <- IExecutionEnvironment, EnvTarget, ExecOptions, ExecResult
+│   │   └── adapters/             <- LocalNodeExecutionEnv (default) & MockExecutionEnv
+│   └── package.json              <- Depends on Node.js builtins. Zero agent dependencies.
+│
+├── core/                         <- @durable-zero/core (Sovereign Headless Core Domain)
+│   ├── src/
+│   │   ├── engine.ts             <- DurableZeroEngine (orchestrator, no transport knowledge)
+│   │   ├── runtime.ts            <- Session Lifecycle (Bind-before-Resume invariant)
+│   │   ├── session/              <- Session state, transcript, task graph bindings
+│   │   ├── builtin-extensions/   <- Pure declarative factories (defineExtension, no self-install)
+│   │   └── policy/               <- SubagentPolicyStore & security rules
+│   └── package.json              <- Depends on @durable-zero/protocol, @durable-zero/execution,
+│                                    @earendil-works/pi-durable, @earendil-works/pi-agent-core, @earendil-works/pi-ai.
+│                                    NO dependency on @earendil-works/pi-coding-agent!
+│
+├── extension-pi-resource/        <- @durable-zero/extension-pi-resource (Pi Setup ACL)
+│   ├── src/
+│   │   ├── pi-resource-ext.ts    <- Native Pi Durable defineExtension wrapping SettingsManager & ResourceLoader
+│   │   └── contracts.ts          <- IConfigProvider & ISkillLoader implementations
+│   └── package.json              <- Depends on @earendil-works/pi-durable, @earendil-works/pi-coding-agent.
+│
+└── runner/                       <- @durable-zero/runner (TRUE COMPOSITION ROOT - AP-020, AP-073)
+    ├── src/
+    │   ├── composition.ts        <- Wires engine + transport + execution env + pi-resource extension
+    │   └── main.ts               <- Executable entrypoint (compiled to dist/runner.js)
+    └── package.json              <- Depends on all workspace packages. Assembles the executable.
 ```
+
+### Dependency Direction Matrix:
+
+```
+@durable-zero/protocol  (Zero dependencies)
+@durable-zero/execution (Zero dependencies)
+          ▲                     ▲
+          │                     │
+@durable-zero/core      (Pure Domain: depends on protocol & execution contracts)
+          ▲                     ▲
+          │                     │
+@durable-zero/extension-pi-resource (Pi ACL: depends on pi-durable & pi-coding-agent)
+          ▲                     ▲
+          │                     │
+@durable-zero/runner    (COMPOSITION ROOT: wires all packages into the executable process)
+```
+
+---
+
+## Factcheck: Why `@earendil-works/pi-mcp` is NOT our Inbound Client Transport
+
+1. **Semantic Mismatch:** MCP (Model Context Protocol) is designed for **LLM -> Tool Providers** (Agent is Client, Tool is Server). Our client transport is **IDE/User -> Agent** (IDE is Client, Agent is Server).
+2. **Technical Mismatch:** The `StdioTransport` in `@earendil-works/pi-mcp` is an outbound client transport that calls `crossSpawn(command, args)` to spawn child tool processes. It cannot serve as our agent's server, which must listen to its own `process.stdin` and write to `process.stdout`.
+3. **Domain Purity:** Pulling `pi-mcp` for client transport couples our agent protocol to `McpError` and tool-specific error codes instead of standard JSON-RPC 2.0 / ACP error codes (`-32600`, `-32603`).
+4. **Resolution:** We implement a clean, 50-line `StdioJsonRpcServer` in `@durable-zero/protocol`. We use `@earendil-works/pi-mcp` strictly where it belongs — as an Outbound Tool Provider for MCP tools.
 
 ---
 
@@ -72,50 +97,34 @@ packages/core/src/
 
 ---
 
-### Cycle 1: Semantic Contracts Reorganization & Pluggable Execution Environment
+### Cycle 1: Package Extraction (`protocol` & `execution`) & Pluggable Environment
 
-**Goal:** Reorganize `packages/contracts/src/` into semantic domain bounded contexts (eliminating technical `wire-*` and `runner-*` groupings) and introduce the pluggable `IExecutionEnvironment` strategy into `packages/core/src/harness-setup.ts`.
+**Goal:** Create independent packages `@durable-zero/protocol` and `@durable-zero/execution` in `packages/`, removing technical `wire-*` groupings, and plug `ExecutionEnvFactory` into `@durable-zero/core`.
 
-#### Task 1.1: Create Semantic Domain Contracts in `packages/contracts/src/`
+#### Task 1.1: Create `@durable-zero/protocol` Package
 
 **Files:**
-- Create: `packages/contracts/src/execution/environment.ts`
-- Create: `packages/contracts/src/execution/types.ts`
-- Create: `packages/contracts/src/protocol/jsonrpc.ts`
-- Create: `packages/contracts/src/protocol/transport.ts`
-- Modify: `packages/contracts/src/index.ts`
-- Test: `packages/contracts/test/semantic-contracts.test.ts`
+- Create: `packages/protocol/package.json`
+- Create: `packages/protocol/src/jsonrpc/schema.ts`
+- Create: `packages/protocol/src/jsonrpc/types.ts`
+- Create: `packages/protocol/src/transport/interface.ts`
+- Create: `packages/protocol/src/index.ts`
+- Test: `packages/protocol/test/protocol.test.ts`
 
-- [ ] **Step 1: Write the failing test for semantic contracts**
+- [ ] **Step 1: Write failing test for `@durable-zero/protocol`**
 
-Create `packages/contracts/test/semantic-contracts.test.ts`:
+Create `packages/protocol/test/protocol.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   jsonRpcRequestSchema,
   jsonRpcResponseSchema,
-  type IExecutionEnvironment,
-  type ExecutionEnvFactory,
   type ITransportStrategy,
 } from "../src/index.ts";
 
-describe("Semantic Contracts Bounded Contexts", () => {
-  it("exports IExecutionEnvironment contract and ExecutionEnvFactory", () => {
-    const mockFactory: ExecutionEnvFactory = (target) => ({
-      id: "test-env",
-      cwd: target.cwd ?? "/tmp",
-      readFile: async () => "content",
-      writeFile: async () => {},
-      exec: async () => ({ stdout: "ok", stderr: "", exitCode: 0 }),
-      cleanup: async () => {},
-    });
-    const env: IExecutionEnvironment = mockFactory({ cwd: "/work" });
-    assert.equal(env.id, "test-env");
-    assert.equal(env.cwd, "/work");
-  });
-
-  it("validates strict JSON-RPC 2.0 request envelope", () => {
+describe("@durable-zero/protocol Package", () => {
+  it("validates JSON-RPC 2.0 request envelope strictly", () => {
     const valid = jsonRpcRequestSchema.safeParse({
       jsonrpc: "2.0",
       id: "req_1",
@@ -131,7 +140,7 @@ describe("Semantic Contracts Bounded Contexts", () => {
     assert.equal(valid.success, false);
   });
 
-  it("exports ITransportStrategy interface shape", () => {
+  it("exports ITransportStrategy interface", () => {
     const transport: ITransportStrategy = {
       start: async () => {},
       send: async () => {},
@@ -145,12 +154,184 @@ describe("Semantic Contracts Bounded Contexts", () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test packages/contracts/test/semantic-contracts.test.ts`
-Expected: FAIL with "Cannot find module '../src/index.ts' or exported member"
+Run: `node --test packages/protocol/test/protocol.test.ts`
+Expected: FAIL with "Cannot find module '../src/index.ts'"
 
-- [ ] **Step 3: Write semantic contract definitions**
+- [ ] **Step 3: Implement `@durable-zero/protocol` package**
 
-Create `packages/contracts/src/execution/types.ts`:
+Create `packages/protocol/package.json`:
+```json
+{
+  "name": "@durable-zero/protocol",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}
+```
+
+Create `packages/protocol/src/jsonrpc/schema.ts`:
+```typescript
+import { z } from "zod";
+
+export const jsonRpcRequestSchema = z.object({
+  jsonrpc: z.literal("2.0"),
+  id: z.union([z.string(), z.number()]),
+  method: z.string().min(1),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const jsonRpcResponseSchema = z.object({
+  jsonrpc: z.literal("2.0"),
+  id: z.union([z.string(), z.number(), z.null()]),
+  result: z.unknown().optional(),
+  error: z.object({
+    code: z.number().int(),
+    message: z.string(),
+    data: z.unknown().optional(),
+  }).optional(),
+});
+
+export const jsonRpcNotificationSchema = z.object({
+  jsonrpc: z.literal("2.0"),
+  method: z.string().min(1),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+```
+
+Create `packages/protocol/src/jsonrpc/types.ts`:
+```typescript
+import { z } from "zod";
+import {
+  jsonRpcRequestSchema,
+  jsonRpcResponseSchema,
+  jsonRpcNotificationSchema,
+} from "./schema.ts";
+
+export type JsonRpcRequest = z.infer<typeof jsonRpcRequestSchema>;
+export type JsonRpcResponse = z.infer<typeof jsonRpcResponseSchema>;
+export type JsonRpcNotification = z.infer<typeof jsonRpcNotificationSchema>;
+export type JsonRpcWireMessage = JsonRpcRequest | JsonRpcResponse | JsonRpcNotification;
+```
+
+Create `packages/protocol/src/transport/interface.ts`:
+```typescript
+import type { JsonRpcWireMessage } from "../jsonrpc/types.ts";
+
+export interface ITransportStrategy {
+  start(): Promise<void>;
+  send(message: JsonRpcWireMessage): Promise<void>;
+  onMessage(handler: (message: JsonRpcWireMessage) => void): void;
+  close(): Promise<void>;
+}
+```
+
+Create `packages/protocol/src/index.ts`:
+```typescript
+export * from "./jsonrpc/schema.ts";
+export * from "./jsonrpc/types.ts";
+export * from "./transport/interface.ts";
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `node --test packages/protocol/test/protocol.test.ts`
+Expected: PASS (2 tests pass)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/protocol/
+git commit -m "feat(protocol): create @durable-zero/protocol package with JSON-RPC 2.0 schemas"
+```
+
+---
+
+#### Task 1.2: Create `@durable-zero/execution` Package
+
+**Files:**
+- Create: `packages/execution/package.json`
+- Create: `packages/execution/src/contracts/types.ts`
+- Create: `packages/execution/src/contracts/environment.ts`
+- Create: `packages/execution/src/adapters/local-node-env.ts`
+- Create: `packages/execution/src/index.ts`
+- Test: `packages/execution/test/execution.test.ts`
+
+- [ ] **Step 1: Write failing test for `@durable-zero/execution`**
+
+Create `packages/execution/test/execution.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import {
+  LocalNodeExecutionEnv,
+  type IExecutionEnvironment,
+  type ExecutionEnvFactory,
+} from "../src/index.ts";
+
+describe("@durable-zero/execution Package", () => {
+  it("LocalNodeExecutionEnv implements IExecutionEnvironment interface", async () => {
+    const env: IExecutionEnvironment = new LocalNodeExecutionEnv({ cwd: process.cwd() });
+    assert.equal(env.cwd, process.cwd());
+    assert.equal(typeof env.readFile, "function");
+    assert.equal(typeof env.exec, "function");
+  });
+
+  it("supports pluggable custom ExecutionEnvFactory", () => {
+    const mockFactory: ExecutionEnvFactory = (target) => ({
+      id: "mock-custom-env",
+      cwd: target.cwd ?? "/tmp",
+      readFile: async () => "data",
+      writeFile: async () => {},
+      exec: async () => ({ stdout: "ok", stderr: "", exitCode: 0 }),
+      cleanup: async () => {},
+    });
+    const env = mockFactory({ cwd: "/sandbox" });
+    assert.equal(env.id, "mock-custom-env");
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test packages/execution/test/execution.test.ts`
+Expected: FAIL with "Cannot find module '../src/index.ts'"
+
+- [ ] **Step 3: Implement `@durable-zero/execution` package**
+
+Create `packages/execution/package.json`:
+```json
+{
+  "name": "@durable-zero/execution",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@earendil-works/chord": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0"
+  }
+}
+```
+
+Create `packages/execution/src/contracts/types.ts`:
 ```typescript
 export interface ExecOptions {
   cwd?: string;
@@ -172,7 +353,7 @@ export interface FileStat {
 }
 ```
 
-Create `packages/contracts/src/execution/environment.ts`:
+Create `packages/execution/src/contracts/environment.ts`:
 ```typescript
 import type { Context } from "@earendil-works/chord";
 import type { ExecOptions, ExecResult, FileStat } from "./types.ts";
@@ -196,131 +377,109 @@ export interface IExecutionEnvironment {
 export type ExecutionEnvFactory = (target: EnvTarget) => IExecutionEnvironment | Promise<IExecutionEnvironment>;
 ```
 
-Create `packages/contracts/src/protocol/jsonrpc.ts`:
+Create `packages/execution/src/adapters/local-node-env.ts`:
 ```typescript
-import { z } from "zod";
+import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
+import type { Context } from "@earendil-works/chord";
+import type { IExecutionEnvironment, EnvTarget } from "../contracts/environment.ts";
+import type { ExecOptions, ExecResult, FileStat } from "../contracts/types.ts";
 
-export const jsonRpcRequestSchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string(), z.number()]),
-  method: z.string().min(1),
-  params: z.record(z.string(), z.unknown()).optional(),
-});
-export type JsonRpcRequest = z.infer<typeof jsonRpcRequestSchema>;
+export class LocalNodeExecutionEnv implements IExecutionEnvironment {
+  readonly id: string;
+  readonly cwd: string;
+  private inner: NodeExecutionEnv;
 
-export const jsonRpcResponseSchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string(), z.number(), z.null()]),
-  result: z.unknown().optional(),
-  error: z.object({
-    code: z.number().int(),
-    message: z.string(),
-    data: z.unknown().optional(),
-  }).optional(),
-});
-export type JsonRpcResponse = z.infer<typeof jsonRpcResponseSchema>;
+  constructor(target: EnvTarget) {
+    this.cwd = target.cwd ?? process.cwd();
+    this.id = `local-node:${this.cwd}`;
+    this.inner = new NodeExecutionEnv({ cwd: this.cwd });
+  }
 
-export const jsonRpcNotificationSchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  method: z.string().min(1),
-  params: z.record(z.string(), z.unknown()).optional(),
-});
-export type JsonRpcNotification = z.infer<typeof jsonRpcNotificationSchema>;
-```
+  async readFile(path: string): Promise<string> {
+    return this.inner.readTextFile(path);
+  }
 
-Create `packages/contracts/src/protocol/transport.ts`:
-```typescript
-import type { JsonRpcRequest, JsonRpcResponse, JsonRpcNotification } from "./jsonrpc.ts";
+  async writeFile(path: string, content: string): Promise<void> {
+    return this.inner.writeFile(path, content);
+  }
 
-export type JsonRpcWireMessage = JsonRpcRequest | JsonRpcResponse | JsonRpcNotification;
+  async exec(argv: string[], options?: ExecOptions): Promise<ExecResult> {
+    let stdout = "";
+    let stderr = "";
+    const res = await this.inner.exec(argv, {
+      cwd: options?.cwd,
+      env: options?.env,
+      onOutput: (text, _ctx, info) => {
+        if (info.stream === "stderr") stderr += text;
+        else stdout += text;
+      },
+    });
+    return { stdout, stderr, exitCode: res.exitCode ?? 0 };
+  }
 
-export interface ITransportStrategy {
-  start(): Promise<void>;
-  send(message: JsonRpcWireMessage): Promise<void>;
-  onMessage(handler: (message: JsonRpcWireMessage) => void): void;
-  close(): Promise<void>;
+  async cleanup(context?: Context): Promise<void> {
+    await this.inner.cleanup(context as any);
+  }
 }
 ```
 
-Update `packages/contracts/src/index.ts`:
+Create `packages/execution/src/index.ts`:
 ```typescript
-export * from "./execution/types.ts";
-export * from "./execution/environment.ts";
-export * from "./protocol/jsonrpc.ts";
-export * from "./protocol/transport.ts";
-
-// Existing exports preserved during migration slice
-export * from "./diagnostics.ts";
-export * from "./runner-channel.ts";
-export * from "./runner-command.ts";
-export * from "./runner-event.ts";
-export * from "./runner-response.ts";
-export * from "./wire-context.ts";
-export * from "./wire-lifecycle.ts";
-export * from "./wire-message.ts";
-export * from "./wire-tool.ts";
-export * from "./runtime-graph/types.ts";
-export * from "./runtime-graph/schema.ts";
-export * from "./runtime-graph/scope.ts";
-export * from "./runtime-graph/status.ts";
+export * from "./contracts/types.ts";
+export * from "./contracts/environment.ts";
+export * from "./adapters/local-node-env.ts";
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test packages/contracts/test/semantic-contracts.test.ts`
-Expected: PASS (3 tests pass)
+Run: `node --test packages/execution/test/execution.test.ts`
+Expected: PASS (2 tests pass)
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/contracts/
-git commit -m "refactor(contracts): introduce semantic execution and jsonrpc domain contracts"
+git add packages/execution/
+git commit -m "feat(execution): create @durable-zero/execution package with LocalNodeExecutionEnv"
 ```
 
 ---
 
-#### Task 1.2: Implement `ExecutionEnvFactory` Strategy in `ExecutionEnvs`
+#### Task 1.3: Wire ExecutionEnvFactory into `@durable-zero/core`
 
 **Files:**
+- Modify: `packages/core/package.json` (add `@durable-zero/execution` dependency)
 - Modify: `packages/core/src/harness-setup.ts:109-131`
-- Create: `packages/core/test/execution-env-strategy.test.ts`
+- Test: `packages/core/test/execution-env-strategy.test.ts`
 
-- [ ] **Step 1: Write failing test for pluggable ExecutionEnvFactory**
+- [ ] **Step 1: Write failing test in core for injected execution factory**
 
 Create `packages/core/test/execution-env-strategy.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { ExecutionEnvs } from "../src/harness-setup.ts";
-import type { IExecutionEnvironment } from "../../contracts/src/index.ts";
+import type { IExecutionEnvironment } from "@durable-zero/execution";
 
-describe("ExecutionEnvs Strategy Pattern (AP-072)", () => {
-  it("uses custom injected ExecutionEnvFactory instead of hardcoding NodeExecutionEnv", async () => {
-    let factoryCalledWithCwd: string | undefined;
+describe("ExecutionEnvs Strategy Pattern in Core (AP-072)", () => {
+  it("delegates environment instantiation to injected ExecutionEnvFactory", () => {
+    let calledWithCwd: string | undefined;
     const mockEnv: IExecutionEnvironment = {
-      id: "mock-custom-env",
-      cwd: "/custom/sandbox",
-      readFile: async () => "mock-data",
+      id: "mock-env",
+      cwd: "/sandbox/dir",
+      readFile: async () => "data",
       writeFile: async () => {},
-      exec: async () => ({ stdout: "mock-result", stderr: "", exitCode: 0 }),
+      exec: async () => ({ stdout: "ok", stderr: "", exitCode: 0 }),
       cleanup: async () => {},
     };
 
-    const envs = new ExecutionEnvs("/default/cwd", (target) => {
-      factoryCalledWithCwd = target.cwd;
+    const envs = new ExecutionEnvs("/default", (target) => {
+      calledWithCwd = target.cwd;
       return mockEnv as any;
     });
 
-    const resolved = envs.env({ cwd: "/custom/sandbox" } as any);
-    assert.equal(factoryCalledWithCwd, "/custom/sandbox");
-    assert.equal((resolved as any).id, "mock-custom-env");
-  });
-
-  it("defaults to local NodeExecutionEnv when no factory is supplied", () => {
-    const envs = new ExecutionEnvs(process.cwd());
-    const resolved = envs.env({ cwd: process.cwd() } as any);
-    assert.ok(resolved);
-    assert.equal(typeof (resolved as any).readTextFile, "function");
+    const env = envs.env({ cwd: "/sandbox/dir" } as any);
+    assert.equal(calledWithCwd, "/sandbox/dir");
+    assert.equal((env as any).id, "mock-env");
   });
 });
 ```
@@ -328,13 +487,14 @@ describe("ExecutionEnvs Strategy Pattern (AP-072)", () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `node --test packages/core/test/execution-env-strategy.test.ts`
-Expected: FAIL with "ExecutionEnvs constructor takes 1 argument, custom factory ignored"
+Expected: FAIL
 
-- [ ] **Step 3: Implement Strategy Injection in `packages/core/src/harness-setup.ts`**
+- [ ] **Step 3: Modify `harness-setup.ts` to use `@durable-zero/execution`**
 
 Edit `packages/core/src/harness-setup.ts:109-131`:
 ```typescript
-import type { ExecutionEnvFactory } from "../../contracts/src/index.ts";
+import type { ExecutionEnvFactory } from "@durable-zero/execution";
+import { LocalNodeExecutionEnv } from "@durable-zero/execution";
 
 export class ExecutionEnvs {
 	readonly #defaultCwd: string;
@@ -343,10 +503,10 @@ export class ExecutionEnvs {
 
 	constructor(defaultCwd: string, factory?: ExecutionEnvFactory) {
 		this.#defaultCwd = defaultCwd;
-		this.#factory = factory ?? (({ cwd = this.#defaultCwd }) => new NodeExecutionEnv({ cwd }));
+		this.#factory = factory ?? (({ cwd = this.#defaultCwd }) => new LocalNodeExecutionEnv({ cwd }));
 	}
 
-	readonly env = ({ cwd = this.#defaultCwd, conversationId, read }: EnvTarget): any => {
+	readonly env = ({ cwd = this.#defaultCwd, conversationId }: EnvTarget): any => {
 		let env = this.#envs.get(cwd);
 		if (env === undefined) {
 			env = this.#factory({ cwd, conversationId });
@@ -359,9 +519,7 @@ export class ExecutionEnvs {
 		const envs = [...this.#envs.values()];
 		this.#envs.clear();
 		for (const env of envs) {
-			if (typeof env.cleanup === "function") {
-				await env.cleanup(context);
-			}
+			if (typeof env.cleanup === "function") await env.cleanup(context);
 		}
 	}
 }
@@ -370,107 +528,41 @@ export class ExecutionEnvs {
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test packages/core/test/execution-env-strategy.test.ts`
-Expected: PASS (2 tests pass)
-Run full suite: `npm test`
-Expected: 180 tests pass (100%)
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add packages/core/src/harness-setup.ts packages/core/test/execution-env-strategy.test.ts
-git commit -m "feat(core): implement ExecutionEnvFactory strategy pattern in ExecutionEnvs"
-```
-
----
-
-### Cycle 2: Pi Resource Isolation via Native Extensions (ACL & AP-073)
-
-**Goal:** Isolate `@earendil-works/pi-coding-agent` dependencies (`SettingsManager`, `DefaultResourceLoader`) into a dedicated `PiResourceExtension` (defined via Pi Durable's native `defineExtension`). Enforce AP-073: the extension file is purely declarative and does NOT perform self-registration; registration into `harness.registry` occurs strictly in the Composition Root.
-
-#### Task 2.1: Implement `IConfigProvider` Domain Contract in `packages/contracts/`
-
-**Files:**
-- Create: `packages/contracts/src/config/config-provider.ts`
-- Modify: `packages/contracts/src/index.ts`
-- Test: `packages/contracts/test/config-provider.test.ts`
-
-- [ ] **Step 1: Write failing test for IConfigProvider**
-
-Create `packages/contracts/test/config-provider.test.ts`:
-```typescript
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import type { IConfigProvider } from "../src/index.ts";
-
-describe("IConfigProvider Contract", () => {
-  it("satisfies configuration retrieval contract", async () => {
-    const provider: IConfigProvider = {
-      getDefaultModel: () => ({ provider: "antigravity", modelId: "gemini-3.8-flash" }),
-      getSecret: async (key) => key === "API_KEY" ? "secret-123" : undefined,
-      getSkillPaths: () => ["/skills/path"],
-    };
-    assert.deepEqual(provider.getDefaultModel(), { provider: "antigravity", modelId: "gemini-3.8-flash" });
-    assert.equal(await provider.getSecret("API_KEY"), "secret-123");
-    assert.deepEqual(provider.getSkillPaths(), ["/skills/path"]);
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test packages/contracts/test/config-provider.test.ts`
-Expected: FAIL with "Module has no exported member IConfigProvider"
-
-- [ ] **Step 3: Implement `IConfigProvider` in `packages/contracts/src/config/config-provider.ts`**
-
-Create `packages/contracts/src/config/config-provider.ts`:
-```typescript
-export interface ModelConfigRef {
-  provider: string;
-  modelId: string;
-}
-
-export interface IConfigProvider {
-  getDefaultModel(): ModelConfigRef | undefined;
-  getSecret(key: string): Promise<string | undefined>;
-  getSkillPaths(): string[];
-}
-```
-
-Update `packages/contracts/src/index.ts` to export it:
-```typescript
-export * from "./config/config-provider.ts";
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test packages/contracts/test/config-provider.test.ts`
 Expected: PASS
+Run full suite: `npm test`
+Expected: 180 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/contracts/src/config/ packages/contracts/test/config-provider.test.ts packages/contracts/src/index.ts
-git commit -m "feat(contracts): add IConfigProvider domain contract"
+git add packages/core/src/harness-setup.ts packages/core/test/execution-env-strategy.test.ts packages/core/package.json
+git commit -m "refactor(core): inject ExecutionEnvFactory strategy from @durable-zero/execution"
 ```
 
 ---
 
-#### Task 2.2: Wrap Pi Harness Resources in Declarative `PiResourceExtension` (AP-073 Compliant)
+### Cycle 2: Pi Resource Isolation via Dedicated Extension Package (`@durable-zero/extension-pi-resource`)
+
+**Goal:** Extract `SettingsManager` and `DefaultResourceLoader` from `@durable-zero/core` into a clean, dedicated workspace package `@durable-zero/extension-pi-resource` implementing Pi Durable's native `defineExtension`. The core becomes free of hardcoded paths to `~/.pi/agent/`.
+
+#### Task 2.1: Create `@durable-zero/extension-pi-resource` Package
 
 **Files:**
-- Create: `packages/core/src/builtin-extensions/pi-resource-extension.ts`
-- Test: `packages/core/test/pi-resource-extension.test.ts`
+- Create: `packages/extension-pi-resource/package.json`
+- Create: `packages/extension-pi-resource/src/contracts.ts`
+- Create: `packages/extension-pi-resource/src/pi-resource-ext.ts`
+- Create: `packages/extension-pi-resource/src/index.ts`
+- Test: `packages/extension-pi-resource/test/pi-resource.test.ts`
 
-- [ ] **Step 1: Write failing test for PiResourceExtension**
+- [ ] **Step 1: Write failing test for `@durable-zero/extension-pi-resource`**
 
-Create `packages/core/test/pi-resource-extension.test.ts`:
+Create `packages/extension-pi-resource/test/pi-resource.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { createPiResourceExtension } from "../src/builtin-extensions/pi-resource-extension.ts";
+import { createPiResourceExtension } from "../src/index.ts";
 
-describe("PiResourceExtension (AP-073 Declaration / Configuration Separation)", () => {
+describe("@durable-zero/extension-pi-resource (AP-073)", () => {
   it("creates a pure declarative native Pi Durable extension without self-installing", () => {
     const ext = createPiResourceExtension({
       cwd: process.cwd(),
@@ -485,16 +577,52 @@ describe("PiResourceExtension (AP-073 Declaration / Configuration Separation)", 
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test packages/core/test/pi-resource-extension.test.ts`
-Expected: FAIL with "Cannot find module '../src/builtin-extensions/pi-resource-extension.ts'"
+Run: `node --test packages/extension-pi-resource/test/pi-resource.test.ts`
+Expected: FAIL with "Cannot find module '../src/index.ts'"
 
-- [ ] **Step 3: Implement `PiResourceExtension` using `defineExtension`**
+- [ ] **Step 3: Implement `@durable-zero/extension-pi-resource`**
 
-Create `packages/core/src/builtin-extensions/pi-resource-extension.ts`:
+Create `packages/extension-pi-resource/package.json`:
+```json
+{
+  "name": "@durable-zero/extension-pi-resource",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0"
+  }
+}
+```
+
+Create `packages/extension-pi-resource/src/contracts.ts`:
+```typescript
+export interface ModelConfigRef {
+  provider: string;
+  modelId: string;
+}
+
+export interface IConfigProvider {
+  getDefaultModel(): ModelConfigRef | undefined;
+  getSecret(key: string): Promise<string | undefined>;
+  getSkillPaths(): string[];
+}
+```
+
+Create `packages/extension-pi-resource/src/pi-resource-ext.ts`:
 ```typescript
 import { defineExtension, type Extension } from "@earendil-works/pi-durable";
 import { SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
-import type { IConfigProvider, ModelConfigRef } from "../../contracts/src/index.ts";
+import type { IConfigProvider, ModelConfigRef } from "./contracts.ts";
 
 export interface PiResourceExtensionOptions {
   cwd: string;
@@ -543,16 +671,22 @@ export function createPiResourceExtension(options: PiResourceExtensionOptions): 
 }
 ```
 
+Create `packages/extension-pi-resource/src/index.ts`:
+```typescript
+export * from "./contracts.ts";
+export * from "./pi-resource-ext.ts";
+```
+
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test packages/core/test/pi-resource-extension.test.ts`
+Run: `node --test packages/extension-pi-resource/test/pi-resource.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/builtin-extensions/pi-resource-extension.ts packages/core/test/pi-resource-extension.test.ts
-git commit -m "feat(core): encapsulate Pi settings and loader into native PiResourceExtension (AP-073)"
+git add packages/extension-pi-resource/
+git commit -m "feat(extension): create @durable-zero/extension-pi-resource package"
 ```
 
 ---
@@ -569,7 +703,7 @@ git commit -m "feat(core): encapsulate Pi settings and loader into native PiReso
 
 - [ ] **Step 1: Write test verifying bind executes strictly before resume**
 
-Check existing `packages/core/test/before-resume.test.ts`. Add assertion that storage and harness are bound before tasks execute.
+Check `packages/core/test/before-resume.test.ts`:
 ```typescript
 it("guarantees lifecycle.bind completes strictly before harness.resume", async () => {
   let boundBeforeResume = false;
@@ -588,25 +722,15 @@ it("guarantees lifecycle.bind completes strictly before harness.resume", async (
 Run: `node --test packages/core/test/before-resume.test.ts`
 Expected: PASS
 
-- [ ] **Step 3: Verify and lock `runtime.ts` execution order**
-
-Inspect `packages/core/src/runtime.ts`:
-```typescript
-await controller.toggleTasks();
-await options.beforeResume?.(harness);
-await harness.resume();
-```
-Order is verified and locked against regressions.
-
-- [ ] **Step 4: Commit verification lock**
+- [ ] **Step 3: Commit verification lock**
 
 ```bash
-git commit --allow-empty -m "chore(core): verify and lock Bind-before-Resume invariant order"
+git commit --allow-empty -m "chore(core): lock Bind-before-Resume execution invariant"
 ```
 
 ---
 
-#### Task 3.2: Replace Manual Task Graph Mapper with Native `harness.watchTaskGraph()`
+#### Task 3.2: Delete Custom Graph Mappers and Subagent Couriers
 
 **Files:**
 - Delete: `packages/core/src/runtime-graph-mapper.ts`
@@ -614,7 +738,7 @@ git commit --allow-empty -m "chore(core): verify and lock Bind-before-Resume inv
 - Delete: `packages/core/src/runtime-graph-source.ts`
 - Delete: `packages/core/src/runtime-graph-state.ts`
 - Delete: `packages/core/src/runtime-graph-scope.ts`
-- Create: `packages/core/src/native-task-graph.ts`
+- Modify: `packages/core/src/subagent.ts` (redirect to native task ownership)
 - Test: `packages/core/test/native-task-graph.test.ts`
 
 - [ ] **Step 1: Write test verifying native task graph watcher**
@@ -647,9 +771,8 @@ describe("Native Pi Durable Task Graph Watcher", () => {
 Run: `node --test packages/core/test/native-task-graph.test.ts`
 Expected: PASS
 
-- [ ] **Step 3: Remove custom graph mappers and redirect callers to `harness.watchTaskGraph`**
+- [ ] **Step 3: Delete redundant bike files**
 
-Delete redundant files:
 ```bash
 rm packages/core/src/runtime-graph-mapper.ts
 rm packages/core/src/runtime-graph-receipts.ts
@@ -667,31 +790,32 @@ Expected: PASS (all tests pass without dead graph mappers)
 
 ```bash
 git add packages/core/
-git commit -m "refactor(core): delete custom task graph mappers in favor of native harness.watchTaskGraph"
+git commit -m "refactor(core): delete redundant custom task graph mappers in favor of native harness.watchTaskGraph"
 ```
 
 ---
 
-### Cycle 4: Unified JSON-RPC 2.0 stdio Transport (Single Default Strategy)
+### Cycle 4: True Composition Root in `@durable-zero/runner` & Single Stdio JSON-RPC 2.0 Transport
 
-**Goal:** Remove legacy custom framing (`RunnerRpcChannel`, `host-rpc.ts`) and establish a single, robust, standards-compliant JSON-RPC 2.0 transport over `stdio` (`session/prompt`, `session/cancel`, `session/update`) reusing message contracts and validation from `@earendil-works/pi-mcp`.
+**Goal:** Create a dedicated `@durable-zero/runner` package that serves as the **TRUE COMPOSITION ROOT** (AP-020, AP-073), moving entrypoint wiring out of `@durable-zero/core`. Implement the single default `StdioJsonRpcServer` in `@durable-zero/protocol`.
 
-#### Task 4.1: Implement `StdioJsonRpcTransport`
+#### Task 4.1: Implement `StdioJsonRpcServer` in `@durable-zero/protocol`
 
 **Files:**
-- Create: `packages/core/src/transport/stdio-jsonrpc-transport.ts`
-- Test: `packages/core/test/stdio-jsonrpc-transport.test.ts`
+- Create: `packages/protocol/src/transport/stdio-server.ts`
+- Modify: `packages/protocol/src/index.ts`
+- Test: `packages/protocol/test/stdio-server.test.ts`
 
-- [ ] **Step 1: Write failing test for StdioJsonRpcTransport**
+- [ ] **Step 1: Write failing test for StdioJsonRpcServer**
 
-Create `packages/core/test/stdio-jsonrpc-transport.test.ts`:
+Create `packages/protocol/test/stdio-server.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { Readable, Writable } from "node:stream";
-import { StdioJsonRpcTransport } from "../src/transport/stdio-jsonrpc-transport.ts";
+import { StdioJsonRpcServer } from "../src/index.ts";
 
-describe("StdioJsonRpcTransport (JSON-RPC 2.0 Standard)", () => {
+describe("StdioJsonRpcServer (JSON-RPC 2.0 Standard)", () => {
   it("processes session/prompt request and replies with jsonrpc 2.0 result", async () => {
     const input = new Readable({ read() {} });
     let outputBuffer = "";
@@ -702,7 +826,7 @@ describe("StdioJsonRpcTransport (JSON-RPC 2.0 Standard)", () => {
       },
     });
 
-    const transport = new StdioJsonRpcTransport({
+    const server = new StdioJsonRpcServer({
       stdin: input,
       stdout: output,
       handler: async (method, params) => {
@@ -710,7 +834,7 @@ describe("StdioJsonRpcTransport (JSON-RPC 2.0 Standard)", () => {
         throw new Error(`Unknown method: ${method}`);
       },
     });
-    await transport.start();
+    server.start();
 
     input.push(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "session/prompt", params: { content: "test" } }) + "\n");
 
@@ -719,64 +843,55 @@ describe("StdioJsonRpcTransport (JSON-RPC 2.0 Standard)", () => {
     assert.equal(response.jsonrpc, "2.0");
     assert.equal(response.id, 1);
     assert.deepEqual(response.result, { status: "accepted", prompt: "test" });
-    await transport.close();
+    server.stop();
   });
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test packages/core/test/stdio-jsonrpc-transport.test.ts`
-Expected: FAIL with "Cannot find module '../src/transport/stdio-jsonrpc-transport.ts'"
+Run: `node --test packages/protocol/test/stdio-server.test.ts`
+Expected: FAIL with "Cannot find module '../src/index.ts' or exported member StdioJsonRpcServer"
 
-- [ ] **Step 3: Implement `StdioJsonRpcTransport` implementing `ITransportStrategy`**
+- [ ] **Step 3: Implement `StdioJsonRpcServer`**
 
-Create `packages/core/src/transport/stdio-jsonrpc-transport.ts`:
+Create `packages/protocol/src/transport/stdio-server.ts`:
 ```typescript
 import { Readable, Writable } from "node:stream";
 import { StringDecoder } from "node:string_decoder";
-import { jsonRpcRequestSchema, type ITransportStrategy, type JsonRpcWireMessage } from "../../contracts/src/index.ts";
+import { jsonRpcRequestSchema } from "../jsonrpc/schema.ts";
 
-export interface StdioJsonRpcTransportOptions {
+export interface StdioJsonRpcServerOptions {
   stdin?: Readable;
   stdout?: Writable;
   handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
 }
 
-export class StdioJsonRpcTransport implements ITransportStrategy {
+export class StdioJsonRpcServer {
   private stdin: Readable;
   private stdout: Writable;
   private handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
   private decoder = new StringDecoder("utf8");
   private buffer = "";
-  private messageHandlers: Array<(msg: JsonRpcWireMessage) => void> = [];
   private onDataHandler = (chunk: Buffer) => { void this.handleChunk(chunk); };
 
-  constructor(options: StdioJsonRpcTransportOptions) {
+  constructor(options: StdioJsonRpcServerOptions) {
     this.stdin = options.stdin ?? process.stdin;
     this.stdout = options.stdout ?? process.stdout;
     this.handler = options.handler;
   }
 
-  public async start(): Promise<void> {
+  public start(): void {
     this.stdin.on("data", this.onDataHandler);
   }
 
-  public async close(): Promise<void> {
+  public stop(): void {
     this.stdin.off("data", this.onDataHandler);
   }
 
-  public onMessage(handler: (msg: JsonRpcWireMessage) => void): void {
-    this.messageHandlers.push(handler);
-  }
-
-  public async send(message: JsonRpcWireMessage): Promise<void> {
-    const payload = JSON.stringify(message) + "\n";
-    this.stdout.write(payload);
-  }
-
   public sendNotification(method: string, params: Record<string, unknown>): void {
-    void this.send({ jsonrpc: "2.0", method, params });
+    const payload = JSON.stringify({ jsonrpc: "2.0", method, params }) + "\n";
+    this.stdout.write(payload);
   }
 
   private async handleChunk(chunk: Buffer): Promise<void> {
@@ -811,25 +926,158 @@ export class StdioJsonRpcTransport implements ITransportStrategy {
   }
 
   private sendResult(id: string | number, result: unknown): void {
-    void this.send({ jsonrpc: "2.0", id, result });
+    const payload = JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n";
+    this.stdout.write(payload);
   }
 
   private sendError(id: string | number | null, code: number, message: string): void {
-    void this.send({ jsonrpc: "2.0", id, error: { code, message } });
+    const payload = JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }) + "\n";
+    this.stdout.write(payload);
   }
 }
 ```
 
+Update `packages/protocol/src/index.ts`:
+```typescript
+export * from "./jsonrpc/schema.ts";
+export * from "./jsonrpc/types.ts";
+export * from "./transport/interface.ts";
+export * from "./transport/stdio-server.ts";
+```
+
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test packages/core/test/stdio-jsonrpc-transport.test.ts`
+Run: `node --test packages/protocol/test/stdio-server.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/transport/ packages/core/test/stdio-jsonrpc-transport.test.ts
-git commit -m "feat(core): implement StdioJsonRpcTransport conforming to JSON-RPC 2.0"
+git add packages/protocol/
+git commit -m "feat(protocol): implement StdioJsonRpcServer conforming to JSON-RPC 2.0"
+```
+
+---
+
+#### Task 4.2: Create `@durable-zero/runner` (The True Composition Root - AP-020, AP-073)
+
+**Files:**
+- Create: `packages/runner/package.json`
+- Create: `packages/runner/src/composition.ts`
+- Create: `packages/runner/src/main.ts`
+- Test: `packages/runner/test/composition-root.test.ts`
+
+- [ ] **Step 1: Write test verifying runner wires engine and transport outside core**
+
+Create `packages/runner/test/composition-root.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { assembleDurableZero } from "../src/composition.ts";
+
+describe("Durable-Zero True Composition Root (AP-020, AP-073)", () => {
+  it("assembles engine, transport, execution environment, and extensions at root boundary", async () => {
+    const instance = await assembleDurableZero({
+      cwd: process.cwd(),
+      headless: true,
+    });
+    assert.ok(instance.engine);
+    assert.ok(instance.transport);
+    await instance.close();
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test packages/runner/test/composition-root.test.ts`
+Expected: FAIL with "Cannot find module '../src/composition.ts'"
+
+- [ ] **Step 3: Implement `@durable-zero/runner`**
+
+Create `packages/runner/package.json`:
+```json
+{
+  "name": "@durable-zero/runner",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/main.js",
+  "types": "./src/main.ts",
+  "dependencies": {
+    "@durable-zero/core": "workspace:*",
+    "@durable-zero/execution": "workspace:*",
+    "@durable-zero/extension-pi-resource": "workspace:*",
+    "@durable-zero/protocol": "workspace:*"
+  }
+}
+```
+
+Create `packages/runner/src/composition.ts`:
+```typescript
+import { DurableEngine } from "@durable-zero/core";
+import { LocalNodeExecutionEnv } from "@durable-zero/execution";
+import { StdioJsonRpcServer } from "@durable-zero/protocol";
+import { createPiResourceExtension } from "@durable-zero/extension-pi-resource";
+
+export interface AssembleOptions {
+  cwd?: string;
+  headless?: boolean;
+}
+
+export async function assembleDurableZero(options: AssembleOptions = {}) {
+  const cwd = options.cwd ?? process.cwd();
+  const env = new LocalNodeExecutionEnv({ cwd });
+  const piResource = options.headless ? undefined : createPiResourceExtension({ cwd });
+
+  const engine = new DurableEngine();
+
+  const transport = new StdioJsonRpcServer({
+    handler: async (method, params) => {
+      if (method === "session/prompt") {
+        await engine.prompt(String(params.content ?? ""));
+        return { status: "completed" };
+      }
+      return { status: "ignored" };
+    },
+  });
+
+  return {
+    engine,
+    transport,
+    close: async () => {
+      transport.stop();
+      await env.cleanup();
+    },
+  };
+}
+```
+
+Create `packages/runner/src/main.ts`:
+```typescript
+import { assembleDurableZero } from "./composition.ts";
+
+async function main() {
+  const runner = await assembleDurableZero();
+  runner.transport.start();
+
+  process.on("SIGINT", () => { void runner.close().then(() => process.exit(0)); });
+  process.on("SIGTERM", () => { void runner.close().then(() => process.exit(0)); });
+}
+
+void main();
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `node --test packages/runner/test/composition-root.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/runner/
+git commit -m "feat(runner): establish dedicated Composition Root package assembling zero packages"
 ```
 
 ---
