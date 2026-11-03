@@ -187,6 +187,22 @@ A deep cross-system audit against downstream consumers (`bb-plugin-provider-pi-d
 - **Blind Spot:** In codemode scripts, `store(key, value)` and `load(key)` must persist across process restarts.
 - **Mitigation:** Codemode state is mapped directly to Pi Durable SQLite documents via atomic `root.submit(tx, draft)` (AP-013).
 
+### 8. Event Streaming Pipe in Composition Root (Real-Time Text & Tool Progress)
+- **Blind Spot:** Calling `coordinator.prompt()` only admits input. If the runner does not pipe `coordinator.events(...)` to `transport.sendNotification("session/event", event)`, the client IDE receives `status: "accepted"` and hangs indefinitely without receiving text deltas, assistant turns, or tool progress.
+- **Mitigation:** In `packages/runner/src/composition.ts`, `coordinator.events()` is explicitly subscribed and forwarded to `transport.sendNotification("session/event", event)`.
+
+### 9. Host Tool Delegation Registration (`HostToolBridge` for `AskUserQuestion`)
+- **Blind Spot:** Although the transport supports `request("host/toolCall")`, the agent needs tools registered with `pi-agent-core` whose `execute()` delegates to the host over JSON-RPC. Downstream `bb-tools-extension.ts` also imports `forwardHostToolCall` and `requestHostInteraction` from `durable-zero/core`.
+- **Mitigation:** `packages/runner/src/host-tool-bridge.ts` configures `setHostToolForwarder` and `setHostInteractionRequester`, and `forwardHostToolCall` is re-exported from `durable-zero/core` for seamless backwards compatibility.
+
+### 10. Multi-Thread Process Topology & CLI Arguments (1 Process = 1 Thread = 1 DB Lock)
+- **Blind Spot:** BB IDE launches a separate Node.js child process per thread with CLI arguments: `--session <path> --cwd <dir> --provider <p> --model <m> --thinking <t>`. If the runner ignores CLI arguments, multiple threads collide on the same `.durable-session` lock in `process.cwd()`.
+- **Mitigation:** `packages/runner/src/cli-args.ts` is relocated to `@durable-zero/runner`, and `main.ts` parses `process.argv.slice(2)` into `assembleDurableZero({ sessionDir: args.sessionDir ?? args.session, ... })`.
+
+### 11. Crash & Lock Cleanup Lifecycle
+- **Blind Spot:** If Node.js terminates on `uncaughtException` or `unhandledRejection`, SQLite WAL and `.lock` files remain orphaned on disk, locking subsequent runs of the thread.
+- **Mitigation:** `packages/runner/src/main.ts` binds `SIGTERM`, `SIGINT`, `uncaughtException`, and `unhandledRejection` to `await runner.close()`, guaranteeing atomic unlock and sandbox disposal.
+
 ---
 
 To prevent accidental loss of mature, battle-tested domain logic (175 tests across 64 suites), all existing code is categorized into three explicit zones before refactoring:
@@ -1427,26 +1443,57 @@ git commit -m "feat(core): achieve zero vendor dependencies in core with pure do
 
 **Files:**
 - Create: `packages/runner/package.json`
+- Create: `packages/runner/src/cli-args.ts`
+- Create: `packages/runner/src/host-tool-bridge.ts`
 - Create: `packages/runner/src/composition.ts`
 - Create: `packages/runner/src/main.ts`
 - Test: `packages/runner/test/composition-root.test.ts`
 
-- [ ] **Step 1: Write test verifying runner wires engine and adapters outside core**
+- [ ] **Step 1: Write test verifying runner wires engine, adapters, streaming pipe, and host tool bridge**
 
 Create `packages/runner/test/composition-root.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { assembleDurableZero } from "../src/composition.ts";
+import { parseCliArgs } from "../src/cli-args.ts";
 
 describe("Durable-Zero True Composition Root (AP-020, AP-073)", () => {
-  it("assembles core engine, storage, models, sandbox, and transport at root boundary", async () => {
+  it("parses CLI flags correctly for multi-thread process topology", () => {
+    const args = parseCliArgs([
+      "--session", "/tmp/test-session",
+      "--cwd", "/tmp/test-cwd",
+      "--provider", "antigravity",
+      "--model", "gemini-3.8-flash",
+      "--thinking", "high",
+    ]);
+    assert.equal(args.session, "/tmp/test-session");
+    assert.equal(args.cwd, "/tmp/test-cwd");
+    assert.equal(args.provider, "antigravity");
+    assert.equal(args.model, "gemini-3.8-flash");
+    assert.equal(args.thinking, "high");
+  });
+
+  it("assembles core engine, storage, models, sandbox, streaming pipe, and transport at root boundary", async () => {
+    const notifications: Array<{ method: string; params: unknown }> = [];
     const instance = await assembleDurableZero({
       cwd: process.cwd(),
       headless: true,
+      onNotification: (method, params) => {
+        notifications.push({ method, params });
+      },
     });
+
     assert.ok(instance.coordinator);
     assert.ok(instance.transport);
+
+    // Verify event streaming pipe is wired
+    instance.coordinator.emitEvent({
+      type: "item/agentMessage/delta",
+      delta: { text: "hello stream" },
+    });
+
+    assert.ok(notifications.some((n) => n.method === "session/event"));
     await instance.close();
   });
 });
@@ -1480,6 +1527,97 @@ Create `packages/runner/package.json`:
 }
 ```
 
+Create `packages/runner/src/cli-args.ts`:
+```typescript
+export interface CliArgs {
+  mode?: string;
+  session?: string;
+  sessionDir?: string;
+  continueSession?: boolean;
+  noSession?: boolean;
+  provider?: string;
+  model?: string;
+  thinking?: string;
+  cwd?: string;
+  systemPromptPath?: string;
+  appendSystemPromptPath?: string;
+  extension?: string;
+  extensions?: string[];
+  noGlobalExtensions?: boolean;
+  skills?: string[];
+}
+
+export function parseCliArgs(argv: string[]): CliArgs {
+  const args: CliArgs = {};
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--mode" && i + 1 < argv.length) args.mode = argv[++i];
+    else if (arg === "--session" && i + 1 < argv.length) args.session = argv[++i];
+    else if (arg === "--session-dir" && i + 1 < argv.length) args.sessionDir = argv[++i];
+    else if (arg === "--continue") args.continueSession = true;
+    else if (arg === "--no-session") args.noSession = true;
+    else if (arg === "--provider" && i + 1 < argv.length) args.provider = argv[++i];
+    else if (arg === "--model" && i + 1 < argv.length) args.model = argv[++i];
+    else if (arg === "--thinking" && i + 1 < argv.length) args.thinking = argv[++i];
+    else if (arg === "--system-prompt" && i + 1 < argv.length) args.systemPromptPath = argv[++i];
+    else if (arg === "--append-system-prompt" && i + 1 < argv.length) args.appendSystemPromptPath = argv[++i];
+    else if (arg === "--cwd" && i + 1 < argv.length) args.cwd = argv[++i];
+    else if (arg === "--extension" && i + 1 < argv.length) {
+      const ext = argv[++i];
+      args.extension = ext;
+      args.extensions ??= [];
+      args.extensions.push(ext);
+    }
+    else if (arg === "--no-global-extensions") {
+      args.noGlobalExtensions = true;
+    }
+    else if (arg === "--skill" && i + 1 < argv.length) {
+      args.skills ??= [];
+      args.skills.push(argv[++i]);
+    }
+  }
+  return args;
+}
+```
+
+Create `packages/runner/src/host-tool-bridge.ts`:
+```typescript
+import { setHostToolForwarder, setHostInteractionRequester } from "@durable-zero/core";
+import type { ITransportStrategy } from "@durable-zero/protocol";
+
+export function setupHostToolBridge(transport: ITransportStrategy): void {
+  setHostToolForwarder(async (toolName: string, args: unknown) => {
+    try {
+      const response = await transport.request("host/toolCall", {
+        toolName,
+        arguments: args ?? {},
+      });
+      const parsed = response as { content?: Array<{ type: "text"; text: string }>; isError?: boolean } | undefined;
+      return {
+        content: parsed?.content ?? [{ type: "text", text: JSON.stringify(response ?? "") }],
+        isError: Boolean(parsed?.isError),
+      };
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: `Host tool ${toolName} failed: ${err instanceof Error ? err.message : String(err)}` }],
+        isError: true,
+      };
+    }
+  });
+
+  setHostInteractionRequester(async (kind: string, payload: { title?: string; message?: string; data?: unknown }) => {
+    try {
+      return await transport.request("host/interaction", {
+        interactionKind: kind,
+        ...payload,
+      });
+    } catch {
+      return null;
+    }
+  });
+}
+```
+
 Create `packages/runner/src/composition.ts`:
 ```typescript
 import { SessionCoordinator } from "@durable-zero/core";
@@ -1489,16 +1627,25 @@ import { PiDurableSessionStore } from "@durable-zero/adapter-pi-durable";
 import { PiAiModelProvider } from "@durable-zero/adapter-pi-ai";
 import { QuickJsCodemodeRunner } from "@durable-zero/adapter-codemode";
 import { createPiResourceExtension } from "@durable-zero/extension-pi-resource";
+import { setupHostToolBridge } from "./host-tool-bridge.ts";
 
 export interface AssembleOptions {
   cwd?: string;
   sessionDir?: string;
+  session?: string;
   headless?: boolean;
+  provider?: string;
+  model?: string;
+  thinking?: string;
+  extensions?: string[];
+  skills?: string[];
+  noGlobalExtensions?: boolean;
+  onNotification?: (method: string, params: unknown) => void;
 }
 
 export async function assembleDurableZero(options: AssembleOptions = {}) {
   const cwd = options.cwd ?? process.cwd();
-  const sessionDir = options.sessionDir ?? `${cwd}/.durable-session`;
+  const sessionDir = options.sessionDir ?? options.session ?? `${cwd}/.durable-session`;
 
   const env = new LocalNodeExecutionEnv({ cwd });
   const store = new PiDurableSessionStore({ sessionDir });
@@ -1517,15 +1664,32 @@ export async function assembleDurableZero(options: AssembleOptions = {}) {
   const transport = new StdioJsonRpcServer({
     handler: async (method, params) => {
       if (method === "session/prompt") {
-        return coordinator.prompt(String(params.content ?? ""));
+        return coordinator.prompt(String(params.content ?? ""), {
+          deliverAs: params.deliverAs as "steer" | "followUp" | undefined,
+        });
       }
       if (method === "session/cancel") {
         await coordinator.abort();
         return { status: "aborted" };
       }
+      if (method === "session/get_state") {
+        return coordinator.getState();
+      }
+      if (method === "session/set_subagent_policy") {
+        return coordinator.setSubagentPolicy(params);
+      }
       throw new Error(`Unknown method: ${method}`);
     },
   });
+
+  // 1. Pipe coordinator events to JSON-RPC stream notifications
+  coordinator.events((event) => {
+    transport.sendNotification("session/event", event as unknown as Record<string, unknown>);
+    options.onNotification?.("session/event", event);
+  });
+
+  // 2. Wire host tools bridge for full-duplex client tool delegation (e.g. AskUserQuestion)
+  setupHostToolBridge(transport);
 
   return {
     coordinator,
@@ -1543,19 +1707,49 @@ export async function assembleDurableZero(options: AssembleOptions = {}) {
 
 Create `packages/runner/src/main.ts`:
 ```typescript
+import { parseCliArgs } from "./cli-args.ts";
 import { assembleDurableZero } from "./composition.ts";
 
 async function main() {
-  const runner = await assembleDurableZero();
-  runner.transport.start();
+  const argv = process.argv.slice(2);
+  const args = parseCliArgs(argv);
 
-  const shutdown = async () => {
-    await runner.close();
-    process.exit(0);
+  const runner = await assembleDurableZero({
+    cwd: args.cwd,
+    sessionDir: args.sessionDir ?? args.session,
+    provider: args.provider,
+    model: args.model,
+    thinking: args.thinking,
+    extensions: args.extensions,
+    skills: args.skills,
+    noGlobalExtensions: args.noGlobalExtensions,
+  });
+
+  runner.transport.start();
+  runner.transport.sendNotification("session/ready", {
+    ready: true,
+    pid: process.pid,
+  });
+
+  let isExiting = false;
+  const handleExit = async (signalOrReason: string, err?: unknown) => {
+    if (isExiting) return;
+    isExiting = true;
+    if (err) {
+      console.error(`[Runner] Fatal crash (${signalOrReason}):`, err);
+    }
+    try {
+      await runner.close();
+    } catch (closeErr) {
+      console.warn(`[Runner] Cleanup error on ${signalOrReason}:`, closeErr);
+    }
+    process.exit(err ? 1 : 0);
   };
 
-  process.on("SIGINT", () => { void shutdown(); });
-  process.on("SIGTERM", () => { void shutdown(); });
+  process.on("SIGINT", () => { void handleExit("SIGINT"); });
+  process.on("SIGTERM", () => { void handleExit("SIGTERM"); });
+  process.on("uncaughtException", (err) => { void handleExit("uncaughtException", err); });
+  process.on("unhandledRejection", (err) => { void handleExit("unhandledRejection", err); });
 }
 
 void main();
@@ -1570,7 +1764,7 @@ Expected: PASS
 
 ```bash
 git add packages/runner/
-git commit -m "feat(runner): establish dedicated Composition Root assembling core with adapters"
+git commit -m "feat(runner): establish dedicated Composition Root assembling core with adapters, streaming pipe, and host tool bridge"
 ```
 
 ---
