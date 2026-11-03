@@ -28,4 +28,5 @@ export * from "./builtin-extensions/index.ts";
 export * from "./tools/execution-env.ts";
 export * from "./tools/sandbox.ts";
 export * from "./session/store.ts";
+export * from "./session/coordinator.ts";
 export * from "./models/provider.ts";
