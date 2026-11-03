@@ -132,4 +132,20 @@
   - Circuit 2 (Product Reviewer @thread:thr_4qeyrr38sj): **UNANIMOUS PASS** (All 3 Golden Journeys verified, 5/5 packages compiled, 188/188 tests passing in 16.5s).
 - **Residual Risk:** Temporary re-export shims in `core` (`session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts`) to be purged in Cycle 4 when `runtime.ts` migrates to `runner`.
 
+### S10 Cycle 3 Closure: Model & Codemode Adapters (2026-11-03)
+- **Scope Implemented:**
+  1. `packages/core/src/models/provider.ts`: Pure domain port `IModelProvider` and `ModelRef` (0 vendor dependencies).
+  2. `packages/core/src/tools/sandbox.ts`: Pure domain port `ISandboxExtension` and `ISandbox` (0 vendor dependencies).
+  3. `@durable-zero/adapter-pi-ai`: Encapsulates `ModelRuntime`, `resolveCliModel`, `SettingsManager` from `@earendil-works/pi-coding-agent` and `@earendil-works/pi-ai`.
+  4. `@durable-zero/adapter-codemode`: Encapsulates native `CodemodeSandbox` from `@earendil-works/pi-codemode` and `createCodemodeExtension` from `@earendil-works/pi-durable/codemode`.
+  5. Relocated `model-setup.ts` and `builtin-extensions/codemode.ts` with backwards-compatible re-exports.
+  6. Updated `scripts/build.mjs` to compile all 7 packages.
+- **Mandatory Skill Activation Enforced:**
+  - All worker and reviewer prompts mandate explicit `read` of TDD, verification, and arch-rules skills at startup. Worker @thread:thr_5et8kc3tqz and reviewers verified compliance.
+- **S9 Dual-Circuit Verification:**
+  - Circuit 1 (Arch Reviewer @thread:thr_76jt3im82x): **UNANIMOUS PASS** (100% native Pi adoption, AP-074 pure DI, all files < 120 lines, DAG package graph).
+  - Circuit 2 (Product Reviewer @thread:thr_vf3idxn5hc): **UNANIMOUS PASS** (Three Golden Journeys verified, clean sandbox teardown, 7/7 packages compiled, 196/196 tests passing in 14.8s).
+- **Residual Risk / P3 Observation:** In `PiAiModelProvider.resolveModel`, accept `modelId` as synonym for `model` and support string references (`provider/model`). Safe for subsequent refinement.
+
+
 
