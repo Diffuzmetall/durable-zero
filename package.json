@@ -50,6 +50,11 @@
       "types": "./packages/adapter-codemode/src/index.ts",
       "import": "./packages/adapter-codemode/dist/index.js",
       "default": "./packages/adapter-codemode/dist/index.js"
+    },
+    "./extension-pi-resource": {
+      "types": "./packages/extension-pi-resource/src/index.ts",
+      "import": "./packages/extension-pi-resource/dist/index.js",
+      "default": "./packages/extension-pi-resource/dist/index.js"
     }
   },
   "typesVersions": {
@@ -74,6 +79,9 @@
       ],
       "adapter-codemode": [
         "./packages/adapter-codemode/src/index.ts"
+      ],
+      "extension-pi-resource": [
+        "./packages/extension-pi-resource/src/index.ts"
       ]
     }
   },

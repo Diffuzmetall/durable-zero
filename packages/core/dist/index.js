@@ -5368,6 +5368,71 @@ function restoreRunnerStdout() {
     activeGuard.restoreStdout();
   }
 }
+
+// packages/core/src/session/coordinator.ts
+var SessionCoordinator = class {
+  store;
+  modelProvider;
+  executionEnv;
+  resourceLoader;
+  isStarted = false;
+  isAborted = false;
+  listeners = /* @__PURE__ */ new Set();
+  constructor(options) {
+    this.store = options.store;
+    this.modelProvider = options.modelProvider;
+    this.executionEnv = options.executionEnv;
+    this.resourceLoader = options.resourceLoader;
+  }
+  async start() {
+    await this.store.acquireLock();
+    this.isStarted = true;
+  }
+  async prompt(content, _options) {
+    if (this.isAborted) {
+      throw new Error("Session is aborted");
+    }
+    if (typeof content !== "string" || content.trim().length === 0) {
+      throw new Error("Prompt content must be a non-empty string");
+    }
+    if (!this.isStarted) {
+      await this.start();
+    }
+    const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    return { status: "accepted", id };
+  }
+  emitEvent(event) {
+    for (const listener of this.listeners) {
+      listener(event);
+    }
+  }
+  events(callback) {
+    this.listeners.add(callback);
+    return () => {
+      this.listeners.delete(callback);
+    };
+  }
+  async abort() {
+    this.isAborted = true;
+    this.emitEvent({ type: "session/aborted" });
+  }
+  getState() {
+    return {
+      isStarted: this.isStarted,
+      isAborted: this.isAborted,
+      sessionDir: this.store.sessionDir
+    };
+  }
+  async setSubagentPolicy(params) {
+    await this.store.saveDocument("subagents", "policy_ack", params);
+    return { ok: true };
+  }
+  async close() {
+    this.listeners.clear();
+    await this.store.releaseLock();
+    await this.store.close();
+  }
+};
 export {
   Anchor,
   BACKGROUND,
@@ -5383,6 +5448,7 @@ export {
   HostRpcManager,
   SUPPORTED_PI_VERSION_PREFIXES,
   SchemaPort,
+  SessionCoordinator,
   SessionDaemon,
   SubagentTasksExtension,
   TaskNames,
