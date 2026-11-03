@@ -53,4 +53,32 @@ describe("SessionCoordinator (AP-010, AP-012, AP-074)", () => {
 		);
 		await coordinator.close();
 	});
+
+	it("fails fast when prompt is called before start() (Defect 2)", async () => {
+		const store = new MemorySessionStore();
+		const coordinator = new SessionCoordinator({ store });
+
+		await assert.rejects(
+			async () => coordinator.prompt("prompt before start"),
+			{
+				name: "Error",
+				message: "Session is not started. Call start() before submitting prompts",
+			},
+		);
+	});
+
+	it("fails fast when prompt is called after close() (Defect 1)", async () => {
+		const store = new MemorySessionStore();
+		const coordinator = new SessionCoordinator({ store });
+		await coordinator.start();
+		await coordinator.close();
+
+		await assert.rejects(
+			async () => coordinator.prompt("prompt after close"),
+			{
+				name: "Error",
+				message: "Session is closed",
+			},
+		);
+	});
 });

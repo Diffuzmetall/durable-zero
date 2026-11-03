@@ -1,8 +1,8 @@
 import { defineExtension, type Extension } from "@earendil-works/pi-durable";
-import { SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
+import { SettingsManager, DefaultResourceLoader, getAgentDir } from "@earendil-works/pi-coding-agent";
 
 export interface PiResourceExtensionOptions {
-	cwd: string;
+	cwd?: string;
 	agentDir?: string;
 	settingsManager?: SettingsManager;
 	resourceLoader?: DefaultResourceLoader;
@@ -13,13 +13,15 @@ export interface PiResourceExtension extends Extension {
 	readonly resourceLoader: DefaultResourceLoader;
 }
 
-export function createPiResourceExtension(options: PiResourceExtensionOptions): PiResourceExtension {
-	const settingsManager = options.settingsManager ?? SettingsManager.create(options.cwd);
+export function createPiResourceExtension(options: Partial<PiResourceExtensionOptions> = {}): PiResourceExtension {
+	const cwd = options.cwd ?? process.cwd();
+	const agentDir = options.agentDir ?? getAgentDir();
+	const settingsManager = options.settingsManager ?? SettingsManager.create(cwd);
 	const resourceLoader =
 		options.resourceLoader ??
 		new DefaultResourceLoader({
-			cwd: options.cwd,
-			agentDir: options.agentDir,
+			cwd,
+			agentDir,
 			settingsManager,
 		});
 

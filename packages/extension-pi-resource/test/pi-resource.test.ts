@@ -15,4 +15,16 @@ describe("@durable-zero/extension-pi-resource (AP-073)", () => {
 		assert.ok(ext.resourceLoader);
 		assert.equal(typeof ext.resourceLoader.getSkills, "function");
 	});
+
+	it("creates extension with default options when called without arguments or with empty object (Defect 3)", () => {
+		const extWithoutArgs = createPiResourceExtension();
+		assert.equal(extWithoutArgs.name, "pi-resource");
+		assert.ok(extWithoutArgs.configProvider);
+		assert.ok(extWithoutArgs.resourceLoader);
+
+		const extWithEmptyObj = createPiResourceExtension({});
+		assert.equal(extWithEmptyObj.name, "pi-resource");
+		assert.ok(extWithEmptyObj.configProvider);
+		assert.ok(extWithEmptyObj.resourceLoader);
+	});
 });

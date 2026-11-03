@@ -5376,6 +5376,7 @@ var SessionCoordinator = class {
   executionEnv;
   resourceLoader;
   isStarted = false;
+  isClosed = false;
   isAborted = false;
   listeners = /* @__PURE__ */ new Set();
   constructor(options) {
@@ -5389,14 +5390,17 @@ var SessionCoordinator = class {
     this.isStarted = true;
   }
   async prompt(content, _options) {
+    if (this.isClosed) {
+      throw new Error("Session is closed");
+    }
     if (this.isAborted) {
       throw new Error("Session is aborted");
     }
+    if (!this.isStarted) {
+      throw new Error("Session is not started. Call start() before submitting prompts");
+    }
     if (typeof content !== "string" || content.trim().length === 0) {
       throw new Error("Prompt content must be a non-empty string");
-    }
-    if (!this.isStarted) {
-      await this.start();
     }
     const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     return { status: "accepted", id };
@@ -5420,6 +5424,7 @@ var SessionCoordinator = class {
     return {
       isStarted: this.isStarted,
       isAborted: this.isAborted,
+      isClosed: this.isClosed,
       sessionDir: this.store.sessionDir
     };
   }
@@ -5428,6 +5433,8 @@ var SessionCoordinator = class {
     return { ok: true };
   }
   async close() {
+    this.isClosed = true;
+    this.isStarted = false;
     this.listeners.clear();
     await this.store.releaseLock();
     await this.store.close();
