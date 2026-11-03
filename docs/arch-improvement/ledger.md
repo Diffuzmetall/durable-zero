@@ -117,3 +117,19 @@
   - Added `AP-074` to `/Users/vanya/Projects/arch-rules/arch-rules.md`: Prohibiting global mutable state, singleton defaults, and side-effecting imports (commit `37f1723`). All dependencies must flow top-down via Pure Dependency Injection from Composition Root.
 - **Verification Evidence:** All 186 tests passing with `--test-timeout 30000` (15.2s). All 4 packages successfully build to `dist/index.js`.
 
+### S10 Cycle 2 Closure: Storage ACL & ISessionStore Port (2026-11-03)
+- **Scope Implemented:**
+  1. `packages/core/src/session/store.ts`: Pure domain port `ISessionStore` and `TaskRecord` (0 dependencies on SQLite, WASM, or `@earendil-works/*`).
+  2. `packages/core/test/mocks/memory-session-store.ts`: Fast in-memory mock for unit tests.
+  3. `packages/adapter-pi-durable`: ACL package implementing `ISessionStore` via native Pi Durable (`openNodeSqliteStorage`, `createSession`, `defineDocFamily`, `session.commit`, `session.snapshot`).
+  4. Relocated `session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts` to `adapter-pi-durable` with backwards-compatible re-exports.
+  5. Updated `scripts/build.mjs` to compile all 5 packages.
+- **Anti-Bikeshedding Invariant Enforced:**
+  - Audited code and Master Plan: eliminated bikeshed risks (no raw SQL tables, no fake prompt interpreters, native Pi adoption).
+  - Cleaned up upcoming Tasks 3.1, 3.2, and 4.2 in `master-plan.md` (commit `9589e8c`).
+- **S9 Dual-Circuit Verification:**
+  - Circuit 1 (Arch Reviewer @thread:thr_67akw3q46t): **UNANIMOUS PASS** (100% native Pi adoption, zero singletons AP-074, all adapters < 120 lines).
+  - Circuit 2 (Product Reviewer @thread:thr_4qeyrr38sj): **UNANIMOUS PASS** (All 3 Golden Journeys verified, 5/5 packages compiled, 188/188 tests passing in 16.5s).
+- **Residual Risk:** Temporary re-export shims in `core` (`session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts`) to be purged in Cycle 4 when `runtime.ts` migrates to `runner`.
+
+
