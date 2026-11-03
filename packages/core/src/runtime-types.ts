@@ -100,6 +100,7 @@ export interface OpenDurableOptions {
 	readonly builtins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 	readonly plugins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 	readonly beforeResume?: (harness: Harness) => Promise<void>;
+	readonly executionEnvFactory?: import("./tools/execution-env.ts").ExecutionEnvFactory;
 }
 
 export interface SubagentWatcherController {

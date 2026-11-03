@@ -25,4 +25,11 @@ describe("ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)", () => {
     assert.equal(calledWithCwd, "/sandbox/dir");
     assert.equal((env as any).id, "mock-env");
   });
+
+  it("fails fast when ExecutionEnvFactory is not provided (AP-012, AP-072, AP-073)", () => {
+    assert.throws(
+      () => new ExecutionEnvs("/default", undefined as unknown as ExecutionEnvFactory),
+      /ExecutionEnvFactory is required/,
+    );
+  });
 });

@@ -2,6 +2,8 @@ import type { AttachedReplicatedState } from "@earendil-works/chord";
 import type { Conversation, ConversationId, ConversationView, Cursor, Harness, TaskGraph } from "@earendil-works/pi-durable";
 import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agent";
 import { ExecutionEnvs, findInitialAgentModel } from "./harness-setup.ts";
+import { LocalNodeExecutionEnv } from "../../execution/src/index.ts";
+import type { ExecutionEnvFactory } from "./tools/execution-env.ts";
 import { selectSession } from "./session-storage.ts";
 import {
 	agentOf, firstInput, titleOf, type ConversationSummary, type DurableView,
@@ -17,7 +19,9 @@ export { hydrateSessionActiveTools } from "./runtime-hydration.ts";
 
 export async function openDurable(options: OpenDurableOptions = {}): Promise<OpenDurableResult> {
 	const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
-	const envs = new ExecutionEnvs(location.cwd);
+	const defaultFactory: ExecutionEnvFactory = (target) =>
+		new LocalNodeExecutionEnv({ cwd: target.cwd ?? location.cwd });
+	const envs = new ExecutionEnvs(location.cwd, options.executionEnvFactory ?? defaultFactory);
 	let harness: Harness | undefined;
 	let envState: LoadedHarnessEnvironment | undefined;
 

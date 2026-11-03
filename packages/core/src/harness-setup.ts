@@ -8,7 +8,6 @@ import {
 	type ModelRef,
 	type Registry,
 } from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import { createToolSearchExtension } from "@earendil-works/pi-durable/tool-search";
 import type { SubagentPolicyRecord } from "./policy/types.ts";
 import type { ExecutionEnvFactory, IExecutionEnvironment } from "./tools/execution-env.ts";
@@ -109,23 +108,22 @@ export async function createCodingRegistry(
 
 export class ExecutionEnvs {
 	readonly #defaultCwd: string;
-	readonly #factory?: ExecutionEnvFactory;
-	readonly #envs = new Map<string, NodeExecutionEnv | IExecutionEnvironment>();
+	readonly #factory: ExecutionEnvFactory;
+	readonly #envs = new Map<string, IExecutionEnvironment>();
 
-	constructor(defaultCwd: string, factory?: ExecutionEnvFactory) {
+	constructor(defaultCwd: string, factory: ExecutionEnvFactory) {
+		if (typeof factory !== "function") {
+			throw new Error("ExecutionEnvFactory is required (AP-012, AP-072, AP-073: no fallback in core)");
+		}
 		this.#defaultCwd = defaultCwd;
 		this.#factory = factory;
 	}
 
-	readonly env = ({ cwd = this.#defaultCwd, conversationId }: EnvTarget): NodeExecutionEnv | IExecutionEnvironment => {
+	readonly env = ({ cwd = this.#defaultCwd, conversationId }: EnvTarget): IExecutionEnvironment => {
 		let env = this.#envs.get(cwd);
 		if (env === undefined) {
-			if (this.#factory) {
-				const created = this.#factory({ cwd, conversationId });
-				env = created as IExecutionEnvironment;
-			} else {
-				env = new NodeExecutionEnv({ cwd });
-			}
+			const created = this.#factory({ cwd, conversationId });
+			env = created as IExecutionEnvironment;
 			this.#envs.set(cwd, env);
 		}
 		return env;

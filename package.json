@@ -25,6 +25,16 @@
       "types": "./packages/core/src/runner-server.ts",
       "import": "./packages/core/dist/runner.js",
       "default": "./packages/core/dist/runner.js"
+    },
+    "./protocol": {
+      "types": "./packages/protocol/src/index.ts",
+      "import": "./packages/protocol/dist/index.js",
+      "default": "./packages/protocol/dist/index.js"
+    },
+    "./execution": {
+      "types": "./packages/execution/src/index.ts",
+      "import": "./packages/execution/dist/index.js",
+      "default": "./packages/execution/dist/index.js"
     }
   },
   "typesVersions": {
@@ -34,12 +44,18 @@
       ],
       "contracts": [
         "./packages/contracts/src/index.ts"
+      ],
+      "protocol": [
+        "./packages/protocol/src/index.ts"
+      ],
+      "execution": [
+        "./packages/execution/src/index.ts"
       ]
     }
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test packages/contracts/test/*.test.ts packages/cli/test/*.test.ts packages/core/test/*.test.ts",
+    "test": "node --test --test-timeout 30000 packages/*/test/*.test.ts",
     "lint": "pnpm -r run lint"
   },
   "dependencies": {
