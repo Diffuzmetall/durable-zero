@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Transform `durable-zero` into a sovereign, modular headless agent runtime with semantic domain contracts, pluggable execution environments, clean Pi extension architecture, native Pi Durable task graph integration, and a unified JSON-RPC 2.0 stdio transport.
+**Goal:** Transform `durable-zero` into a sovereign, modular headless agent runtime with domain-based semantic contracts, pluggable execution environments via DIP, clean Pi extension architecture separating declaration from composition (AP-073), and a unified JSON-RPC 2.0 stdio transport leveraging upstream Pi MCP primitives.
 
-**Architecture:** Hexagonal Architecture (Ports & Adapters) where Inbound Adapters (JSON-RPC 2.0 stdio server) wrap the Core Domain (`DurableZeroEngine`), while Outbound SPIs (`IExecutionEnvironment`, `IConfigProvider`) are injected via Strategy pattern in the Composition Root. Domain contracts in `packages/contracts/` are organized semantically by Bounded Contexts (`execution/`, `session/`, `tools/`, `protocol/`, `config/`), not by technical layers.
+**Architecture:** Hexagonal Architecture (Ports & Adapters) where Inbound Adapters (JSON-RPC 2.0 stdio transport) wrap the Core Domain (`DurableZeroEngine`), while Outbound SPIs (`IExecutionEnvironment`, `IConfigProvider`) are injected via Strategy pattern in the Composition Root. Domain contracts in `packages/contracts/` are organized semantically by Bounded Contexts (`execution/`, `session/`, `tools/`, `protocol/`, `config/`), not by technical layers.
 
-**Tech Stack:** TypeScript 5.9, Node.js 22+ (ESM), `@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-agent-core` 1.5.0, `@earendil-works/pi-ai` 1.5.0, `@earendil-works/chord` 1.5.0, `quickjs-wasi`, `node:test`.
+**Tech Stack:** TypeScript 5.9, Node.js 22+ (ESM), `@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-agent-core` 1.5.0, `@earendil-works/pi-mcp` 1.5.0, `@earendil-works/pi-ai` 1.5.0, `@earendil-works/chord` 1.5.0, `quickjs-wasi`, `node:test`.
 
 ---
 
@@ -19,7 +19,7 @@
   - **AP-011 (High Cohesion & Low Coupling):** Grouping by functional domains (Screaming Architecture), never by technical type buckets (`ports/`, `wire/`).
   - **AP-012 (Fail-Fast & Dependency Inversion):** Explicit contracts, no implicit global fallbacks or loose `any` casts.
   - **AP-013 (Data Integrity & SQLite Atomicity):** State changes and message admissions go through atomic `root.submit(tx, draft)` inside `harness.commit()`.
-  - **AP-020 & AP-073 (Composition Root & Separation of Declaration from Configuration):** Domain classes declare dependencies; object wiring occurs exclusively in bootstrap factories.
+  - **AP-020 & AP-073 (Composition Root & Separation of Declaration from Configuration):** Domain classes declare dependencies; object wiring occurs exclusively in bootstrap factories. Extensions never self-register on import.
   - **AP-071 (Node.js Default):** Native Node.js ESM baseline.
   - **AP-072 (Domain Strategies over Procedural Switch/Case):** Transports, environments, and configs are polymorphic strategies.
 
@@ -31,7 +31,7 @@
 packages/contracts/src/
 ├── execution/                <- Execution Environment Domain
 │   ├── environment.ts        <- IExecutionEnvironment & EnvTarget contracts
-│   └── types.ts              <- ExecResult, FileInfo, TerminalSession
+│   └── types.ts              <- ExecResult, ExecOptions, FileStat
 ├── session/                  <- Session & Conversation Domain
 │   ├── message.ts            <- UserMessage, AssistantMessage, ToolResultMessage
 │   ├── lifecycle.ts          <- SessionLifecycleEvent (agent_start, turn_end, etc.)
@@ -42,7 +42,7 @@ packages/contracts/src/
 ├── protocol/                 <- Client-Server Protocol Domain (JSON-RPC 2.0)
 │   ├── jsonrpc.ts            <- JsonRpcRequest, JsonRpcResponse, JsonRpcNotification
 │   ├── methods.ts            <- session/prompt, session/cancel, session/update
-│   └── transport.ts          <- ITransport (send, onMessage, close)
+│   └── transport.ts          <- ITransportStrategy (send, onMessage, close)
 ├── config/                   <- Configuration & Policy Domain
 │   ├── config-provider.ts    <- IConfigProvider (getSecret, getSetting, getModel)
 │   ├── skill-provider.ts     <- ISkillLoader (loadSkills)
@@ -51,6 +51,7 @@ packages/contracts/src/
 
 packages/core/src/
 ├── bootstrap/                <- Composition Root (AP-073)
+│   ├── harness-composition.ts<- Pure composition of extensions into harness registry
 │   └── host-builder.ts       <- DurableHostBuilder (wires strategies together)
 ├── adapters/                 <- Strategy Implementations (AP-072)
 │   ├── execution/
@@ -80,8 +81,8 @@ packages/core/src/
 **Files:**
 - Create: `packages/contracts/src/execution/environment.ts`
 - Create: `packages/contracts/src/execution/types.ts`
-- Create: `packages/contracts/src/session/message.ts`
 - Create: `packages/contracts/src/protocol/jsonrpc.ts`
+- Create: `packages/contracts/src/protocol/transport.ts`
 - Modify: `packages/contracts/src/index.ts`
 - Test: `packages/contracts/test/semantic-contracts.test.ts`
 
@@ -96,6 +97,7 @@ import {
   jsonRpcResponseSchema,
   type IExecutionEnvironment,
   type ExecutionEnvFactory,
+  type ITransportStrategy,
 } from "../src/index.ts";
 
 describe("Semantic Contracts Bounded Contexts", () => {
@@ -126,7 +128,17 @@ describe("Semantic Contracts Bounded Contexts", () => {
       id: "req_1",
       method: "session/prompt",
     });
-    assert.equal(invalid.success, false);
+    assert.equal(valid.success, false);
+  });
+
+  it("exports ITransportStrategy interface shape", () => {
+    const transport: ITransportStrategy = {
+      start: async () => {},
+      send: async () => {},
+      onMessage: () => {},
+      close: async () => {},
+    };
+    assert.equal(typeof transport.send, "function");
   });
 });
 ```
@@ -136,7 +148,7 @@ describe("Semantic Contracts Bounded Contexts", () => {
 Run: `node --test packages/contracts/test/semantic-contracts.test.ts`
 Expected: FAIL with "Cannot find module '../src/index.ts' or exported member"
 
-- [ ] **Step 3: Write the semantic contract definitions**
+- [ ] **Step 3: Write semantic contract definitions**
 
 Create `packages/contracts/src/execution/types.ts`:
 ```typescript
@@ -216,11 +228,26 @@ export const jsonRpcNotificationSchema = z.object({
 export type JsonRpcNotification = z.infer<typeof jsonRpcNotificationSchema>;
 ```
 
+Create `packages/contracts/src/protocol/transport.ts`:
+```typescript
+import type { JsonRpcRequest, JsonRpcResponse, JsonRpcNotification } from "./jsonrpc.ts";
+
+export type JsonRpcWireMessage = JsonRpcRequest | JsonRpcResponse | JsonRpcNotification;
+
+export interface ITransportStrategy {
+  start(): Promise<void>;
+  send(message: JsonRpcWireMessage): Promise<void>;
+  onMessage(handler: (message: JsonRpcWireMessage) => void): void;
+  close(): Promise<void>;
+}
+```
+
 Update `packages/contracts/src/index.ts`:
 ```typescript
 export * from "./execution/types.ts";
 export * from "./execution/environment.ts";
 export * from "./protocol/jsonrpc.ts";
+export * from "./protocol/transport.ts";
 
 // Existing exports preserved during migration slice
 export * from "./diagnostics.ts";
@@ -241,7 +268,7 @@ export * from "./runtime-graph/status.ts";
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test packages/contracts/test/semantic-contracts.test.ts`
-Expected: PASS (2 tests pass)
+Expected: PASS (3 tests pass)
 
 - [ ] **Step 5: Commit**
 
@@ -356,9 +383,9 @@ git commit -m "feat(core): implement ExecutionEnvFactory strategy pattern in Exe
 
 ---
 
-### Cycle 2: Pi Resource Isolation via Native Extensions (ACL)
+### Cycle 2: Pi Resource Isolation via Native Extensions (ACL & AP-073)
 
-**Goal:** Isolate `@earendil-works/pi-coding-agent` dependencies (`SettingsManager`, `DefaultResourceLoader`) into a dedicated `PiResourceExtension` (defined via Pi Durable's native `defineExtension`). This preserves full local compatibility with `~/.pi/agent` and skills, while allowing headless/Docker environments to run with a static configuration provider.
+**Goal:** Isolate `@earendil-works/pi-coding-agent` dependencies (`SettingsManager`, `DefaultResourceLoader`) into a dedicated `PiResourceExtension` (defined via Pi Durable's native `defineExtension`). Enforce AP-073: the extension file is purely declarative and does NOT perform self-registration; registration into `harness.registry` occurs strictly in the Composition Root.
 
 #### Task 2.1: Implement `IConfigProvider` Domain Contract in `packages/contracts/`
 
@@ -429,7 +456,7 @@ git commit -m "feat(contracts): add IConfigProvider domain contract"
 
 ---
 
-#### Task 2.2: Wrap Pi Harness Resources in `PiResourceExtension`
+#### Task 2.2: Wrap Pi Harness Resources in Declarative `PiResourceExtension` (AP-073 Compliant)
 
 **Files:**
 - Create: `packages/core/src/builtin-extensions/pi-resource-extension.ts`
@@ -443,8 +470,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createPiResourceExtension } from "../src/builtin-extensions/pi-resource-extension.ts";
 
-describe("PiResourceExtension", () => {
-  it("creates a native Pi Durable extension encapsulating settings and loader", () => {
+describe("PiResourceExtension (AP-073 Declaration / Configuration Separation)", () => {
+  it("creates a pure declarative native Pi Durable extension without self-installing", () => {
     const ext = createPiResourceExtension({
       cwd: process.cwd(),
       agentDir: "/tmp/fake-agent",
@@ -525,7 +552,7 @@ Expected: PASS
 
 ```bash
 git add packages/core/src/builtin-extensions/pi-resource-extension.ts packages/core/test/pi-resource-extension.test.ts
-git commit -m "feat(core): encapsulate Pi settings and loader into native PiResourceExtension"
+git commit -m "feat(core): encapsulate Pi settings and loader into native PiResourceExtension (AP-073)"
 ```
 
 ---
@@ -645,26 +672,26 @@ git commit -m "refactor(core): delete custom task graph mappers in favor of nati
 
 ---
 
-### Cycle 4: Unified JSON-RPC 2.0 stdio Transport
+### Cycle 4: Unified JSON-RPC 2.0 stdio Transport (Single Default Strategy)
 
-**Goal:** Remove legacy custom framing (`RunnerRpcChannel`, `host-rpc.ts`) and establish a single, robust, standards-compliant JSON-RPC 2.0 transport over `stdio` (`session/prompt`, `session/cancel`, `session/update`).
+**Goal:** Remove legacy custom framing (`RunnerRpcChannel`, `host-rpc.ts`) and establish a single, robust, standards-compliant JSON-RPC 2.0 transport over `stdio` (`session/prompt`, `session/cancel`, `session/update`) reusing message contracts and validation from `@earendil-works/pi-mcp`.
 
-#### Task 4.1: Implement `StdioJsonRpcServer`
+#### Task 4.1: Implement `StdioJsonRpcTransport`
 
 **Files:**
-- Create: `packages/core/src/transport/stdio-jsonrpc-server.ts`
-- Test: `packages/core/test/stdio-jsonrpc-server.test.ts`
+- Create: `packages/core/src/transport/stdio-jsonrpc-transport.ts`
+- Test: `packages/core/test/stdio-jsonrpc-transport.test.ts`
 
-- [ ] **Step 1: Write failing test for StdioJsonRpcServer**
+- [ ] **Step 1: Write failing test for StdioJsonRpcTransport**
 
-Create `packages/core/test/stdio-jsonrpc-server.test.ts`:
+Create `packages/core/test/stdio-jsonrpc-transport.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { Readable, Writable } from "node:stream";
-import { StdioJsonRpcServer } from "../src/transport/stdio-jsonrpc-server.ts";
+import { StdioJsonRpcTransport } from "../src/transport/stdio-jsonrpc-transport.ts";
 
-describe("StdioJsonRpcServer (JSON-RPC 2.0 Standard)", () => {
+describe("StdioJsonRpcTransport (JSON-RPC 2.0 Standard)", () => {
   it("processes session/prompt request and replies with jsonrpc 2.0 result", async () => {
     const input = new Readable({ read() {} });
     let outputBuffer = "";
@@ -675,7 +702,7 @@ describe("StdioJsonRpcServer (JSON-RPC 2.0 Standard)", () => {
       },
     });
 
-    const server = new StdioJsonRpcServer({
+    const transport = new StdioJsonRpcTransport({
       stdin: input,
       stdout: output,
       handler: async (method, params) => {
@@ -683,7 +710,7 @@ describe("StdioJsonRpcServer (JSON-RPC 2.0 Standard)", () => {
         throw new Error(`Unknown method: ${method}`);
       },
     });
-    server.start();
+    await transport.start();
 
     input.push(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "session/prompt", params: { content: "test" } }) + "\n");
 
@@ -692,55 +719,64 @@ describe("StdioJsonRpcServer (JSON-RPC 2.0 Standard)", () => {
     assert.equal(response.jsonrpc, "2.0");
     assert.equal(response.id, 1);
     assert.deepEqual(response.result, { status: "accepted", prompt: "test" });
-    server.stop();
+    await transport.close();
   });
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test packages/core/test/stdio-jsonrpc-server.test.ts`
-Expected: FAIL with "Cannot find module '../src/transport/stdio-jsonrpc-server.ts'"
+Run: `node --test packages/core/test/stdio-jsonrpc-transport.test.ts`
+Expected: FAIL with "Cannot find module '../src/transport/stdio-jsonrpc-transport.ts'"
 
-- [ ] **Step 3: Implement `StdioJsonRpcServer`**
+- [ ] **Step 3: Implement `StdioJsonRpcTransport` implementing `ITransportStrategy`**
 
-Create `packages/core/src/transport/stdio-jsonrpc-server.ts`:
+Create `packages/core/src/transport/stdio-jsonrpc-transport.ts`:
 ```typescript
 import { Readable, Writable } from "node:stream";
 import { StringDecoder } from "node:string_decoder";
-import { jsonRpcRequestSchema } from "../../contracts/src/index.ts";
+import { jsonRpcRequestSchema, type ITransportStrategy, type JsonRpcWireMessage } from "../../contracts/src/index.ts";
 
-export interface StdioJsonRpcServerOptions {
+export interface StdioJsonRpcTransportOptions {
   stdin?: Readable;
   stdout?: Writable;
   handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
 }
 
-export class StdioJsonRpcServer {
+export class StdioJsonRpcTransport implements ITransportStrategy {
   private stdin: Readable;
   private stdout: Writable;
   private handler: (method: string, params: Record<string, unknown>) => Promise<unknown>;
   private decoder = new StringDecoder("utf8");
   private buffer = "";
-  private onDataHandler = (chunk: Buffer) => this.handleChunk(chunk);
+  private messageHandlers: Array<(msg: JsonRpcWireMessage) => void> = [];
+  private onDataHandler = (chunk: Buffer) => { void this.handleChunk(chunk); };
 
-  constructor(options: StdioJsonRpcServerOptions) {
+  constructor(options: StdioJsonRpcTransportOptions) {
     this.stdin = options.stdin ?? process.stdin;
     this.stdout = options.stdout ?? process.stdout;
     this.handler = options.handler;
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
     this.stdin.on("data", this.onDataHandler);
   }
 
-  public stop(): void {
+  public async close(): Promise<void> {
     this.stdin.off("data", this.onDataHandler);
   }
 
-  public sendNotification(method: string, params: Record<string, unknown>): void {
-    const payload = JSON.stringify({ jsonrpc: "2.0", method, params }) + "\n";
+  public onMessage(handler: (msg: JsonRpcWireMessage) => void): void {
+    this.messageHandlers.push(handler);
+  }
+
+  public async send(message: JsonRpcWireMessage): Promise<void> {
+    const payload = JSON.stringify(message) + "\n";
     this.stdout.write(payload);
+  }
+
+  public sendNotification(method: string, params: Record<string, unknown>): void {
+    void this.send({ jsonrpc: "2.0", method, params });
   }
 
   private async handleChunk(chunk: Buffer): Promise<void> {
@@ -775,27 +811,25 @@ export class StdioJsonRpcServer {
   }
 
   private sendResult(id: string | number, result: unknown): void {
-    const payload = JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n";
-    this.stdout.write(payload);
+    void this.send({ jsonrpc: "2.0", id, result });
   }
 
   private sendError(id: string | number | null, code: number, message: string): void {
-    const payload = JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }) + "\n";
-    this.stdout.write(payload);
+    void this.send({ jsonrpc: "2.0", id, error: { code, message } });
   }
 }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test packages/core/test/stdio-jsonrpc-server.test.ts`
+Run: `node --test packages/core/test/stdio-jsonrpc-transport.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/transport/ packages/core/test/stdio-jsonrpc-server.test.ts
-git commit -m "feat(core): implement StdioJsonRpcServer conforming to JSON-RPC 2.0"
+git add packages/core/src/transport/ packages/core/test/stdio-jsonrpc-transport.test.ts
+git commit -m "feat(core): implement StdioJsonRpcTransport conforming to JSON-RPC 2.0"
 ```
 
 ---
