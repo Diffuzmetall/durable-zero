@@ -80,3 +80,12 @@
   2. Strongly typed all `SessionCoordinator` dependencies using Core domain interfaces: `ISessionStore`, `IModelProvider`, `ICodemodeRunner`, `IExecutionEnvironment`, `IResourceLoader`.
   3. Eliminated circular adapter re-export in Task 2.2 (`forkSessionDatabase` re-exported exclusively in `packages/contracts` and root subpath exports, keeping `@durable-zero/core` 100% pure).
 - **Commit:** `ad72d63`. All 177 tests PASS.
+
+### S7 Fail-Fast & Anti-Fallback Doctrine Audit (2026-11-03)
+- **Principle:** Fallbacks are architectural smell masking critical defects and causing silent data corruption. Fail-fast is mandatory.
+- **Defects Remediated in Plan:**
+  1. *Host UI Dialogs:* Eliminated `try { ... } catch { return null; }` in `setHostInteractionRequester`. Rejections and timeouts propagate explicitly.
+  2. *Session Directory:* Eliminated silent fallback to `${cwd}/.durable-session`. `--session` is strictly required in RPC mode, failing fast to prevent lock collision across parallel IDE threads.
+  3. *Malformed JSON-RPC Responses:* Eliminated silent fallthrough in `StdioJsonRpcServer`. If client returns invalid payload for pending request ID, the promise is rejected immediately with `MalformedJsonRpcResponseError`.
+  4. *Model Availability:* Model resolution fails fast with `SubagentModelUnavailableError` rather than silently picking random `available[0]`.
+- **Commit:** `0bdfc0a`. All 177 tests PASS.
