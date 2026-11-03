@@ -203,6 +203,15 @@ A deep cross-system audit against downstream consumers (`bb-plugin-provider-pi-d
 - **Blind Spot:** If Node.js terminates on `uncaughtException` or `unhandledRejection`, SQLite WAL and `.lock` files remain orphaned on disk, locking subsequent runs of the thread.
 - **Mitigation:** `packages/runner/src/main.ts` binds `SIGTERM`, `SIGINT`, `uncaughtException`, and `unhandledRejection` to `await runner.close()`, guaranteeing atomic unlock and sandbox disposal.
 
+### 12. Fail-Fast Error Boundary Invariant (Anti-Fallback Doctrine)
+- **Blind Spot:** Silent fallbacks (falling back to a random model, falling back to an unvalidated session directory in cwd, swallowing failed UI dialogs into `null`, or ignoring corrupted lockfiles) mask underlying defects and cause catastrophic data corruption or unexpected behavior downstream.
+- **Mitigation:**
+  * **No Silent Model Substitution:** If a requested or default model is unavailable, throw `SubagentModelUnavailableError` immediately. Never silently switch to `available[0]`.
+  * **No Silent CWD Pollution:** If running in persistent RPC mode without `--session`, fail fast with exit code 1. Never silently fall back to `${cwd}/.durable-session`.
+  * **No Silent Interaction Swallowing:** If host UI dialog RPC fails or times out, propagate the rejection. Never silently return `null`.
+  * **No Silent Malformed Response Fallthrough:** If the client responds to a pending request with malformed JSON-RPC, reject the pending request promise with `MalformedJsonRpcResponseError`.
+  * **No Silent Stale Lock Eviction on Corrupted Owner:** If `session.owner.json` is unparseable syntax, throw `CorruptedSessionOwnerError` instead of treating it as missing (which could kill a live process).
+
 ---
 
 To prevent accidental loss of mature, battle-tested domain logic (175 tests across 64 suites), all existing code is categorized into three explicit zones before refactoring:
@@ -531,6 +540,13 @@ export class StdioJsonRpcServer implements ITransportStrategy {
             else pending.resolve(result);
             return;
           }
+        } else if (parsed.id !== null && this.pendingOutbound.has(parsed.id)) {
+          // Fail-fast: client responded to our request with invalid JSON-RPC payload
+          const pending = this.pendingOutbound.get(parsed.id)!;
+          clearTimeout(pending.timer);
+          this.pendingOutbound.delete(parsed.id);
+          pending.reject(new Error(`Malformed JSON-RPC response from client: ${responseVal.error.message}`));
+          return;
         }
       }
 
@@ -1690,14 +1706,11 @@ export function setupHostToolBridge(transport: ITransportStrategy): void {
   });
 
   setHostInteractionRequester(async (kind: string, payload: { title?: string; message?: string; data?: unknown }) => {
-    try {
-      return await transport.request("host/interaction", {
-        interactionKind: kind,
-        ...payload,
-      });
-    } catch {
-      return null;
-    }
+    // Fail-fast: dialog requests must propagate timeout or client rejections explicitly, never swallow to null
+    return await transport.request("host/interaction", {
+      interactionKind: kind,
+      ...payload,
+    });
   });
 }
 ```
@@ -1729,10 +1742,14 @@ export interface AssembleOptions {
 
 export async function assembleDurableZero(options: AssembleOptions = {}) {
   const cwd = options.cwd ?? process.cwd();
-  const sessionDir = options.sessionDir ?? options.session ?? `${cwd}/.durable-session`;
+  const sessionDir = options.sessionDir ?? options.session;
+  if (!sessionDir && !options.headless) {
+    throw new Error("Fail-fast: --session or --session-dir is strictly required for persistent runner execution. Silent fallback to cwd is prohibited.");
+  }
+  const resolvedSessionDir = sessionDir ?? `${cwd}/.durable-session`;
 
   const env = new LocalNodeExecutionEnv({ cwd });
-  const store = new PiDurableSessionStore({ sessionDir });
+  const store = new PiDurableSessionStore({ sessionDir: resolvedSessionDir });
   const modelProvider = new PiAiModelProvider();
   const codemodeRunner = new QuickJsCodemodeRunner();
   const resourceLoader = options.headless ? undefined : createPiResourceExtension({ cwd });
@@ -1797,6 +1814,12 @@ import { assembleDurableZero } from "./composition.ts";
 async function main() {
   const argv = process.argv.slice(2);
   const args = parseCliArgs(argv);
+
+  // Fail-fast: in persistent RPC mode, --session or --session-dir is strictly required
+  if (!args.noSession && !args.session && !args.sessionDir) {
+    console.error("[Runner] Fatal: --session or --session-dir is required in RPC mode. Silent fallback to cwd is prohibited to prevent multi-thread lock collisions.");
+    process.exit(1);
+  }
 
   const runner = await assembleDurableZero({
     cwd: args.cwd,
