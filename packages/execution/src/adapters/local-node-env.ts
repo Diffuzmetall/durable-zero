@@ -109,38 +109,6 @@ export class LocalNodeExecutionEnv implements IExecutionEnvironment {
     return await fs.readdir(this.resolvePath(dirPath));
   }
 
-  absolutePath(filePath: string): { ok: boolean; value: string } {
-    return { ok: true, value: this.resolvePath(filePath) };
-  }
-
-  joinPath(...segments: string[]): { ok: boolean; value: string } {
-    return { ok: true, value: path.join(...segments) };
-  }
-
-  async readTextFile(filePath: string): Promise<{ ok: boolean; value: string }> {
-    const content = await this.readFile(filePath);
-    return { ok: true, value: content };
-  }
-
-  async readBinaryFile(filePath: string): Promise<{ ok: boolean; value: Buffer }> {
-    const content = await fs.readFile(this.resolvePath(filePath));
-    return { ok: true, value: content };
-  }
-
-  async fileInfo(filePath: string): Promise<{ ok: boolean; value: FileStat }> {
-    const info = await this.statFile(filePath);
-    return { ok: true, value: info };
-  }
-
-  async exists(filePath: string): Promise<{ ok: boolean; value: boolean }> {
-    try {
-      await fs.access(this.resolvePath(filePath));
-      return { ok: true, value: true };
-    } catch {
-      return { ok: true, value: false };
-    }
-  }
-
   async cleanup(_context?: unknown): Promise<void> {
     // Local node environment requires no teardown
   }

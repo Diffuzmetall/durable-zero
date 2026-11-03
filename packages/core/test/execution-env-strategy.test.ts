@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { ExecutionEnvs } from "../src/harness-setup.ts";
+import { openDurable } from "../src/runtime.ts";
 import type { IExecutionEnvironment, ExecutionEnvFactory } from "../src/tools/execution-env.ts";
 
 describe("ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)", () => {
@@ -30,6 +31,13 @@ describe("ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)", () => {
     assert.throws(
       () => new ExecutionEnvs("/default", undefined as unknown as ExecutionEnvFactory),
       /ExecutionEnvFactory is required/,
+    );
+  });
+
+  it("fails fast in openDurable when executionEnvFactory is not provided (AP-012, AP-072, AP-073)", async () => {
+    await assert.rejects(
+      async () => await openDurable({ sessionDir: "/tmp/non-existent" }),
+      /ExecutionEnvFactory is required in openDurable/,
     );
   });
 });

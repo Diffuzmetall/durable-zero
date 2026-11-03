@@ -8,7 +8,6 @@ import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agen
 import {
   createRegistry
 } from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import { createToolSearchExtension } from "@earendil-works/pi-durable/tool-search";
 import {
   resolveCliModel
@@ -92,10 +91,10 @@ function buildRules(tools) {
   addRule("Show file paths clearly when working with files");
   return rules.map((r) => `- ${r}`).join("\n");
 }
-function tryReadPromptFile(path, label) {
-  if (!path || !existsSync(path)) return void 0;
+function tryReadPromptFile(path2, label) {
+  if (!path2 || !existsSync(path2)) return void 0;
   try {
-    return readFileSync(path, "utf8").trim();
+    return readFileSync(path2, "utf8").trim();
   } catch (err) {
     console.error(`Warning: failed to read ${label ?? "prompt"}: ${err}`);
     return void 0;
@@ -463,20 +462,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve4) => {
-            const timer = setTimeout(() => resolve4(), holdTimeoutMs);
+          await new Promise((resolve5) => {
+            const timer = setTimeout(() => resolve5(), holdTimeoutMs);
             timer.unref?.();
             watch2.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve4();
+                resolve5();
               }
               return Promise.resolve();
             });
             void watch2.closed.then(() => {
               clearTimeout(timer);
-              resolve4();
+              resolve5();
             });
           });
         } finally {
@@ -913,14 +912,20 @@ async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, pro
 }
 var ExecutionEnvs = class {
   #defaultCwd;
+  #factory;
   #envs = /* @__PURE__ */ new Map();
-  constructor(defaultCwd) {
+  constructor(defaultCwd, factory) {
+    if (typeof factory !== "function") {
+      throw new Error("ExecutionEnvFactory is required (AP-012, AP-072, AP-073: no fallback in core)");
+    }
     this.#defaultCwd = defaultCwd;
+    this.#factory = factory;
   }
-  env = ({ cwd = this.#defaultCwd }) => {
+  env = ({ cwd = this.#defaultCwd, conversationId }) => {
     let env = this.#envs.get(cwd);
     if (env === void 0) {
-      env = new NodeExecutionEnv({ cwd });
+      const created = this.#factory({ cwd, conversationId });
+      env = created;
       this.#envs.set(cwd, env);
     }
     return env;
@@ -1573,23 +1578,23 @@ var HostRpcManager = class {
   }
   forwardToolCall = (toolName, args2) => {
     const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
-    return new Promise((resolve4) => {
+    return new Promise((resolve5) => {
       const timer = setTimeout(() => {
         this.pendingToolCalls.delete(callId);
-        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+        resolve5({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
       }, 12e4);
-      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
+      this.pendingToolCalls.set(callId, { resolve: resolve5, timer });
       this.output({ type: "host_tool_call", callId, toolName, arguments: args2 ?? {} });
     });
   };
   requestInteraction = (kind, payload) => {
     const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
-    return new Promise((resolve4) => {
+    return new Promise((resolve5) => {
       const timer = setTimeout(() => {
         this.pendingInteractions.delete(id);
-        resolve4(null);
+        resolve5(null);
       }, 18e4);
-      this.pendingInteractions.set(id, { resolve: resolve4, timer });
+      this.pendingInteractions.set(id, { resolve: resolve5, timer });
       this.output({
         type: "host_interaction_request",
         id,
@@ -1879,8 +1884,8 @@ var SchemaPort = class {
       for (const err of Value.Errors(s, value)) {
         const errObj = err;
         const rawPath = errObj.path;
-        const path = rawPath ? rawPath.replace(/^\//, "") : "root";
-        errors.push(`- ${path}: ${errObj.message ?? "validation error"}`);
+        const path2 = rawPath ? rawPath.replace(/^\//, "") : "root";
+        errors.push(`- ${path2}: ${errObj.message ?? "validation error"}`);
       }
       return { isValid: false, errors };
     } catch (err) {
@@ -2293,7 +2298,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve4, reject) => {
+      return new Promise((resolve5, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2306,7 +2311,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve4();
+                resolve5();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2315,7 +2320,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve4();
+            resolve5();
           } catch (error) {
             reject(error);
           }
@@ -2520,8 +2525,11 @@ async function loadHarnessEnvironment(location, options, envs) {
 
 // packages/core/src/runtime.ts
 async function openDurable(options = {}) {
+  if (!options.executionEnvFactory) {
+    throw new Error("ExecutionEnvFactory is required in openDurable (AP-012, AP-072, AP-073: no fallback in core)");
+  }
   const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
-  const envs = new ExecutionEnvs(location.cwd);
+  const envs = new ExecutionEnvs(location.cwd, options.executionEnvFactory);
   let harness;
   let envState;
   try {
@@ -3924,7 +3932,8 @@ var DurableEngine = class _DurableEngine {
       cli: {
         extensions: options.extensions,
         noGlobalExtensions: options.noGlobalExtensions
-      }
+      },
+      executionEnvFactory: options.executionEnvFactory
     });
     const engine = new _DurableEngine(instance, sessionDir);
     engine.watcher = await startSubagentWatcher(
@@ -4064,6 +4073,89 @@ function attachJsonlLineReader(stream, onLine) {
     stream.off("end", onEnd);
   };
 }
+
+// packages/execution/src/adapters/local-node-env.ts
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { exec, execFile } from "node:child_process";
+var LocalNodeExecutionEnv = class {
+  id;
+  cwd;
+  constructor(options) {
+    this.id = options?.id ?? "local-node";
+    this.cwd = options?.cwd ?? process.cwd();
+  }
+  resolvePath(filePath) {
+    return path.isAbsolute(filePath) ? filePath : path.resolve(this.cwd, filePath);
+  }
+  async readFile(filePath) {
+    return await fs.readFile(this.resolvePath(filePath), "utf8");
+  }
+  async writeFile(filePath, content) {
+    const fullPath = this.resolvePath(filePath);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, content, "utf8");
+  }
+  async exec(argvOrCommand, options, context) {
+    return new Promise((resolve5) => {
+      const execCwd = options?.cwd ?? this.cwd;
+      const execEnv = { ...process.env, ...options?.env };
+      const timeout = options?.timeoutMs ?? 3e4;
+      let stdout = "";
+      let stderr = "";
+      const handleOutput = (chunk, isErr = false) => {
+        const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
+        if (isErr) stderr += text;
+        else stdout += text;
+        if (options?.onOutput) {
+          const buf = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+          options.onOutput(buf, context, { skipped: false });
+        }
+      };
+      const child = typeof argvOrCommand === "string" ? exec(argvOrCommand, { cwd: execCwd, env: execEnv, timeout, signal: options?.signal }) : execFile(argvOrCommand[0], argvOrCommand.slice(1), {
+        cwd: execCwd,
+        env: execEnv,
+        timeout,
+        signal: options?.signal
+      });
+      child.stdout?.on("data", (chunk) => handleOutput(chunk, false));
+      child.stderr?.on("data", (chunk) => handleOutput(chunk, true));
+      child.on("error", (err) => {
+        resolve5({
+          ok: false,
+          value: { exitCode: 1 },
+          stdout,
+          stderr: stderr || err.message,
+          exitCode: 1
+        });
+      });
+      child.on("close", (code) => {
+        const exitCode = code ?? 0;
+        resolve5({
+          ok: exitCode === 0,
+          value: { exitCode },
+          stdout,
+          stderr,
+          exitCode
+        });
+      });
+    });
+  }
+  async statFile(filePath) {
+    const stat = await fs.stat(this.resolvePath(filePath));
+    return {
+      isFile: stat.isFile(),
+      isDirectory: stat.isDirectory(),
+      sizeBytes: stat.size,
+      mtimeMs: stat.mtimeMs
+    };
+  }
+  async listFiles(dirPath) {
+    return await fs.readdir(this.resolvePath(dirPath));
+  }
+  async cleanup(_context) {
+  }
+};
 
 // packages/core/src/cli-args.ts
 function parseCliArgs(argv2) {
@@ -4273,19 +4365,19 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
 // packages/core/src/session-fork.ts
 import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import { join as join3, resolve as resolve3 } from "node:path";
+import { join as join3, resolve as resolve4 } from "node:path";
 function forkSessionDatabase(options) {
-  let sourceDir = resolve3(options.sourceDir);
+  let sourceDir = resolve4(options.sourceDir);
   if (sourceDir.endsWith(".sqlite")) {
-    sourceDir = resolve3(sourceDir, "..");
+    sourceDir = resolve4(sourceDir, "..");
   }
   const sourceDb = join3(sourceDir, "session.sqlite");
   if (!existsSync2(sourceDir) || !existsSync2(sourceDb)) {
     throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
   }
-  let targetDir = resolve3(options.targetDir);
+  let targetDir = resolve4(options.targetDir);
   if (targetDir.endsWith(".sqlite")) {
-    targetDir = resolve3(targetDir, "..");
+    targetDir = resolve4(targetDir, "..");
   }
   mkdirSync(targetDir, { recursive: true });
   const targetDb = join3(targetDir, "session.sqlite");
@@ -4915,10 +5007,10 @@ var runnerResponseSchema = z11.discriminatedUnion("success", [
 // packages/core/src/shared/version.ts
 import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join as join4 } from "node:path";
+import { dirname as dirname2, join as join4 } from "node:path";
 import { fileURLToPath } from "node:url";
 var esmRequire = createRequire(import.meta.url);
-var currentDir = dirname(fileURLToPath(import.meta.url));
+var currentDir = dirname2(fileURLToPath(import.meta.url));
 function getPiDurableVersion() {
   try {
     const durablePkg = esmRequire.resolve("@earendil-works/pi-durable/package.json");
@@ -5835,7 +5927,8 @@ async function main() {
     continueSession: args.continueSession,
     session: args.session,
     cli: { provider: args.provider, model: args.model, thinking: args.thinking, skills: args.skills, extension: args.extension },
-    prompt: { systemPromptPath: args.systemPromptPath, appendSystemPromptPath: args.appendSystemPromptPath }
+    prompt: { systemPromptPath: args.systemPromptPath, appendSystemPromptPath: args.appendSystemPromptPath },
+    executionEnvFactory: (target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd })
   });
   activeDurable = durable;
   activeControlChannel = startRunnerControlChannel(durable.view.current().session.directory, durable.harness);

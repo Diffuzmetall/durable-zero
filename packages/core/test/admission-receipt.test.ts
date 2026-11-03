@@ -11,9 +11,19 @@ test("controller.submit returns atomic AdmissionReceipt upon input admission", {
 	let instance: any;
 
 	try {
+		const mockEnv = {
+			id: "mock-env",
+			cwd: sessionDir,
+			readFile: async () => "",
+			writeFile: async () => {},
+			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
+			cleanup: async () => {},
+		};
+
 		instance = await openDurable({
 			sessionDir,
 			cli: { noGlobalExtensions: true },
+			executionEnvFactory: () => mockEnv,
 		});
 
 		const receipt: AdmissionReceipt = await instance.controller.submit("Hello world", "followUp");

@@ -2,6 +2,7 @@ export { DurableEngine, type DurableEngineOptions } from "./engine.ts";
 import { setupRunnerModels } from "./model-setup.ts";
 import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";
 import { openDurable } from "./runtime.ts";
+import { LocalNodeExecutionEnv } from "../../execution/src/index.ts";
 import type { OpenDurableOptions, OpenDurableResult } from "./runtime-types.ts";
 import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import type { RunnerEvent } from "./bridge/contracts.ts";
@@ -122,6 +123,7 @@ async function main() {
 		session: args.session,
 		cli: { provider: args.provider, model: args.model, thinking: args.thinking, skills: args.skills, extension: args.extension },
 		prompt: { systemPromptPath: args.systemPromptPath, appendSystemPromptPath: args.appendSystemPromptPath },
+		executionEnvFactory: (target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }),
 	});
 	activeDurable = durable;
 	activeControlChannel = startRunnerControlChannel(durable.view.current().session.directory, durable.harness);

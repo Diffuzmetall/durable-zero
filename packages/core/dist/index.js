@@ -5,7 +5,6 @@ import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agen
 import {
   createRegistry
 } from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import { createToolSearchExtension } from "@earendil-works/pi-durable/tool-search";
 import {
   resolveCliModel
@@ -917,14 +916,20 @@ async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, pro
 }
 var ExecutionEnvs = class {
   #defaultCwd;
+  #factory;
   #envs = /* @__PURE__ */ new Map();
-  constructor(defaultCwd) {
+  constructor(defaultCwd, factory) {
+    if (typeof factory !== "function") {
+      throw new Error("ExecutionEnvFactory is required (AP-012, AP-072, AP-073: no fallback in core)");
+    }
     this.#defaultCwd = defaultCwd;
+    this.#factory = factory;
   }
-  env = ({ cwd = this.#defaultCwd }) => {
+  env = ({ cwd = this.#defaultCwd, conversationId }) => {
     let env = this.#envs.get(cwd);
     if (env === void 0) {
-      env = new NodeExecutionEnv({ cwd });
+      const created = this.#factory({ cwd, conversationId });
+      env = created;
       this.#envs.set(cwd, env);
     }
     return env;
@@ -2545,8 +2550,11 @@ async function loadHarnessEnvironment(location, options, envs) {
 
 // packages/core/src/runtime.ts
 async function openDurable(options = {}) {
+  if (!options.executionEnvFactory) {
+    throw new Error("ExecutionEnvFactory is required in openDurable (AP-012, AP-072, AP-073: no fallback in core)");
+  }
   const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
-  const envs = new ExecutionEnvs(location.cwd);
+  const envs = new ExecutionEnvs(location.cwd, options.executionEnvFactory);
   let harness;
   let envState;
   try {
@@ -3949,7 +3957,8 @@ var DurableEngine = class _DurableEngine {
       cli: {
         extensions: options.extensions,
         noGlobalExtensions: options.noGlobalExtensions
-      }
+      },
+      executionEnvFactory: options.executionEnvFactory
     });
     const engine = new _DurableEngine(instance, sessionDir);
     engine.watcher = await startSubagentWatcher(

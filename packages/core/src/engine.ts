@@ -1,5 +1,6 @@
 import { openDurable } from "./runtime.ts";
 import type { AdmissionReceipt } from "./runtime-types.ts";
+import type { ExecutionEnvFactory } from "./tools/execution-env.ts";
 import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";
 import type { RunnerEvent } from "../../contracts/src/index.ts";
@@ -11,6 +12,7 @@ export interface DurableEngineOptions {
 	continueSession?: boolean;
 	extensions?: string[];
 	noGlobalExtensions?: boolean;
+	executionEnvFactory?: ExecutionEnvFactory;
 }
 
 export class DurableEngine {
@@ -48,6 +50,7 @@ export class DurableEngine {
 				extensions: options.extensions,
 				noGlobalExtensions: options.noGlobalExtensions,
 			},
+			executionEnvFactory: options.executionEnvFactory,
 		});
 		const engine = new DurableEngine(instance, sessionDir);
 		engine.watcher = await startSubagentWatcher(

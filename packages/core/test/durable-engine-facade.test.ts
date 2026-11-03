@@ -7,8 +7,19 @@ import { mkdtempSync, rmSync } from "node:fs";
 
 test("DurableEngine: provides a cohesive in-process facade with encapsulated instance", async () => {
 	const sessionDir = mkdtempSync(join(tmpdir(), "pi-engine-facade-"));
+	const mockEnv = {
+		id: "mock-env",
+		cwd: sessionDir,
+		readFile: async () => "",
+		writeFile: async () => {},
+		exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
+		cleanup: async () => {},
+	};
 	try {
-		const engine = await DurableEngine.open({ sessionDir });
+		const engine = await DurableEngine.open({
+			sessionDir,
+			executionEnvFactory: () => mockEnv,
+		});
 		assert.ok(engine);
 		assert.equal(typeof engine.prompt, "function");
 		assert.equal(typeof engine.events, "function");

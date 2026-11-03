@@ -12,9 +12,19 @@ test("openDurable calls beforeResume hook strictly before harness.resume", { tim
 	let instance: any;
 
 	try {
+		const mockEnv = {
+			id: "mock-env",
+			cwd: sessionDir,
+			readFile: async () => "",
+			writeFile: async () => {},
+			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
+			cleanup: async () => {},
+		};
+
 		instance = await openDurable({
 			sessionDir,
 			cli: { noGlobalExtensions: true },
+			executionEnvFactory: () => mockEnv,
 			beforeResume: async (harness) => {
 				executionOrder.push("beforeResume:start");
 				assert.ok(harness, "harness must be passed to beforeResume hook");
