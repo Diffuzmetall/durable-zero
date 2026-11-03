@@ -40,6 +40,11 @@
       "types": "./packages/adapter-pi-durable/src/index.ts",
       "import": "./packages/adapter-pi-durable/dist/index.js",
       "default": "./packages/adapter-pi-durable/dist/index.js"
+    },
+    "./adapter-pi-ai": {
+      "types": "./packages/adapter-pi-ai/src/index.ts",
+      "import": "./packages/adapter-pi-ai/dist/index.js",
+      "default": "./packages/adapter-pi-ai/dist/index.js"
     }
   },
   "typesVersions": {
@@ -58,6 +63,9 @@
       ],
       "adapter-pi-durable": [
         "./packages/adapter-pi-durable/src/index.ts"
+      ],
+      "adapter-pi-ai": [
+        "./packages/adapter-pi-ai/src/index.ts"
       ]
     }
   },
