@@ -1,0 +1,27 @@
+{
+  "name": "@durable-zero/runner",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "bin": {
+    "durable-runner": "./dist/index.js"
+  },
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/contracts": "workspace:*",
+    "@durable-zero/protocol": "workspace:*",
+    "@durable-zero/core": "workspace:*",
+    "@durable-zero/execution": "workspace:*",
+    "@durable-zero/adapter-pi-durable": "workspace:*",
+    "@durable-zero/adapter-pi-ai": "workspace:*",
+    "@durable-zero/adapter-codemode": "workspace:*",
+    "@durable-zero/extension-pi-resource": "workspace:*"
+  }
+}
