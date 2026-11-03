@@ -89,3 +89,12 @@
   3. *Malformed JSON-RPC Responses:* Eliminated silent fallthrough in `StdioJsonRpcServer`. If client returns invalid payload for pending request ID, the promise is rejected immediately with `MalformedJsonRpcResponseError`.
   4. *Model Availability:* Model resolution fails fast with `SubagentModelUnavailableError` rather than silently picking random `available[0]`.
 - **Commit:** `0bdfc0a`. All 177 tests PASS.
+
+### S8 Orchestrator Steer: Fallback Doctrine & Timeout Enforcement (2026-11-03)
+- **Defect Detected by Review:** `ExecutionEnvs` in `harness-setup.ts` retained an infrastructure fallback: `else { env = new NodeExecutionEnv({ cwd }); }`, violating DIP (AP-012) and leaking concrete Node adapter into Core.
+- **Architectural Law Enforced:** Fallbacks and defaults are permitted EXCLUSIVELY at the configuration / Control Plane / Composition Root layer (AP-020, AP-073). Inside Domain Core, all infrastructure fallbacks are strictly prohibited; dependencies/factories must be explicit and injected via DI/Strategy (AP-012, AP-072).
+- **Steered to Worker Subthread @thread:thr_kjpmq736xf:**
+  1. Update `/Users/vanya/Projects/arch-rules/arch-rules.md` (AP-012 / AP-073) with the Fallback Doctrine.
+  2. Purge `NodeExecutionEnv` from `packages/core/src/harness-setup.ts`; require mandatory `ExecutionEnvFactory`.
+  3. Run all tests with mandatory timeouts (`--test-timeout 10000`).
+- **GBrain Updated:** Facts persisted to `arch-rules` and `arch-improvement-loop`.
