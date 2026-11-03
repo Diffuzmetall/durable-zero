@@ -22,6 +22,19 @@
   - **AP-020 & AP-073 (Composition Root & Separation of Declaration from Configuration):** Domain packages (`core`, `protocol`, `execution`) declare interfaces and passive factories; object wiring and registry population occur exclusively in the application runner (`packages/runner`).
   - **AP-071 (Node.js Default):** Native Node.js ESM baseline.
   - **AP-072 (Domain Strategies over Procedural Switch/Case):** Transports, execution environments, and configuration sources are polymorphic strategies.
+  - **AP-074 (Explicit Dependency Injection & Zero Singletons):** All dependencies flow strictly top-down from Composition Root. Zero mutable module variables or global state.
+
+---
+
+## Anti-Bikeshedding & Native Pi Adoption Invariant (CRITICAL)
+
+**Iron Rule:** Do NOT reinvent wheels or build an Inner Platform Effect on top of Pi.
+`@earendil-works/pi-durable`, `@earendil-works/pi-ai`, `@earendil-works/pi-codemode`, and `@earendil-works/chord` are the core engine SDK.
+- **Storage:** Use `openNodeSqliteStorage`, `createSession`, `defineDocFamily`, `session.commit`, and `session.snapshot`. Do NOT write raw SQL tables or custom document serializers.
+- **Agent Turns & Prompts:** `Harness` in `pi-durable` runs turns, streams deltas, tracks task graphs, and handles aborts. Do NOT write fake prompt dispatchers or mock run loops in Core.
+- **Models:** Use `ModelRuntime` and `pi-ai` providers. Adapters wrap model discovery and options mapping.
+- **Codemode:** Use `CodemodeSandbox` from `pi-codemode` and `createCodemodeExtension` from `pi-durable/codemode`. Do NOT write custom QuickJS WASM loaders.
+- **Target for Elimination:** ONLY `@earendil-works/pi-coding-agent` (CLI, ink/react TUI, interactive prompt loops, themes). The runtime engine (`pi-durable`, `pi-agent-core`, `pi-ai`) is embraced and leveraged natively.
 
 ---
 
@@ -1086,7 +1099,7 @@ git commit -m "refactor(storage): delete custom task graph mappers in favor of n
 
 **Goal:** Extract model generation and QuickJS WASM execution into separate ACL packages. Core declares port interfaces (`IModelProvider`, `ICodemodeRunner`), while adapters encapsulate `@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`, and `@earendil-works/pi-codemode`.
 
-#### Task 3.1: Create `@durable-zero/adapter-pi-ai`
+#### Task 3.1: Create `@durable-zero/adapter-pi-ai` (Model Discovery & Runtime Adapter)
 
 **Files:**
 - Create: `packages/core/src/models/provider.ts`
@@ -1105,11 +1118,11 @@ import assert from "node:assert/strict";
 import { PiAiModelProvider } from "../src/index.ts";
 
 describe("@durable-zero/adapter-pi-ai (IModelProvider Adapter)", () => {
-  it("normalizes model references and maps thinking levels", async () => {
+  it("normalizes model references and maps thinking levels using native Pi AI", async () => {
     const provider = new PiAiModelProvider();
-    const resolved = await provider.resolveModel({ provider: "antigravity", modelId: "antigravity/gemini-3.8-flash" });
-    assert.equal(resolved.provider, "antigravity");
-    assert.equal(resolved.modelId, "gemini-3.8-flash");
+    const resolved = await provider.resolveModel({ provider: "antigravity", model: "antigravity/gemini-3.8-flash" });
+    assert.equal(resolved.model?.provider, "antigravity");
+    assert.equal(resolved.model?.modelId, "gemini-3.8-flash");
   });
 });
 ```
@@ -1123,15 +1136,9 @@ export interface ModelRef {
   modelId: string;
 }
 
-export interface StreamDelta {
-  type: "text" | "tool_call" | "thought";
-  content?: string;
-  toolCall?: { id: string; name: string; args: unknown };
-}
-
 export interface IModelProvider {
-  resolveModel(ref?: ModelRef): Promise<ModelRef>;
-  generateStream(model: ModelRef, prompt: string, onDelta: (delta: StreamDelta) => void): Promise<{ output: string }>;
+  resolveModel(ref?: { provider?: string; model?: string; thinking?: string }): Promise<{ model?: ModelRef; thinkingLevel?: string }>;
+  getAvailableModels(): Promise<ModelRef[]>;
 }
 ```
 
@@ -1153,13 +1160,14 @@ Create `packages/adapter-pi-ai/package.json`:
   "dependencies": {
     "@durable-zero/core": "workspace:*",
     "@earendil-works/pi-agent-core": "1.5.0",
-    "@earendil-works/pi-ai": "1.5.0"
+    "@earendil-works/pi-ai": "1.5.0",
+    "@earendil-works/pi-coding-agent": "1.5.0"
   }
 }
 ```
 
-Implement `PiAiModelProvider` wrapping `createModels()` and streaming deltas.
-Relocate `packages/core/src/model-setup.ts` into `packages/adapter-pi-ai/src/model-setup.ts`.
+Implement `PiAiModelProvider` directly delegating to `ModelRuntime` and `setupRunnerModels` from `model-setup.ts`.
+**Anti-Bikeshed:** Do NOT write custom LLM streaming or HTTP clients. Harness and pi-ai handle execution. Relocate `packages/core/src/model-setup.ts` into `packages/adapter-pi-ai/src/model-setup.ts`.
 
 - [ ] **Step 3: Run test to verify it passes**
 
@@ -1175,7 +1183,7 @@ git commit -m "feat(adapter-pi-ai): create LLM adapter implementing core/models/
 
 ---
 
-#### Task 3.2: Create `@durable-zero/adapter-codemode` with Deterministic Replay
+#### Task 3.2: Create `@durable-zero/adapter-codemode` (Native Codemode Adapter)
 
 **Files:**
 - Create: `packages/core/src/tools/sandbox.ts`
@@ -1183,54 +1191,26 @@ git commit -m "feat(adapter-pi-ai): create LLM adapter implementing core/models/
 - Create: `packages/adapter-codemode/src/codemode-runner.ts`
 - Create: `packages/adapter-codemode/src/index.ts`
 - Relocate: `packages/core/src/builtin-extensions/codemode.ts` -> `packages/adapter-codemode/src/codemode.ts`
-- Test: `packages/adapter-codemode/test/codemode-replay.test.ts`
+- Test: `packages/adapter-codemode/test/codemode.test.ts`
 
-- [ ] **Step 1: Write failing test for deterministic codemode replay**
+- [ ] **Step 1: Write test for Codemode adapter**
 
-Create `packages/adapter-codemode/test/codemode-replay.test.ts`:
+Create `packages/adapter-codemode/test/codemode.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { QuickJsCodemodeRunner } from "../src/index.ts";
+import { CodemodeExtension } from "../src/index.ts";
 
-describe("@durable-zero/adapter-codemode (Deterministic Replay)", () => {
-  it("replays journaled tool calls without physically re-executing tools", async () => {
-    const runner = new QuickJsCodemodeRunner();
-    let executions = 0;
-    const tools = [
-      {
-        name: "test_tool",
-        execute: async () => {
-          executions++;
-          return "fresh-result";
-        },
-      },
-    ];
-
-    const result = await runner.run(`return await tools.test_tool();`, tools);
-    assert.equal(result.ok, true);
-    assert.equal(result.value, "fresh-result");
-    assert.equal(executions, 1);
-    await runner.close();
+describe("@durable-zero/adapter-codemode (Native Pi Codemode Adapter)", () => {
+  it("encapsulates CodemodeSandbox and manages sandbox lifecycle cleanly", async () => {
+    const ext = new CodemodeExtension();
+    assert.equal(ext.id, "codemode");
+    await ext.teardown();
   });
 });
 ```
 
-- [ ] **Step 2: Implement `ICodemodeRunner` port in core and `QuickJsCodemodeRunner` in adapter**
-
-Create `packages/core/src/tools/sandbox.ts`:
-```typescript
-export interface CodemodeExecutionResult {
-  ok: boolean;
-  value?: unknown;
-  error?: string;
-}
-
-export interface ICodemodeRunner {
-  run(code: string, tools: Array<{ name: string; execute: (args: unknown) => Promise<unknown> }>): Promise<CodemodeExecutionResult>;
-  close(): Promise<void>;
-}
-```
+- [ ] **Step 2: Implement `@durable-zero/adapter-codemode` using native `CodemodeSandbox`**
 
 Create `packages/adapter-codemode/package.json`:
 ```json
@@ -1250,13 +1230,14 @@ Create `packages/adapter-codemode/package.json`:
   "dependencies": {
     "@durable-zero/core": "workspace:*",
     "@earendil-works/pi-codemode": "1.5.0",
-    "quickjs-wasi": "3.6.2"
+    "@earendil-works/pi-durable": "1.5.0"
   }
 }
 ```
 
-Implement `QuickJsCodemodeRunner` wrapping `sandbox.start()` with replay journaling and session documents.
-Relocate `codemode.ts` into `packages/adapter-codemode/src/`.
+**Anti-Bikeshed:** Directly use `CodemodeSandbox` from `@earendil-works/pi-codemode` and `createCodemodeExtension` from `@earendil-works/pi-durable/codemode`.
+Do NOT write a custom QuickJS WASM loader or replay engine.
+Relocate `packages/core/src/builtin-extensions/codemode.ts` into `packages/adapter-codemode/src/codemode.ts`.
 
 - [ ] **Step 3: Run test to verify it passes**
 
