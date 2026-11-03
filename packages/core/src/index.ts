@@ -25,3 +25,4 @@ export * from "./session-storage.ts";
 export * from "./prompt.ts";
 export * from "./host-rpc.ts";
 export * from "./builtin-extensions/index.ts";
+export * from "./tools/execution-env.ts";

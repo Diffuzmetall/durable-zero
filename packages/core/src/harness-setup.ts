@@ -11,6 +11,7 @@ import {
 import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import { createToolSearchExtension } from "@earendil-works/pi-durable/tool-search";
 import type { SubagentPolicyRecord } from "./policy/types.ts";
+import type { ExecutionEnvFactory, IExecutionEnvironment } from "./tools/execution-env.ts";
 import {
 	type ModelRuntime,
 	type SettingsManager,
@@ -108,16 +109,23 @@ export async function createCodingRegistry(
 
 export class ExecutionEnvs {
 	readonly #defaultCwd: string;
-	readonly #envs = new Map<string, NodeExecutionEnv>();
+	readonly #factory?: ExecutionEnvFactory;
+	readonly #envs = new Map<string, NodeExecutionEnv | IExecutionEnvironment>();
 
-	constructor(defaultCwd: string) {
+	constructor(defaultCwd: string, factory?: ExecutionEnvFactory) {
 		this.#defaultCwd = defaultCwd;
+		this.#factory = factory;
 	}
 
-	readonly env = ({ cwd = this.#defaultCwd }: EnvTarget): NodeExecutionEnv => {
+	readonly env = ({ cwd = this.#defaultCwd, conversationId }: EnvTarget): NodeExecutionEnv | IExecutionEnvironment => {
 		let env = this.#envs.get(cwd);
 		if (env === undefined) {
-			env = new NodeExecutionEnv({ cwd });
+			if (this.#factory) {
+				const created = this.#factory({ cwd, conversationId });
+				env = created as IExecutionEnvironment;
+			} else {
+				env = new NodeExecutionEnv({ cwd });
+			}
 			this.#envs.set(cwd, env);
 		}
 		return env;
