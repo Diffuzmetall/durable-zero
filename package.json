@@ -22,9 +22,9 @@
       "default": "./packages/contracts/dist/index.js"
     },
     "./runner": {
-      "types": "./packages/core/src/runner-server.ts",
-      "import": "./packages/core/dist/runner.js",
-      "default": "./packages/core/dist/runner.js"
+      "types": "./packages/runner/src/index.ts",
+      "import": "./packages/runner/dist/index.js",
+      "default": "./packages/runner/dist/index.js"
     },
     "./protocol": {
       "types": "./packages/protocol/src/index.ts",
@@ -82,6 +82,9 @@
       ],
       "extension-pi-resource": [
         "./packages/extension-pi-resource/src/index.ts"
+      ],
+      "runner": [
+        "./packages/runner/src/index.ts"
       ]
     }
   },
