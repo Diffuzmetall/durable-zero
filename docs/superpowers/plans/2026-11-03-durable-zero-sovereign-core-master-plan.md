@@ -566,81 +566,55 @@ git commit -m "feat(protocol): create @durable-zero/protocol with full-duplex St
 
 ---
 
-#### Task 1.2: Create `@durable-zero/execution` Package
+#### Task 1.2: Declare `IExecutionEnvironment` Port in Core
 
 **Files:**
-- Create: `packages/execution/package.json`
-- Create: `packages/execution/src/contracts/types.ts`
-- Create: `packages/execution/src/contracts/environment.ts`
-- Create: `packages/execution/src/adapters/local-node-env.ts`
-- Create: `packages/execution/src/index.ts`
-- Test: `packages/execution/test/execution.test.ts`
+- Create: `packages/core/src/tools/execution-env.ts`
+- Modify: `packages/core/src/harness-setup.ts:109-131`
+- Test: `packages/core/test/execution-env-strategy.test.ts`
 
-- [ ] **Step 1: Write failing test for `@durable-zero/execution`**
+- [ ] **Step 1: Write failing test for pluggable ExecutionEnvFactory in Core**
 
-Create `packages/execution/test/execution.test.ts`:
+Create `packages/core/test/execution-env-strategy.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import {
-  LocalNodeExecutionEnv,
-  type IExecutionEnvironment,
-  type ExecutionEnvFactory,
-} from "../src/index.ts";
+import { ExecutionEnvs } from "../src/harness-setup.ts";
+import type { IExecutionEnvironment, ExecutionEnvFactory } from "../src/tools/execution-env.ts";
 
-describe("@durable-zero/execution Package", () => {
-  it("LocalNodeExecutionEnv implements IExecutionEnvironment interface", async () => {
-    const env: IExecutionEnvironment = new LocalNodeExecutionEnv({ cwd: process.cwd() });
-    assert.equal(env.cwd, process.cwd());
-    assert.equal(typeof env.readFile, "function");
-    assert.equal(typeof env.exec, "function");
-  });
-
-  it("supports pluggable custom ExecutionEnvFactory", () => {
-    const mockFactory: ExecutionEnvFactory = (target) => ({
-      id: "mock-custom-env",
-      cwd: target.cwd ?? "/tmp",
+describe("ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)", () => {
+  it("delegates environment instantiation to injected ExecutionEnvFactory without depending on concrete adapters", () => {
+    let calledWithCwd: string | undefined;
+    const mockEnv: IExecutionEnvironment = {
+      id: "mock-env",
+      cwd: "/sandbox/dir",
       readFile: async () => "data",
       writeFile: async () => {},
       exec: async () => ({ stdout: "ok", stderr: "", exitCode: 0 }),
       cleanup: async () => {},
-    });
-    const env = mockFactory({ cwd: "/sandbox" });
-    assert.equal(env.id, "mock-custom-env");
+    };
+
+    const factory: ExecutionEnvFactory = (target) => {
+      calledWithCwd = target.cwd;
+      return mockEnv;
+    };
+
+    const envs = new ExecutionEnvs("/default", factory);
+    const env = envs.env({ cwd: "/sandbox/dir" });
+    assert.equal(calledWithCwd, "/sandbox/dir");
+    assert.equal(env.id, "mock-env");
   });
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test packages/execution/test/execution.test.ts`
-Expected: FAIL with "Cannot find module '../src/index.ts'"
+Run: `node --test packages/core/test/execution-env-strategy.test.ts`
+Expected: FAIL with "Cannot find module '../src/tools/execution-env.ts'"
 
-- [ ] **Step 3: Implement `@durable-zero/execution` package**
+- [ ] **Step 3: Declare `IExecutionEnvironment` port in `packages/core/src/tools/execution-env.ts`**
 
-Create `packages/execution/package.json`:
-```json
-{
-  "name": "@durable-zero/execution",
-  "version": "0.8.1",
-  "type": "module",
-  "license": "MIT",
-  "main": "./dist/index.js",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./src/index.ts"
-    }
-  },
-  "dependencies": {
-    "@earendil-works/chord": "1.5.0",
-    "@earendil-works/pi-durable": "1.5.0"
-  }
-}
-```
-
-Create `packages/execution/src/contracts/types.ts`:
+Create `packages/core/src/tools/execution-env.ts`:
 ```typescript
 export interface ExecOptions {
   cwd?: string;
@@ -660,12 +634,6 @@ export interface FileStat {
   sizeBytes: number;
   mtimeMs: number;
 }
-```
-
-Create `packages/execution/src/contracts/environment.ts`:
-```typescript
-import type { Context } from "@earendil-works/chord";
-import type { ExecOptions, ExecResult, FileStat } from "./types.ts";
 
 export interface EnvTarget {
   readonly conversationId?: string | number;
@@ -680,172 +648,98 @@ export interface IExecutionEnvironment {
   exec(argv: string[], options?: ExecOptions): Promise<ExecResult>;
   statFile?(path: string): Promise<FileStat>;
   listFiles?(path: string, options?: { exclude?: string[]; maxEntries?: number }): Promise<string[]>;
-  cleanup(context?: Context): Promise<void>;
+  cleanup(context?: unknown): Promise<void>;
 }
 
 export type ExecutionEnvFactory = (target: EnvTarget) => IExecutionEnvironment | Promise<IExecutionEnvironment>;
 ```
 
-Create `packages/execution/src/adapters/local-node-env.ts`:
-```typescript
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import type { Context } from "@earendil-works/chord";
-import type { IExecutionEnvironment, EnvTarget } from "../contracts/environment.ts";
-import type { ExecOptions, ExecResult, FileStat } from "../contracts/types.ts";
-
-export class LocalNodeExecutionEnv implements IExecutionEnvironment {
-  readonly id: string;
-  readonly cwd: string;
-  private inner: NodeExecutionEnv;
-
-  constructor(target: EnvTarget) {
-    this.cwd = target.cwd ?? process.cwd();
-    this.id = `local-node:${this.cwd}`;
-    this.inner = new NodeExecutionEnv({ cwd: this.cwd });
-  }
-
-  async readFile(path: string): Promise<string> {
-    return this.inner.readTextFile(path);
-  }
-
-  async writeFile(path: string, content: string): Promise<void> {
-    return this.inner.writeFile(path, content);
-  }
-
-  async exec(argv: string[], options?: ExecOptions): Promise<ExecResult> {
-    let stdout = "";
-    let stderr = "";
-    const res = await this.inner.exec(argv, {
-      cwd: options?.cwd,
-      env: options?.env,
-      onOutput: (text, _ctx, info) => {
-        if (info.stream === "stderr") stderr += text;
-        else stdout += text;
-      },
-    });
-    return { stdout, stderr, exitCode: res.exitCode ?? 0 };
-  }
-
-  async cleanup(context?: Context): Promise<void> {
-    await this.inner.cleanup(context as any);
-  }
-}
-```
-
-Create `packages/execution/src/index.ts`:
-```typescript
-export * from "./contracts/types.ts";
-export * from "./contracts/environment.ts";
-export * from "./adapters/local-node-env.ts";
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test packages/execution/test/execution.test.ts`
-Expected: PASS (2 tests pass)
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add packages/execution/
-git commit -m "feat(execution): create @durable-zero/execution package with LocalNodeExecutionEnv"
-```
-
----
-
-#### Task 1.3: Wire ExecutionEnvFactory into `@durable-zero/core`
-
-**Files:**
-- Modify: `packages/core/package.json` (add `@durable-zero/execution` dependency)
-- Modify: `packages/core/src/harness-setup.ts:109-131`
-- Test: `packages/core/test/execution-env-strategy.test.ts`
-
-- [ ] **Step 1: Write failing test in core for injected execution factory**
-
-Create `packages/core/test/execution-env-strategy.test.ts`:
-```typescript
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { ExecutionEnvs } from "../src/harness-setup.ts";
-import type { IExecutionEnvironment } from "@durable-zero/execution";
-
-describe("ExecutionEnvs Strategy Pattern in Core (AP-072)", () => {
-  it("delegates environment instantiation to injected ExecutionEnvFactory", () => {
-    let calledWithCwd: string | undefined;
-    const mockEnv: IExecutionEnvironment = {
-      id: "mock-env",
-      cwd: "/sandbox/dir",
-      readFile: async () => "data",
-      writeFile: async () => {},
-      exec: async () => ({ stdout: "ok", stderr: "", exitCode: 0 }),
-      cleanup: async () => {},
-    };
-
-    const envs = new ExecutionEnvs("/default", (target) => {
-      calledWithCwd = target.cwd;
-      return mockEnv as any;
-    });
-
-    const env = envs.env({ cwd: "/sandbox/dir" } as any);
-    assert.equal(calledWithCwd, "/sandbox/dir");
-    assert.equal((env as any).id, "mock-env");
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test packages/core/test/execution-env-strategy.test.ts`
-Expected: FAIL
-
-- [ ] **Step 3: Modify `harness-setup.ts` to use `@durable-zero/execution`**
-
-Edit `packages/core/src/harness-setup.ts:109-131`:
-```typescript
-import type { ExecutionEnvFactory } from "@durable-zero/execution";
-import { LocalNodeExecutionEnv } from "@durable-zero/execution";
-
-export class ExecutionEnvs {
-	readonly #defaultCwd: string;
-	readonly #factory: ExecutionEnvFactory;
-	readonly #envs = new Map<string, any>();
-
-	constructor(defaultCwd: string, factory?: ExecutionEnvFactory) {
-		this.#defaultCwd = defaultCwd;
-		this.#factory = factory ?? (({ cwd = this.#defaultCwd }) => new LocalNodeExecutionEnv({ cwd }));
-	}
-
-	readonly env = ({ cwd = this.#defaultCwd, conversationId }: EnvTarget): any => {
-		let env = this.#envs.get(cwd);
-		if (env === undefined) {
-			env = this.#factory({ cwd, conversationId });
-			this.#envs.set(cwd, env);
-		}
-		return env;
-	};
-
-	async cleanup(context: Context): Promise<void> {
-		const envs = [...this.#envs.values()];
-		this.#envs.clear();
-		for (const env of envs) {
-			if (typeof env.cleanup === "function") await env.cleanup(context);
-		}
-	}
-}
-```
+Modify `packages/core/src/harness-setup.ts:109-131` to use `type { ExecutionEnvFactory } from "./tools/execution-env.ts"`, accepting `factory?: ExecutionEnvFactory`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test packages/core/test/execution-env-strategy.test.ts`
 Expected: PASS
-Run full suite: `npm test`
-Expected: 180 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/harness-setup.ts packages/core/test/execution-env-strategy.test.ts packages/core/package.json
-git commit -m "refactor(core): inject ExecutionEnvFactory strategy from @durable-zero/execution"
+git add packages/core/src/tools/execution-env.ts packages/core/src/harness-setup.ts packages/core/test/execution-env-strategy.test.ts
+git commit -m "feat(core): declare IExecutionEnvironment port in tools/ without adapter dependencies"
+```
+
+---
+
+#### Task 1.3: Create `@durable-zero/execution` Adapter Package
+
+**Files:**
+- Create: `packages/execution/package.json`
+- Create: `packages/execution/src/adapters/local-node-env.ts`
+- Create: `packages/execution/src/adapters/mock-env.ts`
+- Create: `packages/execution/src/index.ts`
+- Test: `packages/execution/test/execution.test.ts`
+
+- [ ] **Step 1: Write test for LocalNodeExecutionEnv and MockExecutionEnv**
+
+Create `packages/execution/test/execution.test.ts`:
+```typescript
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { LocalNodeExecutionEnv, MockExecutionEnv } from "../src/index.ts";
+
+describe("@durable-zero/execution Adapter Package", () => {
+  it("MockExecutionEnv provides fast in-memory filesystem for tests", async () => {
+    const mock = new MockExecutionEnv();
+    await mock.writeFile("test.txt", "hello world");
+    assert.equal(await mock.readFile("test.txt"), "hello world");
+    const res = await mock.exec(["echo", "ok"]);
+    assert.equal(res.exitCode, 0);
+  });
+
+  it("LocalNodeExecutionEnv executes against local node filesystem", async () => {
+    const local = new LocalNodeExecutionEnv({ cwd: process.cwd() });
+    assert.equal(local.cwd, process.cwd());
+    assert.equal(typeof local.readFile, "function");
+  });
+});
+```
+
+- [ ] **Step 2: Implement `@durable-zero/execution` package**
+
+Create `packages/execution/package.json`:
+```json
+{
+  "name": "@durable-zero/execution",
+  "version": "0.8.1",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@durable-zero/core": "workspace:*"
+  }
+}
+```
+
+Implement `LocalNodeExecutionEnv` and `MockExecutionEnv` in `packages/execution/src/adapters/` implementing `IExecutionEnvironment` from `@durable-zero/core`.
+Create `packages/execution/src/index.ts`.
+
+- [ ] **Step 3: Run test to verify it passes**
+
+Run: `node --test packages/execution/test/execution.test.ts`
+Expected: PASS (2 tests pass)
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/execution/
+git commit -m "feat(execution): create @durable-zero/execution adapter implementing core execution port"
 ```
 
 ---
@@ -1501,8 +1395,6 @@ Edit `packages/core/package.json`:
     }
   },
   "dependencies": {
-    "@durable-zero/execution": "workspace:*",
-    "@durable-zero/protocol": "workspace:*",
     "zod": "^4.6.7"
   }
 }
