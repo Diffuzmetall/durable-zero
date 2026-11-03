@@ -277,7 +277,7 @@ var codingToolsExtension = {
   }
 };
 
-// packages/core/src/builtin-extensions/codemode.ts
+// packages/adapter-codemode/src/codemode.ts
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 var CodemodeExtension = class {
@@ -3961,7 +3961,7 @@ var DurableEngine = class _DurableEngine {
   }
 };
 
-// packages/core/src/model-setup.ts
+// packages/adapter-pi-ai/src/model-setup.ts
 import {
   DefaultResourceLoader as DefaultResourceLoader2,
   ModelRuntime as ModelRuntime2,
@@ -3969,6 +3969,71 @@ import {
   getAgentDir as getAgentDir2,
   resolveModelScopeWithDiagnostics as resolveModelScopeWithDiagnostics2
 } from "@earendil-works/pi-coding-agent";
+
+// packages/adapter-pi-ai/src/model-provider.ts
+import {
+  resolveCliModel as resolveCliModel2
+} from "@earendil-works/pi-coding-agent";
+var PiAiModelProvider = class {
+  #modelRuntime;
+  #settingsManager;
+  constructor(modelRuntime, settingsManager) {
+    this.#modelRuntime = modelRuntime;
+    this.#settingsManager = settingsManager;
+  }
+  get modelRuntime() {
+    return this.#modelRuntime;
+  }
+  get settingsManager() {
+    return this.#settingsManager;
+  }
+  async getAvailableModels() {
+    const models = this.#modelRuntime.getAvailableSnapshot();
+    return models.map((m) => ({
+      provider: m.provider,
+      modelId: m.id
+    }));
+  }
+  async resolveModel(ref) {
+    if (ref?.model !== void 0) {
+      const resolved = resolveCliModel2({
+        cliProvider: ref.provider,
+        cliModel: ref.model,
+        modelRuntime: this.#modelRuntime
+      });
+      if (resolved.error !== void 0 || resolved.model === void 0) {
+        throw new Error(`Could not resolve model: ${resolved.error ?? ref.model}`);
+      }
+      return {
+        model: { provider: resolved.model.provider, modelId: resolved.model.id },
+        thinkingLevel: ref.thinking ?? resolved.thinkingLevel ?? "off"
+      };
+    }
+    const defaultProvider = this.#settingsManager?.getDefaultProvider?.();
+    const defaultModelId = this.#settingsManager?.getDefaultModel?.();
+    const defaultThinkingLevel = this.#settingsManager?.getDefaultThinkingLevel?.();
+    if (defaultProvider && defaultModelId) {
+      const models = this.#modelRuntime.getAvailableSnapshot();
+      const matched = models.find((m) => m.provider === defaultProvider && m.id === defaultModelId);
+      if (matched) {
+        return {
+          model: { provider: matched.provider, modelId: matched.id },
+          thinkingLevel: defaultThinkingLevel ?? "off"
+        };
+      }
+    }
+    const available = this.#modelRuntime.getAvailableSnapshot();
+    if (available.length > 0) {
+      return {
+        model: { provider: available[0].provider, modelId: available[0].id },
+        thinkingLevel: "off"
+      };
+    }
+    return {};
+  }
+};
+
+// packages/adapter-pi-ai/src/model-setup.ts
 async function setupRunnerModels(cwd, args2) {
   const agentDir = getAgentDir2();
   const settingsManager = SettingsManager2.create(cwd, agentDir);
@@ -4011,9 +4076,8 @@ async function setupRunnerModels(cwd, args2) {
   const scopedScope = enabledPatterns && enabledPatterns.length > 0 ? await resolveModelScopeWithDiagnostics2(enabledPatterns, modelRuntime) : void 0;
   const scopedModelList = scopedScope && scopedScope.scopedModels.length > 0 ? scopedScope.scopedModels.map((sm) => sm.model) : availableModels;
   const scopedModelIds = scopedModelList.map((m) => `${m.provider}/${m.id}`);
-  const initialAgent = await findInitialAgentModel(
-    settingsManager,
-    modelRuntime,
+  const modelProvider = new PiAiModelProvider(modelRuntime, settingsManager);
+  const initialAgent = await modelProvider.resolveModel(
     args2.model ? { provider: args2.provider, model: args2.model, thinking: args2.thinking } : void 0
   );
   const defaultModel = initialAgent.model ? modelRuntime.getModel(initialAgent.model.provider, initialAgent.model.modelId) ?? scopedModelList[0] : scopedModelList[0];

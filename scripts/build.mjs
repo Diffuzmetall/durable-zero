@@ -34,7 +34,7 @@ const externals = [
 
 console.log("Building durable-zero packages...");
 
-const packages = ["contracts", "protocol", "core", "execution", "adapter-pi-durable"];
+const packages = ["contracts", "protocol", "core", "execution", "adapter-pi-durable", "adapter-pi-ai", "adapter-codemode"];
 
 for (const pkg of packages) {
 	await build({

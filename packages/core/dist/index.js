@@ -274,7 +274,7 @@ var codingToolsExtension = {
   }
 };
 
-// packages/core/src/builtin-extensions/codemode.ts
+// packages/adapter-codemode/src/codemode.ts
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 var CodemodeExtension = class {
