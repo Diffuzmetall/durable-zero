@@ -29,33 +29,48 @@
 
 ```
 packages/
-├── protocol/                     <- @durable-zero/protocol (Independent Wire Package)
+├── protocol/                     <- @durable-zero/protocol (Independent Inbound Wire Package)
 │   ├── src/
 │   │   ├── jsonrpc/              <- Pure JSON-RPC 2.0 Schema & Types (Request, Response, Error)
-│   │   ├── methods/              <- Standard Agent Methods (session/prompt, session/cancel, host/toolCall)
+│   │   ├── methods/              <- Standard Agent Wire Methods (session/prompt, session/cancel, host/toolCall)
 │   │   └── transport/            <- Full-Duplex StdioJsonRpcServer implementation
 │   └── package.json              <- Depends only on zod. Zero engine dependencies.
 │
-├── execution/                    <- @durable-zero/execution (Execution Sandbox Domain)
+├── execution/                    <- @durable-zero/execution (Execution Sandbox Adapter)
 │   ├── src/
-│   │   ├── contracts/            <- IExecutionEnvironment, EnvTarget, ExecOptions, ExecResult
-│   │   └── adapters/             <- LocalNodeExecutionEnv (default) & MockExecutionEnv
-│   └── package.json              <- Depends on Node.js builtins. Zero agent dependencies.
+│   │   ├── adapters/             <- LocalNodeExecutionEnv (default) & MockExecutionEnv
+│   │   └── index.ts              <- Implements IExecutionEnvironment from @durable-zero/core
+│   └── package.json              <- Depends on @durable-zero/core, Node builtins. Zero agent dependencies.
 │
-├── core/                         <- @durable-zero/core (SOVEREIGN PURE DOMAIN - ZERO PI DEPS!)
+├── core/                         <- @durable-zero/core (SOVEREIGN DOMAIN - SCREAMING ARCHITECTURE)
 │   ├── src/
-│   │   ├── ports/                <- Outbound SPIs: ISessionStore, IModelProvider, ICodemodeRunner
-│   │   ├── domain/               <- Entities: Session, TaskGraph, AdmissionReceipt, PolicyRecord
-│   │   ├── policy/               <- SubagentPolicyStore & security rules (CAS, optimistic locks)
-│   │   ├── services/             <- SessionCoordinator (prompt, abort, cascading abort)
-│   │   └── index.ts              <- Re-exports of domain ports, entities, and services
+│   │   ├── session/              <- Bounded Context: Sessions & Storage SPI
+│   │   │   ├── store.ts          <- Port SPI: ISessionStore, TaskRecord
+│   │   │   ├── session.ts        <- Aggregate: Session entity & state transitions
+│   │   │   ├── coordinator.ts    <- Service: SessionCoordinator (prompt, abort, streaming)
+│   │   │   └── tokens.ts         <- Value Object: Token metric counters (task-tokens)
+│   │   │
+│   │   ├── subagents/            <- Bounded Context: Subagents & Security Policies
+│   │   │   ├── policy-store.ts   <- Aggregate/Store: SubagentPolicyStore (CAS, optimistic locks)
+│   │   │   ├── policy.ts         <- Value Objects: SubagentPolicyRecord, Profile
+│   │   │   └── manager.ts        <- Service: SubagentManager (cascading abort, depth recursion)
+│   │   │
+│   │   ├── models/               <- Bounded Context: LLM & Reasoning SPI
+│   │   │   ├── provider.ts       <- Port SPI: IModelProvider (resolveModel, generateStream)
+│   │   │   └── types.ts          <- Value Objects: ModelRef, StreamDelta, ThinkingLevel
+│   │   │
+│   │   ├── tools/                <- Bounded Context: Tooling, Sandbox SPI & Execution SPI
+│   │   │   ├── registry.ts       <- Port/Registry: IToolRegistry, ToolDefinition, ToolCall, ToolResult
+│   │   │   ├── sandbox.ts        <- Port SPI: ICodemodeRunner, CodemodeExecutionResult
+│   │   │   └── execution-env.ts  <- Port SPI: IExecutionEnvironment, EnvTarget, ExecResult
+│   │   │
+│   │   └── index.ts              <- Unified Screaming Domain Entry Point
 │   ├── test/                     <- Pure unit tests running on In-Memory mocks (< 50ms)
-│   └── package.json              <- Depends on @durable-zero/protocol, @durable-zero/execution, zod.
-│                                    STRICTLY ZERO dependencies on @earendil-works/* or native binaries!
+│   └── package.json              <- Depends on zod. STRICTLY ZERO dependencies on @earendil-works/* or native binaries!
 │
 ├── adapter-pi-durable/           <- @durable-zero/adapter-pi-durable (Storage ACL)
 │   ├── src/
-│   │   ├── store.ts              <- Implements ISessionStore via Pi Durable SQLite Harness
+│   │   ├── store.ts              <- Implements ISessionStore (core/session/store.ts) via Pi Durable SQLite
 │   │   ├── session-storage.ts    <- Relocated: PID safety, lock eviction, document storage
 │   │   ├── session-fork.ts       <- Relocated: database forking, checkpoint tree
 │   │   └── event-adapter.ts      <- Relocated: DurableEventAdapter (tool delta translation for UI)
@@ -64,14 +79,14 @@ packages/
 │
 ├── adapter-pi-ai/                <- @durable-zero/adapter-pi-ai (LLM & Agent Loop ACL)
 │   ├── src/
-│   │   ├── provider.ts           <- Implements IModelProvider via @earendil-works/pi-ai
+│   │   ├── provider.ts           <- Implements IModelProvider (core/models/provider.ts) via @earendil-works/pi-ai
 │   │   └── agent-driver.ts       <- Drives agent loop via @earendil-works/pi-agent-core
 │   ├── test/                     <- Integration tests for model resolution & streaming
 │   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-ai, @earendil-works/pi-agent-core.
 │
 ├── adapter-codemode/             <- @durable-zero/adapter-codemode (Sandbox ACL)
 │   ├── src/
-│   │   ├── runner.ts             <- Implements ICodemodeRunner via QuickJS WASM sandbox.start()
+│   │   ├── runner.ts             <- Implements ICodemodeRunner (core/tools/sandbox.ts) via QuickJS WASM sandbox.start()
 │   │   └── journal.ts            <- Replays journaled tool calls deterministically
 │   ├── test/                     <- Integration tests for QuickJS WASM sandbox isolation
 │   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-codemode, quickjs-wasi.
@@ -79,7 +94,7 @@ packages/
 ├── extension-pi-resource/        <- @durable-zero/extension-pi-resource (Pi Setup ACL)
 │   ├── src/
 │   │   ├── pi-resource-ext.ts    <- Native Pi Durable defineExtension wrapping SettingsManager & ResourceLoader
-│   │   └── contracts.ts          <- IConfigProvider & ISkillLoader implementations
+│   │   └── contracts.ts          <- Implements IConfigProvider & ISkillLoader
 │   └── package.json              <- Depends on @durable-zero/core, @earendil-works/pi-durable, @earendil-works/pi-coding-agent.
 │
 └── runner/                       <- @durable-zero/runner (TRUE COMPOSITION ROOT - AP-020, AP-073)
@@ -89,32 +104,45 @@ packages/
     └── package.json              <- Depends on all workspace packages. Assembles the executable.
 ```
 
-### Dependency Direction Matrix (Strict Hexagonal Inward Flow):
+### Critical Architectural Assessment: "Core as the Port Authority" (AP-011 & AP-012)
+
+**Critical evaluation of the thesis: *"Core should contain declarations for everything implemented in packages"*:**
+1. **YES for all Outbound / Driven SPIs (Dependency Inversion Principle - AP-012):**
+   In clean Hexagonal Architecture, the Core hexagon OWNS the contracts it depends upon. Therefore, every outbound adapter package (`adapter-pi-durable`, `adapter-pi-ai`, `adapter-codemode`, `execution`) implements an interface **declared directly in Core**:
+   - `core/session/store.ts` (`ISessionStore`) $\leftarrow$ implemented by `adapter-pi-durable`
+   - `core/models/provider.ts` (`IModelProvider`) $\leftarrow$ implemented by `adapter-pi-ai`
+   - `core/tools/sandbox.ts` (`ICodemodeRunner`) $\leftarrow$ implemented by `adapter-codemode`
+   - `core/tools/execution-env.ts` (`IExecutionEnvironment`) $\leftarrow$ implemented by `execution`
+2. **NO for Inbound / Driving Protocols (Primary Drivers):**
+   The wire-level JSON-RPC 2.0 protocol (`@durable-zero/protocol`) is a *driving client adapter*. Core must remain blissfully unaware of JSON-RPC 2.0 frames, HTTP status codes, or CLI terminal formatting. Core exposes domain use-case services (`SessionCoordinator.prompt()`, `SessionCoordinator.abort()`), and `@durable-zero/protocol` translates incoming wire frames into these core service calls.
+3. **Screaming Architecture over Technical Buckets (AP-011):**
+   Within `@durable-zero/core`, files are grouped strictly by **Domain Bounded Contexts** (`session/`, `subagents/`, `models/`, `tools/`), not by architectural categories (`ports/`, `domain/`, `services/`, `policy/`). Inside each context, the Port SPI lives beside the Aggregate and the Domain Service that consumes it.
+
+### Dependency Direction Matrix (Strict Inward Hexagonal Flow):
 
 ```
-       @durable-zero/protocol          @durable-zero/execution
-                 ▲                                ▲
-                 │                                │
-                 +----------------+---------------+
-                                  |
-                        @durable-zero/core
-                     (Pure Domain: Zero Pi deps!)
-                                  ▲
-        +-------------------------+-------------------------+
-        |                         |                         |
-@durable-zero/            @durable-zero/            @durable-zero/
-adapter-pi-durable        adapter-pi-ai             adapter-codemode
-   (ISessionStore)       (IModelProvider)          (ICodemodeRunner)
-        │                         │                         │
-        v                         v                         v
-[@earendil-works/         [@earendil-works/         [@earendil-works/
-   pi-durable]                  pi-ai]                  pi-codemode]
-        │                         │                         │
-        +-------------------------+-------------------------+
-                                  |
-                                  v
-                        @durable-zero/runner
-                        (Composition Root)
+                               @durable-zero/protocol
+                              (Inbound Client Driver)
+                                         |
+                                         v
+                                @durable-zero/core
+                          (PURE DOMAIN: Screaming Contexts)
+                             Declares all Outbound SPIs
+                                         ▲
+        +--------------------------------+-------------------------------+
+        |                                |                               |
+@durable-zero/                   @durable-zero/                  @durable-zero/
+adapter-pi-durable               adapter-pi-ai                   adapter-codemode
+(implements ISessionStore)     (implements IModelProvider)     (implements ICodemodeRunner)
+        │                                │                               │
+        v                                v                               v
+[@earendil-works/pi-durable]     [@earendil-works/pi-ai]         [@earendil-works/pi-codemode]
+        │                                │                               │
+        +--------------------------------+-------------------------------+
+                                         |
+                                         v
+                               @durable-zero/runner
+                                (Composition Root)
 ```
 
 ---
@@ -831,7 +859,7 @@ git commit -m "refactor(core): inject ExecutionEnvFactory strategy from @durable
 #### Task 2.1: Define `ISessionStore` Port in Core with In-Memory Mock
 
 **Files:**
-- Create: `packages/core/src/ports/session-store.ts`
+- Create: `packages/core/src/session/store.ts`
 - Create: `packages/core/test/mocks/memory-session-store.ts`
 - Create: `packages/core/test/session-store-port.test.ts`
 
@@ -841,7 +869,7 @@ Create `packages/core/test/session-store-port.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import type { ISessionStore } from "../src/ports/session-store.ts";
+import type { ISessionStore } from "../src/session/store.ts";
 import { MemorySessionStore } from "./mocks/memory-session-store.ts";
 
 describe("ISessionStore Domain Port (AP-010, AP-012)", () => {
@@ -863,11 +891,11 @@ describe("ISessionStore Domain Port (AP-010, AP-012)", () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `node --test packages/core/test/session-store-port.test.ts`
-Expected: FAIL with "Cannot find module '../src/ports/session-store.ts'"
+Expected: FAIL with "Cannot find module '../src/session/store.ts'"
 
 - [ ] **Step 3: Define `ISessionStore` and implement `MemorySessionStore`**
 
-Create `packages/core/src/ports/session-store.ts`:
+Create `packages/core/src/session/store.ts`:
 ```typescript
 export interface TaskRecord {
   id: string | number;
@@ -891,7 +919,7 @@ export interface ISessionStore {
 
 Create `packages/core/test/mocks/memory-session-store.ts`:
 ```typescript
-import type { ISessionStore, TaskRecord } from "../../src/ports/session-store.ts";
+import type { ISessionStore, TaskRecord } from "../../src/session/store.ts";
 
 export class MemorySessionStore implements ISessionStore {
   public sessionDir = "/memory/session";
@@ -950,8 +978,8 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/ports/session-store.ts packages/core/test/session-store-port.test.ts packages/core/test/mocks/memory-session-store.ts
-git commit -m "feat(core): declare ISessionStore domain port with in-memory mock"
+git add packages/core/src/session/store.ts packages/core/test/session-store-port.test.ts packages/core/test/mocks/memory-session-store.ts
+git commit -m "feat(core): declare ISessionStore domain port in session/ with in-memory mock"
 ```
 
 ---
@@ -1133,7 +1161,7 @@ git commit -m "refactor(storage): delete custom task graph mappers in favor of n
 #### Task 3.1: Create `@durable-zero/adapter-pi-ai`
 
 **Files:**
-- Create: `packages/core/src/ports/model-provider.ts`
+- Create: `packages/core/src/models/provider.ts`
 - Create: `packages/adapter-pi-ai/package.json`
 - Create: `packages/adapter-pi-ai/src/model-provider.ts`
 - Create: `packages/adapter-pi-ai/src/index.ts`
@@ -1160,7 +1188,7 @@ describe("@durable-zero/adapter-pi-ai (IModelProvider Adapter)", () => {
 
 - [ ] **Step 2: Implement `IModelProvider` port in core and `PiAiModelProvider` in adapter**
 
-Create `packages/core/src/ports/model-provider.ts`:
+Create `packages/core/src/models/provider.ts`:
 ```typescript
 export interface ModelRef {
   provider: string;
@@ -1213,8 +1241,8 @@ Expected: PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add packages/core/src/ports/model-provider.ts packages/adapter-pi-ai/
-git commit -m "feat(adapter-pi-ai): create LLM adapter implementing IModelProvider"
+git add packages/core/src/models/provider.ts packages/adapter-pi-ai/
+git commit -m "feat(adapter-pi-ai): create LLM adapter implementing core/models/provider.ts"
 ```
 
 ---
@@ -1222,7 +1250,7 @@ git commit -m "feat(adapter-pi-ai): create LLM adapter implementing IModelProvid
 #### Task 3.2: Create `@durable-zero/adapter-codemode` with Deterministic Replay
 
 **Files:**
-- Create: `packages/core/src/ports/codemode-runner.ts`
+- Create: `packages/core/src/tools/sandbox.ts`
 - Create: `packages/adapter-codemode/package.json`
 - Create: `packages/adapter-codemode/src/codemode-runner.ts`
 - Create: `packages/adapter-codemode/src/index.ts`
@@ -1262,7 +1290,7 @@ describe("@durable-zero/adapter-codemode (Deterministic Replay)", () => {
 
 - [ ] **Step 2: Implement `ICodemodeRunner` port in core and `QuickJsCodemodeRunner` in adapter**
 
-Create `packages/core/src/ports/codemode-runner.ts`:
+Create `packages/core/src/tools/sandbox.ts`:
 ```typescript
 export interface CodemodeExecutionResult {
   ok: boolean;
@@ -1322,7 +1350,7 @@ Run: `npm test`
 Expected: PASS
 
 ```bash
-git add packages/core/ packages/adapter-codemode/
+git add packages/core/src/tools/sandbox.ts packages/adapter-codemode/
 git commit -m "feat(adapter-codemode): encapsulate QuickJS WASM sandbox and delete obsolete couriers"
 ```
 
@@ -1413,7 +1441,7 @@ git commit -m "feat(extension): create @durable-zero/extension-pi-resource packa
 
 **Files:**
 - Modify: `packages/core/package.json`
-- Create: `packages/core/src/services/session-coordinator.ts`
+- Create: `packages/core/src/session/coordinator.ts`
 - Create: `packages/core/test/pure-domain-engine.test.ts`
 
 - [ ] **Step 1: Write pure domain engine unit test with In-Memory mocks**
@@ -1422,7 +1450,7 @@ Create `packages/core/test/pure-domain-engine.test.ts`:
 ```typescript
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { SessionCoordinator } from "../src/services/session-coordinator.ts";
+import { SessionCoordinator } from "../src/session/coordinator.ts";
 import { MemorySessionStore } from "./mocks/memory-session-store.ts";
 
 describe("@durable-zero/core Sovereign Domain Engine", () => {
@@ -1453,7 +1481,7 @@ describe("@durable-zero/core Sovereign Domain Engine", () => {
 
 - [ ] **Step 2: Implement `SessionCoordinator` in Core**
 
-Extract pure domain coordination from `session-commands.ts` into `packages/core/src/services/session-coordinator.ts`. It accepts `ISessionStore`, `IModelProvider`, `ICodemodeRunner`, and `IExecutionEnvironment` via constructor dependency injection (AP-012, AP-072).
+Extract pure domain coordination from `session-commands.ts` into `packages/core/src/session/coordinator.ts`. It accepts `ISessionStore`, `IModelProvider`, `ICodemodeRunner`, and `IExecutionEnvironment` via constructor dependency injection (AP-012, AP-072).
 
 - [ ] **Step 3: Clean `packages/core/package.json` to have ZERO `@earendil-works/*` dependencies**
 
