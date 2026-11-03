@@ -462,20 +462,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve5) => {
-            const timer = setTimeout(() => resolve5(), holdTimeoutMs);
+          await new Promise((resolve4) => {
+            const timer = setTimeout(() => resolve4(), holdTimeoutMs);
             timer.unref?.();
             watch2.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve5();
+                resolve4();
               }
               return Promise.resolve();
             });
             void watch2.closed.then(() => {
               clearTimeout(timer);
-              resolve5();
+              resolve4();
             });
           });
         } finally {
@@ -970,24 +970,17 @@ async function findInitialAgentModel(settingsManager, modelRuntime, cli) {
   return {};
 }
 
-// packages/core/src/session-storage.ts
-import { execFileSync } from "node:child_process";
+// packages/adapter-pi-durable/src/session-storage.ts
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
-import "node:os";
-import { basename, join as join2, resolve as resolve2 } from "node:path";
-import lockfile from "proper-lockfile";
-
-// packages/core/src/shared/agent-dir.ts
+import { mkdir, readdir, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
-function getAgentDir(env = process.env) {
-  const override = env.PI_AGENT_DIR?.trim() || env.PI_CODING_AGENT_DIR?.trim();
-  if (override && override.length > 0) return resolve(override);
-  return join(homedir(), ".pi", "agent");
-}
+import { basename, join as join2, resolve } from "node:path";
 
-// packages/core/src/session-storage.ts
+// packages/adapter-pi-durable/src/session-lock-eviction.ts
+import { execFileSync } from "node:child_process";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import lockfile from "proper-lockfile";
 function isProcessAlive(pid) {
   if (!pid || pid <= 0) return false;
   try {
@@ -1016,11 +1009,11 @@ function logUnexpectedErr(err, allowedCode, context) {
   }
 }
 async function writeOwnerFile(directory, owner) {
-  await writeFile(join2(directory, "session.owner.json"), JSON.stringify(owner, null, 2), "utf8");
+  await writeFile(join(directory, "session.owner.json"), JSON.stringify(owner, null, 2), "utf8");
 }
 async function readOwnerFile(directory) {
   try {
-    const content = await readFile(join2(directory, "session.owner.json"), "utf8");
+    const content = await readFile(join(directory, "session.owner.json"), "utf8");
     return JSON.parse(content);
   } catch (err) {
     logUnexpectedErr(err, "ENOENT", `Corrupted or unreadable session.owner.json in ${directory}`);
@@ -1028,7 +1021,7 @@ async function readOwnerFile(directory) {
   }
 }
 async function removeOwnerFile(directory) {
-  await rm(join2(directory, "session.owner.json"), { force: true }).catch(
+  await rm(join(directory, "session.owner.json"), { force: true }).catch(
     (err) => logUnexpectedErr(err, "ENOENT", `Failed to remove owner file in ${directory}`)
   );
 }
@@ -1051,9 +1044,7 @@ async function acquireSessionLock(directory, cwd, id) {
       await new Promise((r) => setTimeout(r, 100));
       owner = await readOwnerFile(directory);
     }
-    if (!owner) {
-      throw new Error(`Session is already open in another process: ${directory}`, { cause: initialErr });
-    }
+    if (!owner) throw new Error(`Session is already open in another process: ${directory}`, { cause: initialErr });
     const isAlive = isProcessAlive(owner.pid);
     const isRunner = isAlive && isVerifiedRunnerProcess(owner);
     if (!isAlive || !isRunner) {
@@ -1065,10 +1056,7 @@ async function acquireSessionLock(directory, cwd, id) {
         throw new DurableStorageError(`Session is already open in another process (PID: ${owner.pid}): ${directory}`, retryErr);
       }
     } else {
-      throw new DurableStorageError(
-        `Session is already open in another live process (PID: ${owner.pid}): ${directory}`,
-        initialErr
-      );
+      throw new DurableStorageError(`Session is already open in another live process (PID: ${owner.pid}): ${directory}`, initialErr);
     }
   }
   await writeOwnerFile(directory, { pid: process.pid, id, cwd, startedAt: Date.now() });
@@ -1083,15 +1071,22 @@ async function acquireSessionLock(directory, cwd, id) {
     }
   };
 }
+
+// packages/adapter-pi-durable/src/session-storage.ts
+function getAgentDir() {
+  const custom = process.env.PI_CODING_AGENT_DIR;
+  if (custom) return resolve(custom);
+  return join2(homedir(), ".pi", "agent");
+}
 async function selectSession(cwdInput, continueSession, targetSession) {
-  const cwd = await realpath(resolve2(cwdInput));
+  const cwd = await realpath(resolve(cwdInput));
   const root = join2(getAgentDir(), "experimental", "durable-sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 24));
   await mkdir(root, { recursive: true });
   let directory;
   let created = false;
   if (targetSession) {
-    const clean = targetSession.endsWith(".sqlite") ? resolve2(targetSession, "..") : targetSession;
-    directory = clean.includes("/") || clean.includes("\\") ? resolve2(clean) : join2(root, clean);
+    const clean = targetSession.endsWith(".sqlite") ? resolve(targetSession, "..") : targetSession;
+    directory = clean.includes("/") || clean.includes("\\") ? resolve(clean) : join2(root, clean);
     try {
       await mkdir(directory, { recursive: true });
       const entries = await readdir(directory);
@@ -1099,7 +1094,9 @@ async function selectSession(cwdInput, continueSession, targetSession) {
         created = true;
       }
     } catch (err) {
-      logUnexpectedErr(err, "ENOENT", `Directory inspection failed in ${directory}`);
+      if (err?.code !== "ENOENT") {
+        console.warn(`[SessionStorage] Directory inspection failed in ${directory}: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
   } else if (continueSession) {
     const entries = await readdir(root, { withFileTypes: true });
@@ -1578,23 +1575,23 @@ var HostRpcManager = class {
   }
   forwardToolCall = (toolName, args2) => {
     const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
-    return new Promise((resolve5) => {
+    return new Promise((resolve4) => {
       const timer = setTimeout(() => {
         this.pendingToolCalls.delete(callId);
-        resolve5({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
       }, 12e4);
-      this.pendingToolCalls.set(callId, { resolve: resolve5, timer });
+      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
       this.output({ type: "host_tool_call", callId, toolName, arguments: args2 ?? {} });
     });
   };
   requestInteraction = (kind, payload) => {
     const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
-    return new Promise((resolve5) => {
+    return new Promise((resolve4) => {
       const timer = setTimeout(() => {
         this.pendingInteractions.delete(id);
-        resolve5(null);
+        resolve4(null);
       }, 18e4);
-      this.pendingInteractions.set(id, { resolve: resolve5, timer });
+      this.pendingInteractions.set(id, { resolve: resolve4, timer });
       this.output({
         type: "host_interaction_request",
         id,
@@ -2298,7 +2295,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve5, reject) => {
+      return new Promise((resolve4, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2311,7 +2308,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve5();
+                resolve4();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2320,7 +2317,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve5();
+            resolve4();
           } catch (error) {
             reject(error);
           }
@@ -4097,7 +4094,7 @@ var LocalNodeExecutionEnv = class {
     await fs.writeFile(fullPath, content, "utf8");
   }
   async exec(argvOrCommand, options, context) {
-    return new Promise((resolve5) => {
+    return new Promise((resolve4) => {
       const execCwd = options?.cwd ?? this.cwd;
       const execEnv = { ...process.env, ...options?.env };
       const timeout = options?.timeoutMs ?? 3e4;
@@ -4121,7 +4118,7 @@ var LocalNodeExecutionEnv = class {
       child.stdout?.on("data", (chunk) => handleOutput(chunk, false));
       child.stderr?.on("data", (chunk) => handleOutput(chunk, true));
       child.on("error", (err) => {
-        resolve5({
+        resolve4({
           ok: false,
           value: { exitCode: 1 },
           stdout,
@@ -4131,7 +4128,7 @@ var LocalNodeExecutionEnv = class {
       });
       child.on("close", (code) => {
         const exitCode = code ?? 0;
-        resolve5({
+        resolve4({
           ok: exitCode === 0,
           value: { exitCode },
           stdout,
@@ -4362,22 +4359,22 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
   return false;
 }
 
-// packages/core/src/session-fork.ts
+// packages/adapter-pi-durable/src/session-fork.ts
 import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import { join as join3, resolve as resolve4 } from "node:path";
+import { join as join3, resolve as resolve3 } from "node:path";
 function forkSessionDatabase(options) {
-  let sourceDir = resolve4(options.sourceDir);
+  let sourceDir = resolve3(options.sourceDir);
   if (sourceDir.endsWith(".sqlite")) {
-    sourceDir = resolve4(sourceDir, "..");
+    sourceDir = resolve3(sourceDir, "..");
   }
   const sourceDb = join3(sourceDir, "session.sqlite");
   if (!existsSync2(sourceDir) || !existsSync2(sourceDb)) {
     throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
   }
-  let targetDir = resolve4(options.targetDir);
+  let targetDir = resolve3(options.targetDir);
   if (targetDir.endsWith(".sqlite")) {
-    targetDir = resolve4(targetDir, "..");
+    targetDir = resolve3(targetDir, "..");
   }
   mkdirSync(targetDir, { recursive: true });
   const targetDb = join3(targetDir, "session.sqlite");
