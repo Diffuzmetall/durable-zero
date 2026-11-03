@@ -147,5 +147,17 @@
   - Circuit 2 (Product Reviewer @thread:thr_vf3idxn5hc): **UNANIMOUS PASS** (Three Golden Journeys verified, clean sandbox teardown, 7/7 packages compiled, 196/196 tests passing in 14.8s).
 - **Residual Risk / P3 Observation:** In `PiAiModelProvider.resolveModel`, accept `modelId` as synonym for `model` and support string references (`provider/model`). Safe for subsequent refinement.
 
+### S10 Cycle 4 & 4.1 Closure: Sovereign Domain Coordination & Pi Resource Extension (2026-11-03)
+- **Scope Implemented:**
+  1. `@durable-zero/extension-pi-resource`: Declarative resource & settings extension using `defineExtension` from `@earendil-works/pi-durable` and `SettingsManager`/`DefaultResourceLoader` from `@earendil-works/pi-coding-agent`.
+  2. `packages/core/src/session/coordinator.ts`: Pure domain coordinator `SessionCoordinator` operating strictly on ports (`ISessionStore`, `IModelProvider`, `IExecutionEnvironment`, `IResourceLoader`). 0 database, SQLite, or WASM dependencies. Pure constructor DI (`SessionCoordinatorOptions`).
+  3. Updated `scripts/build.mjs` to compile all 8 packages (`contracts`, `protocol`, `core`, `execution`, `adapter-pi-durable`, `adapter-pi-ai`, `adapter-codemode`, `extension-pi-resource`).
+- **S9 Dual-Circuit Verification & Remediation (Cycle 4.1):**
+  - Initial Circuit 1 (Arch Reviewer @thread:thr_pvxxv7nnzv): **PASS** (Pure ports, zero singletons, all files < 120 lines).
+  - Initial Circuit 2 (Product Reviewer @thread:thr_z274vg6dkj): **FAIL** (P1: `prompt()` accepted after `close()` without lock; P2: `prompt()` before `start()` silently auto-started; P2: `createPiResourceExtension()` threw TypeError without options).
+  - Remediation Cycle 4.1 (@thread:thr_kwizs25xch): Landed commit `7f7b99a` fixing all 3 defects via strict TDD (Red -> Green).
+  - Re-Review Circuit 2 (@thread:thr_m83nee7n7m): **UNANIMOUS PASS** (All P1/P2 defects confirmed fixed, 202/202 tests passing in 14.8s, 8/8 packages compiled).
+
+
 
 
