@@ -1393,7 +1393,79 @@ describe("@durable-zero/core Sovereign Domain Engine", () => {
 
 - [ ] **Step 2: Implement `SessionCoordinator` in Core**
 
-Extract pure domain coordination from `session-commands.ts` into `packages/core/src/session/coordinator.ts`. It accepts `ISessionStore`, `IModelProvider`, `ICodemodeRunner`, and `IExecutionEnvironment` via constructor dependency injection (AP-012, AP-072).
+Create `packages/core/src/session/coordinator.ts`:
+```typescript
+import type { ISessionStore } from "./store.ts";
+
+export interface SessionCoordinatorOptions {
+  store: ISessionStore;
+  modelProvider?: {
+    resolveModel?: (ref?: { provider: string; modelId: string }) => Promise<{ provider: string; modelId: string }>;
+    generateStream?: (model: unknown, prompt: unknown, onDelta: (d: unknown) => void) => Promise<{ output: string }>;
+  };
+  codemodeRunner?: unknown;
+  executionEnv?: unknown;
+  piResourceExtension?: unknown;
+}
+
+export class SessionCoordinator {
+  private store: ISessionStore;
+  private modelProvider: unknown;
+  private isStarted = false;
+  public isAborted = false;
+  private listeners = new Set<(event: unknown) => void>();
+
+  constructor(options: SessionCoordinatorOptions) {
+    this.store = options.store;
+    this.modelProvider = options.modelProvider;
+  }
+
+  public async start(): Promise<void> {
+    await this.store.acquireLock();
+    this.isStarted = true;
+  }
+
+  public async prompt(content: string, _options?: { deliverAs?: "steer" | "followUp" }): Promise<{ status: string; id: string }> {
+    if (this.isAborted) throw new Error("Session is aborted");
+    if (!this.isStarted) await this.start();
+    const id = `rec_${Date.now()}`;
+    return { status: "accepted", id };
+  }
+
+  public emitEvent(event: unknown): void {
+    for (const l of this.listeners) l(event);
+  }
+
+  public events(callback: (event: unknown) => void): () => void {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+
+  public async abort(): Promise<void> {
+    this.isAborted = true;
+    this.emitEvent({ type: "session/aborted" });
+  }
+
+  public getState(): Record<string, unknown> {
+    return {
+      isStarted: this.isStarted,
+      isAborted: this.isAborted,
+      sessionDir: this.store.sessionDir,
+    };
+  }
+
+  public async setSubagentPolicy(params: unknown): Promise<{ ok: boolean }> {
+    await this.store.saveDocument("subagents", "policy_ack", params);
+    return { ok: true };
+  }
+
+  public async close(): Promise<void> {
+    this.listeners.clear();
+    await this.store.releaseLock();
+    await this.store.close();
+  }
+}
+```
 
 - [ ] **Step 3: Clean `packages/core/package.json` to have ZERO `@earendil-works/*` dependencies**
 
