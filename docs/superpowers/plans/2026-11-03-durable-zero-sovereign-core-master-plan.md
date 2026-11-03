@@ -976,13 +976,13 @@ Implement `PiDurableSessionStore` in `packages/adapter-pi-durable/src/store.ts` 
 Relocate `session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts` to `packages/adapter-pi-durable/src/`.
 Create `packages/adapter-pi-durable/src/index.ts`.
 
-- [ ] **Step 4: Re-export `forkSessionDatabase` from `@durable-zero/core` and `packages/contracts`**
+- [ ] **Step 4: Re-export `forkSessionDatabase` in `packages/contracts` for downstream compatibility**
 
-In `packages/core/src/index.ts` and `packages/contracts/src/index.ts`:
+In `packages/contracts/src/index.ts`:
 ```typescript
 export { forkSessionDatabase } from "@durable-zero/adapter-pi-durable";
 ```
-This guarantees 100% backward compatibility for `bb-plugin-provider-pi-durable` (`thread-fork.ts`) and existing tests.
+This guarantees 100% backward compatibility for `bb-plugin-provider-pi-durable` (`thread-fork.ts`) and existing tests without polluting `@durable-zero/core` with circular adapter dependencies.
 
 - [ ] **Step 5: Run integration test and full test suite**
 
@@ -1396,21 +1396,30 @@ describe("@durable-zero/core Sovereign Domain Engine", () => {
 Create `packages/core/src/session/coordinator.ts`:
 ```typescript
 import type { ISessionStore } from "./store.ts";
+import type { IModelProvider } from "../models/provider.ts";
+import type { ICodemodeRunner } from "../tools/sandbox.ts";
+import type { IExecutionEnvironment } from "../tools/execution-env.ts";
+
+export interface IResourceLoader {
+  getSystemPrompt?(): Promise<string> | string;
+  getContextFiles?(): Array<{ path: string; content: string }>;
+  getSkills?(): Array<{ name: string; description: string }>;
+}
 
 export interface SessionCoordinatorOptions {
   store: ISessionStore;
-  modelProvider?: {
-    resolveModel?: (ref?: { provider: string; modelId: string }) => Promise<{ provider: string; modelId: string }>;
-    generateStream?: (model: unknown, prompt: unknown, onDelta: (d: unknown) => void) => Promise<{ output: string }>;
-  };
-  codemodeRunner?: unknown;
-  executionEnv?: unknown;
-  piResourceExtension?: unknown;
+  modelProvider?: IModelProvider;
+  codemodeRunner?: ICodemodeRunner;
+  executionEnv?: IExecutionEnvironment;
+  resourceLoader?: IResourceLoader;
 }
 
 export class SessionCoordinator {
   private store: ISessionStore;
-  private modelProvider: unknown;
+  private modelProvider?: IModelProvider;
+  private codemodeRunner?: ICodemodeRunner;
+  private executionEnv?: IExecutionEnvironment;
+  private resourceLoader?: IResourceLoader;
   private isStarted = false;
   public isAborted = false;
   private listeners = new Set<(event: unknown) => void>();
@@ -1418,6 +1427,9 @@ export class SessionCoordinator {
   constructor(options: SessionCoordinatorOptions) {
     this.store = options.store;
     this.modelProvider = options.modelProvider;
+    this.codemodeRunner = options.codemodeRunner;
+    this.executionEnv = options.executionEnv;
+    this.resourceLoader = options.resourceLoader;
   }
 
   public async start(): Promise<void> {
@@ -1723,14 +1735,14 @@ export async function assembleDurableZero(options: AssembleOptions = {}) {
   const store = new PiDurableSessionStore({ sessionDir });
   const modelProvider = new PiAiModelProvider();
   const codemodeRunner = new QuickJsCodemodeRunner();
-  const piResource = options.headless ? undefined : createPiResourceExtension({ cwd });
+  const resourceLoader = options.headless ? undefined : createPiResourceExtension({ cwd });
 
   const coordinator = new SessionCoordinator({
     store,
     modelProvider,
     codemodeRunner,
     executionEnv: env,
-    piResourceExtension: piResource,
+    resourceLoader,
   });
 
   const transport = new StdioJsonRpcServer({
