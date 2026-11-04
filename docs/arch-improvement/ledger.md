@@ -249,3 +249,38 @@
 - [ ] Implement the smallest repairs only in owned files. Existing reverse request/response routing must remain functional; do not respond to unsolicited responses as though they were requests.
 - [ ] Run focused new + existing protocol tests with 30s per-test / 60s command bound; save separate RED/GREEN JUnit/log artifacts under worker thread storage. No network/model calls or user-session writes.
 - [ ] Self-review scoped diff; report exact owned files, test artifacts, compatibility/integration concerns to parent. Leave source uncommitted for separate mechanical checkpoint. Parent arranges independent architecture + product/transport verification before acceptance; no worker-spawned reviewers, release, merge or push.
+
+### Cycle 7 — Parallel HostBridge component (Task 2A) S7 / execution handoff (2026-11-04)
+
+- Latest user authorization: implement isolated HostBridge in a separate **pi** subthread only if it does not hinder the other slices. Full host/Harness integration remains excluded.
+- Exclusive new files: `packages/core/src/tools/host-bridge.ts`, `packages/protocol/src/methods/host.ts`, `packages/runner/src/host/host-bridge.ts`, `packages/runner/test/host-bridge.test.ts`, `packages/protocol/test/host-methods.test.ts`. No other edits. Slice 0 relinquishes the pure SPI file but retains core index/composition/build/adapter ownership. Protocol Task 4A retains schema/errors/dispatcher/index and its two existing test paths. Parent alone owns ledger.
+
+#### Frozen component contract
+
+- Pure `IHostBridge` matches Canonical Design Amendment §5: `forwardToolCall(toolName: string, args: unknown): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }>` and `requestInteraction(kind: string, payload: { title?: string; message?: string; data?: unknown }): Promise<unknown>`. It imports no SDK or I/O. The interface-only file may be created early to unblock the existing Slice-0 type consumer; runtime implementation remains TDD-first.
+- `HostBridge` receives an injected requester with the EXISTING `request(method: string, params: Record<string, unknown>, timeoutMs?: number): Promise<unknown>` signature. Constructor options are `{ requester, timeoutMs?: number }`; default timeout is 30,000ms and a provided timeout must be finite and positive. Production passes a bound existing server request capability; tests may use the real stdio server.
+- `forwardToolCall` delegates to `host/toolCall` with `{ toolName, arguments: args ?? {} }`, validates the returned payload with `hostToolResultSchema`, and preserves `isError` results rather than converting them into success.
+- `requestInteraction` delegates to `host/interaction` with `{ kind, ...payload }`; response contract is an opaque JSON value (including null), validated as JSON, NOT unrestricted `z.unknown()` and NOT a claim that a user approved anything. No coercion/fabricated approval on rejection or timeout. Known UI semantic integration remains later.
+- **Ruling:** transport owns wire IDs, pending promises and timeouts. HostBridge passes its timeout as the existing third request argument; it creates no IDs, extra pending map, tracker, second timer or global singleton. This supersedes the plan's misplaced HostBridge `idSource` example; component tests capture and echo actual emitted IDs, never assume numeric 101.
+- Schema module owns typed host request/result payload schemas and exports locally. Keep the existing text-content result contract, reject malformed payloads and non-JSON arguments/data at the boundary. Do not change public protocol/Core index files; Slice-0/integration owner exports the pure port when needed. A type-only Core public import may be integrated once its owner adds the export; structural contract compatibility does not justify editing another owner's index.
+
+#### Preflight
+
+| Shared surface | Producer → consumer | Finding / ruling |
+| --- | --- | --- |
+| Core bridge SPI | Host component → optional Slice-0 dependency | Transfer this single new file to HostBridge owner now; exact signature frozen above. Slice 0 does not need a concrete bridge instance. |
+| Stdio requester | Protocol server → HostBridge | Existing public method unchanged; no protocol transport/index ownership overlap. |
+| Host schemas | New host module → isolated bridge tests | New files only, independent of Task-4A envelope fixes. |
+| Composition / Harness / dynamic tools | Component → later full Task 2 | DO NOT wire now, delete legacy host code, modify extensions, or create `tools/register` integration. |
+| Test identity and acceptance | Existing real server → component assertions | IDs observed from output; response ordering/timeout tests require actual pending cleanup. Full model-issued tool E2E remains later and is not replaced by component tests. |
+
+- Selected component S7: coherent under these contracts and disjoint ownership. It is not a global plan approval, full Task-2 completion or runtime acceptance.
+
+#### Written execution plan — Task 2A
+
+- [ ] Load required Arch Loop/TDD skills and confirm exact dirty-worktree ownership. Write focused component tests first; missing-module failures alone are not sufficient behavior evidence.
+- [ ] Validate new host schemas with meaningful valid/invalid payload assertions; keep RED and GREEN artifacts distinct.
+- [ ] Implement only the new pure port, payload schemas and HostBridge requester adapter. Test real requests `host/toolCall` and `host/interaction`, validated results, malformed result rejection and propagated transport errors.
+- [ ] Using real `StdioJsonRpcServer` with isolated in-memory streams, test two concurrent reverse calls answered out of order, actual-ID correlation, short configurable timeout, and server-close rejection. No live process/session/model or network is required.
+- [ ] Run owned source-level tests within 30s per test / 60s per command. Do not build shared dist, change package/lock files or edit other workers' tests; parent coordinates final combined build/suite acceptance.
+- [ ] Self-review; report exact five-file scope, behavioral RED/GREEN and readiness/integration concerns. No commits, new subagents, merge, push, release or S9 PASS claims. Parent handles independent review and later Harness integration.
