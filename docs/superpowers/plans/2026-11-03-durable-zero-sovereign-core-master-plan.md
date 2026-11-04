@@ -1915,23 +1915,40 @@ await fs.copyFile(wasmSource, wasmDest);
 console.log("- Copied quickjs.wasm to packages/runner/dist/quickjs.wasm");
 ```
 
-- [ ] **Step 2: Update root `package.json` test runner glob and subpath exports**
+- [x] **Step 2: Update root `package.json` test runner glob and subpath exports**
 
 In root `package.json`:
 - `"test": "node --test packages/*/test/*.test.ts"`
 - `"./runner": "./packages/runner/dist/runner.js"`
 
-- [ ] **Step 3: Run full build and test suite**
+- [x] **Step 3: Run full build and test suite**
 
 Run: `npm run build && npm test`
 Expected: Build succeeds, all tests pass!
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/build.mjs package.json
 git commit -m "chore(build): update build pipeline for all packages and copy WASM to runner dist"
 ```
+
+---
+
+## Cycle 6: Pure Core Decoupling & Legacy Elimination (Remediation Closure)
+
+- [x] **Task 6.1: StdioServer Decomposition**
+  - Extract `request-dispatcher.ts` (85 lines) from `stdio-server.ts` (87 lines). Both files < 120 lines budget.
+- [x] **Task 6.2: Executable CLI Entrypoint**
+  - Create `packages/runner/src/main.ts` (43 lines) with signal traps and safe session unlock.
+  - Wire `"bin": { "durable-runner": "./dist/main.js" }` and update `scripts/build.mjs`.
+- [x] **Task 6.3: Pure Dependency Injection & Zero Singletons**
+  - Eliminate mutable singleton `codemodeExtension` from `packages/adapter-codemode/src/codemode.ts`.
+- [x] **Task 6.4: Boundary Leak Elimination**
+  - Purge relative shims (`session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts`, `model-setup.ts`, `builtin-extensions/codemode.ts`) from `packages/core/src/`.
+  - Decouple `packages/core/package.json` from `@earendil-works/*`, leaving strictly `@durable-zero/*` and `zod`.
+- [x] **Task 6.5: Version and Build Alignment**
+  - Update CLI version to `0.8.1`, copy `quickjs.wasm` to runner dist, commit and verify all 205 tests pass.
 
 ---
 
