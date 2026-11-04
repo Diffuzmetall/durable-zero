@@ -158,6 +158,20 @@
   - Remediation Cycle 4.1 (@thread:thr_kwizs25xch): Landed commit `7f7b99a` fixing all 3 defects via strict TDD (Red -> Green).
   - Re-Review Circuit 2 (@thread:thr_m83nee7n7m): **UNANIMOUS PASS** (All P1/P2 defects confirmed fixed, 202/202 tests passing in 14.8s, 8/8 packages compiled).
 
+### S10 Cycle 5 Closure: True Composition Root & 9-Package Monorepo (2026-11-03)
+- **Scope Implemented:**
+  1. `@durable-zero/runner`: True Composition Root package (AP-020, AP-073) wiring all Core ports and Infrastructure adapters:
+     - Inbound: `@durable-zero/protocol` (`StdioJsonRpcServer`).
+     - Pure Domain: `@durable-zero/core` (`SessionCoordinator`).
+     - Adapters: `@durable-zero/execution`, `@durable-zero/adapter-pi-durable`, `@durable-zero/adapter-pi-ai`, `@durable-zero/adapter-codemode`, `@durable-zero/extension-pi-resource`.
+  2. `packages/runner/src/cli-args.ts`: Strict CLI parser for `--session`, `--cwd`, `--provider`, `--model`, `--thinking` (31 lines, < 80 limit).
+  3. `packages/runner/src/composition.ts`: Explicit dependency injection factory `assembleDurableZero` (118 lines, < 120 limit, AP-074).
+  4. Finalized 9-package build pipeline in `scripts/build.mjs` and root `package.json`.
+- **S9 Dual-Circuit Verification:**
+  - Circuit 1 (Arch Reviewer @thread:thr_cwvdzjuud4): **UNANIMOUS PASS** (Zero reverse dependencies, Composition Root strictly bounded, all files < 120 lines, acyclic package graph).
+  - Circuit 2 (Product Reviewer @thread:thr_a6tvnr4vxa): **UNANIMOUS PASS** (Three Golden Journeys verified: CLI args parsing, lock lifecycle, JSON-RPC streaming, 9/9 packages compiled, 204/204 tests passing in 15.5s).
+
+
 
 
 
