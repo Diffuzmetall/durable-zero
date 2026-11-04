@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0.0",
+  "target": "task-4b-capability-dispatcher-candidate",
+  "frozenCommit": "49bcad1486a5101e20e8b88a616cc175a34fc3e9",
+  "builtAt": "2026-11-04T21:21:30.651Z",
+  "artifact": {
+    "fileName": "component-driver.mjs",
+    "path": "docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs",
+    "sha256": "7d8fb526e3cfcc1cefe4cf44eab67634ab38dab052a33668d3d2dd9be084db46",
+    "sizeBytes": 30854
+  },
+  "environment": {
+    "nodeVersion": "v26.0.0",
+    "esbuildVersion": "0.28.2"
+  },
+  "buildLog": [
+    "[2026-11-04T21:21:29.978Z] Starting build of frozen Task-4B candidate from commit 49bcad1486a5101e20e8b88a616cc175a34fc3e9",
+    "[2026-11-04T21:21:30.020Z] Built fresh isolated artifact: packages/contracts/dist/index.js",
+    "[2026-11-04T21:21:30.027Z] Built fresh isolated artifact: packages/protocol/dist/index.js",
+    "[2026-11-04T21:21:30.033Z] Built fresh isolated artifact: packages/core/dist/index.js",
+    "[2026-11-04T21:21:30.041Z] Built runnable component driver bundle: /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs",
+    "[2026-11-04T21:21:30.042Z] Generated SHA256 checksum: 7d8fb526e3cfcc1cefe4cf44eab67634ab38dab052a33668d3d2dd9be084db46",
+    "[2026-11-04T21:21:30.042Z] Running startup & interaction smoke check against compiled bundle...",
+    "[2026-11-04T21:21:30.651Z] Child exited with code 0, signal null",
+    "[2026-11-04T21:21:30.651Z] Verification responses captured (7 lines)"
+  ],
+  "verificationSmoke": {
+    "exitCode": 0,
+    "exitSignal": null,
+    "rawStdoutLines": [
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-1-state\",\"result\":{\"sessionId\":\"fixture-in-memory-session\",\"cwd\":\"/fixture-test-workspace\",\"activeConversationId\":\"1\",\"activeModel\":{\"provider\":\"fixture-provider\",\"modelId\":\"fixture-model-v1\"},\"thinkingLevel\":\"high\",\"models\":[{\"provider\":\"fixture-provider\",\"modelId\":\"fixture-model-v1\",\"name\":\"Fixture Model V1\",\"contextWindow\":64000}],\"entryCount\":1}}",
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-2-stats\",\"result\":{\"contextUsage\":{\"tokens\":100,\"contextWindow\":128000}}}",
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-3-prompt\",\"result\":{\"status\":\"accepted\",\"id\":\"fixture_sub_1\",\"conversationId\":\"1\"}}",
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-4-calls\",\"result\":{\"calls\":[{\"method\":\"start\",\"args\":[\"/tmp/fixture-session-dir\"],\"timestamp\":1793827290208},{\"method\":\"getState\",\"args\":[null],\"timestamp\":1793827290212},{\"method\":\"getStats\",\"args\":[null],\"timestamp\":1793827290212},{\"method\":\"submit\",\"args\":[\"smoke test prompt\",{\"deliverAs\":\"followUp\"}],\"timestamp\":1793827290213}]}}",
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-5-unknown\",\"error\":{\"code\":-32603,\"message\":\"Method not found: unknown/capabilityProbe\"}}",
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-6-bad-params\",\"error\":{\"code\":-32603,\"message\":\"Missing required prompt content, message, or images\"}}",
+      "{\"jsonrpc\":\"2.0\",\"id\":\"probe-7-unsupported\",\"error\":{\"code\":-32603,\"message\":\"Capability 'binding/register' is unsupported by the current SessionCoordinator / IAgentEngine SPI. Missing seam: Runtime binding storage is not exposed on IAgentEngine or SessionCoordinator SPI; requires dedicated IBindingStore or IAgentEngine binding methods.\"}}"
+    ],
+    "rawStderr": ""
+  }
+}
