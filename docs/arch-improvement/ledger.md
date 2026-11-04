@@ -220,3 +220,32 @@
 - **R7 — Acceptance and parallel ownership:** implement Task 1 only. New technical ambiguity gets a bounded source-backed ruling, not another whole-plan rewrite. No changes to canonical plan/master plan, skills, provider plugin, original session databases, live deployments or releases. No push until remote visibility/authorization is verified. Implementation is NOT accepted until parent inspects the diff and independent architecture + product circuits pass; the author must not spawn reviewers or additional workers.
 
 - **Global design assessment:** mature native runtime retained behind sovereign contracts; one composition root, acyclic adapters and one JSON-RPC transport is the intended direction. No proven global design blocker requires postponing this bounded vertical slice. Known remaining plan work is not relabeled as completed or as permission to execute later tasks.
+
+### Cycle 7 — Parallel protocol defect slice (Task 4A) S7 / execution handoff (2026-11-04)
+
+- Latest user authorization: execute only the three JSON-RPC defects in a separate **pi** subthread concurrently with Slice 0. This supersedes the earlier Task-1-only authorization for this bounded subset, NOT for all of Tasks 2–6.
+- Owner split: protocol worker owns `packages/protocol/src/jsonrpc/schema.ts`, new `jsonrpc/errors.ts`, `transport/request-dispatcher.ts`, additive export in `protocol/src/index.ts`, `protocol/test/protocol-conformance.test.ts` and only necessary adjustments in `protocol/test/protocol.test.ts`. Slice-0 worker owns runner/core/adapter/contracts/CLI/build and must not edit these reserved paths. The plan author owns only canonical plan. Parent is sole ledger writer; workers supply handoff reports/logs, not concurrent ledger edits.
+- Review evidence: existing source and earlier in-process probes confirm notification rejection with a response instead of execution/silence, method-not-found classified as internal error, and response schemas accepting both result and error.
+- Architecture: stateless protocol-envelope repair; no model/session/storage/host-tool orchestration, no SDK dependency and no new transport. Public server/options/MethodHandler/request lifecycle signatures remain unchanged.
+
+#### Preflight and rulings
+
+| Shared surface | Producer → consumer | Ruling |
+| --- | --- | --- |
+| Stdio server + MethodHandler | Existing protocol API → Slice-0 composition | Freeze all existing public signatures and transport lifecycle behavior. Notification executes the same handler without creating a response or fake ID. |
+| Method-not-found error | New protocol error → runner fallback | Add `JsonRpcMethodNotFoundError(method?: string)` with code `-32601`; dispatcher recognizes it by type. Slice-0 worker updates its own runner fallback. Generic exceptions remain `-32603`; no guessing from error strings. |
+| Response schema → outbound tracker | Zod validation → pending promise settlement | Enforce exactly one of result/error by field presence, not truthiness. Preserve valid null/false/zero/empty-string results and existing pending cleanup/correlation. |
+| Shared tests/build output | Two source writers → final acceptance | Protocol runs focused source-level node:test only, no build/dist/package/lock edits. Parent coordinates final whole-repo verification after both writers reach checkpoints. Temporary other-slice RED is not evidence of a regression in this slice. |
+| Task 4A → full Task 4 | Three fixes → remaining conformance/dispatch work | Full batches/positional params/capability preservation/host/probe are not added to this slice or claimed complete. |
+
+- **Selected S7 verdict:** bounded Task 4A is executable with the above fixed ownership/contracts. No acceptance of the implementation is claimed.
+
+#### Written execution plan — Task 4A
+
+- [ ] Add focused behavioral tests in `packages/protocol/test/protocol-conformance.test.ts`; record genuine RED with existing imports before production fixes (not a missing-module/compile failure).
+- [ ] Notifications: assert handler is actually called and no response is emitted, including when the handler rejects; preserve request IDs `0` and `""` as requests, and do not classify an object with an `id` field as an ID-less notification.
+- [ ] Responses: reject neither/both result/error; preserve valid falsy results and native pending-outbound resolution/rejection/timeout cleanup. Ensure a void handler serializes a valid success result (`null`), not an envelope missing result on JSON serialization.
+- [ ] Add typed method-not-found error/export and a behavioral failing test for its current erroneous mapping before changing that catch path. Map only this explicit condition to `-32601`, other handler errors to `-32603`; preserve `-32700` for malformed JSON and `-32600` for invalid requests.
+- [ ] Implement the smallest repairs only in owned files. Existing reverse request/response routing must remain functional; do not respond to unsolicited responses as though they were requests.
+- [ ] Run focused new + existing protocol tests with 30s per-test / 60s command bound; save separate RED/GREEN JUnit/log artifacts under worker thread storage. No network/model calls or user-session writes.
+- [ ] Self-review scoped diff; report exact owned files, test artifacts, compatibility/integration concerns to parent. Leave source uncommitted for separate mechanical checkpoint. Parent arranges independent architecture + product/transport verification before acceptance; no worker-spawned reviewers, release, merge or push.
