@@ -8,8 +8,8 @@
     {
       "name": "1 · Native Slice 0",
       "tone": "bad",
-      "status": "Независимый source-review FAIL",
-      "proof": "Авторский native E2E проходит, но независимое ревью нашло дефекты abort/reuse, contentIndex, DI, teardown, EOF и качества oracle. Полный текст второго ответа тестом не проверялся.",
+      "status": "Native product PASS / source FAIL",
+      "proof": "Независимый gated black-box: 9 случаев без падений; полный второй/третий текст и EntryId после restart проверены. Source-review блокирует Slice0: lifecycle, contentIndex, DI, teardown/EOF/CLI и постоянный regression-oracle.",
       "remaining": "Исправления исходным автором; усиленный oracle и независимая native black-box приёмка; оставшаяся миграция тестов."
     },
     {
@@ -36,15 +36,15 @@
     {
       "name": "4B · Capability dispatcher",
       "tone": "warn",
-      "status": "Compiled component PASS; evidence gate открыт",
-      "proof": "Независимый Node black-box исправленного fixture-компонента: 46 cases, без падений. Source-review сообщает behavioral PASS; собственный probe-harness ревьюера требует исправления.",
-      "remaining": "Закрыть достоверность review receipts; затем отдельно production wiring и неподдержанные admin/host seams."
+      "status": "Компонент 4B принят в своём scope",
+      "proof": "Source/component review и независимый compiled black-box PASS; настоящий Node reporter и failing negative control перепроверены. Native и production composition не входят в этот PASS.",
+      "remaining": "Production wiring отдельным этапом; bindings/fork/tools seams ещё не реализованы."
     },
     {
       "name": "5A · Architecture guards",
       "tone": "bad",
-      "status": "Fix round 2 ждёт независимого ревью",
-      "proof": "После подтверждённых false-green bypasses автор разделил checker на модули и представил новую реализацию; авторский GREEN ещё не означает, что обходы устранены.",
+      "status": "Round2 FAIL; round3 на перепроверке",
+      "proof": "DAG frozen e006 ацикличен; четыре structural CLI-checker bypasses R2 блокировали scope. Автор R3 представил исправления, независимое ревью ещё нужно.",
       "remaining": "Независимо перепроверить настоящее выполнение imported callable main, реальный serve branch, точное разрешение пакета/экспорта и прежние counterexamples."
     },
     {
@@ -58,7 +58,7 @@
   "remaining": [
     {
       "title": "Закрыть native Slice 0 независимо",
-      "detail": "Исправить найденные Native source-review дефекты, доказать поток до завершения модели и полный второй текст/EntryId после restart; затем пройти независимую product-проверку на реальном CLI."
+      "detail": "Независимый gated native walking path уже PASS. Закрываем source-review дефекты и усиливаем постоянные regression-тесты, затем перепроверяем новый кандидат."
     },
     {
       "title": "Довести тестовую миграцию",
@@ -66,7 +66,7 @@
     },
     {
       "title": "Перепроверить исправленный dispatcher и guards",
-      "detail": "Source GREEN у dispatcher не заменяет повторный compiled-run. У AST-checker переоткрыт настоящий false-green: произвольный main, отсутствующий экспорт и поддельный runner-путь проходят проверку."
+      "detail": "Компонент dispatcher получил оба scoped PASS. Guard checker после R2 FAIL исправлен автором в R3 и проходит новую независимую проверку."
     },
     {
       "title": "Замкнуть оставшиеся рабочие возможности",
@@ -132,6 +132,14 @@
       "tests": 46,
       "failed": 0,
       "scope": "Независимый fixture-компонент; НЕ native Harness/SQLite"
+    },
+    {
+      "name": "Independent native gated walking path",
+      "path": "live/task-1/independent-product-review/test-report.junit.xml",
+      "tests": 9,
+      "failed": 0,
+      "sha256": "a9528d85b6ce5a833330103b6f46970d80730a047d94a147cc9d41006ea20f5b",
+      "scope": "Frozen fc090 real native CLI/Harness/SQLite, only model seam scripted; Native source review FAIL"
     }
   ],
   "evidence": [
@@ -182,6 +190,14 @@
     {
       "path": "live/task-1/independent-source-review/review.md",
       "label": "Native source/spec review · FAIL"
+    },
+    {
+      "path": "live/task-1/independent-product-review/review.md",
+      "label": "Независимый native gated path · scoped PASS"
+    },
+    {
+      "path": "live/task-1/independent-product-review/test-report.junit.xml",
+      "label": "Независимый native gated path · JUnit"
     }
   ],
   "changes": [
@@ -193,5 +209,7 @@
     "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом.",
     "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
   ],
-  "reviewUpdateAt": "2026-11-05T01:46:54.368771+03:00"
+  "reviewUpdateAt": "2026-11-05T02:04:16.849957+03:00",
+  "nativeMinimumProductVerdict": "PASS",
+  "nativeSourceVerdict": "FAIL"
 }

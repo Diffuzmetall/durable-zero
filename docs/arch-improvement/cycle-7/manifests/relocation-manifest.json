@@ -1,6 +1,6 @@
 {
   "title": "Cycle 7 current packaged-artifact integrity (not product acceptance)",
-  "created_at": "2026-11-05T01:30:53.256611+03:00",
+  "created_at": "2026-11-05T02:04:16.972718+03:00",
   "packaged_deliverables_count": 128,
   "packaged_deliverables": [
     {
@@ -41,43 +41,43 @@
     {
       "path": "architecture/durable-zero-architecture-asis.svg",
       "category": "architecture",
-      "sha256": "96c01997efd8a51e7e5cf1c598a7669836cdc552a17555b36511d7808ea39212",
-      "bytes": 4698,
+      "sha256": "21d76e42ba253955a30e0e90a898a2aac1280f0f67d6e4dd681dcb48119fc43f",
+      "bytes": 4704,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-asis.svg"
     },
     {
       "path": "architecture/durable-zero-architecture-status.html",
       "category": "architecture",
-      "sha256": "a8adbf6e9ddecbf11a4d805cfddb98021f816197c0de03d66db6f7570f21e7de",
-      "bytes": 23298,
+      "sha256": "638d57b7da572314d69c898067135c346536f779e98d392041b79ed43bc090f1",
+      "bytes": 24709,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
     },
     {
       "path": "architecture/durable-zero-architecture-status.json",
       "category": "architecture",
-      "sha256": "ffaa9dcb34499908b36251ac5bb5a04a7304dcdf8de7bf05dbeb7b08d82b1ff3",
-      "bytes": 10530,
+      "sha256": "8c06bf71e2d040167de81a819786e7b7d81af6f553443a93cb6aa5feef92aa7f",
+      "bytes": 12179,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.json"
     },
     {
       "path": "architecture/durable-zero-architecture-status.md",
       "category": "architecture",
-      "sha256": "5b6dcfb8d8c0bfae9f69510d950a71056246b37a18c5cb5028e5250b5e8a4e44",
-      "bytes": 4096,
+      "sha256": "e83f201e722ed37f25fdb7d94262858e330fbdc8b70f9c3deb20773515105614",
+      "bytes": 4584,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.md"
     },
     {
       "path": "architecture/durable-zero-architecture-tobe.svg",
       "category": "architecture",
-      "sha256": "de8c4163e5529411b7515bfa81eea8e2d594ce1a855b59b2c2f5ac68630810a2",
-      "bytes": 4645,
+      "sha256": "41999fca13fa8a22d0c6c18515eeaf3a8a5bc9010a4556915a0bb47d9bc146ab",
+      "bytes": 4651,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-tobe.svg"
     },
     {
       "path": "architecture/render-architecture-status.py",
       "category": "architecture",
-      "sha256": "e701858b287612eeb10aead96e6fbab67d1d3330dcd04fc5e918a6d999130cee",
-      "bytes": 10749,
+      "sha256": "211c9aaaf410dfba158b99c59c37d6cd088531ab9cbf55fcc26ff8933ee884e0",
+      "bytes": 11081,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/render-architecture-status.py"
     },
     {
@@ -818,7 +818,7 @@
     {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "573dede16561149978568bbd44042665d72fef69e636880fc78670049becb383",
+      "sha256": "e4f6f1f96918a3672a468e114a085a3c5b3628682f8b87291ede1b53e8d4787d",
       "bytes": 975,
       "source_provenance": "workspace"
     },
@@ -952,19 +952,19 @@
   "verification_receipts": {
     "html_links_verified": {
       "target": "architecture/durable-zero-architecture-status.html",
-      "total_links": 15,
+      "total_links": 18,
       "broken_links": 0
     },
     "svgs_verified": {
       "asis": {
         "validXML": true,
         "viewBox": "0 0 1060 690",
-        "sha256": "96c01997efd8a51e7e5cf1c598a7669836cdc552a17555b36511d7808ea39212"
+        "sha256": "21d76e42ba253955a30e0e90a898a2aac1280f0f67d6e4dd681dcb48119fc43f"
       },
       "tobe": {
         "validXML": true,
         "viewBox": "0 0 1060 690",
-        "sha256": "de8c4163e5529411b7515bfa81eea8e2d594ce1a855b59b2c2f5ac68630810a2"
+        "sha256": "41999fca13fa8a22d0c6c18515eeaf3a8a5bc9010a4556915a0bb47d9bc146ab"
       }
     },
     "source_snapshot_immutable": {

@@ -2,11 +2,11 @@
 
 Срез 2026-11-05T01:24:06.884289+03:00; ea21bf5a645d148c0767716b099d387bb0bce822 + WIP. Global S9: NOT ACCEPTED.
 
-## 1 · Native Slice 0 — Сквозной авторский тест прошёл
+## 1 · Native Slice 0 — Native product PASS / source FAIL
 
-Реальный CLI, native Harness, text_delta, SQLite и повторный процесс; отдельный frozen CLI собран. Начата независимая source-проверка.
+Независимый gated black-box: 9 случаев без падений; полный второй/третий текст и EntryId после restart проверены. Source-review блокирует Slice0: lifecycle, contentIndex, DI, teardown/EOF/CLI и постоянный regression-oracle.
 
-Осталось: Независимая native black-box приёмка; полный перенос тестовых потребителей и регрессионный прогон.
+Осталось: Исправления исходным автором; усиленный oracle и независимая native black-box приёмка; оставшаяся миграция тестов.
 
 ## 2A / полный Task 2 — Компонент HostBridge принят
 
@@ -26,17 +26,17 @@ f3fff38: независимые architecture и compiled-public-package PASS в 
 
 Осталось: Не переносить этот PASS на все endpoint/capability и production composition.
 
-## 4B · Capability dispatcher — Fix round 1 готов к перепроверке
+## 4B · Capability dispatcher — Компонент 4B принят в своём scope
 
-Исходный compiled-кандидат: 5 падений на nominal error identity. Исправление: 60 source cases без падений.
+Source/component review и независимый compiled black-box PASS; настоящий Node reporter и failing negative control перепроверены. Native и production composition не входят в этот PASS.
 
-Осталось: Свежая frozen-сборка и оба независимых re-review; затем wiring. binding/list/register, session/fork и tools/register пока unsupported.
+Осталось: Production wiring отдельным этапом; bindings/fork/tools seams ещё не реализованы.
 
-## 5A · Architecture guards — Повторное ревью FAIL
+## 5A · Architecture guards — Round2 FAIL; round3 на перепроверке
 
-Сканирование DAG и правдивый FAIL-отчёт работают; дополнительная проверка доказала 3 обхода CLI main checker и нарушение AP-019.
+DAG frozen e006 ацикличен; четыре structural CLI-checker bypasses R2 блокировали scope. Автор R3 представил исправления, независимое ревью ещё нужно.
 
-Осталось: Привязать реальный imported main, проверить экспорт и точную границу пакета; осмысленно декомпозировать checker; повторить независимые probes.
+Осталось: Независимо перепроверить настоящее выполнение imported callable main, реальный serve branch, точное разрешение пакета/экспорта и прежние counterexamples.
 
 ## 5 / 6 · Полная чистота и S9 — Общий PASS не выдан
 
@@ -57,3 +57,6 @@ f3fff38: независимые architecture и compiled-public-package PASS в 
 - [Frozen native CLI · build / startup smoke, не product acceptance](../live/task-1/native-candidate/README.md)
 - [Architecture guards · amended FAIL](../live/task-5-guards/independent-review/fix-round-1/review.md)
 - [Оригинальный compiled dispatcher · black-box review](../live/task-4b/independent-product-review/report.md)
+- [Native source/spec review · FAIL](../live/task-1/independent-source-review/review.md)
+- [Независимый native gated path · scoped PASS](../live/task-1/independent-product-review/review.md)
+- [Независимый native gated path · JUnit](../live/task-1/independent-product-review/test-report.junit.xml)
