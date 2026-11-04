@@ -1,7 +1,7 @@
 # Cycle 7 — Architecture, Implementation, and Evidence Index
 
 Branch: `cycle-7-runtime-adapter-ioc-migration`  
-Source Baseline: `7d4b235` and docs checkpoints `6891b73`, `cafd5f9`.  
+Source Baseline: `7d4b235` and docs checkpoints `6891b73`, `cafd5f9`, `07609af`.  
 Current Status: **Native walking skeleton NOT accepted.** Protocol 4A candidate `f3fff38` has bounded architecture/product PASS; HostBridge candidate `efc9eab` has component architecture PASS only. Global S9 acceptance is pending.
 
 ---
@@ -15,6 +15,7 @@ Current Status: **Native walking skeleton NOT accepted.** Protocol 4A candidate 
 - **Canonical Plan:** [2026-11-04-cycle-7-runtime-adapter-ioc-migration.md](../../superpowers/plans/2026-11-04-cycle-7-runtime-adapter-ioc-migration.md)
 - **Shared Ledger:** [docs/arch-improvement/ledger.md](../ledger.md)
 - **Packaging Manifest:** [manifests/relocation-manifest.json](manifests/relocation-manifest.json)
+- **Validation Report:** [manifests/final-validation-report.md](manifests/final-validation-report.md)
 
 ---
 
@@ -26,12 +27,12 @@ All deliverables have been promoted from ephemeral thread storage into permanent
 docs/arch-improvement/cycle-7/
 ├── README.md                              # This index
 ├── architecture/                          # Architecture status, diagrams, snapshot, and renderer
-│   ├── durable-zero-architecture-status.html
-│   ├── durable-zero-architecture-status.md
-│   ├── durable-zero-architecture-status.json
-│   ├── durable-zero-architecture-asis.svg
-│   ├── durable-zero-architecture-tobe.svg
-│   ├── architecture-map-source-snapshot.json
+│   ├── durable-zero-architecture-status.html # Responsive status dashboard (29 verified relative links)
+│   ├── durable-zero-architecture-status.md   # Analysis markdown
+│   ├── durable-zero-architecture-status.json # Status JSON schema
+│   ├── durable-zero-architecture-asis.svg    # Valid standalone SVG
+│   ├── durable-zero-architecture-tobe.svg    # Valid standalone SVG
+│   ├── architecture-map-source-snapshot.json # Immutable source snapshot with file SHA256 hashes
 │   ├── architecture-map-migration-metrics.json
 │   ├── architecture-map-slice0-command-receipts.json
 │   └── render-architecture-status.py      # Self-contained source-relative renderer
@@ -63,7 +64,7 @@ docs/arch-improvement/cycle-7/
 │   ├── plan-contracts-wip-source-check.md
 │   ├── plan-final-contracts-author-report.md
 │   └── latest-plan-change.patch
-├── evidence/                              # RED/GREEN receipts, diffs, build logs, and candidate manifests
+├── evidence/                              # RED/GREEN receipts, diffs, build logs, and candidate packages
 │   ├── cycle7-task-1-red.log              # Verified RED receipt: walking skeleton timeout (exit 1)
 │   ├── protocol-conformance-red.junit.xml / .log
 │   ├── protocol-conformance-green.junit.xml / .log
@@ -89,7 +90,19 @@ docs/arch-improvement/cycle-7/
 │   ├── hostbridge-candidate-commit.log / fix-r1-commit.log
 │   ├── hostbridge-fixed-manifest.json
 │   ├── protocol-fix-r1-review.diff / review-raw.diff / parent-inspection.diff
-│   └── hostbridge-review-package-fixed.diff / all-raw.diff / parent-inspection.diff
+│   ├── hostbridge-review-package-fixed.diff / all-raw.diff / parent-inspection.diff
+│   ├── protocol-package/                  # Pre-fix built candidate package & consumer test suite
+│   │   ├── dist/index.js                  # SHA256: a4eafbd7365b98df3637e19195d2c00346a0c0ad5d40c74f514d7c17758ea093
+│   │   ├── package.json
+│   │   ├── generate-journey-artifacts.mjs
+│   │   ├── test-consumer-server.mjs
+│   │   └── test-suite.mjs
+│   └── protocol-package-fix-r1/           # Fixed candidate package & consumer test suite
+│       ├── dist/index.js                  # SHA256: 24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514
+│       ├── package.json
+│       ├── generate-journey-artifacts.mjs
+│       ├── test-consumer-server.mjs
+│       └── test-suite.mjs
 ├── historical/                            # Truthful record of initial failures and earlier rounds
 │   ├── protocol-architecture-review.md    # Initial Round 0 review (surfaced P1 findings)
 │   ├── protocol-architecture-findings.json
@@ -103,7 +116,8 @@ docs/arch-improvement/cycle-7/
 │   ├── durable-zero-target.svg
 │   └── durable-zero-checkpoint-*.log / .json / .txt
 └── manifests/                             # Machine-readable inventory of moved deliverables
-    └── relocation-manifest.json           # 106 deliverables, SHA256, exclusions, and verifications
+    ├── relocation-manifest.json           # 116 deliverables, SHA256, exclusions, and verifications
+    └── final-validation-report.md         # Final verification and reproducibility report
 ```
 
 ---
@@ -113,6 +127,7 @@ docs/arch-improvement/cycle-7/
 1. **Protocol 4A (Commit `f3fff38`):**
    - Verified by independent architecture re-review ([protocol-architecture-rereview-r1.md](reviews/protocol-architecture-rereview-r1.md)) and compiled-package product test ([protocol-product-rereview-r1.md](reviews/protocol-product-rereview-r1.md)).
    - Conformance: StdioJsonRpcServer correctly handles notifications, request ID types, XOR response objects, reverse RPC, and typed method-not-found errors.
+   - Candidate Artifact: Frozen and preserved at [evidence/protocol-package-fix-r1/dist/index.js](evidence/protocol-package-fix-r1/dist/index.js) (SHA256: `24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514`).
    - Boundary: Scope is strictly limited to `@durable-zero/protocol`. It does NOT accept the full runner capability dispatcher.
 
 2. **HostBridge 2A (Commit `efc9eab`):**

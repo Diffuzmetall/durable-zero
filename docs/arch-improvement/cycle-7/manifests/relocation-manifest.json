@@ -1,6 +1,6 @@
 {
   "title": "durable-zero Cycle 7 Deliverables Relocation Manifest",
-  "created_at": "2026-11-04T23:30:00+03:00",
+  "created_at": "2026-11-04T23:45:00+03:00",
   "scope_ownership": [
     "docs/arch-improvement/cycle-7/README.md",
     "docs/arch-improvement/cycle-7/architecture/",
@@ -17,13 +17,13 @@
     "AGENTS.md",
     "product source"
   ],
-  "packaged_deliverables_count": 106,
+  "packaged_deliverables_count": 116,
   "packaged_deliverables": [
     {
       "path": "README.md",
       "category": "root",
-      "sha256": "8836e62f8e6eaba8fcfa3fb944985794598248a12bb0aef34b6aa8d7cdf5194a",
-      "bytes": 938,
+      "sha256": "06bc25426e826567983f3b1cf2ddc1248c0083b91ae9a932670722d46c7c8493",
+      "bytes": 10830,
       "source_provenance": "workspace"
     },
     {
@@ -410,6 +410,76 @@
       "sha256": "a1438e724c403619a4e7448c60b5027c38b52175e3f308facf6650c392e4fa7b",
       "bytes": 7836,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/redo-host-methods-behavioral-red.log"
+    },
+    {
+      "path": "evidence/protocol-package/generate-journey-artifacts.mjs",
+      "category": "evidence",
+      "sha256": "1d6b668076cc54a6868de6a9c448002f18c0e009da5f72350e1bbb54d6910bd3",
+      "bytes": 16130,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/generate-journey-artifacts.mjs"
+    },
+    {
+      "path": "evidence/protocol-package/package.json",
+      "category": "evidence",
+      "sha256": "95a473643b1c21c738105034614a08696706eaef8f90aaf6edc0d909877729db",
+      "bytes": 310,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/package.json"
+    },
+    {
+      "path": "evidence/protocol-package/test-consumer-server.mjs",
+      "category": "evidence",
+      "sha256": "924d8d4f85f5ad841f13dc7042f2bf28b3c2d287a821316cf587d7bc2e531732",
+      "bytes": 1972,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-consumer-server.mjs"
+    },
+    {
+      "path": "evidence/protocol-package/test-suite.mjs",
+      "category": "evidence",
+      "sha256": "4f70d3434ac2ddf8542011ffe5079128b15ac29e5645694cde5ea0da6403f7ac",
+      "bytes": 17587,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"
+    },
+    {
+      "path": "evidence/protocol-package/dist/index.js",
+      "category": "evidence",
+      "sha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
+      "bytes": 764537,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/generate-journey-artifacts.mjs",
+      "category": "evidence",
+      "sha256": "79f16c0edd5c88dac4b3f01a4646c8b744a495eebbd41189d059f79d82cde936",
+      "bytes": 16809,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/generate-journey-artifacts.mjs"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/package.json",
+      "category": "evidence",
+      "sha256": "95a473643b1c21c738105034614a08696706eaef8f90aaf6edc0d909877729db",
+      "bytes": 310,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/package.json"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/test-consumer-server.mjs",
+      "category": "evidence",
+      "sha256": "6e8f43fee2c236b97cb23db3d24f2c6fcf6a0d5b574eeb612d9fafe328a52eb4",
+      "bytes": 2210,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/test-consumer-server.mjs"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/test-suite.mjs",
+      "category": "evidence",
+      "sha256": "312e67feeaadc9910ecb93b51027f06d6e575ace9a7cea07cb4184bde5c5df0a",
+      "bytes": 16736,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/test-suite.mjs"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/dist/index.js",
+      "category": "evidence",
+      "sha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
+      "bytes": 764468,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js"
     },
     {
       "path": "historical/durable-zero-architecture.html",
@@ -818,6 +888,20 @@
       "line_count": 23,
       "exit_code": 1,
       "failure_mode": "timeout after 60000ms in Slice 0 Walking Skeleton"
+    },
+    "frozen_candidates": {
+      "protocol_package_original_dist": {
+        "path": "evidence/protocol-package/dist/index.js",
+        "sha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
+        "provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js",
+        "verified_match": true
+      },
+      "protocol_package_fix_r1_dist": {
+        "path": "evidence/protocol-package-fix-r1/dist/index.js",
+        "sha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
+        "provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js",
+        "verified_match": true
+      }
     },
     "html_links_verified": {
       "target": "architecture/durable-zero-architecture-status.html",
