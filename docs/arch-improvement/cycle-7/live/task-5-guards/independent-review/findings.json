@@ -1,0 +1,52 @@
+[
+  {
+    "id": "FND-TASK5-01",
+    "severity": "P1",
+    "title": "CLI Serve Entrypoint Checker Accepts Hollow Implementations & Nonexistent Paths (Unchecked callsMain & Missing Path Verification)",
+    "file": "packages/core/test/architecture-boundaries.test.ts:316",
+    "evidence": "packages/core/test/architecture-boundaries.test.ts lines 316, 335, 357-380; verified by adversarial probe Probe 1 in docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts",
+    "impact": "The guard claims to verify real CLI serve delegation to runner, but callsMain is calculated and never evaluated before returning { isOk: true }. A CLI script that imports runner without ever calling main(args) erroneously passes. Furthermore, string matching without disk resolution passes references to nonexistent runner files and matches string literals in dummy variables/comments.",
+    "rule": "AP-076",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-02",
+    "severity": "P1",
+    "title": "Workspace DAG Cycle Detector Relies Exclusively on package.json Manifests, Completely Blind to Cross-Package Source & Re-Export Cycles",
+    "file": "packages/core/test/architecture-boundaries.test.ts:771",
+    "evidence": "packages/core/test/architecture-boundaries.test.ts lines 771-789; verified by adversarial probe Probe 2 in docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts",
+    "impact": "The checker claims monorepo workspace DAG is strictly acyclic across workspace including re-exports. In reality, the live test only reads package.json dependencies. If Package A imports or re-exports Package B at the TypeScript source level while omitting the dependency in package.json, the graph edge is omitted and circular cross-package dependencies evade detection.",
+    "rule": "AP-025",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-03",
+    "severity": "P1",
+    "title": "Suite 4 Evidence Generator Hardcodes Unconditional 'status: PASS' and 'coreBoundaryViolations: 0' Independent of Test Results",
+    "file": "packages/core/test/architecture-boundaries.test.ts:864",
+    "evidence": "packages/core/test/architecture-boundaries.test.ts lines 864-885; verified by adversarial probe Probe 3 in docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts",
+    "impact": "Because Node test runner continues executing subsequent test blocks after an assertion failure, a boundary violation in Suite 3 fails the test case, but Suite 4 still runs and writes report.json with hardcoded 'status': 'PASS', 'coreBoundaryViolations': 0, and 'workspaceAcyclic': true. CI or automated consumers inspecting report.json observe false green status.",
+    "rule": "AP-076",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-04",
+    "severity": "P2",
+    "title": "AST Dependency Extractor Ignores Dynamic Import Template Literals, import = require, and Non-.ts Extensions",
+    "file": "packages/core/test/architecture-boundaries.test.ts:127",
+    "evidence": "packages/core/test/architecture-boundaries.test.ts lines 127-133, 454; verified by adversarial probe Probe 4 in docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts",
+    "impact": "ts.isStringLiteral(node.arguments[0]) rejects no-substitution template literals (import(`@earendil-works/pi-durable`)), allowing forbidden dynamic vendor imports to bypass detection. TS import = require(...) is unhandled. collectAllSourceFiles only searches .ts, ignoring .mts, .cts, .js, and .tsx.",
+    "rule": "AP-025",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-05",
+    "severity": "P3",
+    "title": "Unreferenced Pre-Migration Legacy Build Script and Dist Artifact in Core (Whole-Cycle Cleanup)",
+    "file": "packages/core/scripts/build-runner.mjs:1",
+    "evidence": "packages/core/scripts/build-runner.mjs and packages/core/dist/runner.js remain in tree from pre-migration state.",
+    "impact": "Uninvoked obsolete script left in core/scripts. package.json has no build:runner script and CLI no longer references core/dist/runner.js. It does not cause runtime defects or break production journeys, but should be deleted during scheduled whole-cycle cleanup.",
+    "rule": "AP-018",
+    "fix_decision": "log-only"
+  }
+]
