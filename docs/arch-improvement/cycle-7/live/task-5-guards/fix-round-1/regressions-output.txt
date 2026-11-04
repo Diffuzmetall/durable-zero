@@ -1,0 +1,28 @@
+▶ Task 5A Remediation: Regression Tests on Independent Review Findings
+  ▶ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement
+    ✔ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (4.442958ms)
+    ✔ REJECTS CLI serve target pointing to nonexistent runner file on disk (0.721625ms)
+    ✔ REJECTS CLI script that matches import only in string literal or comment (0.313166ms)
+    ✔ ACCEPTS valid CLI serve entrypoint that imports runner and calls main() (1.749959ms)
+  ✔ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement (7.578875ms)
+  ▶ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports
+    ✔ DETECTS cross-package source import cycle even when package.json dependencies omit edges (3.911167ms)
+    ✔ DETECTS cross-package barrel re-export cycle when package.json dependencies omit edges (3.933833ms)
+  ✔ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports (7.929208ms)
+  ▶ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting
+    ✔ GENERATES failing report and non-zero violation count when violations exist (no false PASS) (0.594291ms)
+  ✔ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting (0.655792ms)
+  ▶ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage
+    ✔ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.833667ms)
+    ✔ DETECTS TypeScript import = require(...) syntax (0.3955ms)
+    ✔ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.755625ms)
+  ✔ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage (2.05175ms)
+✔ Task 5A Remediation: Regression Tests on Independent Review Findings (18.643584ms)
+ℹ tests 10
+ℹ suites 5
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 312.0615

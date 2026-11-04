@@ -1,0 +1,41 @@
+{
+  "task": "Task 5A: Architecture Boundary & Regression Guards (Remediated)",
+  "timestamp": "2026-11-04T21:32:10.665Z",
+  "status": "FAIL",
+  "sourceBaseline": "7d4b235",
+  "summary": {
+    "coreSourceFilesScanned": 16,
+    "coreBoundaryViolationsCount": 1,
+    "corePackageJsonViolationsCount": 0,
+    "workspaceCyclesCount": 0,
+    "layeringViolationsCount": 0,
+    "cliServeDelegationValid": true,
+    "legacyFilesFoundCount": 0,
+    "totalViolations": 1,
+    "testSuiteResults": {
+      "note": "Standalone audit execution"
+    }
+  },
+  "cliServeAudit": {
+    "isOk": true,
+    "callsMain": true
+  },
+  "workspaceCycles": [],
+  "layeringViolations": [],
+  "coreBoundaryViolations": [
+    {
+      "file": "packages/core/src/policy/store.ts",
+      "line": 10,
+      "character": 1,
+      "specifier": "@earendil-works/pi-durable",
+      "kind": "static-import",
+      "rule": "AP-010",
+      "severity": "P0",
+      "message": "Forbidden vendor dependency in Core"
+    }
+  ],
+  "corePackageJsonViolations": [],
+  "legacyFilesFound": [],
+  "workspaceGraph": {},
+  "files": []
+}

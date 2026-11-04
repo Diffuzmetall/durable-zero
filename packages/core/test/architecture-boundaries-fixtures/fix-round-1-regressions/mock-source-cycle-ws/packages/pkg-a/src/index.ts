@@ -1,0 +1,1 @@
+import { b } from "@durable-zero/mock-b"; export const a = 1;
