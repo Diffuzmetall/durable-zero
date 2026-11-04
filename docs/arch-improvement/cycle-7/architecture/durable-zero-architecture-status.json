@@ -43,9 +43,9 @@
     {
       "name": "5A · Architecture guards",
       "tone": "bad",
-      "status": "Round2 FAIL; round3 на перепроверке",
-      "proof": "DAG frozen e006 ацикличен; четыре structural CLI-checker bypasses R2 блокировали scope. Автор R3 представил исправления, независимое ревью ещё нужно.",
-      "remaining": "Независимо перепроверить настоящее выполнение imported callable main, реальный serve branch, точное разрешение пакета/экспорта и прежние counterexamples."
+      "status": "Round4: parent replay GREEN; review идёт",
+      "proof": "Те же 4 frozen-helper проверки теперь проходят: вызов с primitive-result, primitive alias и primitive re-export отвергаются, настоящая функция принимается. Прежний R3 давал 3 падения. Полный independent scope ещё проверяется.",
+      "remaining": "Закрыть независимое полное re-review R4; не переносить локальный replay на весь Cycle."
     },
     {
       "name": "5 / 6 · Полная чистота и S9",
@@ -209,7 +209,7 @@
     "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом.",
     "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
   ],
-  "reviewUpdateAt": "2026-11-05T02:04:16.849957+03:00",
+  "reviewUpdateAt": "2026-11-05T02:24:33.420667+03:00",
   "nativeMinimumProductVerdict": "PASS",
   "nativeSourceVerdict": "FAIL"
 }

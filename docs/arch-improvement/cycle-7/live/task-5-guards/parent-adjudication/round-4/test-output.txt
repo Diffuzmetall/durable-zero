@@ -1,0 +1,12 @@
+✔ primitive-returning call (494.560625ms)
+✔ primitive identifier (370.920125ms)
+✔ primitive named re-export (414.534833ms)
+✔ genuine function (345.79175ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1923.500875

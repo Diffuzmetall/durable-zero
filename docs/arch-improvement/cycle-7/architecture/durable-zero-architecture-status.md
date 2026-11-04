@@ -32,11 +32,11 @@ Source/component review и независимый compiled black-box PASS; на�
 
 Осталось: Production wiring отдельным этапом; bindings/fork/tools seams ещё не реализованы.
 
-## 5A · Architecture guards — Round2 FAIL; round3 на перепроверке
+## 5A · Architecture guards — Round4: parent replay GREEN; review идёт
 
-DAG frozen e006 ацикличен; четыре structural CLI-checker bypasses R2 блокировали scope. Автор R3 представил исправления, независимое ревью ещё нужно.
+Те же 4 frozen-helper проверки теперь проходят: вызов с primitive-result, primitive alias и primitive re-export отвергаются, настоящая функция принимается. Прежний R3 давал 3 падения. Полный independent scope ещё проверяется.
 
-Осталось: Независимо перепроверить настоящее выполнение imported callable main, реальный serve branch, точное разрешение пакета/экспорта и прежние counterexamples.
+Осталось: Закрыть независимое полное re-review R4; не переносить локальный replay на весь Cycle.
 
 ## 5 / 6 · Полная чистота и S9 — Общий PASS не выдан
 

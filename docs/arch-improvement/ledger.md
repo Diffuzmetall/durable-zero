@@ -390,3 +390,8 @@
 - Independent R3 reviewer reported PASS, but parent executed actual frozen c248 runner-verify helper with genuine Node assertions/reporter:4cases,3failures,exit1. Primitive-producing call, primitive identifier and primitive named re-export are all falsely accepted; real exported function positive succeeds. Evidence under live/task-5-guards/parent-adjudication/round-3. Guard scope remains FAIL/P2, routed to original author round4/5; no false final acceptance from literal-only tests or 'mathematically sound' language.
 - Native fix source1298 preserved; original native source reviewer and separate fresh builder resumed on1298. Old fc090 native minimum9-case product PASS retained, source fixes not yet accepted. Docs-only native product follow-up failed MALFORMED_FUNCTION_CALL; inspected provider/error then supported same-context retryattempt2 (no app regression/DB mutation).
 - Migration batch3 ready: scope/91-case adapter evidence saved, remaining batches use same owner and exclusions.
+
+
+### Guard R4 closing verification
+- Source475745bb preserved; TypeScript Compiler API now resolves exported symbol/call signatures, old blanket heuristics removed. Parent exact frozen-helper replay:4cases/0fail/exit0; same R3 test matrix previously4/3fail/exit1. Both historical results preserved. This closes known parent counterexamples, not a blanket source/native PASS.
+- Same independent guard reviewer resumed on frozen475745bb; source author HOLD. No extra features, roles or release/deploy scope opened.
