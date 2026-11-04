@@ -5,8 +5,8 @@
     "file": "docs/arch-improvement/cycle-7/README.md",
     "line": 95,
     "detail": "Evidence: claimed a4eafbd7365b98df3637e19195d2c00346a0c0ad5d40c74f514d7c17758ea093; actual SHA256(docs/arch-improvement/cycle-7/evidence/protocol-package/dist/index.js) = a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f. Impact: copied artifact bytes are preserved but provenance assertion is false. Rule: AP-026/AP-076. Fix decision: original curator bounded remediation; no artifact-byte changes.",
-    "fix": "Generate checksum assertions from actual bytes, repair every affected claim and regenerate manifest hashes.",
-    "status": "open"
+    "fix": "Generate checksum assertions from actual bytes, repair every affected claim and regenerate manifest hashes. Parent re-derived original bundle SHA, checked both corrected documents and all manifest file hashes after remediation.",
+    "status": "fixed"
   },
   {
     "severity": "medium",
@@ -14,7 +14,7 @@
     "file": "docs/arch-improvement/cycle-7/manifests/final-validation-report.md",
     "line": 27,
     "detail": "Evidence: claimed a4eafbd7365b98df3637e19195d2c00346a0c0ad5d40c74f514d7c17758ea093; actual SHA256(docs/arch-improvement/cycle-7/evidence/protocol-package/dist/index.js) = a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f. Impact: copied artifact bytes are preserved but provenance assertion is false. Rule: AP-026/AP-076. Fix decision: original curator bounded remediation; no artifact-byte changes.",
-    "fix": "Generate checksum assertions from actual bytes, repair every affected claim and regenerate manifest hashes.",
-    "status": "open"
+    "fix": "Generate checksum assertions from actual bytes, repair every affected claim and regenerate manifest hashes. Parent re-derived original bundle SHA, checked both corrected documents and all manifest file hashes after remediation.",
+    "status": "fixed"
   }
 ]

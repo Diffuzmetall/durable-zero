@@ -1,6 +1,6 @@
 {
   "title": "durable-zero Cycle 7 Deliverables Relocation Manifest",
-  "created_at": "2026-11-04T23:45:00+03:00",
+  "created_at": "2026-11-04T23:55:00+03:00",
   "scope_ownership": [
     "docs/arch-improvement/cycle-7/README.md",
     "docs/arch-improvement/cycle-7/architecture/",
@@ -17,12 +17,12 @@
     "AGENTS.md",
     "product source"
   ],
-  "packaged_deliverables_count": 116,
+  "packaged_deliverables_count": 118,
   "packaged_deliverables": [
     {
       "path": "README.md",
       "category": "root",
-      "sha256": "06bc25426e826567983f3b1cf2ddc1248c0083b91ae9a932670722d46c7c8493",
+      "sha256": "fbf8b6900beca31121b95060aa5f3b02659235df592e6b7f17421a80c7e5e380",
       "bytes": 10830,
       "source_provenance": "workspace"
     },
@@ -760,6 +760,20 @@
       "sha256": "aecc027206d9b802444b0b1c2548fb95f195a522861c3ab0071eb1f464305690",
       "bytes": 5564,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/third-party-adjudication.json"
+    },
+    {
+      "path": "manifests/final-validation-report.md",
+      "category": "manifests",
+      "sha256": "2fe730253902e2816792ecd0e8d3a409b844fbe87a3210fda990e744df800a5d",
+      "bytes": 5397,
+      "source_provenance": "workspace"
+    },
+    {
+      "path": "manifests/generate_reports_and_verify.py",
+      "category": "manifests",
+      "sha256": "e975c6c3e3c87ae2cd90fe343246e688344c863f8f47196dd6a7b1f43fbfe0bc",
+      "bytes": 12929,
+      "source_provenance": "workspace"
     },
     {
       "path": "reviews/cycle7-hostbridge-report.md",

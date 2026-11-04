@@ -92,7 +92,7 @@ docs/arch-improvement/cycle-7/
 │   ├── protocol-fix-r1-review.diff / review-raw.diff / parent-inspection.diff
 │   ├── hostbridge-review-package-fixed.diff / all-raw.diff / parent-inspection.diff
 │   ├── protocol-package/                  # Pre-fix built candidate package & consumer test suite
-│   │   ├── dist/index.js                  # SHA256: a4eafbd7365b98df3637e19195d2c00346a0c0ad5d40c74f514d7c17758ea093
+│   │   ├── dist/index.js                  # SHA256: a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f
 │   │   ├── package.json
 │   │   ├── generate-journey-artifacts.mjs
 │   │   ├── test-consumer-server.mjs
