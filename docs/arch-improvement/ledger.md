@@ -395,3 +395,8 @@
 ### Guard R4 closing verification
 - Source475745bb preserved; TypeScript Compiler API now resolves exported symbol/call signatures, old blanket heuristics removed. Parent exact frozen-helper replay:4cases/0fail/exit0; same R3 test matrix previously4/3fail/exit1. Both historical results preserved. This closes known parent counterexamples, not a blanket source/native PASS.
 - Same independent guard reviewer resumed on frozen475745bb; source author HOLD. No extra features, roles or release/deploy scope opened.
+
+
+### Native1298 product re-review / closing residual source path
+- Fixed compiled Native1298 (runner090b6c...) independent product11/11 PASS: gated reasoning0/text1, full replies and restart identity, clean ready-server EOF, root abort-active-turn->continued real prompt. This does not certify child multi-turn catchup.
+- Source1298 independent re-review closed seven original blockers; one P2 FND-T1-10 remains: child message_end stale currentText replays complete second-turn text at index0. Parent inspected exact source and empirical probe; original native author assigned bounded round2/5, preserve genuine per-block missing-tail catchup and remove stale scalar references. No broader native/admin/host/probe expansion.
