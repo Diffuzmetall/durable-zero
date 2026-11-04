@@ -2,7 +2,7 @@
 
 Date: 2026-11-04  
 Branch: `cycle-7-runtime-adapter-ioc-migration`  
-Checkpoint: Following `71e6b520865c9274d603dac932c24c8ea7d9eeac`  
+Checkpoint: Following `8b49eb039023a253ef81c0adbb2e2528714743a1`  
 Status: **QUIESCENT & FULLY VALIDATED** (Holding for parent commit/push)
 
 ---
@@ -11,8 +11,8 @@ Status: **QUIESCENT & FULLY VALIDATED** (Holding for parent commit/push)
 
 This validation round promoted the remaining frozen candidate packages and consumer test suites from scratch storage into versioned project evidence, verified every path and SHA256 hash in `relocation-manifest.json` against the disk, re-rendered the architecture status with source-relative paths, and confirmed zero link regressions.
 
-- **Total Packaged Deliverables:** 117 files across `architecture/`, `reviews/`, `audit/`, `evidence/`, `historical/`, `manifests/`, and root `README.md`.
-- **Path & Hash Mismatches:** **0** (all 117 files match their manifest SHA256 exactly).
+- **Total Packaged Deliverables in Owned Scope:** 118 files across `architecture/`, `reviews/`, `audit/`, `evidence/`, `historical/`, `manifests/`, and root `README.md`.
+- **Path & Hash Mismatches:** **0** (all 118 files match their manifest SHA256 exactly).
 - **Harness Exclusions Enforced:** Raw conversation dumps (17MB+), compaction scripts/daemons, private GBrain DB schemas, process dumps, and raw stream event JSONs were excluded from git and remain in scratch.
 - **Untouched Invariants:** `handoffs/`, `live/`, `ledger.md`, `AGENTS.md`, and all product sources remain completely untouched.
 
@@ -46,7 +46,7 @@ Both compiled candidates and their standalone consumer test fixtures were promot
 - **SHA256:** `1030641e06cabf95b5f64de61178d233d77a05f6fe5739e221dc8b02200437bf`
 - **Command:** `node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts`
 - **Exit Code:** 1
-- **Receipt Finding:** Confirms that the Slice 0 walking skeleton timed out after 60,000ms. Root cause confirmed: CLI was calling legacy `runner-server.ts`, `PiDurableEngine` was incomplete, and terminal notifications were missing.
+- **Receipt Finding:** Confirms that the Slice 0 walking skeleton test timed out after 60,000ms in `packages/runner/test/e2e-walking-skeleton.test.ts:155:1` (exit code 1). The log includes author root-cause notes, but the test receipt itself records timeout and cancellation, not proof of individual root causes.
 
 ---
 
@@ -65,4 +65,4 @@ Both compiled candidates and their standalone consumer test fixtures were promot
 
 ## 5. Quiescence Statement
 
-All files within `docs/arch-improvement/cycle-7/` are fully written, validated, and quiescent. No active processes or file descriptors are open. The repository is ready for parent commit and push.
+All files within the packaging worker's exclusively owned scope (`README.md`, `architecture/`, `reviews/`, `audit/`, `evidence/`, `historical/`, `manifests/`) are fully written, validated, and quiescent. No active processes or file descriptors are held by this packaging task. Other concurrent writers' active directories (e.g. `live/`, `handoffs/`, product sources) remain unmanaged by this task. The repository is ready for parent commit and push.

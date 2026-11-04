@@ -1,6 +1,6 @@
 {
   "title": "durable-zero Cycle 7 Deliverables Relocation Manifest",
-  "created_at": "2026-11-04T23:55:00+03:00",
+  "created_at": "2026-11-05T00:05:00+03:00",
   "scope_ownership": [
     "docs/arch-improvement/cycle-7/README.md",
     "docs/arch-improvement/cycle-7/architecture/",
@@ -764,15 +764,15 @@
     {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "2fe730253902e2816792ecd0e8d3a409b844fbe87a3210fda990e744df800a5d",
-      "bytes": 5397,
+      "sha256": "9d4e80f549b2e8e61adb502cb0a95eee3554a71f6c11b542edc44479da3c1f45",
+      "bytes": 5746,
       "source_provenance": "workspace"
     },
     {
       "path": "manifests/generate_reports_and_verify.py",
       "category": "manifests",
-      "sha256": "e975c6c3e3c87ae2cd90fe343246e688344c863f8f47196dd6a7b1f43fbfe0bc",
-      "bytes": 12929,
+      "sha256": "b728cf33e26addfe82e202d6fafe8eb91c2db8afe432f50ea58c1d8c1271f46f",
+      "bytes": 14376,
       "source_provenance": "workspace"
     },
     {
@@ -907,13 +907,13 @@
       "protocol_package_original_dist": {
         "path": "evidence/protocol-package/dist/index.js",
         "sha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
-        "provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js",
+        "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js",
         "verified_match": true
       },
       "protocol_package_fix_r1_dist": {
         "path": "evidence/protocol-package-fix-r1/dist/index.js",
         "sha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
-        "provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js",
+        "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js",
         "verified_match": true
       }
     },
