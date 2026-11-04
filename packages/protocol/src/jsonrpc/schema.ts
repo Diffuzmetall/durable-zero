@@ -7,18 +7,34 @@ export const jsonRpcRequestSchema = z.object({
   params: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const jsonRpcResponseSchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string(), z.number(), z.null()]),
-  result: z.unknown().optional(),
-  error: z
-    .object({
-      code: z.number().int(),
-      message: z.string(),
-      data: z.unknown().optional(),
-    })
-    .optional(),
-});
+export const jsonRpcResponseSchema = z
+  .object({
+    jsonrpc: z.literal("2.0"),
+    id: z.union([z.string(), z.number(), z.null()]),
+    result: z.unknown().optional(),
+    error: z
+      .object({
+        code: z.number().int(),
+        message: z.string(),
+        data: z.unknown().optional(),
+      })
+      .optional(),
+  })
+  .superRefine((val, ctx) => {
+    const hasResult = Object.prototype.hasOwnProperty.call(val, "result") && val.result !== undefined;
+    const hasError = Object.prototype.hasOwnProperty.call(val, "error") && val.error !== undefined;
+    if (hasResult && hasError) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Response cannot contain both 'result' and 'error'",
+      });
+    } else if (!hasResult && !hasError) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Response must contain either 'result' or 'error'",
+      });
+    }
+  });
 
 export const jsonRpcNotificationSchema = z.object({
   jsonrpc: z.literal("2.0"),
