@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="PROBE 1 (VERIFIED FIXED FND-T1-10): Child adapter multi-turn emits ZERO duplicate deltas on message_end" time="0.001007" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-2/probe-round-2.test.ts"/>
+	<testcase name="PROBE 2 (VERIFIED FIXED FND-T1-10): Child adapter partial tail catchup emits ONLY missing suffix at actual index" time="0.000114" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-2/probe-round-2.test.ts"/>
+	<testcase name="PROBE 3 (VERIFIED FIXED FND-T1-11): Parent DurableEventAdapter message_end reconstructs content cleanly without stale currentText" time="0.000244" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-2/probe-round-2.test.ts"/>
+	<testcase name="PROBE 4: Bounded assembly teardown with custom engine and owned streams" time="0.000417" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-2/probe-round-2.test.ts"/>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 4 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 639.181375 -->
+</testsuites>
