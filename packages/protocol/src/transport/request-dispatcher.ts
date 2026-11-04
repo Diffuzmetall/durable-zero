@@ -86,13 +86,12 @@ export class RequestDispatcher {
       const result = await this.handler(method, params ?? {});
       this.send({ jsonrpc: "2.0", id, result: result === undefined ? null : result });
     } catch (err) {
-      const isNotFound = err instanceof JsonRpcMethodNotFoundError ||
-        (err instanceof Error && err.name === "JsonRpcMethodNotFoundError");
+      const isNotFound = err instanceof JsonRpcMethodNotFoundError;
       this.send({
         jsonrpc: "2.0",
         id,
         error: isNotFound
-          ? { code: -32601, message: (err as Error).message }
+          ? { code: -32601, message: err.message }
           : { code: -32603, message: err instanceof Error ? err.message : String(err) },
       });
     }

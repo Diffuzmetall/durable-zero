@@ -220,6 +220,68 @@ describe("JSON-RPC 2.0 Protocol Conformance", () => {
       harness.server.stop();
     });
 
+    it("maps renamed ordinary Error to -32603 internal error response, not -32601", async () => {
+      const harness = createHarness(async () => {
+        const err = new Error("backend fault");
+        err.name = "JsonRpcMethodNotFoundError";
+        throw err;
+      });
+
+      harness.input.push(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: "req_renamed",
+          method: "faulty/method",
+        }) + "\n",
+      );
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const lines = harness.getLines();
+      assert.equal(lines.length, 1);
+      const parsed = JSON.parse(lines[0]);
+      assert.equal(parsed.jsonrpc, "2.0");
+      assert.equal(parsed.id, "req_renamed");
+      assert.equal(
+        parsed.error?.code,
+        -32603,
+        "Renamed ordinary Error must not be reclassified as -32601",
+      );
+      assert.equal(parsed.error?.message, "backend fault");
+      harness.server.stop();
+    });
+
+    it("maps legitimate subclass of JsonRpcMethodNotFoundError to -32601", async () => {
+      class CustomMethodNotFoundError extends JsonRpcMethodNotFoundError {}
+
+      const harness = createHarness(async (method) => {
+        throw new CustomMethodNotFoundError(method);
+      });
+
+      harness.input.push(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: "req_subclass",
+          method: "subclass/method",
+        }) + "\n",
+      );
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const lines = harness.getLines();
+      assert.equal(lines.length, 1);
+      const parsed = JSON.parse(lines[0]);
+      assert.equal(parsed.jsonrpc, "2.0");
+      assert.equal(parsed.id, "req_subclass");
+      assert.equal(
+        parsed.error?.code,
+        -32601,
+        "Subclass of JsonRpcMethodNotFoundError must map to -32601",
+      );
+      assert.equal(parsed.error?.message, "Method not found: subclass/method");
+      harness.server.stop();
+    });
+
     it("preserves -32700 for malformed JSON text", async () => {
       const harness = createHarness(async () => "ok");
 
