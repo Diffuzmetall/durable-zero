@@ -1,0 +1,15 @@
+{
+  "fixBase": "ad122ffc9a7bf63c73a516d19fb07afcabeb7781",
+  "head": "f3fff38a84154a36f017514c234421aef5215ced",
+  "package": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1",
+  "artifactSha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
+  "sourceHashes": {
+    "packages/protocol/src/index.ts": "52de64218ee8d140cdccb04f4955160d8462dd42b4d8ceae50d03d76f38b263a",
+    "packages/protocol/src/jsonrpc/schema.ts": "f556d701e5d9f856029324dbc5b7f95f148f3227da7d537bf1150f3b4767a968",
+    "packages/protocol/src/jsonrpc/errors.ts": "560ef4c1ff37e4d96d5f3e047d5371a3e93ddceee9603608672e86261af09e10",
+    "packages/protocol/src/transport/request-dispatcher.ts": "50a19bd8b73bb280ffba1f1c2cc6e5cf87fac8c04b300158cc98c2a0bcd6372b",
+    "packages/protocol/test/protocol-conformance.test.ts": "ca4563c402a4e6de52f2b1ec9b0d92374f78b989703689517138904083a918b7"
+  },
+  "buildLog": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1-build.log",
+  "status": "independent scoped re-review pending; original package untouched"
+}

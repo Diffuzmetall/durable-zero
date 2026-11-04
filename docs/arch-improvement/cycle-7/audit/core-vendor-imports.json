@@ -1,0 +1,654 @@
+[
+  {
+    "path": "packages/core/src/binding-commands.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { ConversationId } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/binding-docs.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { defineDoc, type ConversationId, type JsonObject } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/assistant-message-builder.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { AssistantMessage as PiAssistantMessage } from \"@earendil-works/pi-ai\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/durable-contracts.ts",
+    "imports": [
+      {
+        "line": 4,
+        "text": "import { NestedCallDoc } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 40,
+        "text": "export type ConversationEntryRecord = import(\"@earendil-works/pi-durable\").EntryRecord;"
+      },
+      {
+        "line": 41,
+        "text": "export type NestedToolExecutionResult = import(\"@earendil-works/pi-durable\").NestedToolExecutionResult;"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/durable-event-adapter.ts",
+    "imports": [
+      {
+        "line": 19,
+        "text": "* Transforms native @earendil-works/pi-durable AgentEvents into canonical RunnerEvent stream."
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/native-tool-result.ts",
+    "imports": [
+      {
+        "line": 5,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/tool-args-resolver.ts",
+    "imports": [
+      {
+        "line": 2,
+        "text": "import type { LiveState } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/tool-result-presentation.ts",
+    "imports": [
+      {
+        "line": 5,
+        "text": "} from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 6,
+        "text": "import type { ToolDiagnostic } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/bridge/watch-events-compat.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { NestedCallDoc } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/builtin-extensions/coding-tools.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { createCodingTools, CodingTools } from \"@earendil-works/pi-durable/tools\";"
+      },
+      {
+        "line": 2,
+        "text": "import { createNodePhotonImages } from \"@earendil-works/pi-durable/images/node\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/builtin-extensions/index.ts",
+    "imports": [
+      {
+        "line": 4,
+        "text": "export * from \"@durable-zero/adapter-codemode\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/builtin-extensions/types.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Registry } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 2,
+        "text": "import type { SettingsManager } from \"@earendil-works/pi-coding-agent\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/codemode-namespaces.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { CodemodeNamespace } from \"@earendil-works/pi-durable/codemode\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/control-channel.ts",
+    "imports": [
+      {
+        "line": 3,
+        "text": "import { BACKGROUND_CONTEXT } from \"@earendil-works/chord/context\";"
+      },
+      {
+        "line": 4,
+        "text": "import type { Harness, TaskId } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/conversation-id.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { ROOT_CONVERSATION_ID } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 3,
+        "text": "export function parseConversationId(id: string | number | undefined | null): import(\"@earendil-works/pi-durable\").ConversationId {"
+      },
+      {
+        "line": 13,
+        "text": "return num as import(\"@earendil-works/pi-durable\").ConversationId;"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/extension-mount.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { type DefaultResourceLoader, type ModelRuntime, ExtensionRunner } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 2,
+        "text": "import type { Registry } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 5,
+        "text": "import type { SessionLocation } from \"@durable-zero/adapter-pi-durable\";"
+      },
+      {
+        "line": 20,
+        "text": "getEnv?: () => import(\"@earendil-works/pi-durable/env\").ExecutionEnv | undefined,"
+      },
+      {
+        "line": 128,
+        "text": "settingsManager?: import(\"@earendil-works/pi-coding-agent\").SettingsManager,"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/harness-setup.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Context } from \"@earendil-works/chord\";"
+      },
+      {
+        "line": 2,
+        "text": "import type { ModelThinkingLevel } from \"@earendil-works/pi-ai\";"
+      },
+      {
+        "line": 10,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 11,
+        "text": "import { createToolSearchExtension } from \"@earendil-works/pi-durable/tool-search\";"
+      },
+      {
+        "line": 18,
+        "text": "} from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 23,
+        "text": "import { createCodemodeBuiltinExtension } from \"@durable-zero/adapter-codemode\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/index.ts",
+    "imports": [
+      {
+        "line": 23,
+        "text": "export * from \"@durable-zero/adapter-pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/policy/resolver.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Api, Model } from \"@earendil-works/pi-ai\";"
+      },
+      {
+        "line": 2,
+        "text": "import { getSupportedThinkingLevels } from \"@earendil-works/pi-ai/models\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/policy/types.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { ModelThinkingLevel } from \"@earendil-works/pi-ai\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/prompt.ts",
+    "imports": [
+      {
+        "line": 2,
+        "text": "import { defineExtension, type PromptInput, section } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 11,
+        "text": "} from \"@earendil-works/pi-coding-agent\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runner-server.ts",
+    "imports": [
+      {
+        "line": 2,
+        "text": "import { setupRunnerModels } from \"@durable-zero/adapter-pi-ai\";"
+      },
+      {
+        "line": 16,
+        "text": "import { ROOT_CONVERSATION_ID } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-bindings.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Conversation, ConversationView, TaskGraph } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-controller.ts",
+    "imports": [
+      {
+        "line": 2,
+        "text": "import { clampThinkingLevel, getSupportedThinkingLevels, type ModelThinkingLevel } from \"@earendil-works/pi-ai\";"
+      },
+      {
+        "line": 11,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 12,
+        "text": "import type { ModelRuntime } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 25,
+        "text": "extensionRunner?: import(\"@earendil-works/pi-coding-agent\").ExtensionRunner;"
+      },
+      {
+        "line": 84,
+        "text": "} as import(\"@earendil-works/pi-coding-agent\").BuildSystemPromptOptions,"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-graph-mapper.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { TaskGraphNode, TaskRecord } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-graph-receipts.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { TaskRecord } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-graph-state.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { TaskGraph, TaskGraphNode, TaskRecord } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-hydration.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Conversation, ConversationId, ConversationView, Cursor, Harness, TaskGraph } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-loader.ts",
+    "imports": [
+      {
+        "line": 7,
+        "text": "} from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 18,
+        "text": "import { getAgentDir, type SessionLocation } from \"@durable-zero/adapter-pi-durable\";"
+      },
+      {
+        "line": 19,
+        "text": "import { Harness, type ModelRef } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 20,
+        "text": "import { openNodeSqliteStorage } from \"@earendil-works/pi-durable/storage/sqlite/node\";"
+      },
+      {
+        "line": 39,
+        "text": "extensionRunner?: import(\"@earendil-works/pi-coding-agent\").ExtensionRunner;"
+      },
+      {
+        "line": 132,
+        "text": "let runnerRef: import(\"@earendil-works/pi-coding-agent\").ExtensionRunner | undefined;"
+      },
+      {
+        "line": 136,
+        "text": "() => envs.env({ cwd: location.cwd } as unknown as import(\"@earendil-works/pi-durable\").EnvTarget),"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime-types.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { AttachedReplicatedState } from \"@earendil-works/chord\";"
+      },
+      {
+        "line": 2,
+        "text": "import { BACKGROUND_CONTEXT } from \"@earendil-works/chord/context\";"
+      },
+      {
+        "line": 3,
+        "text": "import type { ModelThinkingLevel } from \"@earendil-works/pi-ai\";"
+      },
+      {
+        "line": 15,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 16,
+        "text": "import type { ModelRuntime, SettingsManager } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 75,
+        "text": "submit(content: string | (import(\"@earendil-works/pi-ai\").TextContent | import(\"@earendil-works/pi-ai\").ImageContent)[], whenBusy: \"steer\" | \"followUp\"): Promise<AdmissionReceipt>;"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/runtime.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { AttachedReplicatedState } from \"@earendil-works/chord\";"
+      },
+      {
+        "line": 2,
+        "text": "import type { Conversation, ConversationId, ConversationView, Cursor, Harness, TaskGraph } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 3,
+        "text": "import { resolveModelScopeWithDiagnostics } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 6,
+        "text": "import { selectSession } from \"@durable-zero/adapter-pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/session-commands.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { ModelRuntime } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 2,
+        "text": "import { ROOT_CONVERSATION_ID } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 3,
+        "text": "import { BACKGROUND_CONTEXT } from \"@earendil-works/chord/context\";"
+      },
+      {
+        "line": 11,
+        "text": "import { forkSessionDatabase } from \"@durable-zero/adapter-pi-durable\";"
+      },
+      {
+        "line": 13,
+        "text": "function toDurableInput(message?: string, images?: import(\"@earendil-works/pi-ai\").ImageContent[]): string | (import(\"@earendil-works/pi-ai\").TextContent | import(\"@earendil-works/pi-ai\").ImageContent)[] | null {"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/session-state-commands.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { ModelRuntime } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 2,
+        "text": "import { ROOT_CONVERSATION_ID } from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 3,
+        "text": "import { BACKGROUND_CONTEXT } from \"@earendil-works/chord/context\";"
+      },
+      {
+        "line": 4,
+        "text": "import { estimateContextTokens } from \"@earendil-works/pi-ai/utils/estimate\";"
+      },
+      {
+        "line": 12,
+        "text": "thinkingLevel?: import(\"@earendil-works/pi-ai\").ModelThinkingLevel;"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/shared/extension-runner.ts",
+    "imports": [
+      {
+        "line": 14,
+        "text": "} from \"@earendil-works/pi-coding-agent\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/shared/extension-ui-context.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { ExtensionUIContext } from \"@earendil-works/pi-coding-agent\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/shared/subagent-envelope.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { ROOT_CONVERSATION_ID } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/shared/version.ts",
+    "imports": [
+      {
+        "line": 11,
+        "text": "const durablePkg = esmRequire.resolve(\"@earendil-works/pi-durable/package.json\");"
+      },
+      {
+        "line": 26,
+        "text": "const dep = parsed.dependencies?.[\"@earendil-works/pi-durable\"]?.replace(/^[\\^~]/, \"\");"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/stdout-guard.ts",
+    "imports": [
+      {
+        "line": 5,
+        "text": "* In Pi 1.4.0 (@earendil-works/pi-coding-agent), DefaultPackageManager.spawnCommand"
+      },
+      {
+        "line": 20,
+        "text": "import { getPackageDir } from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 52,
+        "text": "`Incompatible @earendil-works/pi-coding-agent version: \"${version}\". Expected 1.4.x or 1.5.x`,"
+      },
+      {
+        "line": 86,
+        "text": "`Failed to parse @earendil-works/pi-coding-agent package.json: ${err instanceof Error ? err.message : String(err)}`,"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent-courier.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { defineTask, type Task, type TaskRecord } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent-delivery-types.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Context } from \"@earendil-works/chord\";"
+      },
+      {
+        "line": 2,
+        "text": "import type { ConversationHandle, ConversationId, Extension, Task } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent-delivery.ts",
+    "imports": [
+      {
+        "line": 3,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent-docs.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { Context } from \"@earendil-works/chord\";"
+      },
+      {
+        "line": 9,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent-policy-ack.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import { defineDoc, type Harness, type JsonObject } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent-watcher.ts",
+    "imports": [
+      {
+        "line": 5,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      },
+      {
+        "line": 11,
+        "text": "import { BACKGROUND_CONTEXT } from \"@earendil-works/chord/context\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/subagent.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { JsonValue } from \"@earendil-works/chord\";"
+      },
+      {
+        "line": 9,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/task-labels.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { LiveState, NestedToolSlot, TaskGraphNode, ToolSlot } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/task-tokens.ts",
+    "imports": [
+      {
+        "line": 1,
+        "text": "import type { TaskGraphNode, TaskRecord } from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  },
+  {
+    "path": "packages/core/src/tool-adapter.ts",
+    "imports": [
+      {
+        "line": 7,
+        "text": "} from \"@earendil-works/pi-coding-agent\";"
+      },
+      {
+        "line": 13,
+        "text": "} from \"@earendil-works/pi-durable\";"
+      }
+    ]
+  }
+]

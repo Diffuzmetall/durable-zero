@@ -1,0 +1,11 @@
+# Task 4A — fix round 1/5 (same implementer, bounded remediation)
+
+Candidate ad122ff is checkpointed, NOT accepted. Parent reproduced the following through the compiled public package, despite S9a's earlier PASS; S9b is still pending. Fix only your existing dispatcher/conformance-test files; append covering-test commands/output to the SAME cycle7-protocol-report.md. No commits, source expansion, API change, subagents or full plan work.
+
+- [P2] An ordinary internal error is reclassified solely by its mutable name
+  - Evidence: packages/protocol/src/transport/request-dispatcher.ts:88-89 accepts `err instanceof Error && err.name === "JsonRpcMethodNotFoundError"`. Saved black-box reproduction: /Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-named-generic-probe.json. A consumer handler creates `new Error("backend fault")`, changes `.name` to `"JsonRpcMethodNotFoundError"`, and throws it. Expected generic failure code -32603; actual compiled-candidate response is -32601.
+  - Impact: generic backend failures become method-not-found responses, violating the frozen caller/error-classification contract.
+  - Rule: AP-022, AP-026; selected S7 explicitly says recognize the typed condition and leave generic exceptions -32603.
+  - Fix decision: fix-now. Remove the name-only fallback; use the actual typed error identity. No evidence requires cross-realm guessed-name support in this single packaged transport, so do not add a new compatibility mechanism.
+
+TDD regression: add a test in protocol-conformance.test.ts asserting a renamed ordinary Error remains -32603 (including the public compiled consumer case if useful). Watch it fail BEFORE changing the catch mapping. Then run the covering new+existing protocol tests and save distinct fix-round RED/GREEN JUnit/logs. Genuine JsonRpcMethodNotFoundError (and legitimate subclasses) must still map -32601. Preserve all other completed behavior and frozen signatures. Update report honestly; the earlier report's claim that only the typed condition is recognized is disproven by this counterexample. Return short DONE/CONCERNS + artifact/report paths. Parent creates the new checkpoint, rebuilds the isolated public package, and dispatches the scoped re-review; do not self-approve S9.

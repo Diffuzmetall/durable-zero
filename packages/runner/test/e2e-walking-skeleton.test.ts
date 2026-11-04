@@ -73,6 +73,7 @@ class JsonRpcProcessClient {
 		});
 
 		this.rl.on("line", (line) => {
+			console.log("[CHILD STDOUT]", line);
 			const trimmed = line.trim();
 			if (!trimmed || !trimmed.startsWith("{")) return;
 			try {
@@ -136,7 +137,13 @@ class JsonRpcProcessClient {
 			const timer = setTimeout(() => {
 				const idx = this.notificationWaiters.findIndex((w) => w.resolve === resolve);
 				if (idx !== -1) this.notificationWaiters.splice(idx, 1);
-				reject(new Error(`Timed out after ${timeoutMs}ms waiting for notification. Stderr: ${this.stderrOutput}`));
+				reject(
+					new Error(
+						`Timed out after ${timeoutMs}ms waiting for notification. Received: ${JSON.stringify(
+							this.notifications,
+						)}. Stderr: ${this.stderrOutput}`,
+					),
+				);
 			}, timeoutMs);
 
 			this.notificationWaiters.push({
@@ -226,9 +233,11 @@ test(
 		client1 = spawnClient(sessionDir, tmpBase);
 
 		// 2. Send prompt: Echo: hello world
+		console.log("SENDING PROMPT 1");
 		const admission = await client1.request(1, "session/prompt", {
 			content: "Echo: hello world",
 		});
+		console.log("ADMISSION 1:", admission);
 
 		assert.equal(admission.status, "accepted");
 		assert.equal(admission.conversationId, "1");

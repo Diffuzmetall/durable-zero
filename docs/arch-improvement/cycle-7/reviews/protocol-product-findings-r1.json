@@ -1,0 +1,11 @@
+[
+  {
+    "id": "PROD-FND-001",
+    "severity": "P2",
+    "rule": "AP-022",
+    "title": "Generic Error with name 'JsonRpcMethodNotFoundError' misclassified as -32601 Method Not Found instead of -32603 Internal Error",
+    "status": "closed",
+    "resolution": "ADDRESSED",
+    "evidence": "Verified on candidate f3fff38a84154a36f017514c234421aef5215ced (sha256 24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514). Handler throwing `const err = new Error('backend fault'); err.name = 'JsonRpcMethodNotFoundError'; throw err;` now correctly returns error.code -32603 (Internal Error). Genuine typed JsonRpcMethodNotFoundError and its subclasses continue to return error.code -32601."
+  }
+]

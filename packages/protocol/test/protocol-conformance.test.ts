@@ -4,6 +4,7 @@ import { Readable, Writable } from "node:stream";
 import {
   jsonRpcResponseSchema,
   JsonRpcMethodNotFoundError,
+  JsonRpcInvalidParamsError,
   StdioJsonRpcServer,
 } from "../src/index.ts";
 
@@ -492,6 +493,103 @@ describe("JSON-RPC 2.0 Protocol Conformance", () => {
         0,
         "Server must not respond to unsolicited error responses",
       );
+      harness.server.stop();
+    });
+  });
+
+  describe("Defect 4: Typed Invalid Params Error Mapping", () => {
+    it("maps JsonRpcInvalidParamsError to -32602 error response", async () => {
+      const harness = createHarness(async () => {
+        throw new JsonRpcInvalidParamsError("Missing required parameter: prompt");
+      });
+
+      harness.input.push(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: "req_invalid_params",
+          method: "session/prompt",
+          params: {},
+        }) + "\n",
+      );
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const lines = harness.getLines();
+      assert.equal(lines.length, 1);
+      const parsed = JSON.parse(lines[0]);
+      assert.equal(parsed.jsonrpc, "2.0");
+      assert.equal(parsed.id, "req_invalid_params");
+      assert.equal(
+        parsed.error?.code,
+        -32602,
+        "JsonRpcInvalidParamsError must map to -32602",
+      );
+      assert.equal(parsed.error?.message, "Missing required parameter: prompt");
+      harness.server.stop();
+    });
+
+    it("maps renamed ordinary Error to -32603 internal error response, not -32602", async () => {
+      const harness = createHarness(async () => {
+        const fakeErr = new Error("Spoofed invalid params");
+        fakeErr.name = "JsonRpcInvalidParamsError";
+        (fakeErr as any).code = -32602;
+        throw fakeErr;
+      });
+
+      harness.input.push(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: "req_spoofed_params",
+          method: "session/prompt",
+          params: {},
+        }) + "\n",
+      );
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const lines = harness.getLines();
+      assert.equal(lines.length, 1);
+      const parsed = JSON.parse(lines[0]);
+      assert.equal(parsed.jsonrpc, "2.0");
+      assert.equal(parsed.id, "req_spoofed_params");
+      assert.equal(
+        parsed.error?.code,
+        -32603,
+        "Renamed generic Error must NOT map to -32602",
+      );
+      assert.equal(parsed.error?.message, "Spoofed invalid params");
+      harness.server.stop();
+    });
+
+    it("maps legitimate subclass of JsonRpcInvalidParamsError to -32602", async () => {
+      class CustomInvalidParamsError extends JsonRpcInvalidParamsError {}
+
+      const harness = createHarness(async () => {
+        throw new CustomInvalidParamsError("Custom invalid parameter value");
+      });
+
+      harness.input.push(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: "req_subclass_params",
+          method: "session/prompt",
+          params: {},
+        }) + "\n",
+      );
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const lines = harness.getLines();
+      assert.equal(lines.length, 1);
+      const parsed = JSON.parse(lines[0]);
+      assert.equal(parsed.jsonrpc, "2.0");
+      assert.equal(parsed.id, "req_subclass_params");
+      assert.equal(
+        parsed.error?.code,
+        -32602,
+        "Subclass of JsonRpcInvalidParamsError must map to -32602",
+      );
+      assert.equal(parsed.error?.message, "Custom invalid parameter value");
       harness.server.stop();
     });
   });

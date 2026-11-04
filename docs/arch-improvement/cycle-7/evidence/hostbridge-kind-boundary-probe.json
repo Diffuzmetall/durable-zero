@@ -1,0 +1,6 @@
+{
+  "check": "Explicit interaction kind cannot be overridden by an extra payload field",
+  "expected": "confirm",
+  "actual": "notify",
+  "passed": false
+}

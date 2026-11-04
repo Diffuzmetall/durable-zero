@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/runner",
+  "dependencies": {
+    "@fixture/adapter": "workspace:*",
+    "@fixture/core": "workspace:*"
+  }
+}

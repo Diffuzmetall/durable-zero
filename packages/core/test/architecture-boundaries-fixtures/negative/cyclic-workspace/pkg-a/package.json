@@ -1,0 +1,6 @@
+{
+  "name": "@fixture/pkg-a",
+  "dependencies": {
+    "@fixture/pkg-b": "workspace:*"
+  }
+}

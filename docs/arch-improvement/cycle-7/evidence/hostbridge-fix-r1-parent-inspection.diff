@@ -1,0 +1,61 @@
+diff --git a/packages/runner/src/host/host-bridge.ts b/packages/runner/src/host/host-bridge.ts
+index 3beb01f..35f1d17 100644
+--- a/packages/runner/src/host/host-bridge.ts
++++ b/packages/runner/src/host/host-bridge.ts
+@@ -74,9 +74,19 @@ export class HostBridge implements IHostBridge {
+     kind: string,
+     payload: { title?: string; message?: string; data?: unknown },
+   ): Promise<unknown> {
++    const rawPayload = (payload ?? {}) as {
++      title?: string;
++      message?: string;
++      data?: unknown;
++    };
++
++    // Explicit kind parameter is authoritative; construct only declared payload fields
++    // to prevent extra payload properties (e.g. payload.kind) from overriding kind.
+     const validatedParams = hostInteractionParamsSchema.parse({
+       kind,
+-      ...payload,
++      ...(rawPayload.title !== undefined ? { title: rawPayload.title } : {}),
++      ...(rawPayload.message !== undefined ? { message: rawPayload.message } : {}),
++      ...(rawPayload.data !== undefined ? { data: rawPayload.data } : {}),
+     });
+ 
+     const rawResult = await this.requester.request(
+diff --git a/packages/runner/test/host-bridge.test.ts b/packages/runner/test/host-bridge.test.ts
+index b0e4fba..0c41c3f 100644
+--- a/packages/runner/test/host-bridge.test.ts
++++ b/packages/runner/test/host-bridge.test.ts
+@@ -259,6 +259,31 @@ describe("HostBridge Component (Task 2A / S7)", () => {
+       assert.deepEqual(result, { choice: "option-a" });
+     });
+ 
++    it("ensures explicit interaction kind is authoritative and cannot be overridden by payload field", async () => {
++      let capturedMethod = "";
++      let capturedParams: Record<string, unknown> | undefined;
++
++      const fakeRequester: HostRequester = {
++        request: async (method, params) => {
++          capturedMethod = method;
++          capturedParams = params;
++          return { confirmed: true };
++        },
++      };
++
++      const bridge: IHostBridge = new HostBridge({ requester: fakeRequester });
++      const payloadWithExtraKind = JSON.parse(
++        '{"title":"Confirm operation","kind":"notify","message":"Please confirm"}',
++      );
++      const result = await bridge.requestInteraction("confirm", payloadWithExtraKind);
++
++      assert.equal(capturedMethod, "host/interaction");
++      assert.equal(capturedParams?.kind, "confirm");
++      assert.equal(capturedParams?.title, "Confirm operation");
++      assert.equal(capturedParams?.message, "Please confirm");
++      assert.deepEqual(result, { confirmed: true });
++    });
++
+     it("validates and accepts opaque JSON responses (null, boolean, number, string, array, object)", async () => {
+       const responses: unknown[] = [
+         null,

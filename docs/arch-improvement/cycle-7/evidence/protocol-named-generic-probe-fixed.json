@@ -1,0 +1,12 @@
+{
+  "expected": -32603,
+  "actual": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "error": {
+      "code": -32603,
+      "message": "backend fault"
+    }
+  },
+  "passed": true
+}

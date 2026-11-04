@@ -2494,9 +2494,7 @@ async function loadHarnessEnvironment(location, options, envs) {
     additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
     noExtensions: options.cli?.noGlobalExtensions ?? false
   });
-  if (!deps?.resourceLoader) {
-    await resourceLoader.reload();
-  }
+  await resourceLoader.reload();
   const extensionsResult = resourceLoader.getExtensions();
   registerPendingProviders(modelRuntime, extensionsResult.runtime);
   configureHarnessHttp(settingsManager);

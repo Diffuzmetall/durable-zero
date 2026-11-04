@@ -12,6 +12,12 @@ import {
 	PiDurableEngine,
 	type PiRuntimeDependencies,
 } from "@durable-zero/adapter-pi-durable";
+import {
+	SettingsManager,
+	DefaultResourceLoader,
+	createMcpExtension,
+	getAgentDir,
+} from "@earendil-works/pi-coding-agent";
 import { createCodemodeBuiltinExtension } from "@durable-zero/adapter-codemode";
 import { createPiResourceExtension } from "@durable-zero/extension-pi-resource";
 
@@ -52,7 +58,27 @@ export async function assembleDurableZero(
 			: resolve(cwd, ".durable/sessions/default");
 
 	const codemodeBuiltin = createCodemodeBuiltinExtension();
-	const resourceExt = createPiResourceExtension({ cwd });
+	const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
+	const extPaths = [
+		...(options.extensions ?? (options.extension ? [options.extension] : [])),
+		...(extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []),
+	];
+	const settingsManager = SettingsManager.create(cwd);
+	const agentDir = getAgentDir();
+	const resourceLoader = new DefaultResourceLoader({
+		cwd,
+		agentDir,
+		settingsManager,
+		extensionFactories: [createMcpExtension()],
+		additionalSkillPaths: options.skills,
+		additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
+		noExtensions: options.noGlobalExtensions ?? false,
+	});
+	const resourceExt = createPiResourceExtension({
+		cwd,
+		settingsManager,
+		resourceLoader,
+	});
 
 	const executionEnvFactory: ExecutionEnvFactory =
 		options.executionEnvFactory ??

@@ -99,9 +99,7 @@ export async function loadHarnessEnvironment(
 			additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
 			noExtensions: options.cli?.noGlobalExtensions ?? false,
 		});
-	if (!deps?.resourceLoader) {
-		await resourceLoader.reload();
-	}
+	await resourceLoader.reload();
 	const extensionsResult = resourceLoader.getExtensions();
 
 	registerPendingProviders(modelRuntime, extensionsResult.runtime);

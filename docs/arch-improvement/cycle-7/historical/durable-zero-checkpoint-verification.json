@@ -1,0 +1,10 @@
+{
+  "repository": "/Users/vanya/Projects/durable-zero",
+  "branch": "cycle-7-runtime-adapter-ioc-migration",
+  "localSha": "7d4b2351bcd143b2fabf001c3bfd896198cb396c",
+  "remoteSha": "7d4b2351bcd143b2fabf001c3bfd896198cb396c",
+  "remoteMatchesLocal": true,
+  "dirty": false,
+  "pushExit": 0,
+  "acceptance": "WIP checkpoint only; E2E not accepted"
+}

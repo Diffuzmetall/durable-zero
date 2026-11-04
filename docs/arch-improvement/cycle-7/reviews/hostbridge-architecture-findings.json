@@ -1,0 +1,98 @@
+{
+  "task": "Task 2A (Isolated HostBridge Component)",
+  "slice": "S7",
+  "base": "cb4801a0654938350eefd2f9345b4caaa857b114",
+  "head": "efc9eab7ddfba4ba95fb754329d33f05adda2c12",
+  "review_type": "independent_architecture_spec_review",
+  "verdict": "PASS",
+  "verdict_scope": "isolated_component_only",
+  "pending_integration_gates": [
+    "packages/core/src/index.ts public export of IHostBridge",
+    "packages/protocol/src/index.ts public export of host methods/schemas",
+    "assembleDurableZero runner composition wiring and dynamic tools registration",
+    "full model-issued host-tool execution E2E verification"
+  ],
+  "semantic_probes": {
+    "dependency_traceability": {
+      "status": "PASS",
+      "rule": "AP-074, AP-076",
+      "evidence": "packages/runner/src/host/host-bridge.ts:28-49 constructor accepts options.requester; invoked at lines 64-68 (forwardToolCall) and lines 92-96 (requestInteraction). Zero hollow/decorative dependencies."
+    },
+    "runtime_completeness": {
+      "status": "PASS",
+      "rule": "AP-010, AP-011",
+      "evidence": "packages/protocol/test/host-methods.test.ts and packages/runner/test/host-bridge.test.ts import only new component files and stdio-server transport; zero legacy host-rpc imports. Legacy deletion deferred to full Task 2 per plan."
+    },
+    "entrypoint_wiring": {
+      "status": "NOT_APPLICABLE_DEFERRED",
+      "rule": "AP-020, AP-075",
+      "evidence": "Task 2A is explicitly restricted to five exclusive component files without composition/Harness/export wiring to avoid concurrency collisions with Slice 0. Production wiring is a scheduled downstream gate."
+    },
+    "anti_gaming": {
+      "status": "PASS",
+      "rule": "AP-019, AP-076",
+      "evidence": "Strict line budgets respected (core: 33 LOC, protocol: 54 LOC, runner: 100 LOC). No business logic or error handlers truncated. Real JSON schemas with recursive finite checks and dynamic wire-ID correlation tests."
+    }
+  },
+  "parent_remediation_audit": {
+    "finding_1_kind_override": {
+      "severity": "P2",
+      "status": "VERIFIED_FIXED",
+      "evidence": "packages/runner/src/host/host-bridge.ts:85-90 extracts only declared title/message/data fields and binds explicit kind; verified by test in packages/runner/test/host-bridge.test.ts:262-286 and red log in fix-round-1-kind-override-red.log"
+    },
+    "finding_2_behavioral_red_evidence": {
+      "severity": "P2",
+      "status": "VERIFIED_FIXED",
+      "evidence": "Truthful behavioral RED->GREEN redo executed with valid unimplemented stubs: redo-host-methods-behavioral-red.junit.xml (7/13 failed, 0 module errors) and redo-host-bridge-behavioral-red.junit.xml (22/23 failed, 0 module errors); clean green runs verified."
+    }
+  },
+  "findings": [
+    {
+      "id": "FINDING-01",
+      "severity": "P3",
+      "title": "Direct propagation of raw ZodError on malformed host responses",
+      "file": "packages/runner/src/host/host-bridge.ts:69",
+      "evidence": "hostToolResultSchema.parse(rawResult) and jsonValueSchema.parse(rawResult) throw raw ZodError rather than a wrapped domain host error",
+      "impact": "Callers receive standard Zod validation error rather than a typed HostRpcProtocolError; sufficient for component boundary but should be normalized during runner composition",
+      "rule": "AP-022",
+      "fix_decision": "log-only"
+    },
+    {
+      "id": "FINDING-02",
+      "severity": "P3",
+      "title": "Recursive lazy schema evaluation for deep JSON structures",
+      "file": "packages/protocol/src/methods/host.ts:17-23",
+      "evidence": "jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() => ...)",
+      "impact": "Slight validation latency for deeply nested data structures; fully correct and acceptable for expected tool payloads",
+      "rule": "AP-015",
+      "fix_decision": "log-only"
+    }
+  ],
+  "architecture_rules": {
+    "passed": [
+      "AP-010",
+      "AP-011",
+      "AP-012",
+      "AP-014",
+      "AP-015",
+      "AP-016",
+      "AP-018",
+      "AP-019",
+      "AP-020",
+      "AP-022",
+      "AP-023",
+      "AP-025",
+      "AP-026",
+      "AP-028",
+      "AP-029",
+      "AP-032",
+      "AP-074",
+      "AP-076"
+    ],
+    "not_applicable_deferred": [
+      "AP-021",
+      "AP-075"
+    ],
+    "residual_risk": "Public package exports, runner assembleDurableZero composition, tools/register dynamic registration, and full model E2E execution remain pending downstream gates."
+  }
+}

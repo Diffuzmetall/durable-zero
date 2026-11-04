@@ -1,0 +1,1 @@
+import { Adapter } from "@fixture/adapter"; export function start() { return new Adapter(); }

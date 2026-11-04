@@ -1,0 +1,15 @@
+[
+  {
+    "id": "PROD-FND-001",
+    "severity": "P2",
+    "rule": "AP-022",
+    "title": "Generic Error with name 'JsonRpcMethodNotFoundError' misclassified as -32601 Method Not Found instead of -32603 Internal Error",
+    "journey": "Adversarial & Error Recovery",
+    "action": "Downstream handler throws standard Error with reassigned name: `const err = new Error('backend fault'); err.name = 'JsonRpcMethodNotFoundError'; throw err;`",
+    "expectation": "Server distinguishes genuine typed instances/brands of JsonRpcMethodNotFoundError from generic internal errors, preserving -32603 for generic handler failures per the public caller contract.",
+    "reality": "Server matches error strictly by string property `err.name === 'JsonRpcMethodNotFoundError'`, returning `{\"jsonrpc\":\"2.0\",\"id\":\"err-generic-named\",\"error\":{\"code\":-32601,\"message\":\"backend fault\"}}`",
+    "fix_decision": "fix-now",
+    "evidence": "Demonstrated in /Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-named-generic-probe.json and /Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs ('Generic error with name reassigned to JsonRpcMethodNotFoundError remains -32603')",
+    "status": "open"
+  }
+]

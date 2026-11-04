@@ -1,0 +1,55 @@
+{
+  "title": "durable-zero · карта Cycle 7",
+  "scope": "Целевая архитектура и статический снимок исходников; это не отчёт о прохождении S9 и не подтверждение готовности интеграции.",
+  "snapshot": "2026-11-04 · plan 76145d4 · база исходников cdcb0cb до текущих WIP-изменений · рабочее дерево меняется",
+  "target": {
+    "mermaid": "flowchart TB\n  CLI[CLI: durable-zero serve] --> ROOT[runner: Composition Root]\n  CLIENT[Клиент / Host: BB, терминал, приложение] <-->|JSON-RPC 2.0 · stdio| RPC[protocol: запросы, ответы, notifications]\n  ROOT -. создаёт и инжектирует .-> CORE[core: SessionCoordinator]\n  ROOT -. собирает зависимости .-> ENGINE[adapter-pi-durable: PiDurableEngine]\n  RPC -->|dispatch| CORE\n  CORE -->|IAgentEngine| ENGINE\n  ENGINE -->|openDurable / controller| HARNESS[Native Pi Harness: conversations, submissions, tasks]\n  HARNESS <-->|генерация| MODELS[Native ModelRuntime / Models + провайдер LLM]\n  HARNESS <-->|durable state| DB[(SQLite + session lock)]\n  HARNESS <-->|tools / hooks| TOOLS[Registry: Codemode, Pi Resources, tool adapters]\n  RES[Ресурсы: skills, settings, prompt] --> TOOLS\n  TOOLS --> EXEC[Execution environment: FS, процессы, sandbox]\n  TOOLS -->|host tool / interaction| BRIDGE[runner: HostBridge]\n  BRIDGE -->|server.request · reverse RPC| RPC\n  ENGINE -->|canonical events + native settlement| RPC\n  classDef work fill:#282622,stroke:#bda57a,color:#eee8de\n  classDef native fill:#232522,stroke:#6f8476,color:#eee8de\n  class CORE,ENGINE,RPC,BRIDGE work\n  class HARNESS,MODELS,DB native",
+    "details": {
+      "ROOT": "Единственное место сборки конкретных адаптеров. Создаёт coordinator/engine и передаёт фабрики окружения, extensions, ресурсы и host capability. Native объекты могут иметь adapter-owned defaults; это не второй доменный движок. Task 1: wiring в работе.",
+      "CORE": "Цель: доменная проверка входа и lifecycle, типизированный IAgentEngine и другие чистые порты. Без Pi SDK, SQLite, host RPC, FS и импорта конкретных адаптеров. Подключение coordinator к реальному engine — задача Slice 0; незавершённые WIP-изменения не считаются принятой интеграцией.",
+      "ENGINE": "Оборачивает существующий зрелый runtime, а не пишет новый agent loop. Пробрасывает dependencies в openDurable/runtime-loader, native controller/submissions, события и watchers. Один путь открытия/закрытия Harness, storage и lock.",
+      "RPC": "Конверты JSON-RPC, входящий dispatch, исходящие request/response и notifications. Транспорт владеет wire ID, pending promises и timeout cleanup. Task 4A чинит notifications, method-not-found и XOR result/error; это не заявление о полной готовности протокола.",
+      "HARNESS": "Сохраняем native Pi Harness. Он выполняет генерацию и tools, ведёт conversations, admissions/submissions, durable tasks и runtime graph. Реализация не заменяется фиктивной квитанцией.",
+      "MODELS": "Это native Models / ModelRuntime, потребляемый Harness для генерации. Не путать с доменным IModelProvider / PiAiModelProvider для каталога и выбора моделей. В offline E2E подменяется только внешний model provider через public extension API.",
+      "DB": "Native persistence реальна. Открытие/освобождение через единственный engine lifecycle; coordinator не приобретает второй lock. После перезапуска читаются те же native entry IDs и тексты.",
+      "TOOLS": "Реестр native tools и extensions. Codemode и ресурсные расширения собираются снаружи; SDK-специфичные типы не проникают в core. Подключение host-инструментов — отдельная дальнейшая интеграция.",
+      "BRIDGE": "Task 2A: изолированный компонент сейчас в работе, в Harness/composition ещё НЕ подключён. forwardToolCall/requestInteraction вызывают существующий server.request, валидируют payload и передают timeout. Без своего ID source, pending map или второго RPC-трекера.",
+      "EXEC": "Конкретные FS/process/sandbox реализации снаружи core. Native tools используют инжектированное окружение; это не выполнение бизнес-логики внутри coordinator.",
+      "RES": "Файлы, skills, настройки и расширения загружаются инфраструктурой и передаются в native registry. Чистые DTO/контракты могут оставаться в core; реальные загрузчики и SDK — вне его.",
+      "CLIENT": "Внешний клиент общается только по wire API и отвечает на reverse requests. BB — возможный клиент; миграция BB-плагина не входит в эти слайсы. Отдельный host↔BB hop вправе иметь свои IDs."
+    }
+  },
+  "current": {
+    "mermaid": "flowchart TB\n  subgraph OLD[База cdcb0cb: существующий native-путь]\n    CLI[CLI serve] --> LEGACY[core/runner-server.ts: legacy framing]\n    LEGACY --> RT[core/runtime.ts: openDurable]\n    RT --> H[Native Harness]\n    H --> M[ModelRuntime / LLM]\n    H --> DB[(SQLite)]\n    LEGACY --> HR[core/host-rpc.ts: mutable forwarders]\n    LEGACY --> CTRL[control.jsonl: filesystem channel]\n  end\n  subgraph NEW[До Slice 0: новый runner не замкнут с native runtime]\n    MAIN[runner/main.ts] --> COMP[runner/composition.ts]\n    COMP --> COORD[SessionCoordinator]\n    COORD --> REC[accepted: rec_... без вызова engine]\n    COMP --> PROTO[StdioJsonRpcServer]\n  end\n  classDef gap fill:#342625,stroke:#b58d83,color:#eee8de\n  class COORD,REC gap",
+    "details": {
+      "CLI": "База cdcb0cb, до текущего WIP. packages/cli/bin/durable-zero.js:67–69: serve импортирует core/src/runner-server.ts, а не новый runner main. Это статическая проверка исходников, не успешный запуск.",
+      "LEGACY": "packages/core/src/runner-server.ts:120–129: вызывает реальный openDurable с executionEnvFactory и запускает filesystem control channel. Этот зрелый runtime сохраняется, но переносится за adapter boundary; legacy wire path удаляется.",
+      "COORD": "База cdcb0cb, до текущего WIP. packages/core/src/session/coordinator.ts: prompt проверяет lifecycle/строку и формирует rec_... через Date.now/Math.random. Реальный engine не вызывается. Именно этот разрыв обязан закрыть Slice 0.",
+      "COMP": "packages/runner/src/composition.ts: создаёт store/modelProvider/executionEnv и coordinator. Сам факт наличия DI-параметров ещё не означает, что prompt выполняет модель.",
+      "HR": "packages/core/src/host-rpc.ts: HostRpcManager и module-level forwarders используют старое framing. Не путать с новым изолированным HostBridge: старый слой ещё не удалён.",
+      "CTRL": "Это filesystem-watched JSONL канал, не socket. В цели заменяется публичным session/abortTask.",
+      "REC": "Квитанция accepted не является результатом генерации. Ни схема, ни зелёный тест одной квитанции не подтверждают выполнение агента."
+    }
+  },
+  "flow": {
+    "mermaid": "sequenceDiagram\n  participant C as Клиент / Host\n  participant R as runner + protocol\n  participant A as core / engine adapter\n  participant H as Native Harness\n  participant L as LLM\n  participant B as HostBridge\n  C->>R: session/prompt(content, conversationId)\n  R->>A: validate + engine.submit\n  A->>H: native admission\n  H-->>A: Submission.id\n  A-->>C: accepted + native ID (ещё не результат)\n  H->>L: generate(context)\n  L-->>H: text_delta\n  H-->>A: native stream\n  A-->>C: session/event: canonical message_update\n  opt После подключения host-инструментов\n    L-->>H: tool call\n    H->>B: forwardToolCall\n    B->>R: server.request(host/toolCall)\n    R->>C: reverse request + wire ID\n    C-->>R: tool result, тот же wire ID\n    R-->>B: validated response routing\n    B-->>H: validated tool payload\n    H->>L: continue with tool result\n    L-->>H: final answer\n  end\n  H->>H: commit user/assistant entries + settlement\n  H-->>A: Submission.wait() settled\n  A-->>C: turn_complete с native admission ID\n  Note over C,H: После restart: getTranscript возвращает те же EntryId и тексты",
+    "details": {}
+  },
+  "dependencies": {
+    "mermaid": "flowchart LR\n  RUNNER[runner: только composition / boundary] --> CORE[core: чистые порты и coordinator]\n  CORE --> CONTRACTS[contracts: DTO / events]\n  RUNNER --> PROTO[protocol: wire API]\n  RUNNER --> AD[adapter-pi-durable]\n  RUNNER --> CODE[adapter-codemode]\n  RUNNER --> RES[extension-pi-resource]\n  RUNNER --> ENV[execution]\n  RUNNER --> CAT[adapter-pi-ai: каталог]\n  AD --> CORE\n  AD --> SDK[Native Pi SDK]\n  CODE --> AD\n  CODE --> CORE\n  RES --> AD\n  RES --> CORE\n  ENV --> CORE\n  CAT --> CORE\n  CAT --> SDK",
+    "details": {
+      "CORE": "Стрелки здесь — IMPORT-зависимости, не runtime-вызовы. Core не импортирует runner, adapters или Pi SDK. Общие DTO уходят внутрь, в contracts.",
+      "CODE": "Выбранная целевая DAG: codemode может зависеть от native extension contract в adapter-pi-durable; обратная зависимость запрещена. Поэтому конкретные builtins создаёт composition root, не relocated harness-setup.",
+      "CAT": "Каталог/резолвер моделей — не LLM inference engine. Сама генерация идёт через native Harness → Models.",
+      "RUNNER": "Нижние слои не должны импортировать runner. HostBridge находится здесь как boundary adapter, но core знает только чистый IHostBridge."
+    }
+  },
+  "sources": [
+    {"path":"/Users/vanya/Projects/durable-zero/docs/superpowers/plans/2026-11-04-cycle-7-runtime-adapter-ioc-migration.md","note":"План 76145d4: целевая архитектура, контракты, сохранение native runtime"},
+    {"path":"/Users/vanya/Projects/durable-zero/docs/arch-improvement/ledger.md","note":"R1–R7 и независимые границы Task 1 / 4A / 2A; уточнения имеют приоритет над устаревшими примерами"},
+    {"path":"/Users/vanya/Projects/durable-zero/packages/cli/bin/durable-zero.js","note":"Текущий serve entrypoint"},
+    {"path":"/Users/vanya/Projects/durable-zero/packages/runner/src/composition.ts","note":"Текущая сборка нового runner"},
+    {"path":"/Users/vanya/Projects/durable-zero/packages/core/src/session/coordinator.ts","note":"Текущий разрыв prompt → engine"},
+    {"path":"/Users/vanya/Projects/durable-zero/packages/core/src/runner-server.ts","note":"Текущий зрелый native/legacy путь"}
+  ]
+}

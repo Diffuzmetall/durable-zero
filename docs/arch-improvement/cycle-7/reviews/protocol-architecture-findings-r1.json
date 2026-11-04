@@ -1,0 +1,45 @@
+{
+  "task": "durable-zero Cycle 7 Task 4A",
+  "round": "fix-round-1",
+  "fixBase": "ad122ffc9a7bf63c73a516d19fb07afcabeb7781",
+  "head": "f3fff38a84154a36f017514c234421aef5215ced",
+  "reviewer": "independent-architecture-reviewer",
+  "date": "2026-11-04",
+  "verdict": "PASS",
+  "findingsVerification": [
+    {
+      "id": "P2-ERR-001",
+      "title": "Generic Error renamed JsonRpcMethodNotFoundError must stay -32603",
+      "status": "ADDRESSED",
+      "evidence": "packages/protocol/src/transport/request-dispatcher.ts:89-94 (err instanceof JsonRpcMethodNotFoundError)",
+      "testEvidence": {
+        "red": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-fixround1-red.junit.xml (1 failure: -32601 !== -32603)",
+        "green": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-fixround1-green.junit.xml (24 pass, 0 fail)"
+      }
+    }
+  ],
+  "newBreakage": [],
+  "outOfScopeObservations": [
+    "RED JUnit included host-methods.test.ts (37 total cases / 1 targeted failure)",
+    "packages/runner/src/composition.ts fallback update remains gated on Slice 0 worker thr_tcbhyv8p4r"
+  ],
+  "apCompliance": {
+    "passed": [
+      "AP-010",
+      "AP-012",
+      "AP-019",
+      "AP-020",
+      "AP-021",
+      "AP-022",
+      "AP-023",
+      "AP-026",
+      "AP-028",
+      "AP-070",
+      "AP-074",
+      "AP-075",
+      "AP-076"
+    ],
+    "semanticProbes": "All 4 PASS"
+  },
+  "residualIntegrationGates": "Slice 0 runner fallback must throw new JsonRpcMethodNotFoundError(method) to emit -32601 from composition root"
+}

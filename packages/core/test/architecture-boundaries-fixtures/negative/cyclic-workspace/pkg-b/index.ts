@@ -1,0 +1,1 @@
+import { c } from "@fixture/pkg-c"; export const b = c + 1;

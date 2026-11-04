@@ -1,0 +1,961 @@
+# Review package: cb4801a0654938350eefd2f9345b4caaa857b114..8e426989e375fbb7a2af62781658373adc9acca3
+
+## Commits
+8e42698 feat(host): checkpoint isolated HostBridge component before independent verification
+
+## Files changed
+ packages/core/src/tools/host-bridge.ts      |  33 ++
+ packages/protocol/src/methods/host.ts       |  54 +++
+ packages/protocol/test/host-methods.test.ts | 212 +++++++++++
+ packages/runner/src/host/host-bridge.ts     |  90 +++++
+ packages/runner/test/host-bridge.test.ts    | 528 ++++++++++++++++++++++++++++
+ 5 files changed, 917 insertions(+)
+
+## Diff
+diff --git a/packages/core/src/tools/host-bridge.ts b/packages/core/src/tools/host-bridge.ts
+new file mode 100644
+index 0000000..a2b93a5
+--- /dev/null
++++ b/packages/core/src/tools/host-bridge.ts
+@@ -0,0 +1,33 @@
++export interface HostToolCallContent {
++  type: "text";
++  text: string;
++}
++
++export interface HostToolCallResult {
++  content: Array<HostToolCallContent>;
++  isError?: boolean;
++}
++
++export interface HostInteractionPayload {
++  title?: string;
++  message?: string;
++  data?: unknown;
++}
++
++export interface IHostBridge {
++  forwardToolCall(
++    toolName: string,
++    args: unknown,
++  ): Promise<{
++    content: Array<{ type: "text"; text: string }>;
++    isError?: boolean;
++  }>;
++  requestInteraction(
++    kind: string,
++    payload: {
++      title?: string;
++      message?: string;
++      data?: unknown;
++    },
++  ): Promise<unknown>;
++}
+diff --git a/packages/protocol/src/methods/host.ts b/packages/protocol/src/methods/host.ts
+new file mode 100644
+index 0000000..8cda28e
+--- /dev/null
++++ b/packages/protocol/src/methods/host.ts
+@@ -0,0 +1,54 @@
++import { z } from "zod";
++
++export type JsonPrimitive = string | number | boolean | null;
++export type JsonValue =
++  | JsonPrimitive
++  | JsonValue[]
++  | { [key: string]: JsonValue };
++export type JsonObject = { [key: string]: JsonValue };
++
++export const jsonPrimitiveSchema = z.union([
++  z.string(),
++  z.number().finite(),
++  z.boolean(),
++  z.null(),
++]);
++
++export const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
++  z.union([
++    jsonPrimitiveSchema,
++    z.array(jsonValueSchema),
++    z.record(z.string(), jsonValueSchema),
++  ]),
++);
++
++export const jsonObjectSchema: z.ZodType<JsonObject> = z.record(
++  z.string(),
++  jsonValueSchema,
++);
++
++export const hostToolCallParamsSchema = z.object({
++  toolName: z.string().min(1),
++  arguments: jsonValueSchema,
++});
++export type HostToolCallParams = z.infer<typeof hostToolCallParamsSchema>;
++
++export const hostToolResultContentSchema = z.object({
++  type: z.literal("text"),
++  text: z.string(),
++});
++export type HostToolResultContent = z.infer<typeof hostToolResultContentSchema>;
++
++export const hostToolResultSchema = z.object({
++  content: z.array(hostToolResultContentSchema),
++  isError: z.boolean().optional(),
++});
++export type HostToolResult = z.infer<typeof hostToolResultSchema>;
++
++export const hostInteractionParamsSchema = z.object({
++  kind: z.string().min(1),
++  title: z.string().optional(),
++  message: z.string().optional(),
++  data: jsonValueSchema.optional(),
++});
++export type HostInteractionParams = z.infer<typeof hostInteractionParamsSchema>;
+diff --git a/packages/protocol/test/host-methods.test.ts b/packages/protocol/test/host-methods.test.ts
+new file mode 100644
+index 0000000..444f4c2
+--- /dev/null
++++ b/packages/protocol/test/host-methods.test.ts
+@@ -0,0 +1,212 @@
++import { describe, it } from "node:test";
++import assert from "node:assert/strict";
++import {
++  jsonValueSchema,
++  hostToolCallParamsSchema,
++  hostToolResultContentSchema,
++  hostToolResultSchema,
++  hostInteractionParamsSchema,
++} from "../src/methods/host.ts";
++
++describe("Host Protocol Methods & Schemas (Task 2A / S7)", () => {
++  describe("jsonValueSchema", () => {
++    it("accepts valid JSON primitives", () => {
++      assert.equal(jsonValueSchema.safeParse("hello").success, true);
++      assert.equal(jsonValueSchema.safeParse("").success, true);
++      assert.equal(jsonValueSchema.safeParse(0).success, true);
++      assert.equal(jsonValueSchema.safeParse(42).success, true);
++      assert.equal(jsonValueSchema.safeParse(-3.14159).success, true);
++      assert.equal(jsonValueSchema.safeParse(true).success, true);
++      assert.equal(jsonValueSchema.safeParse(false).success, true);
++      assert.equal(jsonValueSchema.safeParse(null).success, true);
++    });
++
++    it("rejects non-finite numbers", () => {
++      assert.equal(jsonValueSchema.safeParse(NaN).success, false);
++      assert.equal(jsonValueSchema.safeParse(Infinity).success, false);
++      assert.equal(jsonValueSchema.safeParse(-Infinity).success, false);
++    });
++
++    it("accepts valid JSON arrays and nested structures", () => {
++      const valid = [1, "two", null, false, { nested: [true, { a: "b" }] }];
++      assert.equal(jsonValueSchema.safeParse(valid).success, true);
++      assert.equal(jsonValueSchema.safeParse([]).success, true);
++      assert.equal(jsonValueSchema.safeParse({}).success, true);
++    });
++
++    it("rejects non-JSON values and objects containing them", () => {
++      assert.equal(jsonValueSchema.safeParse(undefined).success, false);
++      assert.equal(jsonValueSchema.safeParse(() => {}).success, false);
++      assert.equal(jsonValueSchema.safeParse(Symbol("test")).success, false);
++      assert.equal(jsonValueSchema.safeParse(BigInt(42)).success, false);
++
++      assert.equal(jsonValueSchema.safeParse({ fn: () => {} }).success, false);
++      assert.equal(jsonValueSchema.safeParse({ sym: Symbol() }).success, false);
++      assert.equal(jsonValueSchema.safeParse({ bi: 123n }).success, false);
++      assert.equal(jsonValueSchema.safeParse({ undef: undefined }).success, false);
++      assert.equal(jsonValueSchema.safeParse([1, () => {}]).success, false);
++      assert.equal(jsonValueSchema.safeParse([1, undefined]).success, false);
++    });
++  });
++
++  describe("hostToolCallParamsSchema", () => {
++    it("validates valid toolName and JSON arguments", () => {
++      const res1 = hostToolCallParamsSchema.safeParse({
++        toolName: "read_file",
++        arguments: { path: "package.json" },
++      });
++      assert.equal(res1.success, true);
++
++      const res2 = hostToolCallParamsSchema.safeParse({
++        toolName: "status",
++        arguments: {},
++      });
++      assert.equal(res2.success, true);
++    });
++
++    it("rejects invalid toolName (missing or empty)", () => {
++      assert.equal(
++        hostToolCallParamsSchema.safeParse({
++          arguments: {},
++        }).success,
++        false,
++      );
++      assert.equal(
++        hostToolCallParamsSchema.safeParse({
++          toolName: "",
++          arguments: {},
++        }).success,
++        false,
++      );
++    });
++
++    it("rejects arguments with non-JSON values", () => {
++      assert.equal(
++        hostToolCallParamsSchema.safeParse({
++          toolName: "eval",
++          arguments: { callback: () => {} },
++        }).success,
++        false,
++      );
++      assert.equal(
++        hostToolCallParamsSchema.safeParse({
++          toolName: "eval",
++          arguments: { id: 999999999999999999999999n },
++        }).success,
++        false,
++      );
++    });
++  });
++
++  describe("hostToolResultSchema", () => {
++    it("accepts valid tool result with content and optional isError", () => {
++      const res1 = hostToolResultSchema.safeParse({
++        content: [{ type: "text", text: "file contents here" }],
++      });
++      assert.equal(res1.success, true);
++      assert.equal(res1.data?.isError, undefined);
++
++      const res2 = hostToolResultSchema.safeParse({
++        content: [{ type: "text", text: "command failed" }],
++        isError: true,
++      });
++      assert.equal(res2.success, true);
++      assert.equal(res2.data?.isError, true);
++
++      const res3 = hostToolResultSchema.safeParse({
++        content: [{ type: "text", text: "all good" }],
++        isError: false,
++      });
++      assert.equal(res3.success, true);
++      assert.equal(res3.data?.isError, false);
++    });
++
++    it("accepts multiple text blocks or empty content array", () => {
++      const res = hostToolResultSchema.safeParse({
++        content: [
++          { type: "text", text: "chunk 1" },
++          { type: "text", text: "chunk 2" },
++        ],
++      });
++      assert.equal(res.success, true);
++      assert.equal(res.data?.content.length, 2);
++
++      const empty = hostToolResultSchema.safeParse({ content: [] });
++      assert.equal(empty.success, true);
++    });
++
++    it("rejects malformed payloads", () => {
++      // Content is not array
++      assert.equal(
++        hostToolResultSchema.safeParse({ content: "not array" }).success,
++        false,
++      );
++      // Missing content
++      assert.equal(hostToolResultSchema.safeParse({}).success, false);
++      // Unsupported content block type (only 'text' allowed)
++      assert.equal(
++        hostToolResultSchema.safeParse({
++          content: [{ type: "image", data: "base64..." }],
++        }).success,
++        false,
++      );
++      // Missing text field in block
++      assert.equal(
++        hostToolResultSchema.safeParse({
++          content: [{ type: "text" }],
++        }).success,
++        false,
++      );
++      // isError is not boolean
++      assert.equal(
++        hostToolResultSchema.safeParse({
++          content: [{ type: "text", text: "err" }],
++          isError: "true",
++        }).success,
++        false,
++      );
++    });
++  });
++
++  describe("hostInteractionParamsSchema", () => {
++    it("accepts valid kind and optional title, message, data", () => {
++      const res1 = hostInteractionParamsSchema.safeParse({
++        kind: "confirm",
++      });
++      assert.equal(res1.success, true);
++
++      const res2 = hostInteractionParamsSchema.safeParse({
++        kind: "select",
++        title: "Select an option",
++        message: "Choose one of the following:",
++        data: { options: ["yes", "no"] },
++      });
++      assert.equal(res2.success, true);
++    });
++
++    it("rejects missing or empty kind", () => {
++      assert.equal(hostInteractionParamsSchema.safeParse({}).success, false);
++      assert.equal(
++        hostInteractionParamsSchema.safeParse({ kind: "" }).success,
++        false,
++      );
++    });
++
++    it("rejects non-JSON values in data payload", () => {
++      assert.equal(
++        hostInteractionParamsSchema.safeParse({
++          kind: "custom",
++          data: { fn: () => {} },
++        }).success,
++        false,
++      );
++      assert.equal(
++        hostInteractionParamsSchema.safeParse({
++          kind: "custom",
++          data: 123456789n,
++        }).success,
++        false,
++      );
++    });
++  });
++});
+diff --git a/packages/runner/src/host/host-bridge.ts b/packages/runner/src/host/host-bridge.ts
+new file mode 100644
+index 0000000..3beb01f
+--- /dev/null
++++ b/packages/runner/src/host/host-bridge.ts
+@@ -0,0 +1,90 @@
++import type { IHostBridge } from "../../../core/src/tools/host-bridge.ts";
++import {
++  hostToolCallParamsSchema,
++  hostToolResultSchema,
++  hostInteractionParamsSchema,
++  jsonValueSchema,
++} from "../../../protocol/src/methods/host.ts";
++
++export interface HostRequester {
++  request(
++    method: string,
++    params: Record<string, unknown>,
++    timeoutMs?: number,
++  ): Promise<unknown>;
++}
++
++export interface HostBridgeOptions {
++  requester: HostRequester;
++  timeoutMs?: number;
++}
++
++const DEFAULT_TIMEOUT_MS = 30_000;
++
++export class HostBridge implements IHostBridge {
++  private readonly requester: HostRequester;
++  private readonly timeoutMs: number;
++
++  constructor(options: HostBridgeOptions) {
++    if (!options || typeof options !== "object") {
++      throw new TypeError("HostBridge options must be an object");
++    }
++    if (!options.requester || typeof options.requester.request !== "function") {
++      throw new TypeError("requester with a request method is required");
++    }
++    if (options.timeoutMs !== undefined) {
++      if (
++        typeof options.timeoutMs !== "number" ||
++        !Number.isFinite(options.timeoutMs) ||
++        options.timeoutMs <= 0
++      ) {
++        throw new TypeError(
++          `timeoutMs must be a finite positive number, received: ${options.timeoutMs}`,
++        );
++      }
++      this.timeoutMs = options.timeoutMs;
++    } else {
++      this.timeoutMs = DEFAULT_TIMEOUT_MS;
++    }
++    this.requester = options.requester;
++  }
++
++  public async forwardToolCall(
++    toolName: string,
++    args: unknown,
++  ): Promise<{
++    content: Array<{ type: "text"; text: string }>;
++    isError?: boolean;
++  }> {
++    const validatedParams = hostToolCallParamsSchema.parse({
++      toolName,
++      arguments: args ?? {},
++    });
++
++    const rawResult = await this.requester.request(
++      "host/toolCall",
++      validatedParams as Record<string, unknown>,
++      this.timeoutMs,
++    );
++
++    return hostToolResultSchema.parse(rawResult);
++  }
++
++  public async requestInteraction(
++    kind: string,
++    payload: { title?: string; message?: string; data?: unknown },
++  ): Promise<unknown> {
++    const validatedParams = hostInteractionParamsSchema.parse({
++      kind,
++      ...payload,
++    });
++
++    const rawResult = await this.requester.request(
++      "host/interaction",
++      validatedParams as Record<string, unknown>,
++      this.timeoutMs,
++    );
++
++    return jsonValueSchema.parse(rawResult);
++  }
++}
+diff --git a/packages/runner/test/host-bridge.test.ts b/packages/runner/test/host-bridge.test.ts
+new file mode 100644
+index 0000000..b0e4fba
+--- /dev/null
++++ b/packages/runner/test/host-bridge.test.ts
+@@ -0,0 +1,528 @@
++import { describe, it } from "node:test";
++import assert from "node:assert/strict";
++import { Readable, Writable } from "node:stream";
++import { StdioJsonRpcServer } from "../../protocol/src/transport/stdio-server.ts";
++import type { IHostBridge } from "../../core/src/tools/host-bridge.ts";
++import { HostBridge, type HostRequester } from "../src/host/host-bridge.ts";
++
++describe("HostBridge Component (Task 2A / S7)", () => {
++  describe("Constructor & Options Validation", () => {
++    it("rejects null or non-object options", () => {
++      // @ts-expect-error - testing runtime defense
++      assert.throws(() => new HostBridge(null), TypeError);
++      // @ts-expect-error - testing runtime defense
++      assert.throws(() => new HostBridge(undefined), TypeError);
++      // @ts-expect-error - testing runtime defense
++      assert.throws(() => new HostBridge("not an object"), TypeError);
++    });
++
++    it("requires a requester with a request method", () => {
++      // @ts-expect-error - testing runtime defense
++      assert.throws(() => new HostBridge({}), TypeError);
++      // @ts-expect-error - testing runtime defense
++      assert.throws(() => new HostBridge({ requester: {} }), TypeError);
++      assert.throws(
++        // @ts-expect-error - testing runtime defense
++        () => new HostBridge({ requester: { request: "not a function" } }),
++        TypeError,
++      );
++    });
++
++    it("defaults timeoutMs to 30,000ms when omitted", () => {
++      let capturedTimeout: number | undefined;
++      const fakeRequester: HostRequester = {
++        request: async (_method, _params, timeoutMs) => {
++          capturedTimeout = timeoutMs;
++          return { content: [{ type: "text", text: "ok" }] };
++        },
++      };
++
++      const bridge = new HostBridge({ requester: fakeRequester });
++      assert.ok(bridge instanceof HostBridge);
++    });
++
++    it("rejects non-positive or non-finite timeoutMs values", () => {
++      const fakeRequester: HostRequester = { request: async () => ({}) };
++
++      assert.throws(
++        () => new HostBridge({ requester: fakeRequester, timeoutMs: 0 }),
++        TypeError,
++      );
++      assert.throws(
++        () => new HostBridge({ requester: fakeRequester, timeoutMs: -500 }),
++        TypeError,
++      );
++      assert.throws(
++        () => new HostBridge({ requester: fakeRequester, timeoutMs: NaN }),
++        TypeError,
++      );
++      assert.throws(
++        () => new HostBridge({ requester: fakeRequester, timeoutMs: Infinity }),
++        TypeError,
++      );
++      assert.throws(
++        // @ts-expect-error - testing runtime defense
++        () => new HostBridge({ requester: fakeRequester, timeoutMs: "30000" }),
++        TypeError,
++      );
++    });
++
++    it("accepts valid positive finite timeoutMs", async () => {
++      let capturedTimeout: number | undefined;
++      const fakeRequester: HostRequester = {
++        request: async (_method, _params, timeoutMs) => {
++          capturedTimeout = timeoutMs;
++          return { content: [{ type: "text", text: "ok" }] };
++        },
++      };
++
++      const bridge = new HostBridge({
++        requester: fakeRequester,
++        timeoutMs: 15_000,
++      });
++      await bridge.forwardToolCall("dummy", {});
++      assert.equal(capturedTimeout, 15_000);
++    });
++  });
++
++  describe("forwardToolCall Unit Behavior", () => {
++    it("dispatches to host/toolCall with toolName, arguments, and timeoutMs", async () => {
++      let capturedMethod = "";
++      let capturedParams: Record<string, unknown> | undefined;
++      let capturedTimeout: number | undefined;
++
++      const fakeRequester: HostRequester = {
++        request: async (method, params, timeoutMs) => {
++          capturedMethod = method;
++          capturedParams = params;
++          capturedTimeout = timeoutMs;
++          return { content: [{ type: "text", text: "file contents" }] };
++        },
++      };
++
++      const bridge: IHostBridge = new HostBridge({ requester: fakeRequester });
++      const result = await bridge.forwardToolCall("read_file", {
++        path: "README.md",
++      });
++
++      assert.equal(capturedMethod, "host/toolCall");
++      assert.deepEqual(capturedParams, {
++        toolName: "read_file",
++        arguments: { path: "README.md" },
++      });
++      assert.equal(capturedTimeout, 30_000);
++      assert.deepEqual(result, {
++        content: [{ type: "text", text: "file contents" }],
++      });
++    });
++
++    it("defaults arguments to empty object when null or undefined", async () => {
++      let capturedParams: Record<string, unknown> | undefined;
++      const fakeRequester: HostRequester = {
++        request: async (_method, params) => {
++          capturedParams = params;
++          return { content: [{ type: "text", text: "ok" }] };
++        },
++      };
++
++      const bridge = new HostBridge({ requester: fakeRequester });
++      await bridge.forwardToolCall("get_status", undefined);
++      assert.deepEqual(capturedParams?.arguments, {});
++
++      await bridge.forwardToolCall("get_status", null);
++      assert.deepEqual(capturedParams?.arguments, {});
++    });
++
++    it("preserves isError: true on tool failure payloads without throwing", async () => {
++      const fakeRequester: HostRequester = {
++        request: async () => ({
++          content: [{ type: "text", text: "File not found" }],
++          isError: true,
++        }),
++      };
++
++      const bridge = new HostBridge({ requester: fakeRequester });
++      const result = await bridge.forwardToolCall("read_file", { path: "missing" });
++      assert.equal(result.isError, true);
++      assert.deepEqual(result.content, [
++        { type: "text", text: "File not found" },
++      ]);
++    });
++
++    it("preserves isError: false on tool success payloads", async () => {
++      const fakeRequester: HostRequester = {
++        request: async () => ({
++          content: [{ type: "text", text: "Saved" }],
++          isError: false,
++        }),
++      };
++
++      const bridge = new HostBridge({ requester: fakeRequester });
++      const result = await bridge.forwardToolCall("write_file", {});
++      assert.equal(result.isError, false);
++      assert.deepEqual(result.content, [{ type: "text", text: "Saved" }]);
++    });
++
++    it("rejects when input arguments contain non-JSON values", async () => {
++      const fakeRequester: HostRequester = { request: async () => ({}) };
++      const bridge = new HostBridge({ requester: fakeRequester });
++
++      await assert.rejects(
++        () => bridge.forwardToolCall("tool", { fn: () => {} }),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++      await assert.rejects(
++        () => bridge.forwardToolCall("tool", { big: 999999999999999999n }),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++    });
++
++    it("rejects when returned tool result is malformed", async () => {
++      // Content not an array
++      const fake1: HostRequester = {
++        request: async () => ({ content: "plain string" }),
++      };
++      const bridge1 = new HostBridge({ requester: fake1 });
++      await assert.rejects(
++        () => bridge1.forwardToolCall("test", {}),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++
++      // Missing content property
++      const fake2: HostRequester = {
++        request: async () => ({ status: "ok" }),
++      };
++      const bridge2 = new HostBridge({ requester: fake2 });
++      await assert.rejects(
++        () => bridge2.forwardToolCall("test", {}),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++
++      // Invalid content block type
++      const fake3: HostRequester = {
++        request: async () => ({
++          content: [{ type: "binary", data: "0101" }],
++        }),
++      };
++      const bridge3 = new HostBridge({ requester: fake3 });
++      await assert.rejects(
++        () => bridge3.forwardToolCall("test", {}),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++    });
++
++    it("propagates transport errors when requester.request rejects", async () => {
++      const fakeRequester: HostRequester = {
++        request: async () => {
++          throw new Error("Connection reset by peer");
++        },
++      };
++
++      const bridge = new HostBridge({ requester: fakeRequester });
++      await assert.rejects(
++        () => bridge.forwardToolCall("ping", {}),
++        /Connection reset by peer/,
++      );
++    });
++  });
++
++  describe("requestInteraction Unit Behavior", () => {
++    it("dispatches to host/interaction with kind and payload fields", async () => {
++      let capturedMethod = "";
++      let capturedParams: Record<string, unknown> | undefined;
++      let capturedTimeout: number | undefined;
++
++      const fakeRequester: HostRequester = {
++        request: async (method, params, timeoutMs) => {
++          capturedMethod = method;
++          capturedParams = params;
++          capturedTimeout = timeoutMs;
++          return { choice: "option-a" };
++        },
++      };
++
++      const bridge: IHostBridge = new HostBridge({ requester: fakeRequester });
++      const result = await bridge.requestInteraction("select", {
++        title: "Pick one",
++        message: "Available options",
++        data: { options: ["option-a", "option-b"] },
++      });
++
++      assert.equal(capturedMethod, "host/interaction");
++      assert.deepEqual(capturedParams, {
++        kind: "select",
++        title: "Pick one",
++        message: "Available options",
++        data: { options: ["option-a", "option-b"] },
++      });
++      assert.equal(capturedTimeout, 30_000);
++      assert.deepEqual(result, { choice: "option-a" });
++    });
++
++    it("validates and accepts opaque JSON responses (null, boolean, number, string, array, object)", async () => {
++      const responses: unknown[] = [
++        null,
++        true,
++        false,
++        0,
++        42,
++        -1.5,
++        "confirmed",
++        ["a", "b"],
++        { key: "val" },
++      ];
++
++      for (const expected of responses) {
++        const fakeRequester: HostRequester = {
++          request: async () => expected,
++        };
++        const bridge = new HostBridge({ requester: fakeRequester });
++        const res = await bridge.requestInteraction("prompt", {});
++        assert.deepEqual(res, expected);
++      }
++    });
++
++    it("rejects non-JSON input data", async () => {
++      const fakeRequester: HostRequester = { request: async () => null };
++      const bridge = new HostBridge({ requester: fakeRequester });
++
++      await assert.rejects(
++        () =>
++          bridge.requestInteraction("custom", {
++            data: { fn: () => {} },
++          }),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++    });
++
++    it("rejects non-JSON responses from host (undefined, functions, BigInt)", async () => {
++      const fake1: HostRequester = { request: async () => undefined };
++      const bridge1 = new HostBridge({ requester: fake1 });
++      await assert.rejects(
++        () => bridge1.requestInteraction("confirm", {}),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++
++      const fake2: HostRequester = { request: async () => () => {} };
++      const bridge2 = new HostBridge({ requester: fake2 });
++      await assert.rejects(
++        () => bridge2.requestInteraction("confirm", {}),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++
++      const fake3: HostRequester = { request: async () => BigInt(123) };
++      const bridge3 = new HostBridge({ requester: fake3 });
++      await assert.rejects(
++        () => bridge3.requestInteraction("confirm", {}),
++        (err: unknown) => (err as Error).name === "ZodError",
++      );
++    });
++
++    it("propagates transport rejection without fabricating approval or returning null", async () => {
++      const fakeRequester: HostRequester = {
++        request: async () => {
++          throw new Error("Interaction aborted by user");
++        },
++      };
++
++      const bridge = new HostBridge({ requester: fakeRequester });
++      await assert.rejects(
++        () => bridge.requestInteraction("confirm", { title: "Confirm action" }),
++        /Interaction aborted by user/,
++      );
++    });
++  });
++
++  describe("Real StdioJsonRpcServer Integration", () => {
++    function createTestServer() {
++      const stdin = new Readable({ read() {} });
++      const outboundMessages: Array<{
++        jsonrpc: string;
++        id?: string | number;
++        method?: string;
++        params?: Record<string, unknown>;
++        result?: unknown;
++        error?: unknown;
++      }> = [];
++      let buffer = "";
++
++      const stdout = new Writable({
++        write(chunk, _enc, cb) {
++          buffer += chunk.toString();
++          const lines = buffer.split("\n");
++          buffer = lines.pop() ?? "";
++          for (const line of lines) {
++            if (line.trim()) {
++              outboundMessages.push(JSON.parse(line));
++            }
++          }
++          cb();
++        },
++      });
++
++      const server = new StdioJsonRpcServer({
++        stdin,
++        stdout,
++        handler: async () => ({}),
++      });
++      server.start();
++
++      return { server, stdin, outboundMessages };
++    }
++
++    it("forwards tool call through real server and parses valid response", async () => {
++      const { server, stdin, outboundMessages } = createTestServer();
++      const bridge = new HostBridge({ requester: server });
++
++      const promise = bridge.forwardToolCall("cat", { path: "test.txt" });
++      await new Promise((r) => setTimeout(r, 20));
++
++      assert.equal(outboundMessages.length, 1);
++      const wireReq = outboundMessages[0]!;
++      assert.equal(wireReq.method, "host/toolCall");
++      assert.deepEqual(wireReq.params, {
++        toolName: "cat",
++        arguments: { path: "test.txt" },
++      });
++      assert.ok(wireReq.id);
++
++      // Client sends back valid tool result
++      stdin.push(
++        JSON.stringify({
++          jsonrpc: "2.0",
++          id: wireReq.id,
++          result: { content: [{ type: "text", text: "hello world" }] },
++        }) + "\n",
++      );
++
++      const result = await promise;
++      assert.deepEqual(result, {
++        content: [{ type: "text", text: "hello world" }],
++      });
++
++      server.stop();
++    });
++
++    it("requests interaction through real server and parses valid JSON response", async () => {
++      const { server, stdin, outboundMessages } = createTestServer();
++      const bridge = new HostBridge({ requester: server });
++
++      const promise = bridge.requestInteraction("confirm", {
++        title: "Delete file?",
++        message: "This cannot be undone.",
++      });
++      await new Promise((r) => setTimeout(r, 20));
++
++      assert.equal(outboundMessages.length, 1);
++      const wireReq = outboundMessages[0]!;
++      assert.equal(wireReq.method, "host/interaction");
++      assert.deepEqual(wireReq.params, {
++        kind: "confirm",
++        title: "Delete file?",
++        message: "This cannot be undone.",
++      });
++      assert.ok(wireReq.id);
++
++      stdin.push(
++        JSON.stringify({
++          jsonrpc: "2.0",
++          id: wireReq.id,
++          result: { confirmed: true },
++        }) + "\n",
++      );
++
++      const result = await promise;
++      assert.deepEqual(result, { confirmed: true });
++
++      server.stop();
++    });
++
++    it("handles two concurrent calls answered out of order with actual ID correlation", async () => {
++      const { server, stdin, outboundMessages } = createTestServer();
++      const bridge = new HostBridge({ requester: server });
++
++      // Dispatch call 1 and call 2 simultaneously
++      const promise1 = bridge.forwardToolCall("toolAlpha", { val: 1 });
++      const promise2 = bridge.requestInteraction("selectBeta", {
++        title: "Beta",
++      });
++
++      await new Promise((r) => setTimeout(r, 20));
++      assert.equal(outboundMessages.length, 2);
++
++      const req1 = outboundMessages[0]!;
++      const req2 = outboundMessages[1]!;
++
++      // Verify methods
++      assert.equal(req1.method, "host/toolCall");
++      assert.equal(req2.method, "host/interaction");
++
++      // Wire IDs are observed dynamically, never hardcoded
++      assert.ok(req1.id);
++      assert.ok(req2.id);
++      assert.notEqual(req1.id, req2.id);
++
++      // Answer call 2 FIRST
++      stdin.push(
++        JSON.stringify({
++          jsonrpc: "2.0",
++          id: req2.id,
++          result: { selected: "choice-beta" },
++        }) + "\n",
++      );
++
++      // Answer call 1 SECOND
++      stdin.push(
++        JSON.stringify({
++          jsonrpc: "2.0",
++          id: req1.id,
++          result: { content: [{ type: "text", text: "alpha output" }] },
++        }) + "\n",
++      );
++
++      const [res1, res2] = await Promise.all([promise1, promise2]);
++
++      // Correlated properly to their respective requests despite inverted answer order
++      assert.deepEqual(res1, {
++        content: [{ type: "text", text: "alpha output" }],
++      });
++      assert.deepEqual(res2, { selected: "choice-beta" });
++
++      server.stop();
++    });
++
++    it("enforces configurable short timeout and rejects outstanding call", async () => {
++      const { server } = createTestServer();
++      // Configure 50ms short timeout
++      const bridge = new HostBridge({ requester: server, timeoutMs: 50 });
++
++      const startTime = Date.now();
++      await assert.rejects(
++        () => bridge.forwardToolCall("unresponsive_tool", {}),
++        /timed out after 50ms/,
++      );
++      const elapsed = Date.now() - startTime;
++      assert.ok(
++        elapsed >= 40 && elapsed < 3000,
++        `Expected ~50ms timeout, took ${elapsed}ms`,
++      );
++
++      server.stop();
++    });
++
++    it("rejects outstanding work when server is stopped", async () => {
++      const { server } = createTestServer();
++      const bridge = new HostBridge({ requester: server, timeoutMs: 10_000 });
++
++      const promise = bridge.requestInteraction("long_interaction", {
++        title: "Wait",
++      });
++      await new Promise((r) => setTimeout(r, 20));
++
++      // Stop server while call is pending
++      server.stop();
++
++      await assert.rejects(promise, /Server stopped/);
++    });
++  });
++});

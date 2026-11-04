@@ -3,7 +3,10 @@ import {
   jsonRpcRequestSchema,
   jsonRpcResponseSchema,
 } from "../jsonrpc/schema.ts";
-import { JsonRpcMethodNotFoundError } from "../jsonrpc/errors.ts";
+import {
+  JsonRpcMethodNotFoundError,
+  JsonRpcInvalidParamsError,
+} from "../jsonrpc/errors.ts";
 import type { JsonRpcWireMessage } from "../jsonrpc/types.ts";
 
 export interface PendingOutbound {
@@ -86,14 +89,29 @@ export class RequestDispatcher {
       const result = await this.handler(method, params ?? {});
       this.send({ jsonrpc: "2.0", id, result: result === undefined ? null : result });
     } catch (err) {
-      const isNotFound = err instanceof JsonRpcMethodNotFoundError;
-      this.send({
-        jsonrpc: "2.0",
-        id,
-        error: isNotFound
-          ? { code: -32601, message: err.message }
-          : { code: -32603, message: err instanceof Error ? err.message : String(err) },
-      });
+      if (err instanceof JsonRpcMethodNotFoundError) {
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32601, message: err.message },
+        });
+      } else if (err instanceof JsonRpcInvalidParamsError) {
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: {
+            code: -32602,
+            message: err.message,
+            ...(err.data !== undefined ? { data: err.data } : {}),
+          },
+        });
+      } else {
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32603, message: err instanceof Error ? err.message : String(err) },
+        });
+      }
     }
   }
 }

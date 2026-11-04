@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A: Architecture Boundaries &amp; Regression Guards" time="0.040150" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)" time="0.011988" disabled="0" errors="0" tests="12" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="fails on forbidden vendor import (@earendil-works/pi-durable)" time="0.004264" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden adapter import (@durable-zero/adapter-pi-durable)" time="0.000677" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden runner import (@durable-zero/runner)" time="0.000476" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net)" time="0.000834" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden type-only vendor import (import type { ... })" time="0.000523" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden TypeScript import-type syntax (import('mod').Type)" time="0.000416" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden literal dynamic import (await import('adapter'))" time="0.000509" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden re-export barrel (export * from 'vendor')" time="0.000367" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on relative path escaping core root (../../../adapter)" time="0.000352" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on package.json declaring vendor dependencies in Core" time="0.000940" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on legacy CLI serve entrypoint pointing to deleted core runner" time="0.002056" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on cyclic workspace dependencies (A -> B -> C -> A)" time="0.000089" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)" time="0.003197" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="passes cleanly on pure domain service with contracts and zod" time="0.001748" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on pure TypeScript port definitions" time="0.000831" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on conformant Core package.json" time="0.000148" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on real CLI serve entrypoint fixture pointing to runner" time="0.000292" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on acyclic multi-tier workspace" time="0.000108" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 3: Live Project Source Snapshot Execution" time="0.016898" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="scans live packages/core/src/ and checks AST boundaries" time="0.013751" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live packages/core/package.json contains only contracts and zod" time="0.000109" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live workspace package DAG is strictly acyclic" time="0.001952" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner" time="0.000924" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies legacy deleted files do not exist in packages/core/src/" time="0.000078" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 4: Durable Evidence &amp; Report Generation" time="0.007691" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="generates structured evidence report with file SHA hashes" time="0.007650" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 23 -->
+	<!-- suites 5 -->
+	<!-- pass 23 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 365.930625 -->
+</testsuites>

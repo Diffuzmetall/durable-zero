@@ -9,6 +9,16 @@ var JsonRpcMethodNotFoundError = class extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
   }
 };
+var JsonRpcInvalidParamsError = class extends Error {
+  code = -32602;
+  data;
+  constructor(message = "Invalid params", data) {
+    super(message);
+    this.name = "JsonRpcInvalidParamsError";
+    this.data = data;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+};
 
 // packages/protocol/src/jsonrpc/schema.ts
 import { z } from "zod";
@@ -187,6 +197,7 @@ var StdioJsonRpcServer = class {
   }
 };
 export {
+  JsonRpcInvalidParamsError,
   JsonRpcMethodNotFoundError,
   RequestDispatcher,
   StdioJsonRpcServer,

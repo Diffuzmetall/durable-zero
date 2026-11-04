@@ -2753,9 +2753,7 @@ async function loadHarnessEnvironment(location, options, envs) {
     additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
     noExtensions: options.cli?.noGlobalExtensions ?? false
   });
-  if (!deps?.resourceLoader) {
-    await resourceLoader.reload();
-  }
+  await resourceLoader.reload();
   const extensionsResult = resourceLoader.getExtensions();
   registerPendingProviders(modelRuntime, extensionsResult.runtime);
   configureHarnessHttp(settingsManager);
@@ -5497,6 +5495,14 @@ var PiDurableEngine = class {
   }
 };
 
+// packages/runner/src/composition.ts
+import {
+  SettingsManager as SettingsManager3,
+  DefaultResourceLoader as DefaultResourceLoader3,
+  createMcpExtension as createMcpExtension3,
+  getAgentDir as getAgentDir3
+} from "@earendil-works/pi-coding-agent";
+
 // packages/adapter-codemode/dist/index.js
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
@@ -5571,7 +5577,27 @@ async function assembleDurableZero(options = {}) {
   const cwd = resolve5(options.cwd ?? process.cwd());
   const sessionDir = options.sessionDir ? resolve5(options.sessionDir) : options.session ? resolve5(cwd, options.session) : resolve5(cwd, ".durable/sessions/default");
   const codemodeBuiltin = createCodemodeBuiltinExtension();
-  const resourceExt = createPiResourceExtension({ cwd });
+  const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
+  const extPaths = [
+    ...options.extensions ?? (options.extension ? [options.extension] : []),
+    ...extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []
+  ];
+  const settingsManager = SettingsManager3.create(cwd);
+  const agentDir = getAgentDir3();
+  const resourceLoader = new DefaultResourceLoader3({
+    cwd,
+    agentDir,
+    settingsManager,
+    extensionFactories: [createMcpExtension3()],
+    additionalSkillPaths: options.skills,
+    additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
+    noExtensions: options.noGlobalExtensions ?? false
+  });
+  const resourceExt = createPiResourceExtension({
+    cwd,
+    settingsManager,
+    resourceLoader
+  });
   const executionEnvFactory = options.executionEnvFactory ?? ((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
   const dependencies = {
     executionEnvFactory,

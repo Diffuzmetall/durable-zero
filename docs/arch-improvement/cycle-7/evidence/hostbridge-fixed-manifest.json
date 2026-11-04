@@ -1,0 +1,12 @@
+{
+  "base": "cb4801a0654938350eefd2f9345b4caaa857b114",
+  "head": "efc9eab7ddfba4ba95fb754329d33f05adda2c12",
+  "files": {
+    "packages/core/src/tools/host-bridge.ts": "503a8b510359eb9eef5ce2aa8dd700bd6f83ffc82cd8ac39854537f205f74b0b",
+    "packages/protocol/src/methods/host.ts": "b335d7138ce2261213c1ca6bfa8dd73596a50bd7fd9d8cade74a2c0266d453af",
+    "packages/runner/src/host/host-bridge.ts": "b3a9e0c3cb3534751603f9548bc4d97e72f4ed85ba93f5d9e3ff5c8aa685b57f",
+    "packages/protocol/test/host-methods.test.ts": "406737004eba5a516ce7556932edf26bdaeefa2d1ef955117cf8aa6bfaf7c310",
+    "packages/runner/test/host-bridge.test.ts": "4e71e3737077101b8577bf6a1be484e84e8ae33ea16ccdad8f9531a2edff83c7"
+  },
+  "acceptance": "pending independent component architecture review; public export/Harness/product integration NOT accepted"
+}
