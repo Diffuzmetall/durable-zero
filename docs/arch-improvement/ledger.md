@@ -411,3 +411,8 @@
 - Sourcead99873e same independent reviewer PASS, all selected P1/P2 Native findings closed; physical Core/parent/child files match frozen source and probe4/0 reporter verified. Component/source scope only; atomic consumer migration/full gates remain open.
 - Separate native builder produced fresh sourcead99873e CLI exact byte match, runner76ec126543cc131986cdc12246f8fdd0a35a596d62c6a7a235ff9c0857f1b05c physically verified. Artifact preserved before same independent product reviewer resumed on fresh R2. Old9-case and R1 11-case native proofs remain pinned to old artifacts, not automatically transferred.
 - Continue closing already-started scope; no new host/probe/admin features, provider/model changes, merge/release/deploy authorized.
+
+
+### Native minimal dual-circuit acceptance (fixedR2)
+- Parent verified fresh compiled Native productR2 measured11/0 JUnit and physical runnerSHA76ec126543cc131986cdc12246f8fdd0a35a596d62c6a7a235ff9c0857f1b05c matching frozenad99873e build. SourceR2 same-candidate scoped PASS already verified. Minimum Native CLI/Harness/SQLite path accepted in BOTH independent circuits.
+- This is not overallTask1 atomic closure or Cycle7 PASS: final legacy test/consumer inventory, clean build/typecheck/root regression still required; host/probe/full admin/capability integration remains outside accepted minimal scope. No release/merge/deploy.

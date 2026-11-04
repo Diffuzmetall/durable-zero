@@ -1,6 +1,6 @@
 {
   "title": "Cycle 7 current packaged-artifact integrity (not product acceptance)",
-  "created_at": "2026-11-05T02:39:15.533269+03:00",
+  "created_at": "2026-11-05T02:42:17.371994+03:00",
   "packaged_deliverables_count": 128,
   "packaged_deliverables": [
     {
@@ -48,22 +48,22 @@
     {
       "path": "architecture/durable-zero-architecture-status.html",
       "category": "architecture",
-      "sha256": "fe34d390c9d83a1252093b8f6032a737a7ff30f8704311d4bc9f990b52b0aee5",
-      "bytes": 24812,
+      "sha256": "a33e3e9cbfffac9ef076a78516802f2929367165938416482aa5b026122931f5",
+      "bytes": 24995,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
     },
     {
       "path": "architecture/durable-zero-architecture-status.json",
       "category": "architecture",
-      "sha256": "3f22ab966d30971d33bed2afe740552dea1acda6b802980f421d9070b6ee0d23",
-      "bytes": 12298,
+      "sha256": "7271564b7ec0fa1b7755c740d0b1c5a3487a68cb8b69ca59926fcc053c584dfa",
+      "bytes": 12743,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.json"
     },
     {
       "path": "architecture/durable-zero-architecture-status.md",
       "category": "architecture",
-      "sha256": "9f3cd61446ff0492f2fc7a4e2d347848c6cf860ec0fcdfb100ccacccab4d40ba",
-      "bytes": 4677,
+      "sha256": "f8ebb74e37d0c7b9efc9d1707677956caa25eeef479907cfcfcf666f3319986e",
+      "bytes": 4704,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.md"
     },
     {
@@ -818,7 +818,7 @@
     {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "f9475ca8f7001c355398b40a9c4d1b2041201d80cb98148d9c9459a0f1af00a7",
+      "sha256": "fefd3a92702c427064b5b995fd10ec950b03446fad8f51bf3b7da2bb66377a22",
       "bytes": 975,
       "source_provenance": "workspace"
     },
@@ -952,7 +952,7 @@
   "verification_receipts": {
     "html_links_verified": {
       "target": "architecture/durable-zero-architecture-status.html",
-      "total_links": 18,
+      "total_links": 19,
       "broken_links": 0
     },
     "svgs_verified": {

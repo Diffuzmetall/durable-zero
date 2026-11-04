@@ -7,10 +7,10 @@
   "tasks": [
     {
       "name": "1 · Native Slice 0",
-      "tone": "warn",
-      "status": "Source R2 PASS; свежий compiled gate идёт",
-      "proof": "Независимый source R2 закрыл все выявленные native blockers; four-probe reporter без падений и физические source bytes совпадают с ad99873e. Прежний compiled R1 прошёл 11 сценариев; новый R2 runner76ec1265 собран и передан на повторный black-box.",
-      "remaining": "Подтвердить новую compiled-сборку и закончить тестовую миграцию/общий прогон; production capability wiring остаётся отдельно."
+      "tone": "good",
+      "status": "Native минимум: оба независимых гейта PASS",
+      "proof": "Source R2 ad99873e и свежий compiled product R2 (runner76ec1265) приняты в минимальном Native scope. Проверены barrier-stream, reasoning/text indices, полные ответы, restart/EntryId, EOF и abort/reuse.",
+      "remaining": "Atomic consumer migration, clean build/typecheck и общий regression ещё нужны для всего Task1/Cycle; полный capability/host/probe scope этим не принят."
     },
     {
       "name": "2A / полный Task 2",
@@ -57,12 +57,12 @@
   ],
   "remaining": [
     {
-      "title": "Закрыть native Slice 0 независимо",
-      "detail": "Source R2 scoped PASS уже получен. Новый R2 compiled-кандидат проверяется тем же независимым product-контуром; прежний 11-case PASS не переносится автоматически на новый hash."
+      "title": "Закрыть приёмку всего Task1 после миграции",
+      "detail": "Оба независимых native-минимум гейта закрыты на новом кандидате. Открыты оставшиеся consumer/test migration и общий чистый build/typecheck/regression; их нельзя заменить зелёным focused E2E."
     },
     {
       "title": "Довести тестовую миграцию",
-      "detail": "Первый пакет перенесён и проверен: 41 adapter cases без падений. Остальные старые импорты не объявлены починенными; это остаток Task 1, а не отложенная потеря покрытия."
+      "detail": "Четыре партии native-тестов перенесены; adapter-only113 cases зелёные. Финальный remaining inventory и общий root regression ещё не получены."
     },
     {
       "title": "Собрать принятые компоненты в production-путь",
@@ -140,6 +140,14 @@
       "failed": 0,
       "sha256": "a9528d85b6ce5a833330103b6f46970d80730a047d94a147cc9d41006ea20f5b",
       "scope": "Frozen fc090 real native CLI/Harness/SQLite, only model seam scripted; Native source review FAIL"
+    },
+    {
+      "name": "Fresh compiled Native R2 product",
+      "path": "live/task-1/independent-product-review/fix-round-2/test-report.junit.xml",
+      "tests": 11,
+      "failed": 0,
+      "sha256": "9500b80b990105a3a355e9ff415e61c2d024ea9b36735e1f2b1e0b5df692359b",
+      "scope": "Actual fresh ad99873e native CLI/Harness/SQLite; minimal public path, not complete capabilities/Cycle"
     }
   ],
   "evidence": [
@@ -198,6 +206,10 @@
     {
       "path": "live/task-1/independent-product-review/test-report.junit.xml",
       "label": "Независимый native gated path · JUnit"
+    },
+    {
+      "path": "live/task-1/independent-product-review/fix-round-2/test-report.junit.xml",
+      "label": "Fresh compiled Native R2 · real measured JUnit"
     }
   ],
   "changes": [
@@ -209,7 +221,7 @@
     "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом.",
     "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
   ],
-  "reviewUpdateAt": "2026-11-05T02:39:15.392892+03:00",
-  "nativeMinimumProductVerdict": "PASS",
+  "reviewUpdateAt": "2026-11-05T02:42:17.219924+03:00",
+  "nativeMinimumProductVerdict": "PASS fresh compiled R2 76ec1265",
   "nativeSourceVerdict": "PASS scoped ad99873e"
 }

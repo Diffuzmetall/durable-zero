@@ -2,11 +2,11 @@
 
 Срез 2026-11-05T01:24:06.884289+03:00; ea21bf5a645d148c0767716b099d387bb0bce822 + WIP. Global S9: NOT ACCEPTED.
 
-## 1 · Native Slice 0 — Source R2 PASS; свежий compiled gate идёт
+## 1 · Native Slice 0 — Native минимум: оба независимых гейта PASS
 
-Независимый source R2 закрыл все выявленные native blockers; four-probe reporter без падений и физические source bytes совпадают с ad99873e. Прежний compiled R1 прошёл 11 сценариев; новый R2 runner76ec1265 собран и передан на повторный black-box.
+Source R2 ad99873e и свежий compiled product R2 (runner76ec1265) приняты в минимальном Native scope. Проверены barrier-stream, reasoning/text indices, полные ответы, restart/EntryId, EOF и abort/reuse.
 
-Осталось: Подтвердить новую compiled-сборку и закончить тестовую миграцию/общий прогон; production capability wiring остаётся отдельно.
+Осталось: Atomic consumer migration, clean build/typecheck и общий regression ещё нужны для всего Task1/Cycle; полный capability/host/probe scope этим не принят.
 
 ## 2A / полный Task 2 — Компонент HostBridge принят
 
@@ -60,3 +60,4 @@ Source/component review и независимый compiled black-box PASS; на�
 - [Native source/spec review · FAIL](../live/task-1/independent-source-review/review.md)
 - [Независимый native gated path · scoped PASS](../live/task-1/independent-product-review/review.md)
 - [Независимый native gated path · JUnit](../live/task-1/independent-product-review/test-report.junit.xml)
+- [Fresh compiled Native R2 · real measured JUnit](../live/task-1/independent-product-review/fix-round-2/test-report.junit.xml)

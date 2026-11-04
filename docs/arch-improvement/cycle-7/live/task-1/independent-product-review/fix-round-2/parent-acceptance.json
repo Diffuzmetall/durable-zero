@@ -1,0 +1,16 @@
+{
+  "source": "ad99873e396f7440a6896dabaf516b6393c08a37",
+  "runnerSHA256": "76ec126543cc131986cdc12246f8fdd0a35a596d62c6a7a235ff9c0857f1b05c",
+  "sourceVerdict": "PASS scoped native-source round2",
+  "productVerdict": "PASS fresh native public minimum",
+  "physicalCases": 11,
+  "physicalFailures": 0,
+  "overallTask1": "PENDING atomic consumer migration/full verification",
+  "wholeCycle": "NOT ACCEPTED",
+  "notCovered": [
+    "Full HostBridge model-issued tool continuation",
+    "No-session probe",
+    "Remaining production RPC/admin capability wiring",
+    "Full clean build/typecheck/root regression"
+  ]
+}
