@@ -1,305 +1,585 @@
-# Cycle 7: Runtime Adapter Migration, Host Bridge Decoupling & Walking Skeleton Implementation Plan
+# Cycle 7: Sovereign Core Decoupling, Runtime Adapter Migration & JSON-RPC 2.0 Walking Skeleton Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Establish a verified end-to-end **Walking Skeleton (Slice 0)** for `durable-zero` using strict Hexagonal Architecture (AP-010) and pure Constructor Dependency Injection (AP-074), migrate the agent runtime and host-specific infrastructure (`host-rpc.ts`, `stdout-guard.ts`) out of `@durable-zero/core` into `@durable-zero/adapter-pi-durable` and `@durable-zero/runner`, eliminate duplicate ad-hoc host framing in favor of strict bidirectional JSON-RPC 2.0 (`host/toolCall`, `host/interaction`), unify on `@durable-zero/runner` as the single production entry point, and verify via Triple-Circuit Gate (S9).
+**Goal:** Transform `durable-zero` into a sovereign, modular headless agent runtime by migrating the real agent execution closure out of `@durable-zero/core` into `@durable-zero/adapter-pi-durable` as `PiDurableEngine` implementing domain SPI `IAgentEngine`, unifying client transport on strict Full-Duplex JSON-RPC 2.0 over stdio with bidirectional Host Tool Calling (`host/toolCall`, `host/interaction`) and probe mode (`--no-session`), eliminating legacy ad-hoc framing (`runner-server.ts`, `host-rpc.ts`), and proving end-to-end durability via a live Walking Skeleton (Slice 0) before dependency decoupling.
 
-**Architecture:** Monorepo package-level Hexagonal Architecture (Ports & Adapters, AP-010). Core defines pure domain SPIs (`ISessionStore`, `IAgentEngine`, `IModelProvider`, `IExecutionEnvironment`, `ISandboxExtension`, `IResourceLoader`) and high-level FSM coordination (`SessionCoordinator`). All `@earendil-works/*` harness, subagent, stdout guard, and host-facing adapters live strictly in `@durable-zero/adapter-pi-durable` and `@durable-zero/runner`. Reverse RPC for host tools (`host/toolCall`) and UI interactions (`host/interaction`) is handled symmetrically via JSON-RPC 2.0 without mutable module singletons (AP-074).
+**Architecture:** Monorepo package-level Hexagonal Architecture (Ports & Adapters, AP-010). Core defines pure domain SPI ports (`ISessionStore`, `IAgentEngine`, `IExecutionEnvironment`, `IResourceLoader`, `IHostBridge`) and high-level FSM coordination (`SessionCoordinator`). All `@earendil-works/*` harness, subagents, event bridge, stdout guards, and host RPC machinery live strictly in `@durable-zero/adapter-pi-durable`, `@durable-zero/protocol`, and `@durable-zero/runner`. Reverse RPC for host-provided tools is handled symmetrically over JSON-RPC 2.0 via Constructor Dependency Injection without mutable module singletons (AP-074).
 
-**Tech Stack:** Node.js 22+ ESM, `@durable-zero/protocol` (JSON-RPC 2.0 stdio server & client), `@durable-zero/core`, `@durable-zero/adapter-pi-durable` (`@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-ai`, `@earendil-works/chord`, `@earendil-works/pi-coding-agent`), `@durable-zero/runner`, Zod, `node:test`.
+**Tech Stack:** Node.js 22+ ESM, `@durable-zero/protocol` (JSON-RPC 2.0 stdio server & client), `@durable-zero/core`, `@durable-zero/adapter-pi-durable` (`@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-ai`, `@earendil-works/chord`, `@earendil-works/pi-coding-agent`), `@durable-zero/runner`, Zod (^4.6.7), `node:test`.
 
-**Spec:** `docs/superpowers/plans/2026-11-03-durable-zero-sovereign-core-master-plan.md` + Auditor findings (@thread:thr_usuwfbnhx7) + Retro lessons (session `01a1a651-ede7-73d5-a308-e869f2fb4b43`).
+**Spec & Authority:**
+- Primary Design Spec: This document supersedes conflicting clauses of `docs/superpowers/plans/2026-11-03-durable-zero-sovereign-core-master-plan.md` (specifically: backward-compatibility shims, setter-based host singletons, and deletion of unmapped runtime capabilities are explicitly revoked).
+- Audit Evidence: `/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/cycle7-plan-audit.md` and `plan-findings.json` (F01–F14).
+- Adjudication: `/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/third-party-adjudication.json`.
+- Candidate Review Round 1: `/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-repair-review-round1.md` (R1–R9).
+
+---
+
+## Canonical Design Amendment (Resolving Master Plan Conflicts)
+
+1. **Authoritative Goal & Non-Goals:**
+   - **Goal:** Preserve 100% of existing runtime capabilities (subagent dispatch, task graphs, steer/followUp, image inputs, model switching, thinking level, session forks, checkpoints, extension mounting, and token metrics) while migrating their execution implementation into `@durable-zero/adapter-pi-durable`.
+   - **Non-Goal 1 (No Legacy Transport):** Do NOT preserve legacy ad-hoc line-based JSONL framing (`runner-server.ts`, `RunnerRpcChannel`). Client transport is strictly JSON-RPC 2.0 over stdio.
+   - **Non-Goal 2 (No BB Plugin Edits in Cycle 7):** Do NOT modify `bb-plugin-provider-pi-durable` in this cycle. The runner is verified against an independent generic JSON-RPC 2.0 client test suite. BB plugin migration will occur as a downstream task.
+   - **Non-Goal 3 (No Skill Changes):** Do NOT edit skill files in `arch-improvement-skills`, `arch-rules-skills`, or `superpowers`.
+2. **Single Owner of Session, Lock & Lifecycle (Resolves F04, R5):**
+   - In persistent mode, `PiDurableEngine` is the **exclusive owner** of the SQLite session database, `Harness` instance, and file locks (`session.owner.json` / `acquireSessionLock`).
+   - `SessionCoordinator` manages logical lifecycle states (`unstarted` $\to$ `ready` $\to$ `active` $\to$ `aborted` $\to$ `closed`) and delegates all physical execution and teardown to `IAgentEngine`.
+   - `SessionCoordinator.start()` invokes `await this.engine.start(sessionDir)`. It does NOT call a separate `store.acquireLock()`. `ISessionStore` functions as an administrative read/fork port or shares the underlying open engine session.
+3. **Dependency Assembly & Injection Boundaries (Resolves F13, R5):**
+   - The Composition Root (`packages/runner/src/composition.ts`) creates concrete infrastructure adapters:
+     - `executionEnvFactory` from `@durable-zero/execution`
+     - `hostBridge` from `@durable-zero/runner`
+     - Builtin extensions from `@durable-zero/adapter-codemode` and `@durable-zero/extension-pi-resource`
+   - These are passed into `PiDurableEngine` via its constructor. `PiDurableEngine` forwards them into `openDurable`.
+   - `SessionCoordinator` in Core receives only domain ports: `engine: IAgentEngine`, `store?: ISessionStore`. No decorative ports are passed to `SessionCoordinator`.
+   - `PiDurableEngine.getState()` returns a typed domain DTO:
+     ```typescript
+     export interface SessionStateDTO {
+       sessionId: string;
+       cwd: string;
+       activeModel?: { provider: string; modelId: string };
+       thinkingLevel?: string;
+       models: Array<{ provider: string; modelId: string }>;
+     }
+     ```
+4. **Host Communication Architecture (Resolves F06, F14, R7):**
+   - Transport DTOs and JSON-RPC 2.0 method schemas (`host/toolCall`, `host/interaction`) live in `@durable-zero/protocol`.
+   - The domain/adapter port `IHostBridge` lives in Core contracts:
+     ```typescript
+     export interface IHostBridge {
+       forwardToolCall(toolName: string, args: unknown): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }>;
+       requestInteraction(kind: string, payload: { title?: string; message?: string; data?: unknown }): Promise<unknown>;
+     }
+     ```
+   - `HostBridge` in `@durable-zero/runner` implements `IHostBridge` by invoking `server.request("host/toolCall", ...)` and `server.request("host/interaction", ...)`. It is injected into `PiDurableEngine` via Constructor DI.
+   - Reverse RPC results are validated at runtime against Zod schema `hostToolResultSchema`. Configurable timeout (`timeoutMs`, default 30,000ms, injectable down to 100ms in tests) and injected `idSource` ensure deterministic testing without 120s hangs (R7).
+   - `packages/core/src/host-rpc.ts` and all its mutable singletons (`activeToolForwarder`, `setHostToolForwarder`) are completely deleted.
+   - The runner<->host tool call and host<->BB interaction are separate RPC hops with distinct ID spaces; no cross-hop tracker unification is forced.
 
 ---
 
 ## Global Constraints
 
-- **Pure Sovereign Core:** `@durable-zero/core/package.json` must depend ONLY on `@durable-zero/contracts` and `zod`. Zero `@earendil-works/*`, zero SQLite, zero adapter dependencies, and zero host RPC infrastructure in Core (AP-010, AP-012).
-- **Elimination of Host Infrastructure Leaks in Core:** Delete `packages/core/src/host-rpc.ts` and its mutable singletons (`activeToolForwarder`, `setHostToolForwarder`). Move `stdout-guard.ts` and `shared/extension-ui-context.ts` to `@durable-zero/adapter-pi-durable`.
-- **Single Production Runner:** `@durable-zero/runner` (`main.ts`) is the single production Composition Root for `durable-zero serve`. Delete `packages/core/src/runner-server.ts`, `packages/core/src/jsonl.ts`, and `packages/core/src/cli-args.ts` (AP-020, AP-075).
-- **Pure Full-Duplex JSON-RPC 2.0 Transport:** Stdio communication uses strict JSON-RPC 2.0. No legacy ad-hoc JSONL, no multi-transport fallback, and no duplicate pending tool call trackers across host/runner (AP-026).
-- **Pure Constructor Dependency Injection:** Zero singletons, zero module-level mutable variables. All dependencies flow top-down from Composition Root (AP-074).
-- **Walking Skeleton Invariant:** Task 1-3 establishes Slice 0 (Walking Skeleton) connecting entry point -> runner -> coordinator -> engine -> live model stream, proven by a true black-box E2E test before moving the remaining 45 runtime files (AP-075).
-- **Assertion Integrity (Anti-Reward Hacking):** Tests must assert actual state transitions, emitted token deltas, and dependency invocations. Returning synthetic stub IDs (`rec_...`) to satisfy tests is classified as P1 Hollow Implementation (AP-076).
-- **Mandatory Test Timeout:** All tests run with `--test-timeout 30000` (AP-028).
+- **Pure Sovereign Core:** `@durable-zero/core/package.json` depends ONLY on `@durable-zero/contracts` and `zod` (`^4.6.7`). Zero `@earendil-works/*`, zero SQLite, zero adapter dependencies, and zero host RPC infrastructure in Core (AP-010, AP-012, R8).
+- **Single Production Runner Entry Point:** `@durable-zero/runner` (`main.ts`) is the single production Composition Root for `durable-zero serve`. Delete `packages/core/src/runner-server.ts`, `packages/core/src/jsonl.ts`, and `packages/core/src/cli-args.ts` (AP-020, AP-075).
+- **Executable CLI Integration (Resolves F03):** `packages/runner/src/main.ts` exports a callable `export async function main(argv?: string[]): Promise<void>`. `packages/cli/bin/durable-zero.js` calls `await main(process.argv.slice(2))` when `command === "serve"`.
+- **Pure Full-Duplex JSON-RPC 2.0 Transport (Resolves F08):**
+  - Protocol conforms strictly to JSON-RPC 2.0 specification:
+    - Incoming notifications (`id === undefined`) produce ZERO response (silence).
+    - Unknown method returns error `-32601` (`Method not found`), NOT `-32603`.
+    - Response schema enforces strict XOR: object must contain `result` OR `error`, never both.
+- **Walking Skeleton Invariant (Resolves F07, R1):** Slice 0 (Task 1) connects entry point -> runner -> coordinator -> engine -> live model stream and is proven by a true black-box E2E test with real Harness, SQLite persistence, and restart verification before migrating the remaining runtime files (AP-075).
+- **Assertion Integrity (Resolves F10, R2):** Every test asserts concrete state transitions, emitted token deltas, and dependency invocations. Returning synthetic stub IDs (`rec_...`) or fake timestamps to satisfy tests is classified as P1 Hollow Implementation (AP-076).
+- **Mandatory Timeouts:** Per-test timeout is 30,000ms (`--test-timeout 30000`). Total command timeout is 60s for unit suites, 120s for E2E suites (AP-028).
 
 ---
 
-## Review Focus
+## Review Focus & Literal Behavioral Assertions (Resolves F10, R1, R2, R7)
 
-- **Empty Prompt Validation:** Submitting an empty string or whitespace-only prompt throws a typed `SessionError` before dispatching to the engine.
-- **Unstarted Session Rejection:** Calling `prompt()` before `coordinator.start()` or after `close()` throws a typed `SessionError` with clear lifecycle explanation.
-- **Prompt Cancellation:** Sending `session/cancel` immediately aborts the active engine turn and emits an abort event to the event stream.
-- **Host Tool Bridge Dispatch:** Model requesting a host-provided tool (`AskUserQuestion`, `check_ui`) triggers reverse RPC `host/toolCall` via `server.request()` and forwards the host's response back into the turn without global singletons.
-- **Headless Probe Mode:** Running `durable-zero serve --no-session` boots the server in probe mode without creating `.durable/sessions` directory or attempting SQLite locking.
+1. **Empty Prompt Validation:** Submitting an empty or whitespace string throws `SessionError` with code `INVALID_PROMPT`.
+   ```typescript
+   await assert.rejects(
+     () => coordinator.prompt("   "),
+     (err: any) => err instanceof SessionError && err.code === "INVALID_PROMPT" && err.message.includes("non-empty")
+   );
+   ```
+   *Mutation Caught:* Prevents dispatching blank turns to LLM.
+2. **Lifecycle State Enforcement:** Submitting prompt before `start()` or after `close()` throws `SessionError` with code `SESSION_NOT_STARTED` or `SESSION_CLOSED`.
+   ```typescript
+   await assert.rejects(
+     () => coordinator.prompt("hello"),
+     (err: any) => err instanceof SessionError && err.code === "SESSION_NOT_STARTED"
+   );
+   ```
+   *Mutation Caught:* Eliminates unhandled promise hangs when uninitialized.
+3. **Prompt Cancellation (`session/cancel`):** Sending `session/cancel` invokes `engine.abort()` and emits `session_aborted` event.
+   ```typescript
+   await coordinator.abort();
+   assert.equal(engine.abortCalled, true);
+   assert.equal(emittedEvents.some(e => e.type === "session_aborted"), true);
+   ```
+   *Mutation Caught:* Ensures runaway token generation terminates immediately.
+4. **Host Tool Round-Trip:** Model calling a host tool causes runner to send `host/toolCall` over JSON-RPC, await client response, and continue turn.
+   ```typescript
+   const clientRes = await hostBridge.forwardToolCall("echo", { val: "test-42" });
+   assert.deepEqual(clientRes, { content: [{ type: "text", text: "echoed: test-42" }], isError: false });
+   ```
+   *Mutation Caught:* Proves host tools actually execute through reverse RPC without global singletons.
+5. **Headless Probe Mode (`--no-session`):** Running with `--no-session` boots server without creating `.durable/sessions` or SQLite files.
+   ```typescript
+   assert.equal(fs.existsSync(path.resolve(tmpDir, ".durable/sessions")), false);
+   assert.equal(fs.existsSync(path.resolve(tmpDir, "session.sqlite")), false);
+   ```
+   *Mutation Caught:* Prevents spurious session creation and lock contention during inspection.
 
 ---
 
-## Verification of Auditor Findings (@thread:thr_usuwfbnhx7)
+## Preflight Dependency Order & Task Transition Matrix (Resolves R3)
 
-Our code inspection confirmed all 5 auditor findings with 100% precision:
-1. **Agent Loop Missing:** `SessionCoordinator.prompt()` returns a stub `rec_...` without executing the agent loop (`coordinator.ts:63`).
-2. **Coordinator Never Started:** `assembleDurableZero()` constructs `SessionCoordinator` but never calls `await coordinator.start()`, causing any `prompt()` to throw `"Session is not started"`.
-3. **Host Tool Bridge Missing & Trapped in Core:** `packages/core/src/host-rpc.ts` contains an obsolete ad-hoc JSONL tracker with global singletons; the runner has no JSON-RPC 2.0 `host/toolCall` bridge.
-4. **Probe Mode Missing:** Passing `--no-session` crashes because `assembleDurableZero()` unconditionally resolves `.durable/sessions/default` and attempts SQLite locking.
-5. **Runtime Graph Disconnected:** `RuntimeGraphSource` is not forwarded over JSON-RPC 2.0 `session/event` notifications.
+To ensure the build, DAG, and tests remain 100% green and acyclic across every task:
+
+| Task | Files Touched / Moved | Export / Build Changes | Inter-Package DAG State | Executable Public Path Verified |
+| :--- | :--- | :--- | :--- | :--- |
+| **Task 1: Slice 0** | Core `session/engine.ts`, `coordinator.ts`, `adapter-pi-durable` engine facade, `runner/composition.ts`, `cli/bin/durable-zero.js` | Exports `IAgentEngine` from Core; exports `main(argv)` from runner; CLI `serve` imports `runner/dist/main.js` | `contracts` $\to$ `core` $\to$ `adapter-pi-durable` $\to$ `runner` $\to$ `cli` (strict acyclic) | `durable-zero serve` runs real Harness with deterministic test provider |
+| **Task 2: Host Bridge** | Protocol `methods/host.ts`, Core `tools/host-bridge.ts`, Runner `host/host-bridge.ts`, Adapter `pi-durable-engine.ts`, Delete `core/src/host-rpc.ts` | Exports `IHostBridge` from Core; replaces `host-rpc.ts` imports in `extension-ui-context.ts` and `runner-server.ts` atomically | `protocol` $\to$ `core` $\to$ `adapter-pi-durable` $\to$ `runner` (acyclic) | Model tool call round-trip over stdio JSON-RPC 2.0 |
+| **Task 3: Probe Mode** | Runner `composition.ts`, `main.ts`, `cli-args.ts` | Runner accepts `--no-session` flag and starts non-locking probe server | No DAG changes | `durable-zero serve --no-session` responds to `models/list` |
+| **Task 4: Conformance & Dispatch** | Protocol `schema.ts`, `request-dispatcher.ts`, Runner `session-dispatcher.ts` | Protocol strictly validates JSON-RPC 2.0 rules; runner dispatches all capability methods | No DAG changes | Generic JSON-RPC test client executes all 16 capabilities |
+| **Task 5: Strangler Fig Migration** | Move 50 runtime/bridge/subagent files to `adapter-pi-durable/src/engine/` | `adapter-pi-durable` exports runtime engine; internal imports rewired within adapter | Core stops importing adapter; `adapter-pi-durable` imports pure Core SPI | Monorepo test suite + E2E test continuously passing |
+| **Task 6: Pure Core Decoupling** | Core `package.json`, `index.ts`, delete `runner-server.ts`, `jsonl.ts`, `cli-args.ts`, update `scripts/build.mjs` | Core `package.json` stripped to `zod` + `contracts`; `build.mjs` drops `runner-server.ts` build | `core` has ZERO vendor/adapter imports | Automated AST boundary check passes |
+| **Task 7: S9 Gate & Ledger** | `docs/arch-improvement/ledger.md` | S9 Architecture PASS + S9 Product PASS + Orchestrator Diff Gate | Final state verified | Release candidate verified |
+
+---
+
+## Full Dependency Closure Inventory (All 87 Files in `packages/core/src/`) (Resolves F01, R4)
+
+| # | File Path in `packages/core/src/` | Responsibility | Target Package & Path | Action | Importers & Regression Test |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `binding-commands.ts` | Thread binding RPC commands | `adapter-pi-durable/src/engine/binding-commands.ts` | Move | Used by `session-commands.ts`; tested in `adapter-pi-durable` |
+| 2 | `binding-docs.ts` | Pi document schema for bindings | `adapter-pi-durable/src/engine/binding-docs.ts` | Move | Used by `binding-commands.ts` |
+| 3 | `bridge/assistant-message-builder.ts` | Pi AI message formatting | `adapter-pi-durable/src/engine/bridge/` | Move | Used by `durable-event-adapter.ts` |
+| 4 | `bridge/child-run-outcome.ts` | Subagent execution result DTO | `adapter-pi-durable/src/engine/bridge/` | Move | Used by `durable-child-event-adapter.ts` |
+| 5 | `bridge/contracts.ts` | Bridge internal interfaces | `adapter-pi-durable/src/engine/bridge/` | Move | Used by bridge adapters |
+| 6 | `bridge/durable-child-event-adapter.ts` | Subagent event projection | `adapter-pi-durable/src/engine/bridge/` | Move | Tested in `durable-child-event-adapter.test.ts` |
+| 7 | `bridge/durable-contracts.ts` | Event contracts | `adapter-pi-durable/src/engine/bridge/` | Move | Used by event projector |
+| 8 | `bridge/durable-event-adapter.ts` | Main event stream adapter | `adapter-pi-durable/src/engine/bridge/` | Move | Tested in `durable-event-adapter.test.ts` |
+| 9 | `bridge/native-tool-result.ts` | Native Pi tool result parser | `adapter-pi-durable/src/engine/bridge/` | Move | Used by `tool-result-extractor.ts` |
+| 10 | `bridge/tool-args-resolver.ts` | Live state tool args resolver | `adapter-pi-durable/src/engine/bridge/` | Move | Used by `durable-event-adapter.ts` |
+| 11 | `bridge/tool-progress-state.ts` | Tool execution progress tracking | `adapter-pi-durable/src/engine/bridge/` | Move | Used by `durable-event-adapter.ts` |
+| 12 | `bridge/tool-result-extractor.ts` | Tool output extraction | `adapter-pi-durable/src/engine/bridge/` | Move | Used by event projector |
+| 13 | `bridge/tool-result-presentation.ts` | Formatting tool presentations | `adapter-pi-durable/src/engine/bridge/` | Move | Used by event projector |
+| 14 | `bridge/turn-summary.ts` | Agent turn summary generator | `adapter-pi-durable/src/engine/bridge/` | Move | Used by event projector |
+| 15 | `bridge/view-stream-projector.ts` | View stream projector | `adapter-pi-durable/src/engine/bridge/` | Move | Tested in `view-stream-projector.test.ts` |
+| 16 | `bridge/watch-events-compat.ts` | Upstream watch event compat | `adapter-pi-durable/src/engine/bridge/` | Move | Used by `runtime.ts` |
+| 17 | `builtin-extensions/coding-tools.ts` | Pi coding tools registration | `adapter-pi-durable/src/engine/builtin-extensions/` | Move | Used by `runtime-loader.ts` |
+| 18 | `builtin-extensions/index.ts` | Builtin extension aggregator | `adapter-pi-durable/src/engine/builtin-extensions/` | Move | Used by `runtime-loader.ts` |
+| 19 | `builtin-extensions/registry.ts` | Builtin extension registry | `adapter-pi-durable/src/engine/builtin-extensions/` | Move | Used by `runtime-loader.ts` |
+| 20 | `builtin-extensions/subagents.ts` | Native subagent tools mount | `adapter-pi-durable/src/engine/builtin-extensions/` | Move | Used by `runtime-loader.ts` |
+| 21 | `builtin-extensions/types.ts` | Extension context types | `adapter-pi-durable/src/engine/builtin-extensions/` | Split | Domain `ISandboxExtension` in core; Pi `BuiltinExtensionContext` in adapter |
+| 22 | `cli-args.ts` | CLI option parsing | `runner/src/cli-args.ts` | Move | Used by `runner/src/main.ts` |
+| 23 | `codemode-namespaces.ts` | Dynamic QuickJS namespaces | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-loader.ts` |
+| 24 | `compaction-hooks.ts` | Conversation compaction hook | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 25 | `control-channel.ts` | Runtime control socket channel | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 26 | `conversation-id.ts` | Conversation ID parser & constants | `adapter-pi-durable/src/engine/` | Move | Used by controller and commands |
+| 27 | `engine.ts` | Legacy engine stub | N/A | Delete | Replaced by pure `session/engine.ts` |
+| 28 | `errors.ts` | Domain errors | `core/src/errors.ts` | Keep | Domain core error hierarchy |
+| 29 | `extension-actions.ts` | Extension action types | `adapter-pi-durable/src/engine/` | Move | Used by `extension-bridge.ts` |
+| 30 | `extension-bridge.ts` | Bridge for dynamic extensions | `adapter-pi-durable/src/engine/` | Move | Used by `extension-mount.ts` |
+| 31 | `extension-mount.ts` | Mounts extensions to registry | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-loader.ts` |
+| 32 | `harness-setup.ts` | Harness initialization | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 33 | `host-rpc.ts` | Legacy host RPC with singletons | N/A | Delete | Replaced by `IHostBridge` and `HostBridge` |
+| 34 | `index.ts` | Core domain entry point | `core/src/index.ts` | Keep | Export pure domain ports and services |
+| 35 | `jsonl.ts` | Legacy line reader | N/A | Delete | Replaced by `@durable-zero/protocol` |
+| 36 | `models/provider.ts` | Domain SPI port `IModelProvider` | `core/src/models/provider.ts` | Keep | Core model interface |
+| 37 | `policy/errors.ts` | Subagent policy errors | `core/src/policy/errors.ts` | Keep | Pure domain policy errors |
+| 38 | `policy/resolver.ts` | Policy inheritance resolver | `core/src/policy/resolver.ts` | Keep | Pure domain policy resolver |
+| 39 | `policy/schema.ts` | Pure Zod schemas for policies | `core/src/policy/schema.ts` | Keep | Stripped of `@earendil-works` imports |
+| 40 | `policy/store.ts` | In-memory/CAS policy store | `core/src/policy/store.ts` | Keep | Domain policy store |
+| 41 | `policy/types.ts` | Pure policy TypeScript types | `core/src/policy/types.ts` | Keep | Domain policy types |
+| 42 | `prompt.ts` | Prompt options and validation | `core/src/prompt.ts` | Keep | Core prompt domain logic |
+| 43 | `runner-server.ts` | Legacy server monolith | N/A | Delete | Replaced by `@durable-zero/runner` |
+| 44 | `runtime-bindings.ts` | Doc family bindings | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-loader.ts` |
+| 45 | `runtime-cleanup.ts` | Runtime cleanup logic | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-controller.ts` |
+| 46 | `runtime-controller.ts` | Concrete controller implementation | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 47 | `runtime-graph-conversations.ts` | Graph conversation node mapper | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-source.ts` |
+| 48 | `runtime-graph-mapper.ts` | Graph task tree mapper | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-source.ts` |
+| 49 | `runtime-graph-receipts.ts` | Graph receipt node tracking | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-source.ts` |
+| 50 | `runtime-graph-scope.ts` | Graph scope types | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-source.ts` |
+| 51 | `runtime-graph-source.ts` | Graph snapshot provider | `adapter-pi-durable/src/engine/` | Move | Used by `PiDurableEngine` |
+| 52 | `runtime-graph-state.ts` | Graph state transitions | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-source.ts` |
+| 53 | `runtime-hydration.ts` | Hydrates persisted sessions | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-loader.ts` |
+| 54 | `runtime-loader.ts` | Loads Pi SDK objects | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 55 | `runtime-types.ts` | Pi runtime DTOs and contracts | `adapter-pi-durable/src/engine/` | Move | Used by `PiDurableEngine` |
+| 56 | `runtime.ts` | `openDurable` implementation | `adapter-pi-durable/src/engine/` | Move | Encapsulated by `PiDurableEngine` |
+| 57 | `schema-port.ts` | Schema port for Pi Schema | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 58 | `session-commands.ts` | Legacy session command handlers | `runner/src/dispatch/` | Move | Migrated to JSON-RPC dispatcher |
+| 59 | `session-daemon.ts` | Background daemon runner | `adapter-pi-durable/src/engine/` | Move | Used by `runtime.ts` |
+| 60 | `session-state-commands.ts` | Session state query handlers | `runner/src/dispatch/` | Move | Migrated to JSON-RPC dispatcher |
+| 61 | `session/coordinator.ts` | `SessionCoordinator` service | `core/src/session/coordinator.ts` | Keep | Pure domain FSM and lifecycle |
+| 62 | `session/store.ts` | `ISessionStore` SPI port | `core/src/session/store.ts` | Keep | Pure domain session store port |
+| 63 | `shared/agent-dir.ts` | Agent directory resolver | `adapter-pi-durable/src/engine/shared/` | Move | Used by `runtime-loader.ts` |
+| 64 | `shared/child-title.ts` | Child task title derivation | `adapter-pi-durable/src/engine/shared/` | Move | Used by `subagent-delivery.ts` |
+| 65 | `shared/errors.ts` | Adapter error types | `adapter-pi-durable/src/engine/shared/` | Move | Used by adapter bridge |
+| 66 | `shared/extension-runner.ts` | Runner extension helpers | `adapter-pi-durable/src/engine/shared/` | Move | Used by `runtime-loader.ts` |
+| 67 | `shared/extension-ui-context.ts` | UI dialog requester bridge | `adapter-pi-durable/src/engine/shared/` | Move | Injected with `IHostBridge` |
+| 68 | `shared/model-ref.ts` | Model reference DTO | `adapter-pi-durable/src/engine/shared/` | Move | Used by `runtime-controller.ts` |
+| 69 | `shared/subagent-envelope.ts` | Subagent IPC message envelope | `adapter-pi-durable/src/engine/shared/` | Move | Used by `subagent-delivery.ts` |
+| 70 | `shared/version.ts` | Pi runtime version helper | `adapter-pi-durable/src/engine/shared/` | Move | Used by `runtime-graph-source.ts` |
+| 71 | `stdout-guard.ts` | Pi output guard for FD 1 | `adapter-pi-durable/src/engine/stdout-guard.ts` | Move | Isolates `@earendil-works/pi-coding-agent` |
+| 72 | `subagent-courier.ts` | Subagent courier service | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent.ts` |
+| 73 | `subagent-delivery-types.ts` | Delivery types | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent-delivery.ts` |
+| 74 | `subagent-delivery.ts` | Subagent delivery dispatch | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent.ts` |
+| 75 | `subagent-docs.ts` | Subagent Pi document schemas | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent-watcher.ts` |
+| 76 | `subagent-policy-ack.ts` | Subagent policy acknowledgment | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent.ts` |
+| 77 | `subagent-policy-state.ts` | Subagent policy state tracking | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent.ts` |
+| 78 | `subagent-role.ts` | Subagent role definitions | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `subagent.ts` |
+| 79 | `subagent-watcher.ts` | Subagent file/state watcher | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `runtime.ts` |
+| 80 | `subagent.ts` | Subagent manager core | `adapter-pi-durable/src/engine/subagents/` | Move | Used by `runtime-controller.ts` |
+| 81 | `task-labels.ts` | Task labeling helpers | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-mapper.ts` |
+| 82 | `task-tokens.ts` | Task token counter metrics | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-graph-source.ts` |
+| 83 | `tool-adapter.ts` | Tool adapter for Pi harness | `adapter-pi-durable/src/engine/` | Move | Used by `runtime-loader.ts` |
+| 84 | `tools/execution-env.ts` | `IExecutionEnvironment` port | `core/src/tools/execution-env.ts` | Keep | Pure domain execution SPI |
+| 85 | `tools/sandbox.ts` | `ICodemodeRunner`, `ISandboxExtension` | `core/src/tools/sandbox.ts` | Keep | Pure domain sandbox SPI |
+| 86 | `version.ts` | Core version constant | `core/src/version.ts` | Keep | Pure version string |
+| 87 | `watcher-compat.ts` | Watcher backward compat | `adapter-pi-durable/src/engine/` | Move | Used by `subagent-watcher.ts` |
+
+---
+
+## Capability Preservation Matrix (Resolves F05, R6)
+
+| Legacy Command / Feature | Legacy Source Location | Target JSON-RPC 2.0 Method | Target Owner Package | Verification Test Name |
+| :--- | :--- | :--- | :--- | :--- |
+| `prompt` (text + images) | `core/session-commands.ts:34` | `session/prompt` | `@durable-zero/runner` | `test_prompt_with_text_and_images` |
+| `steer` (interrupt turn) | `core/session-commands.ts:54` | `session/steer` | `@durable-zero/runner` | `test_steer_interrupts_active_turn` |
+| `abort` (active turn) | `core/session-commands.ts:74` | `session/abort` | `@durable-zero/runner` | `test_abort_terminates_turn` |
+| `abort_task` (subagent task) | `core/session-commands.ts:87` | `session/abortTask` | `@durable-zero/runner` | `test_abort_subagent_task` |
+| `compact` (conversation) | `core/session-commands.ts:96` | `session/compact` | `@durable-zero/runner` | `test_compact_conversation` |
+| `set_subagent_policy` (CAS) | `core/session-commands.ts:101` | `subagent/setPolicy` | `@durable-zero/adapter-pi-durable` | `test_subagent_policy_cas_update` |
+| `get_available_models` | `core/session-commands.ts:112` | `models/list` | `@durable-zero/runner` | `test_models_list_catalog` |
+| `set_model` | `core/session-commands.ts:117` | `models/set` | `@durable-zero/adapter-pi-durable` | `test_models_set_active` |
+| `set_thinking_level` | `core/session-commands.ts:125` | `models/setThinking` | `@durable-zero/adapter-pi-durable` | `test_models_set_thinking_level` |
+| `session_fork` (checkpoints) | `core/session-commands.ts:133` | `session/fork` | `@durable-zero/adapter-pi-durable` | `test_session_fork_checkpoint` |
+| `get_state` | `core/session-state-commands.ts:19` | `session/getState` | `@durable-zero/runner` | `test_get_session_state` |
+| `get_session_stats` | `core/session-state-commands.ts:51` | `session/getStats` | `@durable-zero/runner` | `test_get_session_stats_tokens` |
+| `register_binding` | `core/binding-commands.ts:21` | `binding/register` | `@durable-zero/adapter-pi-durable` | `test_register_thread_binding` |
+| `lookup_binding` | `core/binding-commands.ts:60` | `binding/lookup` | `@durable-zero/adapter-pi-durable` | `test_lookup_thread_binding` |
+| `get_all_bindings` | `core/binding-commands.ts:80` | `binding/list` | `@durable-zero/adapter-pi-durable` | `test_list_all_bindings` |
+| `clear_binding` | `core/binding-commands.ts:105` | `binding/clear` | `@durable-zero/adapter-pi-durable` | `test_clear_thread_binding` |
+| `RuntimeGraphSource` events | `core/runner-server.ts:141` | `session/event` (graph) | `@durable-zero/adapter-pi-durable` | `test_stream_runtime_graph_snapshot` |
+| `DurableEventAdapter` deltas | `core/runner-server.ts:113` | `session/event` (deltas) | `@durable-zero/adapter-pi-durable` | `test_stream_text_and_tool_deltas` |
+| Dynamic BB Tools (`PI_BB_TOOLS_FILE`) | `plugin: bb-tools-extension.ts` | `host/toolCall` (reverse) | `@durable-zero/runner` | `test_host_tool_call_roundtrip` |
 
 ---
 
 ## Tasks Breakdown
 
-### Task 1: Slice 0 — Domain Port `IAgentEngine` & `SessionCoordinator` Delegation (Core SPI)
+### Task 1: Slice 0 — Living Walking Skeleton with Real Harness, Deterministic Provider & Restart Verification (Resolves F02, F03, F04, F07, F13, R1, R2, R5)
 
 **Files:**
 - Create: `packages/core/src/session/engine.ts`
 - Modify: `packages/core/src/session/coordinator.ts`
 - Modify: `packages/core/src/index.ts`
-- Test: `packages/core/test/session-coordinator-engine.test.ts`
-
-**Interfaces:**
-- Consumes: `ISessionStore`, `PromptOptions`, `PromptAdmissionReceipt`
-- Produces: `IAgentEngine` domain interface:
-  ```typescript
-  export interface IAgentEngine {
-    start(sessionDir: string): Promise<void>;
-    submit(prompt: string, options?: PromptOptions): Promise<PromptAdmissionReceipt>;
-    abort(): Promise<void>;
-    getState(): Record<string, unknown>;
-    events(listener: (event: unknown) => void): () => void;
-    close(): Promise<void>;
-  }
-  ```
-
-- [ ] **Step 1: Write failing behavioral test for `IAgentEngine` delegation in `SessionCoordinator`**
-
-In `packages/core/test/session-coordinator-engine.test.ts`:
-Create `MockAgentEngine implements IAgentEngine` and `MockSessionStore implements ISessionStore`.
-Assert that `coordinator.start()` calls `engine.start()`, `coordinator.prompt("hello")` calls `engine.submit("hello")` and returns the engine's admission receipt (NOT a stub `rec_...`), `coordinator.abort()` calls `engine.abort()`, `coordinator.onEvent()` registers with `engine.events()`, and `coordinator.close()` calls `engine.close()`.
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test packages/core/test/session-coordinator-engine.test.ts`
-Expected: FAIL with compilation error (`IAgentEngine` does not exist or coordinator does not accept `engine`).
-
-- [ ] **Step 3: Implement `IAgentEngine` and update `SessionCoordinator`**
-
-In `packages/core/src/session/engine.ts`, declare `IAgentEngine`.
-In `packages/core/src/session/coordinator.ts`:
-Update constructor to accept `engine: IAgentEngine` via Constructor DI.
-Replace the random stub ID generator in `prompt()` with `return await this.engine.submit(content, options);`.
-Delegate `start()`, `abort()`, `onEvent()`, and `close()` to `this.engine`.
-Export `IAgentEngine` from `packages/core/src/index.ts`.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test packages/core/test/session-coordinator-engine.test.ts`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add packages/core/src/session/engine.ts packages/core/src/session/coordinator.ts packages/core/src/index.ts packages/core/test/session-coordinator-engine.test.ts
-git commit -m "feat(core): declare IAgentEngine SPI port and wire SessionCoordinator delegation via pure DI"
-```
-
----
-
-### Task 2: Slice 0 — `PiDurableEngine` Adapter Facade in `@durable-zero/adapter-pi-durable`
-
-**Files:**
 - Create: `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts`
 - Modify: `packages/adapter-pi-durable/src/index.ts`
-- Test: `packages/adapter-pi-durable/test/pi-durable-engine.test.ts`
+- Modify: `packages/runner/src/composition.ts`
+- Modify: `packages/runner/src/main.ts`
+- Modify: `packages/cli/bin/durable-zero.js`
+- Create: `packages/adapter-pi-ai/src/testing/mock-model-provider.ts`
+- Test: `packages/core/test/session-coordinator-engine.test.ts`
+- Test: `packages/runner/test/e2e-walking-skeleton.test.ts`
 
 **Interfaces:**
-- Consumes: `IAgentEngine` (from `@durable-zero/core`), existing runtime (`openDurable` from `packages/core/src/runtime.ts`)
-- Produces: `PiDurableEngine implements IAgentEngine` (<120 LOC)
+- Consumes: `openDurable` from `packages/core/src/runtime.ts`, `LocalNodeExecutionEnv` from `@durable-zero/execution`.
+- Produces: `IAgentEngine` in Core, `PiDurableEngine implements IAgentEngine` in adapter, callable `export async function main(argv?: string[]): Promise<void>` in runner.
 
-- [ ] **Step 1: Write failing integration test for `PiDurableEngine`**
+- [ ] **Step 1: Write failing True Black-Box Walking Skeleton E2E Test (Resolves R1)**
 
-In `packages/adapter-pi-durable/test/pi-durable-engine.test.ts`:
-Assert that `PiDurableEngine` implements `IAgentEngine`, boots with `start(tmpDir)`, accepts `submit("say hello")`, and forwards events to registered listeners.
+Create `packages/runner/test/e2e-walking-skeleton.test.ts`:
+Spawns `packages/cli/bin/durable-zero.js serve --session <tmpDir> --provider mock --model echo` via `child_process.spawn`.
+Sends JSON-RPC 2.0 request via stdin:
+`{"jsonrpc": "2.0", "id": 1, "method": "session/prompt", "params": {"content": "Echo: hello world"}}`
+Asserts:
+1. Immediate receipt arrives: `{"jsonrpc": "2.0", "id": 1, "result": {"status": "accepted", "id": "req_1"}}`.
+2. Streaming text delta notification arrives: `{"jsonrpc": "2.0", "method": "session/event", "params": {"type": "text_delta", "text": "Echo: hello world"}}`.
+3. Terminal turn notification arrives: `{"jsonrpc": "2.0", "method": "session/event", "params": {"type": "turn_complete", "status": "completed"}}`.
+4. Clean process termination on `SIGTERM` with exit code 0.
+5. Durability Readback: re-spawns process on `<tmpDir>`, sends `{"jsonrpc": "2.0", "id": 2, "method": "session/getState", "params": {}}`, asserts previous turn is recorded in session history.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run Walking Skeleton Test to verify failure**
 
-Run: `node --test packages/adapter-pi-durable/test/pi-durable-engine.test.ts`
-Expected: FAIL with "Cannot find module '.../pi-durable-engine.ts'".
+Run: `node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts`
+Expected: FAIL (connection refused, CLI runs old server, or coordinator throws unstarted).
 
-- [ ] **Step 3: Implement `PiDurableEngine` facade**
+- [ ] **Step 3: Implement `IAgentEngine` and update `SessionCoordinator` (Resolves F02, R2)**
+
+In `packages/core/src/session/engine.ts`:
+```typescript
+import type { PromptAdmissionReceipt } from "@durable-zero/contracts";
+
+export interface PromptExecutionOptions {
+  deliverAs?: "steer" | "followUp";
+  conversationId?: string;
+  images?: Array<{ type: "image"; data: string; mimeType: string }>;
+}
+
+export interface IAgentEngine {
+  start(sessionDir: string): Promise<void>;
+  submit(prompt: string, options?: PromptExecutionOptions): Promise<PromptAdmissionReceipt>;
+  abort(conversationId?: string): Promise<void>;
+  getState(): Promise<Record<string, unknown>>;
+  events(listener: (event: unknown) => void): () => void;
+  close(): Promise<void>;
+}
+```
+In `packages/core/src/session/coordinator.ts`:
+Accept `engine: IAgentEngine` in constructor via pure DI.
+In `start()`: call `await this.engine.start(this.sessionDir)`. Do NOT call `store.acquireLock()` (single lock owner in engine!).
+In `prompt(content, options)`: validate non-empty string; map `options?.deliverAs ?? "followUp"`; call `return await this.engine.submit(content, options)`.
+In `abort(conversationId)`: call `await this.engine.abort(conversationId)`.
+In `close()`: call `await this.engine.close()`.
+
+- [ ] **Step 4: Implement `PiDurableEngine` in Adapter (Resolves F02, F04, R2, R5)**
 
 In `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts`:
-Implement `PiDurableEngine implements IAgentEngine`.
-In `start(sessionDir)`: invoke existing `openDurable({ sessionDir, ... })` and save the handle.
-In `submit(prompt, options)`: delegate to `handle.submitPrompt(prompt, options)`.
-In `abort()`: delegate to `handle.abort()`.
-In `events(listener)`: subscribe to `handle.onEvent(listener)`.
-In `close()`: call `handle.close()`.
-Export `PiDurableEngine` from `packages/adapter-pi-durable/src/index.ts`.
+Implement `PiDurableEngine implements IAgentEngine`:
+- Constructor receives `{ cwd, cli, executionEnvFactory, hostBridge, modelProvider }`.
+- In `start(sessionDir)`: calls `openDurable({ sessionDir, cwd, cli, executionEnvFactory })`. Saves `OpenDurableResult`.
+- In `submit(prompt, options)`: passes `options.deliverAs ?? "followUp"` into `result.controller.submit(prompt, deliverAs)`. Maps native `AdmissionReceipt` where `id: receipt.requestId` (preserving native correlation!).
+- In `abort(conversationId)`: calls `result.controller.abort()`.
+- In `getState()`: returns typed `SessionStateDTO` (`sessionId`, `cwd`, `activeModel`, `thinkingLevel`, `models`).
+- In `events(listener)`: attaches `DurableEventAdapter` and `RuntimeGraphSource` to forward canonical runner events.
+- In `close()`: calls `await result.close()`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 5: Wire `assembleDurableZero` and Export Callable `main` in CLI (Resolves F03, F13)**
 
-Run: `node --test packages/adapter-pi-durable/test/pi-durable-engine.test.ts`
-Expected: PASS
+In `packages/runner/src/composition.ts`:
+- Build single `PiDurableEngine` with injected `LocalNodeExecutionEnv`.
+- Pass `engine` to `new SessionCoordinator({ engine, sessionDir })`.
+- Explicitly call `await coordinator.start()`.
+- Wire `coordinator.events(evt => server.sendNotification("session/event", evt))`.
+In `packages/runner/src/main.ts`:
+- Export `export async function main(argv: string[] = process.argv.slice(2)): Promise<void>`.
+In `packages/cli/bin/durable-zero.js`:
+- In `command === "serve"`: import `main` from `../../runner/dist/main.js` and call `await main(argv.slice(1))`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Run Walking Skeleton Test to verify GREEN**
 
+Run: `node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts`
+Expected: PASS.
+Commit:
 ```bash
-git add packages/adapter-pi-durable/src/engine/pi-durable-engine.ts packages/adapter-pi-durable/src/index.ts packages/adapter-pi-durable/test/pi-durable-engine.test.ts
-git commit -m "feat(adapter-pi-durable): implement PiDurableEngine implementing IAgentEngine SPI"
+git add packages/core/ packages/adapter-pi-durable/ packages/runner/ packages/cli/ packages/adapter-pi-ai/
+git commit -m "feat(runner): implement Slice 0 Walking Skeleton with real PiDurableEngine and E2E black-box test"
 ```
 
 ---
 
-### Task 3: Slice 0 — Wiring Composition Root, Single CLI Runner & Living E2E Skeleton
+### Task 2: Host Tool Bridge & Reverse RPC (Resolves F06, F14, R7)
+
+**Files:**
+- Create: `packages/protocol/src/methods/host.ts`
+- Create: `packages/core/src/tools/host-bridge.ts` (Domain Port: `IHostBridge`)
+- Create: `packages/runner/src/host/host-bridge.ts` (Runner Adapter: `HostBridge implements IHostBridge`)
+- Modify: `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts`
+- Delete: `packages/core/src/host-rpc.ts`
+- Test: `packages/runner/test/host-tool-bridge.test.ts`
+
+**Interfaces:**
+- Consumes: `StdioJsonRpcServer.request()` in runner.
+- Produces: `IHostBridge` in core, bidirectional `host/toolCall` and `host/interaction` in runner.
+
+- [ ] **Step 1: Write failing test for Host Tool Bridge with schema validation and configurable timeout**
+
+In `packages/runner/test/host-tool-bridge.test.ts`:
+```typescript
+import test from "node:test";
+import assert from "node:assert/strict";
+import { HostBridge } from "../src/host/host-bridge.ts";
+
+test("HostBridge forwards tool calls over JSON-RPC and validates response schema", async () => {
+  const sentRequests: any[] = [];
+  const fakeServer = {
+    request: async (method: string, params: any) => {
+      sentRequests.push({ method, params });
+      return { content: [{ type: "text", text: "evaluated result" }], isError: false };
+    }
+  };
+
+  const bridge = new HostBridge(fakeServer as any, { timeoutMs: 500, idSource: () => 101 });
+  const result = await bridge.forwardToolCall("calculate", { expr: "2+2" });
+
+  assert.equal(sentRequests[0].method, "host/toolCall");
+  assert.equal(sentRequests[0].params.toolName, "calculate");
+  assert.equal(result.content[0].text, "evaluated result");
+});
+
+test("HostBridge rejects malformed client tool result", async () => {
+  const fakeServer = {
+    request: async () => ({ invalid: "shape" }) // violates hostToolResultSchema
+  };
+  const bridge = new HostBridge(fakeServer as any, { timeoutMs: 500 });
+  await assert.rejects(() => bridge.forwardToolCall("test", {}), (err: any) => err.name === "ZodError");
+});
+```
+
+- [ ] **Step 2: Run test to verify failure**
+
+Run: `node --test --test-timeout 30000 packages/runner/test/host-tool-bridge.test.ts`
+Expected: FAIL.
+
+- [ ] **Step 3: Implement `IHostBridge` and `HostBridge`**
+
+In `packages/protocol/src/methods/host.ts`:
+Define `hostToolResultSchema`:
+```typescript
+import { z } from "zod";
+export const hostToolResultSchema = z.object({
+  content: z.array(z.object({ type: z.literal("text"), text: z.string() })),
+  isError: z.boolean().optional().default(false)
+});
+```
+In `packages/core/src/tools/host-bridge.ts`: declare interface `IHostBridge`.
+In `packages/runner/src/host/host-bridge.ts`: implement `HostBridge implements IHostBridge` with `timeoutMs`, `idSource`, and `hostToolResultSchema.parse(response)`.
+Inject `HostBridge` into `PiDurableEngine`. Remove `packages/core/src/host-rpc.ts`.
+
+- [ ] **Step 4: Run test to verify PASS**
+
+Run: `node --test --test-timeout 30000 packages/runner/test/host-tool-bridge.test.ts`
+Expected: PASS.
+Commit:
+```bash
+git add packages/core/ packages/protocol/ packages/runner/ packages/adapter-pi-durable/
+git commit -m "feat(runner): implement validated JSON-RPC 2.0 HostBridge and delete legacy host-rpc from core"
+```
+
+---
+
+### Task 3: Headless Probe Mode (`--no-session`) (Resolves F04, F10, R7)
 
 **Files:**
 - Modify: `packages/runner/src/composition.ts`
 - Modify: `packages/runner/src/main.ts`
-- Modify: `packages/cli/bin/durable-zero.js`
-- Test: `packages/runner/test/e2e-walking-skeleton.test.ts`
+- Modify: `packages/runner/src/cli-args.ts`
+- Test: `packages/runner/test/probe-mode.test.ts`
 
 **Interfaces:**
-- Consumes: `PiDurableEngine`, `SessionCoordinator`, `StdioJsonRpcServer`
-- Produces: Fully assembled, executable Walking Skeleton responding over stdio JSON-RPC 2.0 with real stream deltas.
+- Consumes: CLI option `--no-session`.
+- Produces: Read-only diagnostics and catalog server without SQLite persistence or file locks.
 
-- [ ] **Step 1: Write True Black-Box Walking Skeleton E2E Test**
+- [ ] **Step 1: Write failing test for `--no-session` probe mode**
 
-In `packages/runner/test/e2e-walking-skeleton.test.ts`:
-Spawn `packages/cli/bin/durable-zero.js serve --session <tempDir>` via `child_process.spawn`.
-Send JSON-RPC 2.0 request via stdin:
-```json
-{"jsonrpc": "2.0", "id": 1, "method": "session/prompt", "params": {"content": "Respond with OK"}}
-```
-Read stdout stream: assert that a valid JSON-RPC response with `result.status === "accepted"` arrives, AND assert that at least one `session/event` notification arrives with text delta before process exit or abort.
+In `packages/runner/test/probe-mode.test.ts`:
+Spawn runner with `--no-session`.
+Send request: `{"jsonrpc": "2.0", "id": 1, "method": "models/list", "params": {}}`.
+Assert valid response with available models array.
+Assert that directory `.durable/sessions` was NOT created on disk.
+Send request: `{"jsonrpc": "2.0", "id": 2, "method": "session/prompt", "params": {"content": "hi"}}`.
+Assert error response with application error code `-32000` and `error.data: { code: "PROBE_MODE_UNSUPPORTED" }`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test to verify failure**
 
-Run: `node --test packages/runner/test/e2e-walking-skeleton.test.ts`
-Expected: FAIL (coordinator never started, or CLI running legacy runner).
+Run: `node --test --test-timeout 30000 packages/runner/test/probe-mode.test.ts`
+Expected: FAIL.
 
-- [ ] **Step 3: Wire Composition Root and CLI entry point**
+- [ ] **Step 3: Implement probe mode in `composition.ts`**
 
 In `packages/runner/src/composition.ts`:
-- Instantiate `PiDurableEngine` with `store.sessionDir`.
-- Pass `engine` to `new SessionCoordinator({ store, engine, ... })`.
-- Explicitly call `await coordinator.start()` before returning.
-- Subscribe `coordinator.onEvent(evt => server.sendNotification("session/event", evt))`.
-In `packages/cli/bin/durable-zero.js`:
-- In `command === "serve"`: change entry point from `../../core/src/runner-server.ts` to `../../runner/dist/main.js` (or `runner/src/main.ts` in dev).
+If `options.noSession === true`:
+- Do not instantiate SQLite store or lock files.
+- Instantiate lightweight probe engine exposing `models/list` and `doctor`.
+- Reject stateful session mutations with JSON-RPC error code `-32000` (`PROBE_MODE_UNSUPPORTED`).
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run test to verify PASS**
 
-Run: `node --test packages/runner/test/e2e-walking-skeleton.test.ts`
-Expected: PASS. **The Walking Skeleton is now 100% verified and alive end-to-end!**
-
-- [ ] **Step 5: Commit**
-
+Run: `node --test --test-timeout 30000 packages/runner/test/probe-mode.test.ts`
+Expected: PASS.
+Commit:
 ```bash
-git add packages/runner/src/composition.ts packages/runner/src/main.ts packages/cli/bin/durable-zero.js packages/runner/test/e2e-walking-skeleton.test.ts
-git commit -m "feat(runner): wire PiDurableEngine and coordinator.start into Composition Root, prove Walking Skeleton E2E"
+git add packages/runner/
+git commit -m "feat(runner): implement non-locking headless probe mode for --no-session"
 ```
 
 ---
 
-### Task 4: Slice 1 — Strangler Fig Runtime File Migration to Adapter
+### Task 4: JSON-RPC 2.0 Protocol Conformance & Capability Dispatch (Resolves F05, F08, R6)
 
 **Files:**
-- Move from `packages/core/src/` to `packages/adapter-pi-durable/src/engine/`:
-  - `subagents/*`
-  - `bridge/*`
-  - `runtime.ts`
-  - `runtime-controller.ts`
-  - `runtime-graph-source.ts`
-  - `stdout-guard.ts` (Pi-specific output guard)
-  - `shared/*` (`extension-ui-context.ts`, `agent-dir.ts`, etc.)
-- Move from `packages/core/src/` to `packages/adapter-pi-durable/src/storage/`:
-  - `session-lock-eviction.ts`
-  - `session-storage.ts`
-  - `session-fork.ts`
-- Modify: `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts` (update internal paths)
+- Modify: `packages/protocol/src/jsonrpc/schema.ts`
+- Modify: `packages/protocol/src/transport/request-dispatcher.ts`
+- Modify: `packages/protocol/src/transport/stdio-server.ts`
+- Create: `packages/runner/src/dispatch/session-dispatcher.ts`
+- Modify: `packages/runner/src/composition.ts`
+- Test: `packages/protocol/test/protocol-conformance.test.ts`
+- Test: `packages/runner/test/capability-preservation.test.ts`
 
 **Interfaces:**
-- Consumes: Pi SDK (`@earendil-works/*`) inside adapter
-- Produces: Complete operational agent runtime isolated in `@durable-zero/adapter-pi-durable`.
+- Consumes: JSON-RPC 2.0 specification §§4.1, 5, 5.1.
+- Produces: Strict protocol conformance and full capability preservation dispatch.
 
-- [ ] **Step 1: Move Subagents, Bridge and Shared Directories into Adapter**
+- [ ] **Step 1: Write failing protocol conformance tests (Resolves F08)**
 
-Move `packages/core/src/subagent-*`, `packages/core/src/bridge/*`, and `packages/core/src/shared/*` into `packages/adapter-pi-durable/src/engine/`.
-Update relative import paths within the adapter.
-Run `node --test packages/runner/test/e2e-walking-skeleton.test.ts` to confirm skeleton remains green.
+In `packages/protocol/test/protocol-conformance.test.ts`:
+Assert:
+1. Incoming notification (`id` is undefined) produces NO response (silence).
+2. Unknown method produces error `-32601` (`Method not found`).
+3. Response schema rejects payloads having both `result` and `error`.
+4. Parse error produces `-32700`.
 
-- [ ] **Step 2: Move Runtime Controller, Storage and Stdout Guard into Adapter**
+- [ ] **Step 2: Run test to verify failure**
 
-Move `packages/core/src/runtime.ts`, `packages/core/src/runtime-controller.ts`, `packages/core/src/runtime-graph-source.ts`, `packages/core/src/stdout-guard.ts` to `packages/adapter-pi-durable/src/engine/`.
-Move `packages/core/src/session-lock-eviction.ts`, `packages/core/src/session-storage.ts`, `packages/core/src/session-fork.ts` to `packages/adapter-pi-durable/src/storage/`.
+Run: `node --test --test-timeout 30000 packages/protocol/test/protocol-conformance.test.ts`
+Expected: FAIL.
+
+- [ ] **Step 3: Fix protocol conformance in `@durable-zero/protocol`**
+
+In `packages/protocol/src/jsonrpc/schema.ts`:
+Enforce `result` XOR `error` via Zod discriminated union or superRefine.
+In `packages/protocol/src/transport/request-dispatcher.ts`:
+If `request.id === undefined` (notification), do NOT emit response.
+If method not found in registry, return code `-32601`.
+
+- [ ] **Step 4: Implement Capability Preservation Dispatch (Resolves F05, R6)**
+
+In `packages/runner/src/dispatch/session-dispatcher.ts`:
+Wire all capabilities from the Capability Preservation Matrix:
+`session/prompt`, `session/steer`, `session/abort`, `session/abortTask`, `session/compact`, `subagent/setPolicy`, `models/list`, `models/set`, `models/setThinking`, `session/fork`, `session/getState`, `session/getStats`, `binding/register`, `binding/lookup`, `binding/list`, `binding/clear`.
+In `packages/runner/test/capability-preservation.test.ts`:
+Write tests verifying each method dispatches to `PiDurableEngine` and returns correct DTO.
+
+- [ ] **Step 5: Run tests to verify PASS**
+
+Run: `node --test --test-timeout 30000 packages/protocol/test/protocol-conformance.test.ts packages/runner/test/capability-preservation.test.ts`
+Expected: PASS.
+Commit:
+```bash
+git add packages/protocol/ packages/runner/
+git commit -m "feat(protocol): enforce strict JSON-RPC 2.0 conformance and implement full capability preservation dispatch"
+```
+
+---
+
+### Task 5: Strangler Fig Migration of Runtime Dependency Closure (Resolves F01, R4)
+
+**Files:**
+- Move: `packages/core/src/runtime.ts` $\to$ `packages/adapter-pi-durable/src/engine/runtime.ts`
+- Move: `packages/core/src/runtime-*.ts`, `harness-setup.ts`, `session-daemon.ts`, `control-channel.ts`, `compaction-hooks.ts` $\to$ `packages/adapter-pi-durable/src/engine/`
+- Move: `packages/core/src/subagent-*.ts` $\to$ `packages/adapter-pi-durable/src/engine/subagents/`
+- Move: `packages/core/src/bridge/*` $\to$ `packages/adapter-pi-durable/src/engine/bridge/`
+- Move: `packages/core/src/stdout-guard.ts` $\to$ `packages/adapter-pi-durable/src/engine/stdout-guard.ts`
+- Move: `packages/core/src/shared/*` $\to$ `packages/adapter-pi-durable/src/engine/shared/`
+- Move: `packages/core/src/builtin-extensions/*` $\to$ `packages/adapter-pi-durable/src/engine/builtin-extensions/`
+- Move: `packages/core/src/binding-*.ts`, `conversation-id.ts`, `task-*.ts` $\to$ `packages/adapter-pi-durable/src/engine/`
+- Update: `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts` (import from internal paths)
+- Test: `packages/runner/test/e2e-walking-skeleton.test.ts`
+
+- [ ] **Step 1: Move subagents, bridge, and shared directories into adapter**
+
+Move `packages/core/src/subagent-*`, `packages/core/src/bridge/*`, `packages/core/src/shared/*` to `packages/adapter-pi-durable/src/engine/`.
+Update relative import paths within adapter.
+Run `node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts` $\to$ must remain GREEN.
+
+- [ ] **Step 2: Move runtime core, stdout guard, and builtin extensions into adapter**
+
+Move `packages/core/src/runtime.ts`, `packages/core/src/runtime-*.ts`, `harness-setup.ts`, `session-daemon.ts`, `stdout-guard.ts`, `builtin-extensions/*`, `binding-*.ts` to `packages/adapter-pi-durable/src/engine/`.
 Update `PiDurableEngine` to import directly from `./runtime.ts`.
 
-- [ ] **Step 3: Run full monorepo test suite and E2E verification**
+- [ ] **Step 3: Run full monorepo test suite and verify ZERO regressions**
 
-Run: `pnpm test` across monorepo and `node --test packages/runner/test/e2e-walking-skeleton.test.ts`
-Expected: ALL test suites PASS.
+Run: `npm test -- --test-timeout 30000`
+Run: `node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts`
+Expected: ALL suites PASS.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add packages/core/ packages/adapter-pi-durable/
-git commit -m "refactor(adapter-pi-durable): complete Strangler Fig migration of runtime, storage and stdout guard from core"
+git commit -m "refactor(adapter-pi-durable): migrate runtime dependency closure into adapter via Strangler Fig"
 ```
 
 ---
 
-### Task 5: Slice 2 — Host Bridge Decoupling, JSON-RPC 2.0 Reverse RPC & Probe Mode
-
-**Files:**
-- Create: `packages/protocol/src/methods/host.ts` (JSON-RPC 2.0 schemas for `host/toolCall` and `host/interaction`)
-- Create: `packages/runner/src/host/host-bridge.ts` (Pure DI `HostBridge implements IHostBridge`)
-- Modify: `packages/runner/src/composition.ts` (Inject `HostBridge` into `PiDurableEngine`, handle `--no-session`)
-- Modify: `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts` (Accept `IHostBridge` and wire dynamic tools)
-- Delete: `packages/core/src/host-rpc.ts` (Purge legacy ad-hoc host manager and mutable singletons)
-- Test: `packages/runner/test/host-tool-bridge.test.ts`
-- Test: `packages/runner/test/probe-mode.test.ts`
-
-**Interfaces:**
-- Consumes: `StdioJsonRpcServer.request()`
-- Produces: Strict JSON-RPC 2.0 reverse RPC for host tools (`host/toolCall`) and UI dialogs (`host/interaction`), with ZERO mutable global state in Core.
-
-- [ ] **Step 1: Declare Host RPC schemas in `@durable-zero/protocol`**
-
-In `packages/protocol/src/methods/host.ts`:
-Declare Zod schemas for:
-- `host/toolCall`: params `{ toolName: string, arguments: Record<string, unknown> }`, result `{ content: Array<{ type: "text", text: string }>, isError?: boolean }`.
-- `host/interaction`: params `{ kind: string, payload: unknown }`, result `unknown`.
-
-- [ ] **Step 2: Implement `HostBridge` in `@durable-zero/runner`**
-
-In `packages/runner/src/host/host-bridge.ts`:
-Create `HostBridge` class accepting `server: StdioJsonRpcServer`.
-Implement `forwardToolCall(name, args)` calling `server.request("host/toolCall", { toolName: name, arguments: args })`.
-Implement `requestInteraction(kind, payload)` calling `server.request("host/interaction", { kind, payload })`.
-Pure instance-based, zero global variables.
-
-- [ ] **Step 3: Wire `HostBridge` and Probe Mode in Composition Root**
-
-In `packages/runner/src/composition.ts`:
-Instantiate `HostBridge` and pass it to `PiDurableEngine`.
-If `options.noSession === true`, bypass SQLite session directory creation and locking, providing lightweight diagnostics and models catalog without disk mutations.
-Delete `packages/core/src/host-rpc.ts` and its test `packages/core/test/stdio-host-tool-call.test.ts`.
-
-- [ ] **Step 4: Run integration tests for Host Bridge and Probe Mode**
-
-Run: `node --test packages/runner/test/host-tool-bridge.test.ts packages/runner/test/probe-mode.test.ts`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add packages/protocol/ packages/runner/ packages/adapter-pi-durable/ packages/core/
-git commit -m "feat(runner): implement JSON-RPC 2.0 HostBridge and probe mode, delete legacy host-rpc from core"
-```
-
----
-
-### Task 6: Slice 3 — Core Dependency Purge & Sovereign Decoupling
+### Task 6: Pure Core Decoupling, Build Script Cleanup & AST Boundary Enforcement (Resolves F01, F09, R8)
 
 **Files:**
 - Modify: `packages/core/package.json`
@@ -307,51 +587,49 @@ git commit -m "feat(runner): implement JSON-RPC 2.0 HostBridge and probe mode, d
 - Delete: `packages/core/src/runner-server.ts`
 - Delete: `packages/core/src/jsonl.ts`
 - Delete: `packages/core/src/cli-args.ts`
-- Test: Core boundary isolation script
+- Delete: `packages/core/scripts/build-runner.mjs`
+- Modify: `scripts/build.mjs`
+- Test: `packages/core/test/boundary-enforcement.test.ts`
 
-**Interfaces:**
-- Consumes: Only `@durable-zero/contracts` and `zod`
-- Produces: 100% sovereign, vendor-agnostic `@durable-zero/core` package.
+- [ ] **Step 1: Update `scripts/build.mjs` and clean package.json (Resolves F09, R8)**
 
-- [ ] **Step 1: Purge adapter dependencies from `packages/core/package.json`**
-
-Remove:
-- `@durable-zero/adapter-pi-durable`
-- `@durable-zero/adapter-pi-ai`
-- `@durable-zero/adapter-codemode`
-- `@durable-zero/execution`
-- Any `@earendil-works/*` packages from `packages/core/package.json`.
+In `scripts/build.mjs`:
+Remove building of `packages/core/src/runner-server.ts`.
+In `packages/core/package.json`:
+Remove script `"build:runner": "node scripts/build-runner.mjs"`.
+Remove export `"./runner": "./dist/runner.js"`.
+Delete `packages/core/scripts/build-runner.mjs`.
+Keep Zod at `"zod": "^4.6.7"`. Remove all adapter dependencies.
 
 - [ ] **Step 2: Delete legacy runner files from Core**
 
-Delete `packages/core/src/runner-server.ts`, `packages/core/src/jsonl.ts`, and `packages/core/src/cli-args.ts`.
-In `packages/core/src/index.ts`, remove exports of deleted files and adapter re-exports.
+Delete `packages/core/src/runner-server.ts`, `packages/core/src/jsonl.ts`, `packages/core/src/cli-args.ts`.
+In `packages/core/src/index.ts`: export only pure domain files (`session/`, `models/`, `tools/`, `policy/`, `errors.ts`, `version.ts`).
 
-- [ ] **Step 3: Run boundary verification check**
+- [ ] **Step 3: Implement automated AST boundary enforcement test**
 
-Run:
+Create `packages/core/test/boundary-enforcement.test.ts`:
+Parse imports across all files in `packages/core/src/`:
+Assert:
+1. Zero imports matching `@earendil-works/*`.
+2. Zero imports matching `@durable-zero/adapter-*`.
+3. Zero imports matching `node:fs` or `node:child_process` in domain logic (only in tools interfaces).
+4. Run pure Core unit tests: `node --test --test-timeout 30000 packages/core/test/*.test.ts`.
+
+- [ ] **Step 4: Run boundary test and full build to verify PASS**
+
+Run: `node scripts/build.mjs`
+Run: `npm test -- --test-timeout 30000`
+Expected: ALL PASS.
+Commit:
 ```bash
-grep -rn "@earendil-works" packages/core/src/ || true
-grep -rn "@durable-zero/adapter-" packages/core/package.json || true
-grep -rn "host-rpc" packages/core/src/ || true
-```
-Expected: ZERO lines matching.
-
-- [ ] **Step 4: Run Core unit tests in pure isolation**
-
-Run: `node --test packages/core/test/*.test.ts`
-Expected: PASS (all unit tests run with in-memory stores/mocks in < 100ms).
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add packages/core/
-git commit -m "chore(core): purge adapter and vendor dependencies, achieving 100% sovereign core"
+git add packages/core/ scripts/build.mjs
+git commit -m "chore(core): purge vendor/adapter dependencies and enforce sovereign core boundary"
 ```
 
 ---
 
-### Task 7: Slice 4 — Triple-Circuit Verification Gate (S9) & Ledger Finalization
+### Task 7: Triple-Circuit Verification Gate (S9) & Ledger Finalization (Resolves F12, R9)
 
 **Files:**
 - Verify: Circuit A (`arch-rules-implementation-review`)
@@ -360,25 +638,63 @@ git commit -m "chore(core): purge adapter and vendor dependencies, achieving 100
 - Modify: `docs/arch-improvement/ledger.md`
 
 - [ ] **Step 1: Circuit A — Semantic Architecture Audit**
-  Audit code against AP-010..AP-076. Answer the 4 Mandatory Semantic Probes:
-  1. *Dependency Traceability:* Cite file:line where `IAgentEngine` is invoked in `coordinator.ts`.
-  2. *Runtime Completeness:* Confirm 0 dangling legacy operational files in `packages/core/src/`.
-  3. *Entry Point Wiring:* Cite file:line in `packages/cli/bin/durable-zero.js` calling `@durable-zero/runner`.
-  4. *Anti-Gaming Check:* Confirm all classes contain real domain orchestration, not hollow stubs.
+  Audit on candidate SHA against AP-010..AP-076. Answer the 4 Mandatory Semantic Probes:
+  1. *Dependency Traceability:* Prove exact line in `coordinator.ts` invoking `IAgentEngine.submit()`.
+  2. *Runtime Completeness:* Confirm 0 dangling operational files in `core/src/`.
+  3. *Entry Point Wiring:* Prove `bin/durable-zero.js` calls `main()` of `@durable-zero/runner`.
+  4. *Anti-Gaming Check:* Confirm classes contain genuine orchestration, not fake ID generators.
 
 - [ ] **Step 2: Circuit B — True Black-Box Product Audit**
-  Execute compiled binary `dist/bin/durable-zero.js serve` via child_process/bash:
+  Execute compiled binary `packages/cli/bin/durable-zero.js serve`:
   - Happy Path Journey: `session/prompt` returns token stream and completed turn.
   - Empty State Journey: `--no-session` boots probe mode cleanly.
   - Error Recovery Journey: Invalid JSON-RPC request returns standard JSON-RPC 2.0 error `-32600`.
 
 - [ ] **Step 3: Circuit C — Orchestrator Diff Gate**
-  Lead orchestrator inspects `git diff origin/main..HEAD --stat` and key files (`coordinator.ts`, `pi-durable-engine.ts`, `composition.ts`, `host-bridge.ts`) to independently certify implementation completeness.
+  Lead orchestrator inspects `git diff origin/main..HEAD --stat` and reviews key files (`coordinator.ts`, `pi-durable-engine.ts`, `composition.ts`, `host-bridge.ts`).
 
-- [ ] **Step 4: Record Cycle 7 in Ledger**
-  Update `docs/arch-improvement/ledger.md` with Cycle 7 delivery record and commit.
+- [ ] **Step 4: Record Cycle 7 in Ledger & Complete Learn Gate (S11)**
+  Append Cycle 7 completion record to `docs/arch-improvement/ledger.md` including durable lessons learned:
+  1. *Walking Skeleton Invariant:* Always build Slice 0 E2E before file relocation.
+  2. *Anti-Hollow Assertion Integrity:* Never accept status receipts without behavioral assertions.
+  3. *Single Lifecycle Owner:* Only one component may own database file locks.
 
+Commit:
 ```bash
 git add docs/arch-improvement/ledger.md
-git commit -m "docs(ledger): record Cycle 7 completion with Triple-Circuit Gate verification"
+git commit -m "docs(ledger): record Cycle 7 completion with Triple-Circuit Gate verification and durable lessons"
 ```
+
+---
+
+## Execution Handoff & Governance Protocol (Resolves F12, R9)
+
+- **Orchestration Ownership:** Parent thread `thr_9yjb93iwmn` owns workflow progression, S9 dispatch, and user approval gates.
+- **Implementer Constraints:** One bounded implementer subagent per slice. Subagent receives exact task brief, interfaces, and constraints.
+- **Resume-Based Fix Loop:**
+  - Review findings in rounds 1–3 resume the original implementer session with structured findings.
+  - Rounds 4–5 dispatch a fresh implementer on Gemini 3.8 High.
+  - 5-round circuit breaker escalates to orchestrator; unresolved P0–P2 issues are marked `blocked` and NEVER parked as `PASS`.
+- **S9 Verification Gates:** Independent Architectural and Product Reviewers run on the same candidate SHA after meaningful slices (Slice 0 in Task 1, Host Bridge in Task 2, and Final in Task 7).
+- **Orchestrator Diff Gate:** The orchestrator personally audits `git diff origin/main..HEAD --stat` before authorizing branch merge.
+
+---
+
+## Explicit Findings Disposition (F01–F14)
+
+| Finding ID | Title | Disposition | How Resolved in This Plan |
+| :--- | :--- | :--- | :--- |
+| **F01** | Runtime вынос неполный (замыкание зависимостей) | **Addressed** | Full Dependency Closure Inventory maps all 87 files; Task 5 migrates the complete 50-file executable runtime closure into `adapter-pi-durable/src/engine/`. |
+| **F02** | Вызовы несуществующих методов `openDurable` | **Addressed** | Task 1 Step 4 maps exact native signatures: `controller.submit(prompt, deliverAs)`, `controller.abort()`, `AdmissionReceipt.requestId`, `DurableEventAdapter`. |
+| **F03** | Смена `import` в CLI не запускает runner | **Addressed** | Task 1 Step 5 exports callable `main(argv)` from `runner/src/main.ts` and explicitly invokes `await main(argv.slice(1))` from `cli/bin/durable-zero.js`. |
+| **F04** | Не определён единственный владелец session/lock | **Addressed** | Canonical Design Amendment §2: `PiDurableEngine` is the single exclusive owner of session database, lock, and Harness. `coordinator.start()` delegates to `engine.start()`. |
+| **F05** | Полный переход транспорта не сохраняет весь функционал | **Addressed** | Capability Preservation Matrix maps all 16 legacy commands/events to JSON-RPC 2.0 methods; Task 4 implements full capability dispatch with regression tests. |
+| **F06** | `HostBridge` не определён как исполнимый DI-контракт | **Addressed** | Task 2 declares domain port `IHostBridge`, implements `HostBridge` in runner with schema validation & timeout, injects via Constructor DI into `PiDurableEngine`. |
+| **F07** | Срез 0 разделён на горизонтальные задачи со слабым оракулом | **Addressed** | Task 1 unifies the entire vertical slice into ONE reviewable Slice 0 task with a strict black-box E2E test verifying real token streaming, turn completion, and SQLite persistence. |
+| **F08** | «Strict JSON-RPC 2.0» без conformance задачи | **Addressed** | Task 4 adds dedicated protocol conformance test and fixes: notification silence, `-32601` for unknown methods, and strict `result` XOR `error` schema validation. |
+| **F09** | Проверки core и сборки не обеспечивают gates | **Addressed** | Task 6 removes `runner-server.ts` from `scripts/build.mjs`, adds automated AST boundary tests, and enforces `--test-timeout 30000`. |
+| **F10** | Review Focus без проверяемых literal assertions | **Addressed** | Review Focus section provides literal code assertions and names specific production mutations caught for every single item; arbitrary line caps removed. |
+| **F11** | Spec ссылается на старый план с конфликтами | **Addressed** | Canonical Design Amendment section explicitly overrides and supersedes stale master plan clauses with verified architectural decisions. |
+| **F12** | Оркестрация, re-review и Learn Gate не зафиксированы | **Addressed** | Execution Handoff & Governance Protocol defines orchestrator ownership, resume-based fix loops, S9 dual-circuit on candidate SHA, and S11 Learn Gate. |
+| **F13** | Фасад над `openDurable` сохраняет вторую сборку | **Addressed** | Canonical Design Amendment §3: Composition Root builds concrete adapters and injects them into `PiDurableEngine`. Decorative coordinator ports eliminated. |
+| **F14** | Два RPC hop ошибочно объявлены дублирующим tracker | **Addressed** | Clarified separation of hops: runner<->host tool call and host<->BB are distinct ID spaces. Cycle 7 acceptance verified against generic JSON-RPC client without touching BB. |
