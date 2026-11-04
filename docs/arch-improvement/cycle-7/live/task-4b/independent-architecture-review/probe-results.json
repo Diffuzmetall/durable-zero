@@ -1,0 +1,40 @@
+[
+  {
+    "id": "probe-1-package-export",
+    "name": "Runner public package exports createSessionDispatcher",
+    "pass": false,
+    "details": "FAIL: createSessionDispatcher is NOT exported from packages/runner/src/index.ts"
+  },
+  {
+    "id": "probe-2-invalid-params-code",
+    "name": "Invalid params maps to -32602 over compiled protocol transport",
+    "pass": false,
+    "expectedCode": -32602,
+    "actualCode": -32603,
+    "response": {
+      "jsonrpc": "2.0",
+      "id": "req-invalid-params",
+      "error": {
+        "code": -32603,
+        "message": "Prompt content string must not be empty"
+      }
+    },
+    "details": "FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure"
+  },
+  {
+    "id": "probe-3-method-not-found-code",
+    "name": "Unknown method maps to -32601 over compiled protocol transport",
+    "pass": false,
+    "expectedCode": -32601,
+    "actualCode": -32603,
+    "response": {
+      "jsonrpc": "2.0",
+      "id": "req-unknown-method",
+      "error": {
+        "code": -32603,
+        "message": "Method not found: completely/unknown/method"
+      }
+    },
+    "details": "FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure"
+  }
+]

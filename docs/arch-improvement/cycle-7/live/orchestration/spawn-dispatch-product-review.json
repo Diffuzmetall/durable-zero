@@ -1,0 +1,32 @@
+{
+  "id": "thr_3d9dqf544r",
+  "projectId": "proj_t4zxb4pcrk",
+  "environmentId": "env_3jei5g5vps",
+  "providerId": "pi",
+  "title": "Cycle 7 · black-box Task 4B compiled component review",
+  "titleFallback": "ROLE: Independent BLACK-BOX product reviewer for Task-4B compiled COMPONENT, ...",
+  "sectionId": null,
+  "status": "starting",
+  "parentThreadId": "thr_9yjb93iwmn",
+  "sourceThreadId": null,
+  "lifecycleOwnerThreadId": null,
+  "originKind": null,
+  "originPluginId": null,
+  "visibility": "visible",
+  "parentNotifications": "auto",
+  "archivedAt": null,
+  "pinnedAt": null,
+  "deletedAt": null,
+  "lastReadAt": 1793827850905,
+  "latestAttentionAt": 1793827850885,
+  "createdAt": 1793827850885,
+  "updatedAt": 1793827850909,
+  "runtime": {
+    "displayStatus": "starting"
+  },
+  "activeBackgroundAgentCount": 0,
+  "canRestoreEnvironment": false,
+  "canEditMessages": true,
+  "canSpawnChild": true,
+  "queuedMessageCount": 0
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="Task 4B Independent Semantic &amp; Architecture Probes" tests="3" failures="3" errors="0" skipped="0">
+    <testcase name="Runner public package exports createSessionDispatcher" classname="SemanticProbe" time="0.005">
+      <failure message="FAIL: createSessionDispatcher is NOT exported from packages/runner/src/index.ts">FAIL: createSessionDispatcher is NOT exported from packages/runner/src/index.ts</failure>
+    </testcase>
+    <testcase name="Invalid params maps to -32602 over compiled protocol transport" classname="SemanticProbe" time="0.005">
+      <failure message="FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure">FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure</failure>
+    </testcase>
+    <testcase name="Unknown method maps to -32601 over compiled protocol transport" classname="SemanticProbe" time="0.005">
+      <failure message="FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure">FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
