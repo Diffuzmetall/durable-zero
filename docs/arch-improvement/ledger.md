@@ -323,3 +323,9 @@
 - Parent sent SIGTERM only to that verified debug Node and verified process disappearance. Provider process, thread/context and unrelated jobs untouched. Same-context steer reached original author, who returned HOLD_FOR_CHECKPOINT. No context reset, new worker, blind retry or expanded scope used.
 - Bounded diagnostics and failure-path cleanup remain obligations in existing Slice 0. The map task did not justify leaving a silent owned command unmonitored; the user, not proactive parent monitoring, noticed this stall.
 
+### Cycle 7 — Remote backup verified (2026-11-04)
+
+- WIP checkpoint `7d4b2351bcd143b2fabf001c3bfd896198cb396c` preserved the full 185-path migration working set, including persisted tests and tracked dist, plus prior protocol/HostBridge fixes on branch `cycle-7-runtime-adapter-ioc-migration`.
+- Normal non-force push succeeded. Independent `git ls-remote origin refs/heads/cycle-7-runtime-adapter-ioc-migration` equals the local checkpoint SHA; working tree was clean immediately after checkpoint. Parent evidence: `durable-zero-checkpoint-manifest.json`, `durable-zero-checkpoint-verification.json`, push log. Secret-shaped filenames/content checked before staging. No tests or global acceptance fabricated to justify the backup.
+- Preservation does not complete Task 1. Current authorized critical path remains bounded Slice 0 execution and independent native end-to-end acceptance. Newly proposed parallel work requires its own ownership/contracts and authorization; full Task 2/3/4 still share composition/native seams and must not be dispatched to competing writers.
+
