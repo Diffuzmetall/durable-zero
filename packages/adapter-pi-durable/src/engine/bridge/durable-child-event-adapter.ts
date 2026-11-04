@@ -125,25 +125,42 @@ export class DurableChildEventAdapter {
 				this.closeThinkingIfNeeded();
 				const message = event.entry?.model?.[0];
 				if (message?.role === "assistant" && Array.isArray(message.content)) {
-					const fullText = message.content
-						.flatMap((part) => (part.type === "text" ? [part.text] : []))
-						.join("");
-					if (fullText.startsWith(this.currentText) && fullText.length > this.currentText.length) {
-						const delta = fullText.slice(this.currentText.length);
-						this.output({
-							type: "message_update",
-							assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta },
-							parentRef: this.parentRef,
-							...(this.conversationId !== undefined ? { conversationId: this.conversationId } : {}),
-						});
+					for (let i = 0; i < message.content.length; i++) {
+						const part = message.content[i];
+						if (part && typeof part === "object" && part.type === "text" && typeof part.text === "string") {
+							const existing = this.contentBlocks.get(i);
+							const streamed = (existing?.type === "text" ? existing.text : "") ?? "";
+							if (part.text.startsWith(streamed)) {
+								const suffix = part.text.slice(streamed.length);
+								if (suffix.length > 0) {
+									this.output({
+										type: "message_update",
+										assistantMessageEvent: { type: "text_delta", contentIndex: i, delta: suffix },
+										parentRef: this.parentRef,
+										...(this.conversationId !== undefined ? { conversationId: this.conversationId } : {}),
+									});
+									this.contentBlocks.set(i, { type: "text", text: part.text });
+								}
+							} else if (part.text.length > 0) {
+								this.output({
+									type: "message_update",
+									assistantMessageEvent: { type: "text_delta", contentIndex: i, delta: part.text },
+									parentRef: this.parentRef,
+									...(this.conversationId !== undefined ? { conversationId: this.conversationId } : {}),
+								});
+								this.contentBlocks.set(i, { type: "text", text: part.text });
+							}
+						}
 					}
-					this.currentText = "";
-					this.currentThinking = "";
 				}
+				this.contentBlocks.clear();
+				this.activeThinkingIndex = undefined;
 				break;
 			}
 			case "run_end": {
 				this.closeThinkingIfNeeded();
+				this.contentBlocks.clear();
+				this.activeThinkingIndex = undefined;
 				this.toolProjector.clear();
 				const outcome = resolveChildRunOutcome(event.inputs, this.submissions, this.lastTaskError);
 				this.output({
@@ -157,6 +174,8 @@ export class DurableChildEventAdapter {
 				break;
 			}
 			case "turn_start": {
+				this.contentBlocks.clear();
+				this.activeThinkingIndex = undefined;
 				this.output({
 					type: "turn_start",
 					parentRef: this.parentRef,

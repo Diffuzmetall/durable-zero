@@ -3975,23 +3975,42 @@ var DurableChildEventAdapter = class {
         this.closeThinkingIfNeeded();
         const message = event.entry?.model?.[0];
         if (message?.role === "assistant" && Array.isArray(message.content)) {
-          const fullText = message.content.flatMap((part) => part.type === "text" ? [part.text] : []).join("");
-          if (fullText.startsWith(this.currentText) && fullText.length > this.currentText.length) {
-            const delta = fullText.slice(this.currentText.length);
-            this.output({
-              type: "message_update",
-              assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta },
-              parentRef: this.parentRef,
-              ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
-            });
+          for (let i = 0; i < message.content.length; i++) {
+            const part = message.content[i];
+            if (part && typeof part === "object" && part.type === "text" && typeof part.text === "string") {
+              const existing = this.contentBlocks.get(i);
+              const streamed = (existing?.type === "text" ? existing.text : "") ?? "";
+              if (part.text.startsWith(streamed)) {
+                const suffix = part.text.slice(streamed.length);
+                if (suffix.length > 0) {
+                  this.output({
+                    type: "message_update",
+                    assistantMessageEvent: { type: "text_delta", contentIndex: i, delta: suffix },
+                    parentRef: this.parentRef,
+                    ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+                  });
+                  this.contentBlocks.set(i, { type: "text", text: part.text });
+                }
+              } else if (part.text.length > 0) {
+                this.output({
+                  type: "message_update",
+                  assistantMessageEvent: { type: "text_delta", contentIndex: i, delta: part.text },
+                  parentRef: this.parentRef,
+                  ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+                });
+                this.contentBlocks.set(i, { type: "text", text: part.text });
+              }
+            }
           }
-          this.currentText = "";
-          this.currentThinking = "";
         }
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
         break;
       }
       case "run_end": {
         this.closeThinkingIfNeeded();
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
         this.toolProjector.clear();
         const outcome = resolveChildRunOutcome(event.inputs, this.submissions, this.lastTaskError);
         this.output({
@@ -4005,6 +4024,8 @@ var DurableChildEventAdapter = class {
         break;
       }
       case "turn_start": {
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
         this.output({
           type: "turn_start",
           parentRef: this.parentRef,
@@ -4190,7 +4211,19 @@ var DurableEventAdapter = class {
         if (msg?.role === "assistant") {
           const errMsg = typeof msg.errorMessage === "string" ? msg.errorMessage : void 0;
           const stopReason = msg.stopReason ?? (errMsg ? "error" : "stop");
-          let content = msg.content ?? [{ type: "text", text: this.currentText }];
+          let content = Array.isArray(msg.content) ? msg.content : (() => {
+            const blocks = [];
+            const sorted = Array.from(this.contentBlocks.keys()).sort((a, b) => a - b);
+            for (const i of sorted) {
+              const b = this.contentBlocks.get(i);
+              if (b?.type === "thinking" && b.thinking) {
+                blocks.push({ type: "thinking", thinking: b.thinking });
+              } else if (b?.type === "text" && b.text !== void 0) {
+                blocks.push({ type: "text", text: b.text });
+              }
+            }
+            return blocks.length > 0 ? blocks : [{ type: "text", text: "" }];
+          })();
           if (content.length === 0 && (stopReason === "error" || errMsg)) {
             content = [{ type: "text", text: errMsg ? `\u26A0\uFE0F ${errMsg}` : "An error occurred during turn generation." }];
           }
@@ -4202,8 +4235,8 @@ var DurableEventAdapter = class {
             usage: msg.usage
           };
           this.output({ type: "message_end", message: this.lastAssistantMessage });
-          this.currentText = "";
-          this.currentThinking = "";
+          this.contentBlocks.clear();
+          this.activeThinkingIndex = void 0;
         }
         break;
       }

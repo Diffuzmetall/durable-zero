@@ -153,9 +153,23 @@ export class DurableEventAdapter {
 				if (msg?.role === "assistant") {
 					const errMsg = typeof msg.errorMessage === "string" ? msg.errorMessage : undefined;
 					const stopReason = msg.stopReason ?? (errMsg ? "error" : "stop");
-					let content = msg.content ?? [{ type: "text", text: this.currentText }];
+					let content = Array.isArray(msg.content)
+						? msg.content
+						: (() => {
+								const blocks: AssistantMessage["content"] = [];
+								const sorted = Array.from(this.contentBlocks.keys()).sort((a, b) => a - b);
+								for (const i of sorted) {
+									const b = this.contentBlocks.get(i);
+									if (b?.type === "thinking" && b.thinking) {
+										blocks.push({ type: "thinking", thinking: b.thinking });
+									} else if (b?.type === "text" && b.text !== undefined) {
+										blocks.push({ type: "text", text: b.text });
+									}
+								}
+								return blocks.length > 0 ? blocks : [{ type: "text" as const, text: "" }];
+							})();
 					if (content.length === 0 && (stopReason === "error" || errMsg)) {
-						content = [{ type: "text", text: errMsg ? `⚠️ ${errMsg}` : "An error occurred during turn generation." }];
+						content = [{ type: "text" as const, text: errMsg ? `⚠️ ${errMsg}` : "An error occurred during turn generation." }];
 					}
 					this.lastAssistantMessage = {
 						role: "assistant",
@@ -165,8 +179,8 @@ export class DurableEventAdapter {
 						usage: msg.usage,
 					};
 					this.output({ type: "message_end", message: this.lastAssistantMessage });
-					this.currentText = "";
-					this.currentThinking = "";
+					this.contentBlocks.clear();
+					this.activeThinkingIndex = undefined;
 				}
 				break;
 			}

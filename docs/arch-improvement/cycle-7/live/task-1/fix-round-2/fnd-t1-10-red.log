@@ -1,0 +1,11 @@
+[FND-T1-10 RED Test Output]
+Command: node --test packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts
+Exit code: 1
+
+▶ FND-T1-10: DurableChildEventAdapter Per-Content-Index Catchup and Turn Isolation
+  ✖ multi-turn: already-complete text emits NO duplicate delta on message_end across turns (1.1295ms)
+    AssertionError [ERR_ASSERTION]: Expected exactly 2 deltas, got 3
+    3 !== 2
+  ✖ partial tail catchup: emits ONLY missing suffix at the correct non-zero contentIndex with parentRef correlation (0.154041ms)
+    AssertionError [ERR_ASSERTION]: Expected 2 text deltas (initial + catchup), got 1
+    1 !== 2
