@@ -1,0 +1,34 @@
+{
+  "task": "Task 5A: Architecture Boundary & Regression Guards (Round 4)",
+  "timestamp": "2026-11-04T23:27:20.123Z",
+  "status": "FAIL",
+  "sourceBaseline": "7d4b235",
+  "summary": {
+    "coreSourceFilesScanned": 16,
+    "coreBoundaryViolationsCount": 0,
+    "corePackageJsonViolationsCount": 0,
+    "workspaceCyclesCount": 0,
+    "layeringViolationsCount": 0,
+    "cliServeDelegationValid": true,
+    "legacyFilesFoundCount": 0,
+    "totalViolations": 0,
+    "testSuiteResults": {
+      "totalTests": 47,
+      "passed": 46,
+      "failed": 1,
+      "durationMs": 450,
+      "exitCode": 1
+    }
+  },
+  "cliServeAudit": {
+    "isOk": true,
+    "callsMain": true
+  },
+  "workspaceCycles": [],
+  "layeringViolations": [],
+  "coreBoundaryViolations": [],
+  "corePackageJsonViolations": [],
+  "legacyFilesFound": [],
+  "workspaceGraph": {},
+  "files": []
+}

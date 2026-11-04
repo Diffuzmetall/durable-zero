@@ -32,11 +32,11 @@ Source/component review и независимый compiled black-box PASS; на�
 
 Осталось: Production wiring отдельным этапом; bindings/fork/tools seams ещё не реализованы.
 
-## 5A · Architecture guards — Round4: parent replay GREEN; review идёт
+## 5A · Architecture guards — Компонент guards принят (R4)
 
-Те же 4 frozen-helper проверки теперь проходят: вызов с primitive-result, primitive alias и primitive re-export отвергаются, настоящая функция принимается. Прежний R3 давал 3 падения. Полный independent scope ещё проверяется.
+Подтверждённые bypasses закрыты: parent frozen replay4/4 и независимый Node adversarial22/22; source helper/CLI byte-match frozen475745bb. Это bounded infrastructure acceptance, не формальное доказательство всех JS-программ.
 
-Осталось: Закрыть независимое полное re-review R4; не переносить локальный replay на весь Cycle.
+Осталось: Полный clean build/typecheck/regression и whole-Cycle acceptance остаются отдельно; старый неиспользуемый build-script P3 учтён для cleanup.
 
 ## 5 / 6 · Полная чистота и S9 — Общий PASS не выдан
 

@@ -1,0 +1,42 @@
+▶ Task 5A Fix Round 4: Independent Adversarial Probes & Invariant Verification
+  ▶ Section 1: Callable Target Verification (TypeChecker Signatures & Anti-False-Green)
+    ✔ REJECTS primitive-returning CallExpression (export const main = Number('17')) (800.217416ms)
+    ✔ REJECTS primitive identifier assignment (const n = 17; export const main = n) (803.887333ms)
+    ✔ REJECTS primitive named re-export (const n = 17; export { n as main }) (386.277ms)
+    ✔ REJECTS primitive boolean/string constants (export const main = false) (411.851292ms)
+    ✔ REJECTS module with unrelated function export but NO main (no false-rescue by siblings) (384.178708ms)
+    ✔ FAILS CLOSED on syntax error / unparseable code (337.708ms)
+  ✔ Section 1: Callable Target Verification (TypeChecker Signatures & Anti-False-Green) (3124.862083ms)
+  ▶ Section 2: Genuine Callable Target Positives
+    ✔ ACCEPTS standard export function main() (285.79225ms)
+    ✔ ACCEPTS export async function main() (235.275041ms)
+    ✔ ACCEPTS export const main = () => {} (225.932958ms)
+    ✔ ACCEPTS genuine function re-export (function run() {} export { run as main }) (234.919791ms)
+    ✔ ACCEPTS production compiled bundle in packages/runner/dist/main.js (2016.75375ms)
+  ✔ Section 2: Genuine Callable Target Positives (2999.106334ms)
+  ▶ Section 3: CLI Serve Invariant & Package Export Resolution
+    ✔ ACCEPTS real production CLI entrypoint in packages/cli/bin/durable-zero.js (2644.815291ms)
+    ✔ ACCEPTS direct destructuring { main } and main() invocation (1459.641875ms)
+    ✔ ACCEPTS destructured alias { main: runRunner } and runRunner() invocation (2458.837375ms)
+    ✔ ACCEPTS namespace import runner and runner.main() property invocation (1652.77925ms)
+    ✔ REJECTS inverted condition if (command !== 'serve') (0.983542ms)
+    ✔ REJECTS invocation inside never-invoked nested function declaration (2641.848333ms)
+    ✔ REJECTS unexported runner package subpath import (16.638917ms)
+    ✔ REJECTS fake package prefix @durable-zero/runner-fake-package (9.022833ms)
+  ✔ Section 3: CLI Serve Invariant & Package Export Resolution (10891.270292ms)
+  ▶ Section 4: Real Reporter Failure Negative Control
+    ✔ strictly writes status FAIL and lists violations when live audit finds defects (27.830542ms)
+    ✔ strictly writes status FAIL when testReceipt indicates failure (0.435292ms)
+  ✔ Section 4: Real Reporter Failure Negative Control (28.401792ms)
+  ▶ Section 5: Helper Purity & AP-019 Module Boundaries
+    ✔ proves importing modular checker submodules is completely side-effect free (0.1035ms)
+  ✔ Section 5: Helper Purity & AP-019 Module Boundaries (0.156625ms)
+✔ Task 5A Fix Round 4: Independent Adversarial Probes & Invariant Verification (17044.454083ms)
+ℹ tests 22
+ℹ suites 6
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17636.58825

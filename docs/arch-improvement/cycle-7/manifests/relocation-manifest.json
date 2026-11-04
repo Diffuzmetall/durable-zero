@@ -1,6 +1,6 @@
 {
   "title": "Cycle 7 current packaged-artifact integrity (not product acceptance)",
-  "created_at": "2026-11-05T02:24:33.562426+03:00",
+  "created_at": "2026-11-05T02:32:22.514497+03:00",
   "packaged_deliverables_count": 128,
   "packaged_deliverables": [
     {
@@ -48,22 +48,22 @@
     {
       "path": "architecture/durable-zero-architecture-status.html",
       "category": "architecture",
-      "sha256": "ef0fca028cbc422b3ab9c556c3a037f36553a4519d531b9f12b295d2be0380ff",
-      "bytes": 24710,
+      "sha256": "f6ff00a8efcdf2bdabb778bd0af11b6f0eb70ce0280e7ceac5f840c918c4c3ad",
+      "bytes": 24704,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
     },
     {
       "path": "architecture/durable-zero-architecture-status.json",
       "category": "architecture",
-      "sha256": "2636cb1c2e825ae1a384fb7a940fc68466637b810e4aba1da585b412ed24ed8f",
-      "bytes": 12180,
+      "sha256": "7b85bfff18456cfc0305e9c6b5613835b0ca1eef381fc12743174d92acbfbba1",
+      "bytes": 12174,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.json"
     },
     {
       "path": "architecture/durable-zero-architecture-status.md",
       "category": "architecture",
-      "sha256": "966cb039d99f7a614e54ca6eafac33b065b106ada053be085601d8b5cd19d577",
-      "bytes": 4585,
+      "sha256": "19cbc92461dfcd0957994e8153922c0bdbfc94f51cb9ad3122873226849baa8e",
+      "bytes": 4601,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.md"
     },
     {
@@ -818,7 +818,7 @@
     {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "261156fe5907fef2a8ec67671bcfba469c5035599572f9185c3a95a37501cc47",
+      "sha256": "df12d9b6bc8f24a0a11c4e7e4df9ea1c4337b7bf1028b353eef2a26568e1e8d6",
       "bytes": 975,
       "source_provenance": "workspace"
     },

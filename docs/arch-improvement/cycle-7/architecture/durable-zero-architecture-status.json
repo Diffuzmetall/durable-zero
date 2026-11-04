@@ -42,10 +42,10 @@
     },
     {
       "name": "5A · Architecture guards",
-      "tone": "bad",
-      "status": "Round4: parent replay GREEN; review идёт",
-      "proof": "Те же 4 frozen-helper проверки теперь проходят: вызов с primitive-result, primitive alias и primitive re-export отвергаются, настоящая функция принимается. Прежний R3 давал 3 падения. Полный independent scope ещё проверяется.",
-      "remaining": "Закрыть независимое полное re-review R4; не переносить локальный replay на весь Cycle."
+      "tone": "good",
+      "status": "Компонент guards принят (R4)",
+      "proof": "Подтверждённые bypasses закрыты: parent frozen replay4/4 и независимый Node adversarial22/22; source helper/CLI byte-match frozen475745bb. Это bounded infrastructure acceptance, не формальное доказательство всех JS-программ.",
+      "remaining": "Полный clean build/typecheck/regression и whole-Cycle acceptance остаются отдельно; старый неиспользуемый build-script P3 учтён для cleanup."
     },
     {
       "name": "5 / 6 · Полная чистота и S9",
@@ -65,8 +65,8 @@
       "detail": "Первый пакет перенесён и проверен: 41 adapter cases без падений. Остальные старые импорты не объявлены починенными; это остаток Task 1, а не отложенная потеря покрытия."
     },
     {
-      "title": "Перепроверить исправленный dispatcher и guards",
-      "detail": "Компонент dispatcher получил оба scoped PASS. Guard checker после R2 FAIL исправлен автором в R3 и проходит новую независимую проверку."
+      "title": "Собрать принятые компоненты в production-путь",
+      "detail": "Dispatcher и guards имеют scoped PASS. Production wiring и неподдержанные native/admin/host seams этим автоматически не закрываются."
     },
     {
       "title": "Замкнуть оставшиеся рабочие возможности",
@@ -209,7 +209,7 @@
     "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом.",
     "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
   ],
-  "reviewUpdateAt": "2026-11-05T02:24:33.420667+03:00",
+  "reviewUpdateAt": "2026-11-05T02:32:22.398751+03:00",
   "nativeMinimumProductVerdict": "PASS",
   "nativeSourceVerdict": "FAIL"
 }

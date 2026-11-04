@@ -400,3 +400,8 @@
 ### Native1298 product re-review / closing residual source path
 - Fixed compiled Native1298 (runner090b6c...) independent product11/11 PASS: gated reasoning0/text1, full replies and restart identity, clean ready-server EOF, root abort-active-turn->continued real prompt. This does not certify child multi-turn catchup.
 - Source1298 independent re-review closed seven original blockers; one P2 FND-T1-10 remains: child message_end stale currentText replays complete second-turn text at index0. Parent inspected exact source and empirical probe; original native author assigned bounded round2/5, preserve genuine per-block missing-tail catchup and remove stale scalar references. No broader native/admin/host/probe expansion.
+
+
+### Task5A R4 bounded acceptance
+- Parent verified genuine independent Node22/0 JUnit and helper/CLI exact byte match to475745bb, alongside exact parent4/0 replay. Known blocking guard findings closed; Task5A infrastructure PASS in checked/supported structural scope. No 'mathematically sound for all JS'/blanket global proof claim.
+- P3 unused legacy build script tracked. Task5 whole clean build/typecheck/full-suite gates and Native residual child-stream P2 remain open. No new development scope opened; continue closing already-owned work.
