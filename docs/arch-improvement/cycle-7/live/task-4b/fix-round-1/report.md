@@ -56,9 +56,20 @@ Because Node.js ESM treats `protocol/src/index.ts` and `protocol/dist/index.js` 
 | **Combined Fix Round 1** | *(both files)* | **60** | **60** | **0** | **0** | **1156ms** |
 
 ### Provenance of Test Receipts
-- **RED Evidence:** `docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/public-import-regression-red.log` (captured `2026-11-05T00:15:30+03:00`, exit code `1`).
-- **GREEN Output:** `docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/test-output.txt` (captured `2026-11-05T00:23:45+03:00`, exit code `0`).
-- **GREEN JUnit:** `docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/junit.xml` (captured `2026-11-05T00:23:48+03:00`, 60 `<testcase>` tags, 0 failures, 0 errors).
+> **Provenance Correction Note:** Prior draft stated handwritten capture timestamps `00:15:30` / `00:23:45`. Exact subsecond wall-clock command timestamps were not captured by tool logging; those specific handwritten timestamps were unverified and are hereby retracted. The authentic evidence rests on the immutable command stdout, exit codes, and JUnit XML files referenced below.
+
+- **RED Evidence:** `docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/public-import-regression-red.log`
+  - Command: `cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 30000 packages/runner/test/capability-dispatch.test.ts`
+  - Exit Code: `1` (wall-clock timestamp: unverified)
+  - Outcome: 34 tests, 24 passed, 10 failed (failing on constructor prototype mismatch and `-32603 !== -32601` / `-32603 !== -32602`).
+- **GREEN Output:** `docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/test-output.txt`
+  - Command: `cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 30000 packages/protocol/test/protocol-conformance.test.ts packages/runner/test/capability-dispatch.test.ts`
+  - Exit Code: `0` (wall-clock timestamp: unverified)
+  - Outcome: 60 tests, 13 suites, 60 passed, 0 failed.
+- **GREEN JUnit:** `docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/junit.xml`
+  - Command: `cd /Users/vanya/Projects/durable-zero && node --test --test-reporter=junit packages/protocol/test/protocol-conformance.test.ts packages/runner/test/capability-dispatch.test.ts`
+  - Exit Code: `0` (wall-clock timestamp: unverified)
+  - Outcome: Structured JUnit XML with 60 `<testcase>` tags, 0 failures, 0 errors.
 
 ---
 

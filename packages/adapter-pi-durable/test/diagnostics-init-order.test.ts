@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { TaskNames } from "../src/task-labels.ts";
+import { TaskNames } from "../src/engine/task-labels.ts";
 
 test("TaskNames: limits internal cache to 512 entries without unbounded memory leak", { timeout: 3000 }, () => {
 	const names = new TaskNames();

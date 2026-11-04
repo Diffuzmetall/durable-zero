@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-11-05T01:49:05.376188+03:00",
+  "tracks": [
+    {
+      "title": "Native fixes",
+      "thread": "thr_tcbhyv8p4r",
+      "status": "active",
+      "lastActual": {
+        "seq": 2367,
+        "kind": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && rg \"assistantMessageEvent|contentIndex\" packages/",
+        "at": "2026-11-05T01:48:57.230000+03:00"
+      }
+    },
+    {
+      "title": "Native black-box",
+      "thread": "thr_z4wbq3m44p",
+      "status": "active",
+      "lastActual": {
+        "seq": 193,
+        "kind": "commandExecution",
+        "path": null,
+        "command": "node -e '\nconst { spawn } = require(\"child_process\");\nconst cliPath = \"/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate/packages/cli/bin/durable-zero.js\";\nconst fixturePath = \"/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fixtures/gated-provider-extension.mjs\";\n\nconst child = spawn(\"node\", [\n  cliPath,\n  \"serve\",\n  \"--no-global-extensions\",\n  \"--provider\", \"scripted-e2e\",\n  \"--model\", \"echo\",\n  \"--extension\", fixturePath,\n  \"--session\", \"probe-gated-1\"\n], {\n  env: {\n    ...process.env,\n    HOME: \"/tmp/dz-test-gated-home\",\n    XDG_DATA_HOME: \"/tmp/dz-test-gated-xdg\",\n  }\n});\n\nchild.stdout.on(\"data\", d => console.log(\"STDOUT:\", d.toString()));\nchild.stderr.on(\"data\", d => console.error(\"STDERR:\", d.toString()));\nchild.on(\"exit\", (c, s) => console.log(\"EXIT:\", c, s));\n'",
+        "at": "2026-11-05T01:39:26.292000+03:00"
+      }
+    },
+    {
+      "title": "Guard round2 review",
+      "thread": "thr_tpkhmzqjar",
+      "status": "active",
+      "lastActual": {
+        "seq": 949,
+        "kind": "fileChange",
+        "path": null,
+        "command": null,
+        "at": "2026-11-05T01:49:01.712000+03:00"
+      }
+    },
+    {
+      "title": "Test migration",
+      "thread": "thr_t38ban9s79",
+      "status": "idle",
+      "lastActual": {
+        "seq": 870,
+        "kind": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && git status -s | grep \"packages/adapter-pi-durable/test\"",
+        "at": "2026-11-05T01:44:23.267000+03:00"
+      }
+    },
+    {
+      "title": "Review evidence correction",
+      "thread": "thr_khtnehz4vz",
+      "status": "idle",
+      "lastActual": {
+        "seq": 929,
+        "kind": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && git status",
+        "at": "2026-11-05T01:46:49.883000+03:00"
+      }
+    },
+    {
+      "title": "Author report correction",
+      "thread": "thr_4yhrgipwed",
+      "status": "idle",
+      "lastActual": {
+        "seq": 984,
+        "kind": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && git diff docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/",
+        "at": "2026-11-05T01:46:44.078000+03:00"
+      }
+    }
+  ]
+}

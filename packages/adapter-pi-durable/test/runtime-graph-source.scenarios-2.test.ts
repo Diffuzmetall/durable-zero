@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { RuntimeGraphSource } from "../src/runtime-graph-source.ts";
+import { RuntimeGraphSource } from "../src/engine/runtime-graph-source.ts";
 import type { TaskGraph } from "@earendil-works/pi-durable";
-import type { RuntimeGraphSnapshot } from "../src/runtime-graph/types.ts";
+import type { RuntimeGraphSnapshot } from "@durable-zero/contracts";
 
 function createMockViewSource(initialGraph: TaskGraph) {
 	let currentGraph = initialGraph;

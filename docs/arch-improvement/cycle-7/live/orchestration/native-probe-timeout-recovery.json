@@ -1,0 +1,23 @@
+{
+  "at": "2026-11-05T01:51:02.132364+03:00",
+  "commandItem": "dae7c4713f-i5124",
+  "reason": "diagnostic Node wrapper started persistent serve with no request/teardown; pending >600s",
+  "signals": [
+    {
+      "pid": 13744,
+      "signal": "SIGTERM"
+    }
+  ],
+  "ownedTree": {
+    "13725": {
+      "ppid": 9884,
+      "command": "node -e \\012const { spawn } = require(\"child_process\");\\012const cliPath = \"/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate/packages/cli/bin/durable-zero.js\";\\012const fixturePath = \"/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fixtures/gated-provider-extension.mjs\";\\012\\012const child = spawn(\"node\", [\\012  cliPath,\\012  \"serve\",\\012  \"--no-global-extensions\",\\012  \"--provider\", \"scripted-e2e\",\\012  \"--model\", \"echo\",\\012  \"--extension\", fixturePath,\\012  \"--session\", \"probe-gated-1\"\\012], {\\012  env: {\\012    ...process.env,\\012    HOME: \"/tmp/dz-test-gated-home\",\\012    XDG_DATA_HOME: \"/tmp/dz-test-gated-xdg\",\\012  }\\012});\\012\\012child.stdout.on(\"data\", d => console.log(\"STDOUT:\", d.toString()));\\012child.stderr.on(\"data\", d => console.error(\"STDERR:\", d.toString()));\\012child.on(\"exit\", (c, s) => console.log(\"EXIT:\", c, s));\\012"
+    },
+    "13744": {
+      "ppid": 13725,
+      "command": "node /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate/packages/cli/bin/durable-zero.js serve --no-global-extensions --provider scripted-e2e --model echo --extension /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fixtures/gated-provider-extension.mjs --session probe-gated-1"
+    }
+  },
+  "survivors": [],
+  "agentPreserved": true
+}

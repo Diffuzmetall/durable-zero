@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SettingsManager } from "@earendil-works/pi-coding-agent";
-import { createHarnessSettings } from "../src/harness-setup.ts";
+import { createHarnessSettings } from "../src/engine/harness-setup.ts";
 
 test("createHarnessSettings resolves model-specific compaction override for 300k max window from settings", () => {
 	const settingsManager = SettingsManager.inMemory({

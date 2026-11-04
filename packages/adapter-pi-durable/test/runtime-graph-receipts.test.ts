@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { RuntimeGraphReceiptsCollector } from "../src/runtime-graph-receipts.ts";
+import { RuntimeGraphReceiptsCollector } from "../src/engine/runtime-graph-receipts.ts";
 import type { TaskRecord } from "@earendil-works/pi-durable";
 
 test("runtime-graph-receipts: records terminal task with exact outcome and duration", () => {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { closeRuntimeResources } from "../src/runtime-cleanup.ts";
+import { closeRuntimeResources } from "../src/engine/runtime-cleanup.ts";
 
 test("runtime cleanup tries every owned teardown in order and retains failures", async () => {
  const calls: string[] = [];

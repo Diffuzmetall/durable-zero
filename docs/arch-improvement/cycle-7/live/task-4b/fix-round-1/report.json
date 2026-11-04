@@ -44,6 +44,12 @@
       "summary": "Prior report cited 61/27 tests instead of actual 57 (23 conformance + 34 capability)",
       "fix": "Reconciled test counts from actual receipts: historical green has 57 testcases; Fix Round 1 green has 60 testcases (23 conformance + 37 capability)",
       "evidence": "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/junit.xml"
+    },
+    {
+      "id": "P2-PROVENANCE-TIMESTAMP-CORRECTION",
+      "summary": "Prior draft contained handwritten capture timestamps (00:15 / 00:23) unverified by tool logging",
+      "fix": "Explicitly retracted unverified handwritten timestamps; marked wall-clock timestamps as unverified and bound receipts strictly to authentic command stdout, exit codes, and JUnit XML files",
+      "evidence": "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/report.md"
     }
   ],
   "test_results": {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { runCompactionSideEffect } from "../src/compaction-hooks.ts";
+import { runCompactionSideEffect } from "../src/engine/compaction-hooks.ts";
 import { readFileSync } from "node:fs";
 
 test("rejected compact context is diagnosed distinctly, not silently treated as empty context", async () => {
@@ -30,6 +30,6 @@ test("rejected post-compact hook is best effort with safe causal diagnostic, not
 test("successful hook preserves value and the controller has no silent compact catches", async () => {
 	const result = await runCompactionSideEffect("session_before_compact", async () => "ok", () => assert.fail("unexpected warning"));
 	assert.deepEqual(result, { status: "succeeded", value: "ok" });
-	const source = readFileSync(new URL("../src/runtime-controller.ts", import.meta.url), "utf8");
+	const source = readFileSync(new URL("../src/engine/runtime-controller.ts", import.meta.url), "utf8");
 	assert.doesNotMatch(source, /\.catch\(\(\) => (?:\{\}|undefined)\)/);
 });

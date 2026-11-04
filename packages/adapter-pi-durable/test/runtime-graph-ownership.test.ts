@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import {
 	isConversationInScope,
 	filterSnapshotForConversation,
-} from "../src/runtime-graph-scope.ts";
-import type { RuntimeGraphSnapshot } from "../src/runtime-graph/types.ts";
+} from "../src/engine/runtime-graph-scope.ts";
+import type { RuntimeGraphSnapshot } from "@durable-zero/contracts";
 
 test("runtime-graph-ownership: root conversation scope includes all root-owned conversations", () => {
 	const conversations = new Map([
