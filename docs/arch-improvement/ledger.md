@@ -284,3 +284,13 @@
 - [ ] Using real `StdioJsonRpcServer` with isolated in-memory streams, test two concurrent reverse calls answered out of order, actual-ID correlation, short configurable timeout, and server-close rejection. No live process/session/model or network is required.
 - [ ] Run owned source-level tests within 30s per test / 60s per command. Do not build shared dist, change package/lock files or edit other workers' tests; parent coordinates final combined build/suite acceptance.
 - [ ] Self-review; report exact five-file scope, behavioral RED/GREEN and readiness/integration concerns. No commits, new subagents, merge, push, release or S9 PASS claims. Parent handles independent review and later Harness integration.
+
+### Cycle 7 — Protocol Task 4A candidate checkpoint / S9 running (2026-11-04)
+
+- Author `thr_45qtxkivss` returned DONE; parent inspected the actual five-file diff and verified persisted JUnit evidence (RED: 13 cases / 8 failures; GREEN: 22 cases / no failures). This is author evidence, not independent acceptance.
+- Separate mechanical candidate checkpoint: `ad122ffc9a7bf63c73a516d19fb07afcabeb7781`; only protocol index/schema/error/dispatcher/conformance-test paths committed. Other writers' WIP remains uncommitted and preserved.
+- Separate bounded builder command bundled the candidate public protocol entry into an isolated package artifact, retaining original package exports. Public package self-reference import verified. No shared dist, live services, original sessions or model calls used.
+- Provenance/build/source hashes: parent thread artifact `protocol-candidate-manifest.json`; full scoped review package `protocol-review-package.diff`. The artifact is a candidate, not a release.
+- Independent S9a architecture/spec reviewer: `thr_xduha42zcy`, provider pi; report expected `protocol-architecture-review.md`.
+- Independent S9b black-box product/transport reviewer: `thr_tqge89d4m5`, provider pi; consumes only compiled package exports/stdio, never implementation source or diff; report expected `protocol-product-review.md`.
+- State: S9 PENDING. No PASS until both circuits return sound evidence and parent adjudicates all P0–P2. No full JSON-RPC conformance, runner integration or whole Cycle-7 acceptance claimed. Existing source author context retained for bounded remediation if needed.
