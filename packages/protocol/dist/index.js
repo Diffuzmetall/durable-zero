@@ -25,24 +25,86 @@ var jsonRpcNotificationSchema = z.object({
 // packages/protocol/src/jsonrpc/types.ts
 import "zod";
 
+// packages/protocol/src/transport/request-dispatcher.ts
+var RequestDispatcher = class {
+  handler;
+  send;
+  pendingOutbound;
+  constructor(handler, send, pendingOutbound) {
+    this.handler = handler;
+    this.send = send;
+    this.pendingOutbound = pendingOutbound;
+  }
+  async processLine(line) {
+    try {
+      const parsed = JSON.parse(line);
+      if (typeof parsed === "object" && parsed !== null && "id" in parsed && ("result" in parsed || "error" in parsed) && !("method" in parsed)) {
+        const responseVal = jsonRpcResponseSchema.safeParse(parsed);
+        if (responseVal.success) {
+          const { id: id2, result, error } = responseVal.data;
+          if (id2 !== null && this.pendingOutbound.has(id2)) {
+            const pending = this.pendingOutbound.get(id2);
+            clearTimeout(pending.timer);
+            this.pendingOutbound.delete(id2);
+            if (error) pending.reject(new Error(error.message));
+            else pending.resolve(result);
+            return;
+          }
+        } else if (parsed.id !== null && this.pendingOutbound.has(parsed.id)) {
+          const pending = this.pendingOutbound.get(parsed.id);
+          clearTimeout(pending.timer);
+          this.pendingOutbound.delete(parsed.id);
+          pending.reject(
+            new Error(`Malformed JSON-RPC response from client: ${responseVal.error.message}`)
+          );
+          return;
+        }
+      }
+      const validated = jsonRpcRequestSchema.safeParse(parsed);
+      if (!validated.success) {
+        const reqId = parsed && typeof parsed === "object" && "id" in parsed && (typeof parsed.id === "string" || typeof parsed.id === "number") ? parsed.id : null;
+        this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
+        return;
+      }
+      const { id, method, params } = validated.data;
+      try {
+        const result = await this.handler(method, params ?? {});
+        this.send({ jsonrpc: "2.0", id, result });
+      } catch (err) {
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32603, message: err instanceof Error ? err.message : String(err) }
+        });
+      }
+    } catch {
+      this.send({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
+    }
+  }
+};
+
 // packages/protocol/src/transport/stdio-server.ts
 import "node:stream";
 import { StringDecoder } from "node:string_decoder";
 var StdioJsonRpcServer = class {
   stdin;
   stdout;
-  handler;
   decoder = new StringDecoder("utf8");
   buffer = "";
   nextRequestId = 0;
   pendingOutbound = /* @__PURE__ */ new Map();
+  dispatcher;
   onDataHandler = (chunk) => {
     void this.handleChunk(chunk);
   };
   constructor(options) {
     this.stdin = options.stdin ?? process.stdin;
     this.stdout = options.stdout ?? process.stdout;
-    this.handler = options.handler;
+    this.dispatcher = new RequestDispatcher(
+      options.handler,
+      (msg) => this.send(msg),
+      this.pendingOutbound
+    );
   }
   start() {
     this.stdin.on("data", this.onDataHandler);
@@ -81,59 +143,12 @@ var StdioJsonRpcServer = class {
     this.buffer = lines.pop() ?? "";
     for (const line of lines) {
       if (!line.trim()) continue;
-      await this.processLine(line);
+      await this.dispatcher.processLine(line);
     }
-  }
-  async processLine(line) {
-    try {
-      const parsed = JSON.parse(line);
-      if (typeof parsed === "object" && parsed !== null && "id" in parsed && ("result" in parsed || "error" in parsed) && !("method" in parsed)) {
-        const responseVal = jsonRpcResponseSchema.safeParse(parsed);
-        if (responseVal.success) {
-          const { id: id2, result, error } = responseVal.data;
-          if (id2 !== null && this.pendingOutbound.has(id2)) {
-            const pending = this.pendingOutbound.get(id2);
-            clearTimeout(pending.timer);
-            this.pendingOutbound.delete(id2);
-            if (error) pending.reject(new Error(error.message));
-            else pending.resolve(result);
-            return;
-          }
-        } else if (parsed.id !== null && this.pendingOutbound.has(parsed.id)) {
-          const pending = this.pendingOutbound.get(parsed.id);
-          clearTimeout(pending.timer);
-          this.pendingOutbound.delete(parsed.id);
-          pending.reject(
-            new Error(`Malformed JSON-RPC response from client: ${responseVal.error.message}`)
-          );
-          return;
-        }
-      }
-      const validated = jsonRpcRequestSchema.safeParse(parsed);
-      if (!validated.success) {
-        const requestId = parsed && typeof parsed === "object" && "id" in parsed && (typeof parsed.id === "string" || typeof parsed.id === "number") ? parsed.id : null;
-        this.sendError(requestId, -32600, "Invalid Request");
-        return;
-      }
-      const { id, method, params } = validated.data;
-      try {
-        const result = await this.handler(method, params ?? {});
-        this.sendResult(id, result);
-      } catch (err) {
-        this.sendError(id, -32603, err instanceof Error ? err.message : String(err));
-      }
-    } catch {
-      this.sendError(null, -32700, "Parse error");
-    }
-  }
-  sendResult(id, result) {
-    this.send({ jsonrpc: "2.0", id, result });
-  }
-  sendError(id, code, message) {
-    this.send({ jsonrpc: "2.0", id, error: { code, message } });
   }
 };
 export {
+  RequestDispatcher,
   StdioJsonRpcServer,
   jsonRpcNotificationSchema,
   jsonRpcRequestSchema,

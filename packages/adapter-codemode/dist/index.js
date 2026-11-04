@@ -45,10 +45,8 @@ var CodemodeExtension = class {
 function createCodemodeBuiltinExtension() {
   return new CodemodeExtension();
 }
-var codemodeExtension = new CodemodeExtension();
 export {
   CodemodeExtension,
-  codemodeExtension,
   createCodemodeBuiltinExtension
 };
 //# sourceMappingURL=index.js.map

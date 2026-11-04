@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isProcessAlive } from "../src/session-storage.ts";
+import { isProcessAlive } from "@durable-zero/adapter-pi-durable";
 
 test("isProcessAlive accurately identifies process liveness and handles invalid pids", () => {
 	assert.equal(isProcessAlive(process.pid), true);

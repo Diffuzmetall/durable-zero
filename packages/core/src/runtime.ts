@@ -3,7 +3,7 @@ import type { Conversation, ConversationId, ConversationView, Cursor, Harness, T
 import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agent";
 import { ExecutionEnvs, findInitialAgentModel } from "./harness-setup.ts";
 import type { ExecutionEnvFactory } from "./tools/execution-env.ts";
-import { selectSession } from "./session-storage.ts";
+import { selectSession } from "@durable-zero/adapter-pi-durable";
 import {
 	agentOf, firstInput, titleOf, type ConversationSummary, type DurableView,
 	type ModelSummary, type Notice, type OpenDurableOptions, type OpenDurableResult, runtimeContext,

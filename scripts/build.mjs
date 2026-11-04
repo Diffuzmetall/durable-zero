@@ -50,7 +50,23 @@ for (const pkg of packages) {
 	console.log(`- Built packages/${pkg}/dist/index.js`);
 }
 
-// Build standalone runner binary
+// Build @durable-zero/runner executable CLI
+await build({
+	entryPoints: [resolve(root, "packages/runner/src/main.ts")],
+	bundle: true,
+	platform: "node",
+	target: "node22",
+	format: "esm",
+	outfile: resolve(root, "packages/runner/dist/main.js"),
+	external: externals,
+	banner: {
+		js: `import { createRequire as __createRequire } from "node:module";\nconst require = __createRequire(import.meta.url);`,
+	},
+	sourcemap: true,
+});
+console.log("- Built packages/runner/dist/main.js");
+
+// Build standalone legacy runner binary
 await build({
 	entryPoints: [resolve(root, "packages/core/src/runner-server.ts")],
 	bundle: true,
@@ -68,9 +84,11 @@ console.log("- Built packages/core/dist/runner.js");
 
 try {
 	const wasmSource = resolve(root, "node_modules/.pnpm/quickjs-wasi@3.6.2/node_modules/quickjs-wasi/quickjs.wasm");
-	const wasmDest = resolve(root, "packages/core/dist/quickjs.wasm");
-	await fs.copyFile(wasmSource, wasmDest);
-	console.log("- Copied quickjs.wasm to packages/core/dist/quickjs.wasm");
+	const coreWasmDest = resolve(root, "packages/core/dist/quickjs.wasm");
+	const runnerWasmDest = resolve(root, "packages/runner/dist/quickjs.wasm");
+	await fs.copyFile(wasmSource, coreWasmDest);
+	await fs.copyFile(wasmSource, runnerWasmDest);
+	console.log("- Copied quickjs.wasm to packages/core/dist/ and packages/runner/dist/");
 } catch (err) {
 	console.warn("- Warning: quickjs.wasm copy skipped:", err.message);
 }

@@ -4,9 +4,13 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable, Writable } from "node:stream";
-import { parseCliArgs, assembleDurableZero } from "../src/index.ts";
+import { parseCliArgs, assembleDurableZero, main } from "../src/index.ts";
 
 describe("@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)", () => {
+	it("exports executable main function", () => {
+		assert.equal(typeof main, "function");
+	});
+
 	it("parseCliArgs: parses --session, --cwd, --provider, --model, and --thinking flags", () => {
 		const argv = [
 			"--session",

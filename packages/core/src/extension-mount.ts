@@ -2,7 +2,7 @@ import { type DefaultResourceLoader, type ModelRuntime, ExtensionRunner } from "
 import type { Registry } from "@earendil-works/pi-durable";
 import { adaptExtensionTool, installExtensionTools, type NestedToolExecutor } from "./tool-adapter.ts";
 import { setupExtensionRunner } from "./extension-bridge.ts";
-import type { SessionLocation } from "./session-storage.ts";
+import type { SessionLocation } from "@durable-zero/adapter-pi-durable";
 import { runtimeContext } from "./runtime-types.ts";
 import type { DynamicSectionsHolder } from "./prompt.ts";
 import type { DynamicCodemodeNamespaces } from "./codemode-namespaces.ts";

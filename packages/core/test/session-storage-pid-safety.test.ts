@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isVerifiedRunnerProcess } from "../src/session-storage.ts";
+import { isVerifiedRunnerProcess } from "@durable-zero/adapter-pi-durable";
 
 test("isVerifiedRunnerProcess: returns true for current node process", () => {
 	const currentOwner = {
@@ -28,7 +28,7 @@ test("isVerifiedRunnerProcess: returns false for PID 0 or negative", () => {
 });
 
 test("acquireSessionLock fails closed and does not kill live runner process", { timeout: 5000 }, async () => {
-	const { selectSession, isProcessAlive } = await import("../src/session-storage.ts");
+	const { selectSession, isProcessAlive } = await import("@durable-zero/adapter-pi-durable");
 	const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
 	const { tmpdir } = await import("node:os");
 	const { join } = await import("node:path");

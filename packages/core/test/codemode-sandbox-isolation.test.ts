@@ -3,8 +3,7 @@ import assert from "node:assert/strict";
 import {
 	CodemodeExtension,
 	createCodemodeBuiltinExtension,
-	codemodeExtension,
-} from "../src/builtin-extensions/codemode.ts";
+} from "@durable-zero/adapter-codemode";
 import type { BuiltinExtensionContext } from "../src/builtin-extensions/types.ts";
 
 function createMockContext(): { ctx: BuiltinExtensionContext; installed: any[] } {

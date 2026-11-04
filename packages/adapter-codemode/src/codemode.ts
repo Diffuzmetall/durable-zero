@@ -53,6 +53,3 @@ export class CodemodeExtension implements BuiltinExtension, ISandboxExtension {
 export function createCodemodeBuiltinExtension(): CodemodeExtension {
 	return new CodemodeExtension();
 }
-
-export const codemodeExtension: CodemodeExtension = new CodemodeExtension();
-export default codemodeExtension;

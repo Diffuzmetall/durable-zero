@@ -111,36 +111,27 @@ importers:
 
   packages/core:
     dependencies:
+      '@durable-zero/adapter-codemode':
+        specifier: workspace:*
+        version: link:../adapter-codemode
+      '@durable-zero/adapter-pi-ai':
+        specifier: workspace:*
+        version: link:../adapter-pi-ai
+      '@durable-zero/adapter-pi-durable':
+        specifier: workspace:*
+        version: link:../adapter-pi-durable
       '@durable-zero/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@earendil-works/chord':
-        specifier: 1.5.0
-        version: 1.5.0(esbuild@0.28.2)
-      '@earendil-works/pi-ai':
-        specifier: 1.5.0
-        version: 1.5.0(@aws-sdk/credential-provider-node@3.972.92)(@smithy/signature-v4@5.7.5)(undici@8.12.3)(ws@8.22.1)(zod@4.6.7)
-      '@earendil-works/pi-codemode':
-        specifier: 1.5.0
-        version: 1.5.0
-      '@earendil-works/pi-coding-agent':
-        specifier: 1.5.0
-        version: 1.5.0(@aws-sdk/credential-provider-node@3.972.92)(@smithy/signature-v4@5.7.5)(ws@8.22.1)(zod@4.6.7)
-      '@earendil-works/pi-durable':
-        specifier: 1.5.0
-        version: 1.5.0(@aws-sdk/credential-provider-node@3.972.92)(@smithy/signature-v4@5.7.5)(esbuild@0.28.2)(undici@8.12.3)(zod@4.6.7)
-      '@earendil-works/pi-schema':
-        specifier: 1.5.0
-        version: 1.5.0
-      '@sinclair/typebox':
-        specifier: ^0.34.14
-        version: 0.34.52
-      proper-lockfile:
-        specifier: ^4.1.2
-        version: 4.1.2
-      quickjs-wasi:
-        specifier: 3.6.2
-        version: 3.6.2
+      '@durable-zero/execution':
+        specifier: workspace:*
+        version: link:../execution
+      '@durable-zero/extension-pi-resource':
+        specifier: workspace:*
+        version: link:../extension-pi-resource
+      '@durable-zero/protocol':
+        specifier: workspace:*
+        version: link:../protocol
       zod:
         specifier: ^4.6.7
         version: 4.6.7
