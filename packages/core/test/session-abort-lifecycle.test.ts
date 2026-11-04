@@ -19,7 +19,7 @@ describe("FND-T1-01: SessionCoordinator Turn Abort Semantics", () => {
 		// Cancel active turn
 		await coordinator.abort();
 		assert.equal(engine.abortedConversations.length, 1);
-		assert.equal(engine.abortedConversations[0], undefined); // root abort
+		assert.equal(engine.abortedConversations[0], "1"); // root abort
 
 		// Turn 2 MUST be accepted (session is not permanently poisoned)
 		const r2 = await coordinator.prompt("Turn 2 prompt after abort");

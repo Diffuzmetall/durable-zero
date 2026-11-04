@@ -100,10 +100,10 @@ export function extractCumulativeUsage(current: DurableView): CumulativeUsageMet
  */
 export function buildFinalAssistantMessage(
 	current: DurableView,
-	lastGenerationText: string,
-	lastThinkingText: string,
+	contentBlocksOrText: Map<number, { type: "text" | "thinking"; text?: string; thinking?: string }> | string,
+	lastThinkingText?: string,
 ): AssistantMessage {
-	const entries = current.conversation.entries ?? [];
+	const entries = current?.conversation?.entries ?? [];
 	const lastAssistantEntry = [...entries].reverse().find(
 		(e): e is ConversationEntryRecord => isConversationEntryRecord(e) && e.kind === "pi.assistant",
 	);
@@ -118,7 +118,7 @@ export function buildFinalAssistantMessage(
 
 		let content = Array.isArray(lastAssistantMsg.content)
 			? (lastAssistantMsg.content as unknown as AssistantMessage["content"])
-			: [{ type: "text" as const, text: lastGenerationText }];
+			: [{ type: "text" as const, text: typeof contentBlocksOrText === "string" ? contentBlocksOrText : "" }];
 
 		if (content.length === 0 && (stopReason === "error" || errorMessage)) {
 			content = [{ type: "text" as const, text: errorMessage ? `⚠️ ${errorMessage}` : "An error occurred during turn generation." }];
@@ -138,11 +138,23 @@ export function buildFinalAssistantMessage(
 	}
 
 	const finalContent: AssistantMessage["content"] = [];
-	if (lastThinkingText) {
-		finalContent.push({ type: "thinking", thinking: lastThinkingText });
-	}
-	if (lastGenerationText) {
-		finalContent.push({ type: "text", text: lastGenerationText });
+	if (contentBlocksOrText instanceof Map) {
+		const sorted = Array.from(contentBlocksOrText.keys()).sort((a, b) => a - b);
+		for (const idx of sorted) {
+			const b = contentBlocksOrText.get(idx);
+			if (b?.type === "thinking" && b.thinking) {
+				finalContent.push({ type: "thinking", thinking: b.thinking });
+			} else if (b?.type === "text" && b.text !== undefined) {
+				finalContent.push({ type: "text", text: b.text });
+			}
+		}
+	} else {
+		if (lastThinkingText) {
+			finalContent.push({ type: "thinking", thinking: lastThinkingText });
+		}
+		if (contentBlocksOrText) {
+			finalContent.push({ type: "text", text: contentBlocksOrText });
+		}
 	}
 
 	const rawUsageDoc = current?.conversation?.docs?.["pi.usage"];

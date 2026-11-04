@@ -57,53 +57,57 @@ export async function assembleDurableZero(
 			? resolve(cwd, options.session)
 			: resolve(cwd, ".durable/sessions/default");
 
-	const codemodeBuiltin = createCodemodeBuiltinExtension();
-	const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
-	const extPaths = [
-		...(options.extensions ?? (options.extension ? [options.extension] : [])),
-		...(extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []),
-	];
-	const settingsManager = SettingsManager.create(cwd);
-	const agentDir = getAgentDir();
-	const resourceLoader = new DefaultResourceLoader({
-		cwd,
-		agentDir,
-		settingsManager,
-		extensionFactories: [createMcpExtension()],
-		additionalSkillPaths: options.skills,
-		additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
-		noExtensions: options.noGlobalExtensions ?? false,
-	});
-	const resourceExt = createPiResourceExtension({
-		cwd,
-		settingsManager,
-		resourceLoader,
-	});
+	let engine: IAgentEngine;
+	let codemodeBuiltin: ReturnType<typeof createCodemodeBuiltinExtension> | undefined;
 
-	const executionEnvFactory: ExecutionEnvFactory =
-		options.executionEnvFactory ??
-		((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
+	if (options.engine) {
+		engine = options.engine;
+	} else {
+		codemodeBuiltin = createCodemodeBuiltinExtension();
+		const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
+		const extPaths = [
+			...(options.extensions ?? (options.extension ? [options.extension] : [])),
+			...(extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []),
+		];
+		const settingsManager = SettingsManager.create(cwd);
+		const agentDir = getAgentDir();
+		const resourceLoader = new DefaultResourceLoader({
+			cwd,
+			agentDir,
+			settingsManager,
+			extensionFactories: [createMcpExtension()],
+			additionalSkillPaths: options.skills,
+			additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
+			noExtensions: options.noGlobalExtensions ?? false,
+		});
+		const resourceExt = createPiResourceExtension({
+			cwd,
+			settingsManager,
+			resourceLoader,
+		});
 
-	const dependencies: PiRuntimeDependencies = {
-		executionEnvFactory,
-		settingsManager: resourceExt.configProvider,
-		resourceLoader: resourceExt.resourceLoader,
-		builtins: [codemodeBuiltin],
-	};
+		const executionEnvFactory: ExecutionEnvFactory =
+			options.executionEnvFactory ??
+			((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
 
-	const cli = {
-		provider: options.provider,
-		model: options.model,
-		thinking: options.thinking as any,
-		extension: options.extension,
-		extensions: options.extensions,
-		skills: options.skills,
-		noGlobalExtensions: options.noGlobalExtensions,
-	};
+		const dependencies: PiRuntimeDependencies = {
+			executionEnvFactory,
+			settingsManager: resourceExt.configProvider,
+			resourceLoader: resourceExt.resourceLoader,
+			builtins: [codemodeBuiltin],
+		};
 
-	const engine =
-		options.engine ??
-		new PiDurableEngine({
+		const cli = {
+			provider: options.provider,
+			model: options.model,
+			thinking: options.thinking as any,
+			extension: options.extension,
+			extensions: options.extensions,
+			skills: options.skills,
+			noGlobalExtensions: options.noGlobalExtensions,
+		};
+
+		engine = new PiDurableEngine({
 			sessionDir,
 			session: options.session,
 			cwd,
@@ -111,13 +115,21 @@ export async function assembleDurableZero(
 			cli,
 			dependencies,
 		});
+	}
 
 	const coordinator = new SessionCoordinator({
 		engine,
 		sessionDir,
 	});
 
-	await coordinator.start();
+	try {
+		await coordinator.start();
+	} catch (err) {
+		if (codemodeBuiltin && typeof codemodeBuiltin.teardown === "function") {
+			await codemodeBuiltin.teardown().catch(() => {});
+		}
+		throw err;
+	}
 
 	const server = new StdioJsonRpcServer({
 		stdin: options.stdin,
@@ -169,9 +181,6 @@ export async function assembleDurableZero(
 		unsubEvents();
 		server.stop();
 		await coordinator.close();
-		if (typeof codemodeBuiltin.teardown === "function") {
-			await codemodeBuiltin.teardown();
-		}
 	};
 
 	return {

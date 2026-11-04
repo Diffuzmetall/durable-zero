@@ -314,7 +314,11 @@ test(
 		assert.equal(restoredUser.text, "Echo: hello world");
 		assert.equal(restoredAssistant.text, "Echo: hello world");
 
-		// 10. Send second prompt: Second turn
+		// 10. Send second prompt: Second turn with strict streaming-before-terminal order
+		let secondTurnDeltasCount = 0;
+		let secondTurnAccumulated = "";
+		let secondTurnCompleteReceived = false;
+
 		const admission2 = await client2.request(5, "session/prompt", {
 			content: "Second turn",
 		});
@@ -322,15 +326,45 @@ test(
 		const observedReq2 = admission2.id;
 
 		await client2.waitForNotification((msg) => {
+			if (msg.method !== "session/event") return false;
 			const evt = msg.params?.event ?? msg.params;
-			return evt?.type === "turn_complete" && evt?.requestId === observedReq2;
+			if (evt?.type === "message_update") {
+				const ame = evt.assistantMessageEvent;
+				if (ame?.type === "text_delta" && typeof ame?.delta === "string" && ame.delta.length > 0) {
+					assert.equal(
+						secondTurnCompleteReceived,
+						false,
+						"Streaming text_delta must arrive strictly BEFORE turn_complete",
+					);
+					secondTurnAccumulated += ame.delta;
+					secondTurnDeltasCount++;
+				}
+			}
+			if (evt?.type === "turn_complete" && evt?.requestId === observedReq2) {
+				secondTurnCompleteReceived = true;
+				return true;
+			}
+			return false;
 		});
+
+		assert.ok(secondTurnDeltasCount >= 2, `Expected >= 2 deltas in second turn, got ${secondTurnDeltasCount}`);
+		assert.ok(secondTurnAccumulated.includes("Echo: Second turn"));
 
 		const stateAfterSecondPrompt = await client2.request(6, "session/getState", {});
 		assert.ok(
 			stateAfterSecondPrompt.entryCount >= 4,
 			`Expected entryCount >= 4 after second turn, got ${stateAfterSecondPrompt.entryCount}`,
 		);
+
+		// Assert complete distinct assistant text and ID from transcript (FND-T1-04)
+		const transcriptAfterSecond = await client2.request(7, "session/getTranscript", {});
+		assert.ok(Array.isArray(transcriptAfterSecond.entries));
+		const assistantEntries = transcriptAfterSecond.entries.filter((e: any) => e.role === "assistant");
+		assert.ok(assistantEntries.length >= 2, "Expected at least 2 assistant entries in transcript");
+		const secondAssistant = assistantEntries.at(-1);
+		assert.ok(secondAssistant);
+		assert.notEqual(secondAssistant.id, assistantEntryId, "Second assistant entry ID must be distinct from turn 1");
+		assert.equal(secondAssistant.text, "Echo: Second turn", "Second assistant entry must contain distinct second turn text");
 
 		await client2.stop();
 		client2 = undefined;

@@ -12,10 +12,26 @@ test("CLI: --version prints version string", async () => {
 	assert.ok(out.includes("durable-zero v0.26.31"), `Unexpected output: ${out}`);
 });
 
-test("CLI: doctor checks runtime capabilities", async () => {
-	const out = cp.execFileSync("node", [CLI_PATH, "doctor"], { encoding: "utf8" }).trim();
-	assert.ok(out.includes("HEALTHY"), `Expected HEALTHY in output, got: ${out}`);
-	assert.ok(out.includes("SQLite WAL"), `Expected SQLite check, got: ${out}`);
+test("CLI: doctor accurately reports unsupported prototype command with non-zero exit (FND-T1-07)", async () => {
+	assert.throws(
+		() => cp.execFileSync("node", [CLI_PATH, "doctor"], { encoding: "utf8", stdio: "pipe" }),
+		(err: any) => {
+			assert.equal(err.status, 1);
+			assert.ok(err.stderr.includes("not implemented"));
+			return true;
+		},
+	);
+});
+
+test("CLI: run accurately reports unsupported prototype command with non-zero exit (FND-T1-07)", async () => {
+	assert.throws(
+		() => cp.execFileSync("node", [CLI_PATH, "run", "hello"], { encoding: "utf8", stdio: "pipe" }),
+		(err: any) => {
+			assert.equal(err.status, 1);
+			assert.ok(err.stderr.includes("not supported"));
+			return true;
+		},
+	);
 });
 
 import os from "node:os";

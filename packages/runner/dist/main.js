@@ -33,7 +33,7 @@ function parseCliArgs(argv) {
 }
 
 // packages/runner/src/composition.ts
-import { resolve as resolve5 } from "node:path";
+import { resolve as resolve4 } from "node:path";
 
 // packages/protocol/dist/index.js
 import { z } from "zod";
@@ -223,12 +223,12 @@ var StdioJsonRpcServer = class {
   }
   request(method, params, timeoutMs = 12e4) {
     const id = `req_${Date.now()}_${++this.nextRequestId}`;
-    return new Promise((resolve6, reject) => {
+    return new Promise((resolve5, reject) => {
       const timer = setTimeout(() => {
         this.pendingOutbound.delete(id);
         reject(new Error(`Request ${method} (id: ${id}) timed out after ${timeoutMs}ms`));
       }, timeoutMs);
-      this.pendingOutbound.set(id, { resolve: resolve6, reject, timer });
+      this.pendingOutbound.set(id, { resolve: resolve5, reject, timer });
       this.send({ jsonrpc: "2.0", id, method, params });
     });
   }
@@ -304,39 +304,30 @@ var subagentPolicySetOutputSchema = z2.object({
 }).strict();
 var SessionCoordinator = class {
   engine;
-  store;
   sessionDir;
-  modelProvider;
-  executionEnv;
-  resourceLoader;
   isStarted = false;
   isClosed = false;
-  isAborted = false;
   listeners = /* @__PURE__ */ new Set();
   constructor(options) {
     if (!options.engine) {
       throw new Error("IAgentEngine is required by SessionCoordinator (AP-010, AP-076)");
     }
+    if (!options.sessionDir || typeof options.sessionDir !== "string" || options.sessionDir.trim().length === 0) {
+      throw new Error("sessionDir must be a non-empty string (AP-010, AP-074)");
+    }
     this.engine = options.engine;
-    this.store = options.store;
-    this.sessionDir = options.sessionDir ?? options.store?.sessionDir ?? process.cwd();
-    this.modelProvider = options.modelProvider;
-    this.executionEnv = options.executionEnv;
-    this.resourceLoader = options.resourceLoader;
+    this.sessionDir = options.sessionDir;
   }
   async start() {
-    await this.engine.start(this.sessionDir);
-    if (this.store) {
-      await this.store.acquireLock();
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
     }
+    await this.engine.start(this.sessionDir);
     this.isStarted = true;
   }
   async prompt(input, options) {
     if (this.isClosed) {
       throw new SessionError("SESSION_CLOSED", "Session is closed");
-    }
-    if (this.isAborted) {
-      throw new SessionError("SESSION_ABORTED", "Session is aborted");
     }
     if (!this.isStarted) {
       throw new SessionError(
@@ -380,35 +371,64 @@ var SessionCoordinator = class {
     };
   }
   async abort(conversationId) {
-    this.isAborted = true;
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError(
+        "SESSION_NOT_STARTED",
+        "Session is not started. Call start() before aborting"
+      );
+    }
     await this.engine.abort(conversationId);
-    this.emitEvent({ type: "session/aborted" });
+    this.emitEvent({
+      type: "session/aborted",
+      ...conversationId !== void 0 ? { conversationId } : {}
+    });
   }
   async getState(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
     return await this.engine.getState(conversationId);
   }
   async getTranscript(conversationId, limit) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
     return await this.engine.getTranscript(conversationId, limit);
   }
   async getStats(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
     return await this.engine.getStats(conversationId);
   }
   async setSubagentPolicy(params) {
-    await this.engine.setSubagentPolicy(params);
-    if (this.store) {
-      await this.store.saveDocument("subagents", "policy_ack", params);
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
     }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
+    await this.engine.setSubagentPolicy(params);
     return { ok: true };
   }
   async close() {
+    if (this.isClosed) return;
     this.isClosed = true;
     this.isStarted = false;
     this.listeners.clear();
     await this.engine.close();
-    if (this.store) {
-      await this.store.releaseLock();
-      await this.store.close();
-    }
   }
 };
 
@@ -602,13 +622,10 @@ import { z as z6 } from "zod";
 import { z as z8 } from "zod";
 import { z as z7 } from "zod";
 import { z as z10 } from "zod";
-import { existsSync as existsSync3, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
-import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
-import { join as join5, resolve as resolve4 } from "node:path";
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join6 } from "node:path";
+import { join as join5 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync4, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 import net from "node:net";
 import fs2 from "node:fs";
 import path2 from "node:path";
@@ -1261,20 +1278,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve52) => {
-            const timer = setTimeout(() => resolve52(), holdTimeoutMs);
+          await new Promise((resolve42) => {
+            const timer = setTimeout(() => resolve42(), holdTimeoutMs);
             timer.unref?.();
             watch.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve52();
+                resolve42();
               }
               return Promise.resolve();
             });
             void watch.closed.then(() => {
               clearTimeout(timer);
-              resolve52();
+              resolve42();
             });
           });
         } finally {
@@ -2659,7 +2676,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema2.parse(record);
-      return new Promise((resolve52, reject) => {
+      return new Promise((resolve42, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2672,7 +2689,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve52();
+                resolve42();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2681,7 +2698,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve52();
+            resolve42();
           } catch (error) {
             reject(error);
           }
@@ -3413,8 +3430,8 @@ function extractCumulativeUsage(current) {
     ...cacheWriteInputTokens > 0 ? { cacheWriteInputTokens } : {}
   };
 }
-function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingText) {
-  const entries = current.conversation.entries ?? [];
+function buildFinalAssistantMessage(current, contentBlocksOrText, lastThinkingText) {
+  const entries = current?.conversation?.entries ?? [];
   const lastAssistantEntry = [...entries].reverse().find(
     (e) => isConversationEntryRecord(e) && e.kind === "pi.assistant"
   );
@@ -3423,7 +3440,7 @@ function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingTex
     const rawErr = lastAssistantMsg.errorMessage;
     const errorMessage = typeof rawErr === "string" ? rawErr : void 0;
     const stopReason = typeof lastAssistantMsg.stopReason === "string" ? lastAssistantMsg.stopReason : errorMessage ? "error" : "stop";
-    let content = Array.isArray(lastAssistantMsg.content) ? lastAssistantMsg.content : [{ type: "text", text: lastGenerationText }];
+    let content = Array.isArray(lastAssistantMsg.content) ? lastAssistantMsg.content : [{ type: "text", text: typeof contentBlocksOrText === "string" ? contentBlocksOrText : "" }];
     if (content.length === 0 && (stopReason === "error" || errorMessage)) {
       content = [{ type: "text", text: errorMessage ? `\u26A0\uFE0F ${errorMessage}` : "An error occurred during turn generation." }];
     }
@@ -3437,11 +3454,23 @@ function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingTex
     };
   }
   const finalContent = [];
-  if (lastThinkingText) {
-    finalContent.push({ type: "thinking", thinking: lastThinkingText });
-  }
-  if (lastGenerationText) {
-    finalContent.push({ type: "text", text: lastGenerationText });
+  if (contentBlocksOrText instanceof Map) {
+    const sorted = Array.from(contentBlocksOrText.keys()).sort((a, b) => a - b);
+    for (const idx of sorted) {
+      const b = contentBlocksOrText.get(idx);
+      if (b?.type === "thinking" && b.thinking) {
+        finalContent.push({ type: "thinking", thinking: b.thinking });
+      } else if (b?.type === "text" && b.text !== void 0) {
+        finalContent.push({ type: "text", text: b.text });
+      }
+    }
+  } else {
+    if (lastThinkingText) {
+      finalContent.push({ type: "thinking", thinking: lastThinkingText });
+    }
+    if (contentBlocksOrText) {
+      finalContent.push({ type: "text", text: contentBlocksOrText });
+    }
   }
   const rawUsageDoc = current?.conversation?.docs?.["pi.usage"];
   const usageDoc = isUsageDocument(rawUsageDoc) ? rawUsageDoc : {};
@@ -3484,13 +3513,13 @@ function findSubmissionFault(inputs, submissions, lastTaskError) {
   }
   return void 0;
 }
-function resolveTurnSummary(current, currentText, currentThinking, lastAssistantMessage, resolveContextWindow, fault) {
+function resolveTurnSummary(current, contentBlocksOrText, lastAssistantMessage, resolveContextWindow, fault, lastThinkingText) {
   const tail = current?.conversation?.entries?.at(-1);
   const lastCheckpointId = tail?.id !== void 0 ? String(tail.id) : void 0;
   const finalMsg = lastAssistantMessage ?? buildFinalAssistantMessage(
     current,
-    currentText,
-    currentThinking
+    contentBlocksOrText,
+    lastThinkingText
   );
   const rawAgentDoc = current?.conversation?.docs?.["pi.agent"];
   const agentDoc = isAgentDocument(rawAgentDoc) ? rawAgentDoc : {};
@@ -3840,20 +3869,21 @@ var DurableChildEventAdapter = class {
   toolProjector = new ToolEventProjector();
   submissions = /* @__PURE__ */ new Map();
   lastTaskError;
-  currentText = "";
-  currentThinking = "";
-  isInThinking = false;
+  contentBlocks = /* @__PURE__ */ new Map();
+  activeThinkingIndex;
   constructor(output, parentRef, conversationId) {
     this.output = output;
     this.parentRef = parentRef;
     this.conversationId = conversationId;
   }
   closeThinkingIfNeeded() {
-    if (!this.isInThinking) return;
-    this.isInThinking = false;
+    if (this.activeThinkingIndex === void 0) return;
+    const idx = this.activeThinkingIndex;
+    this.activeThinkingIndex = void 0;
+    const content = this.contentBlocks.get(idx)?.thinking ?? "";
     this.output({
       type: "message_update",
-      assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: this.currentThinking },
+      assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content },
       parentRef: this.parentRef,
       ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
     });
@@ -3862,6 +3892,8 @@ var DurableChildEventAdapter = class {
     if (batch.some((ev) => ev.type === "run_start")) {
       this.lastTaskError = void 0;
       this.submissions.clear();
+      this.contentBlocks.clear();
+      this.activeThinkingIndex = void 0;
     }
     for (const ev of batch) {
       if (ev.type === "task_failed") {
@@ -3878,23 +3910,28 @@ var DurableChildEventAdapter = class {
     switch (event.type) {
       case "message_update": {
         for (const change of event.changes) {
+          const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
           const thinkDelta = change.type === "thinking_delta" ? change.delta : change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking ? change.block.thinking : void 0;
           const textDelta = change.type === "text_delta" ? change.delta : change.type === "text_start" && change.block.type === "text" && change.block.text ? change.block.text : void 0;
           if (thinkDelta) {
-            this.isInThinking = true;
-            this.currentThinking += thinkDelta;
+            this.activeThinkingIndex = idx;
+            const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+            block.thinking = (block.thinking ?? "") + thinkDelta;
+            this.contentBlocks.set(idx, block);
             this.output({
               type: "message_update",
-              assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: thinkDelta },
+              assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta },
               parentRef: this.parentRef,
               ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
             });
           } else if (textDelta) {
             this.closeThinkingIfNeeded();
-            this.currentText += textDelta;
+            const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+            block.text = (block.text ?? "") + textDelta;
+            this.contentBlocks.set(idx, block);
             this.output({
               type: "message_update",
-              assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta: textDelta },
+              assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta },
               parentRef: this.parentRef,
               ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
             });
@@ -4043,17 +4080,18 @@ var DurableEventAdapter = class {
   lastTaskError;
   lastAssistantMessage;
   lastCheckpointId;
-  currentText = "";
-  currentThinking = "";
-  isInThinking = false;
+  contentBlocks = /* @__PURE__ */ new Map();
+  activeThinkingIndex;
   constructor(output, resolveContextWindow) {
     this.output = output;
     this.resolveContextWindow = resolveContextWindow;
   }
   closeThinkingIfNeeded() {
-    if (!this.isInThinking) return;
-    this.isInThinking = false;
-    this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: this.currentThinking } });
+    if (this.activeThinkingIndex === void 0) return;
+    const idx = this.activeThinkingIndex;
+    this.activeThinkingIndex = void 0;
+    const content = this.contentBlocks.get(idx)?.thinking ?? "";
+    this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content } });
   }
   resolveParentRef(parentToolCallId) {
     if (parentToolCallId === void 0) return void 0;
@@ -4067,7 +4105,7 @@ var DurableEventAdapter = class {
   emitTerminal(type, current, inputs) {
     this.closeThinkingIfNeeded();
     const fault = type === "agent_end" ? findSubmissionFault(inputs, this.submissions, this.lastTaskError) : void 0;
-    const summary = resolveTurnSummary(current, this.currentText, this.currentThinking, this.lastAssistantMessage, this.resolveContextWindow, fault);
+    const summary = resolveTurnSummary(current, this.contentBlocks, this.lastAssistantMessage, this.resolveContextWindow, fault);
     if (summary.lastCheckpointId) this.lastCheckpointId = summary.lastCheckpointId;
     const isAborted = summary.isAborted;
     const isError = summary.isError && !isAborted;
@@ -4100,9 +4138,8 @@ var DurableEventAdapter = class {
       }
       case "run_start": {
         this.lastTaskError = void 0;
-        this.currentText = "";
-        this.currentThinking = "";
-        this.isInThinking = false;
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
         this.lastAssistantMessage = void 0;
         this.activeToolNames.clear();
         this.toolProjector.clear();
@@ -4115,16 +4152,21 @@ var DurableEventAdapter = class {
       }
       case "message_update": {
         for (const change of event.changes) {
+          const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
           const thinkDelta = change.type === "thinking_delta" ? change.delta : change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking ? change.block.thinking : void 0;
           const textDelta = change.type === "text_delta" ? change.delta : change.type === "text_start" && change.block.type === "text" && change.block.text ? change.block.text : void 0;
           if (thinkDelta) {
-            this.isInThinking = true;
-            this.currentThinking += thinkDelta;
-            this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: thinkDelta } });
+            this.activeThinkingIndex = idx;
+            const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+            block.thinking = (block.thinking ?? "") + thinkDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta } });
           } else if (textDelta) {
             this.closeThinkingIfNeeded();
-            this.currentText += textDelta;
-            this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta: textDelta } });
+            const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+            block.text = (block.text ?? "") + textDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta } });
           }
         }
         break;
@@ -5662,59 +5704,73 @@ function createPiResourceExtension(options = {}) {
 
 // packages/runner/src/composition.ts
 async function assembleDurableZero(options = {}) {
-  const cwd = resolve5(options.cwd ?? process.cwd());
-  const sessionDir = options.sessionDir ? resolve5(options.sessionDir) : options.session ? resolve5(cwd, options.session) : resolve5(cwd, ".durable/sessions/default");
-  const codemodeBuiltin = createCodemodeBuiltinExtension();
-  const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
-  const extPaths = [
-    ...options.extensions ?? (options.extension ? [options.extension] : []),
-    ...extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []
-  ];
-  const settingsManager = SettingsManager3.create(cwd);
-  const agentDir = getAgentDir3();
-  const resourceLoader = new DefaultResourceLoader3({
-    cwd,
-    agentDir,
-    settingsManager,
-    extensionFactories: [createMcpExtension3()],
-    additionalSkillPaths: options.skills,
-    additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
-    noExtensions: options.noGlobalExtensions ?? false
-  });
-  const resourceExt = createPiResourceExtension({
-    cwd,
-    settingsManager,
-    resourceLoader
-  });
-  const executionEnvFactory = options.executionEnvFactory ?? ((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
-  const dependencies = {
-    executionEnvFactory,
-    settingsManager: resourceExt.configProvider,
-    resourceLoader: resourceExt.resourceLoader,
-    builtins: [codemodeBuiltin]
-  };
-  const cli = {
-    provider: options.provider,
-    model: options.model,
-    thinking: options.thinking,
-    extension: options.extension,
-    extensions: options.extensions,
-    skills: options.skills,
-    noGlobalExtensions: options.noGlobalExtensions
-  };
-  const engine = options.engine ?? new PiDurableEngine({
-    sessionDir,
-    session: options.session,
-    cwd,
-    continueSession: options.continueSession,
-    cli,
-    dependencies
-  });
+  const cwd = resolve4(options.cwd ?? process.cwd());
+  const sessionDir = options.sessionDir ? resolve4(options.sessionDir) : options.session ? resolve4(cwd, options.session) : resolve4(cwd, ".durable/sessions/default");
+  let engine;
+  let codemodeBuiltin;
+  if (options.engine) {
+    engine = options.engine;
+  } else {
+    codemodeBuiltin = createCodemodeBuiltinExtension();
+    const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
+    const extPaths = [
+      ...options.extensions ?? (options.extension ? [options.extension] : []),
+      ...extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []
+    ];
+    const settingsManager = SettingsManager3.create(cwd);
+    const agentDir = getAgentDir3();
+    const resourceLoader = new DefaultResourceLoader3({
+      cwd,
+      agentDir,
+      settingsManager,
+      extensionFactories: [createMcpExtension3()],
+      additionalSkillPaths: options.skills,
+      additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
+      noExtensions: options.noGlobalExtensions ?? false
+    });
+    const resourceExt = createPiResourceExtension({
+      cwd,
+      settingsManager,
+      resourceLoader
+    });
+    const executionEnvFactory = options.executionEnvFactory ?? ((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
+    const dependencies = {
+      executionEnvFactory,
+      settingsManager: resourceExt.configProvider,
+      resourceLoader: resourceExt.resourceLoader,
+      builtins: [codemodeBuiltin]
+    };
+    const cli = {
+      provider: options.provider,
+      model: options.model,
+      thinking: options.thinking,
+      extension: options.extension,
+      extensions: options.extensions,
+      skills: options.skills,
+      noGlobalExtensions: options.noGlobalExtensions
+    };
+    engine = new PiDurableEngine({
+      sessionDir,
+      session: options.session,
+      cwd,
+      continueSession: options.continueSession,
+      cli,
+      dependencies
+    });
+  }
   const coordinator = new SessionCoordinator({
     engine,
     sessionDir
   });
-  await coordinator.start();
+  try {
+    await coordinator.start();
+  } catch (err) {
+    if (codemodeBuiltin && typeof codemodeBuiltin.teardown === "function") {
+      await codemodeBuiltin.teardown().catch(() => {
+      });
+    }
+    throw err;
+  }
   const server = new StdioJsonRpcServer({
     stdin: options.stdin,
     stdout: options.stdout,
@@ -5762,9 +5818,6 @@ async function assembleDurableZero(options = {}) {
     unsubEvents();
     server.stop();
     await coordinator.close();
-    if (typeof codemodeBuiltin.teardown === "function") {
-      await codemodeBuiltin.teardown();
-    }
   };
   return {
     coordinator,
@@ -5801,6 +5854,12 @@ async function main(argv = process.argv.slice(2)) {
     }
     process.exit(0);
   };
+  process.stdin.once("end", () => {
+    void cleanup();
+  });
+  process.stdin.once("close", () => {
+    void cleanup();
+  });
   process.once("SIGINT", () => {
     void cleanup();
   });

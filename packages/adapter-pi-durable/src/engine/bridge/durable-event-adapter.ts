@@ -28,9 +28,8 @@ export class DurableEventAdapter {
 	private lastTaskError?: string;
 	private lastAssistantMessage?: AssistantMessage;
 	private lastCheckpointId?: string;
-	private currentText = "";
-	private currentThinking = "";
-	private isInThinking = false;
+	private readonly contentBlocks = new Map<number, { type: "text" | "thinking"; text?: string; thinking?: string }>();
+	private activeThinkingIndex?: number;
 
 	constructor(output: (event: RunnerEvent) => void, resolveContextWindow?: (p?: string, m?: string) => number | undefined) {
 		this.output = output;
@@ -38,9 +37,11 @@ export class DurableEventAdapter {
 	}
 
 	private closeThinkingIfNeeded(): void {
-		if (!this.isInThinking) return;
-		this.isInThinking = false;
-		this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: this.currentThinking } });
+		if (this.activeThinkingIndex === undefined) return;
+		const idx = this.activeThinkingIndex;
+		this.activeThinkingIndex = undefined;
+		const content = this.contentBlocks.get(idx)?.thinking ?? "";
+		this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content } });
 	}
 
 	private resolveParentRef(parentToolCallId?: string | number): string | undefined {
@@ -57,7 +58,7 @@ export class DurableEventAdapter {
 	private emitTerminal(type: "turn_end" | "agent_end", current: DurableView, inputs?: readonly (string | number)[]): void {
 		this.closeThinkingIfNeeded();
 		const fault = type === "agent_end" ? findSubmissionFault(inputs, this.submissions, this.lastTaskError) : undefined;
-		const summary = resolveTurnSummary(current, this.currentText, this.currentThinking, this.lastAssistantMessage, this.resolveContextWindow, fault);
+		const summary = resolveTurnSummary(current, this.contentBlocks, this.lastAssistantMessage, this.resolveContextWindow, fault);
 		if (summary.lastCheckpointId) this.lastCheckpointId = summary.lastCheckpointId;
 		const isAborted = summary.isAborted;
 		const isError = summary.isError && !isAborted;
@@ -93,9 +94,8 @@ export class DurableEventAdapter {
 
 			case "run_start": {
 				this.lastTaskError = undefined;
-				this.currentText = "";
-				this.currentThinking = "";
-				this.isInThinking = false;
+				this.contentBlocks.clear();
+				this.activeThinkingIndex = undefined;
 				this.lastAssistantMessage = undefined;
 				this.activeToolNames.clear();
 				this.toolProjector.clear();
@@ -110,16 +110,21 @@ export class DurableEventAdapter {
 
 			case "message_update": {
 				for (const change of event.changes) {
+					const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
 					const thinkDelta = change.type === "thinking_delta" ? change.delta : (change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking) ? change.block.thinking : undefined;
 					const textDelta = change.type === "text_delta" ? change.delta : (change.type === "text_start" && change.block.type === "text" && change.block.text) ? change.block.text : undefined;
 					if (thinkDelta) {
-						this.isInThinking = true;
-						this.currentThinking += thinkDelta;
-						this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: thinkDelta } });
+						this.activeThinkingIndex = idx;
+						const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+						block.thinking = (block.thinking ?? "") + thinkDelta;
+						this.contentBlocks.set(idx, block);
+						this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta } });
 					} else if (textDelta) {
 						this.closeThinkingIfNeeded();
-						this.currentText += textDelta;
-						this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta: textDelta } });
+						const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+						block.text = (block.text ?? "") + textDelta;
+						this.contentBlocks.set(idx, block);
+						this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta } });
 					}
 				}
 				break;

@@ -54,19 +54,19 @@ export function findSubmissionFault(
 
 export function resolveTurnSummary(
 	current: DurableView,
-	currentText: string,
-	currentThinking: string,
+	contentBlocksOrText: Map<number, { type: "text" | "thinking"; text?: string; thinking?: string }> | string,
 	lastAssistantMessage?: AssistantMessage,
 	resolveContextWindow?: (provider?: string, modelId?: string) => number | undefined,
 	fault?: SubmissionFault,
+	lastThinkingText?: string,
 ): TurnSummaryResult {
 	const tail = current?.conversation?.entries?.at(-1);
 	const lastCheckpointId = tail?.id !== undefined ? String(tail.id) : undefined;
 
 	const finalMsg = lastAssistantMessage ?? buildFinalAssistantMessage(
 		current,
-		currentText,
-		currentThinking,
+		contentBlocksOrText,
+		lastThinkingText,
 	);
 	const rawAgentDoc = current?.conversation?.docs?.["pi.agent"];
 	const agentDoc: AgentDocument = isAgentDocument(rawAgentDoc) ? rawAgentDoc : {};

@@ -85,7 +85,6 @@ describe("@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)", () =>
 
 			// Test abort cascade
 			await instance.coordinator.abort();
-			assert.equal(instance.coordinator.isAborted, true);
 			assert.ok(notifications.some((n) => (n.params.event as any)?.type === "session/aborted"));
 
 			// Safe close

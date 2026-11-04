@@ -3145,8 +3145,8 @@ function extractCumulativeUsage(current) {
     ...cacheWriteInputTokens > 0 ? { cacheWriteInputTokens } : {}
   };
 }
-function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingText) {
-  const entries = current.conversation.entries ?? [];
+function buildFinalAssistantMessage(current, contentBlocksOrText, lastThinkingText) {
+  const entries = current?.conversation?.entries ?? [];
   const lastAssistantEntry = [...entries].reverse().find(
     (e) => isConversationEntryRecord(e) && e.kind === "pi.assistant"
   );
@@ -3155,7 +3155,7 @@ function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingTex
     const rawErr = lastAssistantMsg.errorMessage;
     const errorMessage = typeof rawErr === "string" ? rawErr : void 0;
     const stopReason = typeof lastAssistantMsg.stopReason === "string" ? lastAssistantMsg.stopReason : errorMessage ? "error" : "stop";
-    let content = Array.isArray(lastAssistantMsg.content) ? lastAssistantMsg.content : [{ type: "text", text: lastGenerationText }];
+    let content = Array.isArray(lastAssistantMsg.content) ? lastAssistantMsg.content : [{ type: "text", text: typeof contentBlocksOrText === "string" ? contentBlocksOrText : "" }];
     if (content.length === 0 && (stopReason === "error" || errorMessage)) {
       content = [{ type: "text", text: errorMessage ? `\u26A0\uFE0F ${errorMessage}` : "An error occurred during turn generation." }];
     }
@@ -3169,11 +3169,23 @@ function buildFinalAssistantMessage(current, lastGenerationText, lastThinkingTex
     };
   }
   const finalContent = [];
-  if (lastThinkingText) {
-    finalContent.push({ type: "thinking", thinking: lastThinkingText });
-  }
-  if (lastGenerationText) {
-    finalContent.push({ type: "text", text: lastGenerationText });
+  if (contentBlocksOrText instanceof Map) {
+    const sorted = Array.from(contentBlocksOrText.keys()).sort((a, b) => a - b);
+    for (const idx of sorted) {
+      const b = contentBlocksOrText.get(idx);
+      if (b?.type === "thinking" && b.thinking) {
+        finalContent.push({ type: "thinking", thinking: b.thinking });
+      } else if (b?.type === "text" && b.text !== void 0) {
+        finalContent.push({ type: "text", text: b.text });
+      }
+    }
+  } else {
+    if (lastThinkingText) {
+      finalContent.push({ type: "thinking", thinking: lastThinkingText });
+    }
+    if (contentBlocksOrText) {
+      finalContent.push({ type: "text", text: contentBlocksOrText });
+    }
   }
   const rawUsageDoc = current?.conversation?.docs?.["pi.usage"];
   const usageDoc = isUsageDocument(rawUsageDoc) ? rawUsageDoc : {};
@@ -3218,13 +3230,13 @@ function findSubmissionFault(inputs, submissions, lastTaskError) {
   }
   return void 0;
 }
-function resolveTurnSummary(current, currentText, currentThinking, lastAssistantMessage, resolveContextWindow, fault) {
+function resolveTurnSummary(current, contentBlocksOrText, lastAssistantMessage, resolveContextWindow, fault, lastThinkingText) {
   const tail = current?.conversation?.entries?.at(-1);
   const lastCheckpointId = tail?.id !== void 0 ? String(tail.id) : void 0;
   const finalMsg = lastAssistantMessage ?? buildFinalAssistantMessage(
     current,
-    currentText,
-    currentThinking
+    contentBlocksOrText,
+    lastThinkingText
   );
   const rawAgentDoc = current?.conversation?.docs?.["pi.agent"];
   const agentDoc = isAgentDocument(rawAgentDoc) ? rawAgentDoc : {};
@@ -3591,20 +3603,21 @@ var DurableChildEventAdapter = class {
   toolProjector = new ToolEventProjector();
   submissions = /* @__PURE__ */ new Map();
   lastTaskError;
-  currentText = "";
-  currentThinking = "";
-  isInThinking = false;
+  contentBlocks = /* @__PURE__ */ new Map();
+  activeThinkingIndex;
   constructor(output, parentRef, conversationId) {
     this.output = output;
     this.parentRef = parentRef;
     this.conversationId = conversationId;
   }
   closeThinkingIfNeeded() {
-    if (!this.isInThinking) return;
-    this.isInThinking = false;
+    if (this.activeThinkingIndex === void 0) return;
+    const idx = this.activeThinkingIndex;
+    this.activeThinkingIndex = void 0;
+    const content = this.contentBlocks.get(idx)?.thinking ?? "";
     this.output({
       type: "message_update",
-      assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: this.currentThinking },
+      assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content },
       parentRef: this.parentRef,
       ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
     });
@@ -3613,6 +3626,8 @@ var DurableChildEventAdapter = class {
     if (batch.some((ev) => ev.type === "run_start")) {
       this.lastTaskError = void 0;
       this.submissions.clear();
+      this.contentBlocks.clear();
+      this.activeThinkingIndex = void 0;
     }
     for (const ev of batch) {
       if (ev.type === "task_failed") {
@@ -3629,23 +3644,28 @@ var DurableChildEventAdapter = class {
     switch (event.type) {
       case "message_update": {
         for (const change of event.changes) {
+          const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
           const thinkDelta = change.type === "thinking_delta" ? change.delta : change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking ? change.block.thinking : void 0;
           const textDelta = change.type === "text_delta" ? change.delta : change.type === "text_start" && change.block.type === "text" && change.block.text ? change.block.text : void 0;
           if (thinkDelta) {
-            this.isInThinking = true;
-            this.currentThinking += thinkDelta;
+            this.activeThinkingIndex = idx;
+            const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+            block.thinking = (block.thinking ?? "") + thinkDelta;
+            this.contentBlocks.set(idx, block);
             this.output({
               type: "message_update",
-              assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: thinkDelta },
+              assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta },
               parentRef: this.parentRef,
               ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
             });
           } else if (textDelta) {
             this.closeThinkingIfNeeded();
-            this.currentText += textDelta;
+            const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+            block.text = (block.text ?? "") + textDelta;
+            this.contentBlocks.set(idx, block);
             this.output({
               type: "message_update",
-              assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta: textDelta },
+              assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta },
               parentRef: this.parentRef,
               ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
             });
@@ -3798,17 +3818,18 @@ var DurableEventAdapter = class {
   lastTaskError;
   lastAssistantMessage;
   lastCheckpointId;
-  currentText = "";
-  currentThinking = "";
-  isInThinking = false;
+  contentBlocks = /* @__PURE__ */ new Map();
+  activeThinkingIndex;
   constructor(output, resolveContextWindow) {
     this.output = output;
     this.resolveContextWindow = resolveContextWindow;
   }
   closeThinkingIfNeeded() {
-    if (!this.isInThinking) return;
-    this.isInThinking = false;
-    this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: this.currentThinking } });
+    if (this.activeThinkingIndex === void 0) return;
+    const idx = this.activeThinkingIndex;
+    this.activeThinkingIndex = void 0;
+    const content = this.contentBlocks.get(idx)?.thinking ?? "";
+    this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content } });
   }
   resolveParentRef(parentToolCallId) {
     if (parentToolCallId === void 0) return void 0;
@@ -3822,7 +3843,7 @@ var DurableEventAdapter = class {
   emitTerminal(type, current, inputs) {
     this.closeThinkingIfNeeded();
     const fault = type === "agent_end" ? findSubmissionFault(inputs, this.submissions, this.lastTaskError) : void 0;
-    const summary = resolveTurnSummary(current, this.currentText, this.currentThinking, this.lastAssistantMessage, this.resolveContextWindow, fault);
+    const summary = resolveTurnSummary(current, this.contentBlocks, this.lastAssistantMessage, this.resolveContextWindow, fault);
     if (summary.lastCheckpointId) this.lastCheckpointId = summary.lastCheckpointId;
     const isAborted = summary.isAborted;
     const isError = summary.isError && !isAborted;
@@ -3855,9 +3876,8 @@ var DurableEventAdapter = class {
       }
       case "run_start": {
         this.lastTaskError = void 0;
-        this.currentText = "";
-        this.currentThinking = "";
-        this.isInThinking = false;
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
         this.lastAssistantMessage = void 0;
         this.activeToolNames.clear();
         this.toolProjector.clear();
@@ -3870,16 +3890,21 @@ var DurableEventAdapter = class {
       }
       case "message_update": {
         for (const change of event.changes) {
+          const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
           const thinkDelta = change.type === "thinking_delta" ? change.delta : change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking ? change.block.thinking : void 0;
           const textDelta = change.type === "text_delta" ? change.delta : change.type === "text_start" && change.block.type === "text" && change.block.text ? change.block.text : void 0;
           if (thinkDelta) {
-            this.isInThinking = true;
-            this.currentThinking += thinkDelta;
-            this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: thinkDelta } });
+            this.activeThinkingIndex = idx;
+            const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+            block.thinking = (block.thinking ?? "") + thinkDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta } });
           } else if (textDelta) {
             this.closeThinkingIfNeeded();
-            this.currentText += textDelta;
-            this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta: textDelta } });
+            const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+            block.text = (block.text ?? "") + textDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta } });
           }
         }
         break;

@@ -30,6 +30,12 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
 		process.exit(0);
 	};
 
+	process.stdin.once("end", () => {
+		void cleanup();
+	});
+	process.stdin.once("close", () => {
+		void cleanup();
+	});
 	process.once("SIGINT", () => {
 		void cleanup();
 	});

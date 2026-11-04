@@ -1,0 +1,11 @@
+[FND-T1-01 RED Test Output]
+Command: node --test packages/core/test/session-abort-lifecycle.test.ts
+Exit code: 1
+
+▶ FND-T1-01: SessionCoordinator Turn Abort Semantics
+  ✖ root abort cancels active turn without permanently disabling the session
+    AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: '1' !== undefined
+  ✖ child abort cancels target child conversation without poisoning root
+    Error [SessionError]: Session is aborted
+  ✖ abort rejects if called before start() or after close()
+    AssertionError [ERR_ASSERTION]: Missing expected rejection.

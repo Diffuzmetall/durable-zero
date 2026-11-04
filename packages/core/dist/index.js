@@ -336,39 +336,30 @@ var SubagentPolicyStore = class {
 // packages/core/src/session/coordinator.ts
 var SessionCoordinator = class {
   engine;
-  store;
   sessionDir;
-  modelProvider;
-  executionEnv;
-  resourceLoader;
   isStarted = false;
   isClosed = false;
-  isAborted = false;
   listeners = /* @__PURE__ */ new Set();
   constructor(options) {
     if (!options.engine) {
       throw new Error("IAgentEngine is required by SessionCoordinator (AP-010, AP-076)");
     }
+    if (!options.sessionDir || typeof options.sessionDir !== "string" || options.sessionDir.trim().length === 0) {
+      throw new Error("sessionDir must be a non-empty string (AP-010, AP-074)");
+    }
     this.engine = options.engine;
-    this.store = options.store;
-    this.sessionDir = options.sessionDir ?? options.store?.sessionDir ?? process.cwd();
-    this.modelProvider = options.modelProvider;
-    this.executionEnv = options.executionEnv;
-    this.resourceLoader = options.resourceLoader;
+    this.sessionDir = options.sessionDir;
   }
   async start() {
-    await this.engine.start(this.sessionDir);
-    if (this.store) {
-      await this.store.acquireLock();
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
     }
+    await this.engine.start(this.sessionDir);
     this.isStarted = true;
   }
   async prompt(input, options) {
     if (this.isClosed) {
       throw new SessionError("SESSION_CLOSED", "Session is closed");
-    }
-    if (this.isAborted) {
-      throw new SessionError("SESSION_ABORTED", "Session is aborted");
     }
     if (!this.isStarted) {
       throw new SessionError(
@@ -412,35 +403,64 @@ var SessionCoordinator = class {
     };
   }
   async abort(conversationId) {
-    this.isAborted = true;
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError(
+        "SESSION_NOT_STARTED",
+        "Session is not started. Call start() before aborting"
+      );
+    }
     await this.engine.abort(conversationId);
-    this.emitEvent({ type: "session/aborted" });
+    this.emitEvent({
+      type: "session/aborted",
+      ...conversationId !== void 0 ? { conversationId } : {}
+    });
   }
   async getState(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
     return await this.engine.getState(conversationId);
   }
   async getTranscript(conversationId, limit) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
     return await this.engine.getTranscript(conversationId, limit);
   }
   async getStats(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
     return await this.engine.getStats(conversationId);
   }
   async setSubagentPolicy(params) {
-    await this.engine.setSubagentPolicy(params);
-    if (this.store) {
-      await this.store.saveDocument("subagents", "policy_ack", params);
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
     }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
+    await this.engine.setSubagentPolicy(params);
     return { ok: true };
   }
   async close() {
+    if (this.isClosed) return;
     this.isClosed = true;
     this.isStarted = false;
     this.listeners.clear();
     await this.engine.close();
-    if (this.store) {
-      await this.store.releaseLock();
-      await this.store.close();
-    }
   }
 };
 export {
