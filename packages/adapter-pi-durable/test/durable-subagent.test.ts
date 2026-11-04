@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SettingsManager } from "@earendil-works/pi-coding-agent";
-import { createCodingRegistry } from "../src/harness-setup.ts";
+import { createCodingRegistry } from "../src/engine/harness-setup.ts";
 
 test("createCodingRegistry installs native Subagent tool", async () => {
 	const settings = SettingsManager.create(process.cwd());

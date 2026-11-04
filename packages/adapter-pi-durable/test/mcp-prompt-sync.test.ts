@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createPiPrompt, DynamicPromptSections } from "../src/prompt.ts";
-import { mountExtensionBridge } from "../src/extension-mount.ts";
+import { createPiPrompt, DynamicPromptSections } from "../src/engine/prompt.ts";
+import { mountExtensionBridge } from "../src/engine/extension-mount.ts";
 import { SettingsManager, ModelRuntime, type Extension } from "@earendil-works/pi-coding-agent";
 import { createRegistry } from "@earendil-works/pi-durable";
 

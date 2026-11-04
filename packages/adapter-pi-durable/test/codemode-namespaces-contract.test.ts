@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DynamicCodemodeNamespaces } from "../src/codemode-namespaces.ts";
+import { DynamicCodemodeNamespaces } from "../src/engine/codemode-namespaces.ts";
 
 test("DynamicCodemodeNamespaces preserves distinct description and instructions", () => {
 	const dynamicNs = new DynamicCodemodeNamespaces();

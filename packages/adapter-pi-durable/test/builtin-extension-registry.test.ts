@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BuiltinExtensionRegistry } from "../src/builtin-extensions/registry.ts";
-import type { BuiltinExtension } from "../src/builtin-extensions/types.ts";
-import { BuiltinExtensionError } from "../src/shared/errors.ts";
+import { BuiltinExtensionRegistry } from "../src/engine/builtin-extensions/registry.ts";
+import type { BuiltinExtension } from "../src/engine/builtin-extensions/types.ts";
+import { BuiltinExtensionError } from "../src/engine/shared/errors.ts";
 
 test("BuiltinExtensionRegistry: registers, gets, and lists built-in extensions", () => {
 	const registry = new BuiltinExtensionRegistry();

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createExtensionActions } from "../src/extension-bridge.ts";
+import { createExtensionActions } from "../src/engine/extension-bridge.ts";
 
 test("ExtensionActions.sendUserMessage: delegates to onSubmitUserMessage in FSM", async () => {
 	let submittedContent = "";

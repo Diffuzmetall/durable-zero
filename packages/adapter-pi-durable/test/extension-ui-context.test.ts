@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { createExtensionUIContext } from "../src/extension-bridge.ts";
+import { createExtensionUIContext } from "../src/engine/extension-bridge.ts";
 
 describe("Extension UI Context Safety (Issue #14 Defect 1)", () => {
 	it("provides a full SDK-shaped no-op context that prevents TypeError when extensions access ui members", async () => {

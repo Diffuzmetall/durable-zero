@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ExecutionEnvs } from "../src/harness-setup.ts";
-import { openDurable } from "../src/runtime.ts";
-import type { IExecutionEnvironment, ExecutionEnvFactory } from "../src/tools/execution-env.ts";
+import { ExecutionEnvs } from "../src/engine/harness-setup.ts";
+import { openDurable } from "../src/engine/runtime.ts";
+import type { IExecutionEnvironment, ExecutionEnvFactory } from "@durable-zero/core";
 
 describe("ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)", () => {
   it("delegates environment instantiation to injected ExecutionEnvFactory without depending on concrete adapters", () => {

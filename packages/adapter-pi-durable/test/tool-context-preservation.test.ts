@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { adaptExtensionTool } from "../src/tool-adapter.ts";
+import { adaptExtensionTool } from "../src/engine/tool-adapter.ts";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 
 test("Issue #21: adaptExtensionTool preserves own property descriptors on context across shallow copy", async () => {
