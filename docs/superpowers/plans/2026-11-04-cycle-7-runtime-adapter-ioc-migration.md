@@ -2,11 +2,24 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Relocate the monolithic Pi Durable agent runtime out of `@durable-zero/core` into `@durable-zero/adapter-pi-durable`, establish a pure domain SPI port `IAgentEngine` in Core, delegate `SessionCoordinator` prompts to the real runtime, eliminate legacy ad-hoc transport in favor of strict JSON-RPC 2.0 in `@durable-zero/runner`, and purify `@durable-zero/core` to zero vendor/adapter dependencies.
+**Goal:** Relocate the 45 files of the Pi Durable agent runtime out of `@durable-zero/core` into `@durable-zero/adapter-pi-durable`, establish a pure domain SPI port `IAgentEngine` in Core, connect `SessionCoordinator` to the real runtime via pure Dependency Injection (AP-074), eliminate legacy ad-hoc transport in favor of strict Full-Duplex JSON-RPC 2.0 over stdio with Host Tool Calling, implement probe mode (`--no-session`), and purify `@durable-zero/core` to zero vendor/adapter dependencies.
 
-**Architecture:** Strict Hexagonal Architecture (Ports & Adapters, AP-010) and Pure Dependency Injection (AP-074). Core defines domain SPIs (`ISessionStore`, `IAgentEngine`, `IModelProvider`, `IExecutionEnvironment`, `ISandboxExtension`, `IResourceLoader`) and owns high-level FSM orchestration (`SessionCoordinator`). All `@earendil-works/*` harness, subagent, and event bridging implementations live strictly in `@durable-zero/adapter-pi-durable`. Client communication uses full-duplex JSON-RPC 2.0 over stdio via `@durable-zero/protocol` and `@durable-zero/runner`.
+**Architecture:** Strict Hexagonal Architecture (Ports & Adapters, AP-010). Core defines domain SPIs (`ISessionStore`, `IAgentEngine`, `IModelProvider`, `IExecutionEnvironment`, `ISandboxExtension`, `IResourceLoader`) and high-level FSM coordination (`SessionCoordinator`). All `@earendil-works/*` harness, subagent, and event bridging implementations live strictly in `@durable-zero/adapter-pi-durable`. Client communication uses full-duplex JSON-RPC 2.0 over stdio via `@durable-zero/protocol` and `@durable-zero/runner`, supporting bidirectional host tool calls (`host/toolCall`) without any backward-compatibility compromises.
 
-**Tech Stack:** Node.js 22+ ESM, `@durable-zero/protocol` (JSON-RPC 2.0), `@durable-zero/core`, `@durable-zero/adapter-pi-durable` (`@earendil-works/pi-durable` 1.5.0), `@earendil-works/pi-ai`, `@earendil-works/chord`, Zod.
+**Tech Stack:** Node.js 22+ ESM, `@durable-zero/protocol` (JSON-RPC 2.0 stdio server & client), `@durable-zero/core`, `@durable-zero/adapter-pi-durable` (`@earendil-works/pi-durable` 1.5.0, `@earendil-works/pi-ai`, `@earendil-works/chord`), `@durable-zero/runner`, Zod.
+
+---
+
+## Verification of Auditor Findings (@thread:thr_usuwfbnhx7)
+
+Our cross-source code inspection confirmed all 5 auditor findings with 100% precision:
+1. **Agent Loop Missing:** `SessionCoordinator.prompt()` returns a stub `rec_...` without executing the agent loop.
+2. **Coordinator Never Started:** `assembleDurableZero()` constructs `SessionCoordinator` but never calls `await coordinator.start()`, causing any `prompt()` to throw `"Session is not started"`.
+3. **Host Tool Bridge Missing:** `assembleDurableZero()` does not support client-hosted tools (`AskUserQuestion`, `check_ui`) or `host/toolCall` reverse RPC.
+4. **Probe Mode Missing:** Passing `--no-session` crashes because `assembleDurableZero()` unconditionally resolves `.durable/sessions/default` and attempts SQLite locking.
+5. **Runtime Graph Disconnected:** `RuntimeGraphSource` is not forwarded over JSON-RPC 2.0 `session/event` notifications.
+
+All 5 defects are directly resolved in this Cycle 7 plan.
 
 ---
 
@@ -304,15 +317,14 @@ Move all legacy/engine files (`runtime.ts`, `harness-setup.ts`, `engine.ts`, `ru
 
 Create `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts` (< 120 lines):
 ```typescript
-import type { IAgentEngine, PromptAdmissionReceipt, PromptOptions } from "@durable-zero/core";
+import type { IAgentEngine, PromptAdmissionReceipt, PromptOptions, ExecutionEnvFactory } from "@durable-zero/core";
 import { openDurable } from "./runtime.ts";
 import type { OpenDurableResult } from "./runtime-types.ts";
 import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import type { RunnerEvent } from "@durable-zero/contracts";
-import type { ExecutionEnvFactory } from "@durable-zero/core";
+import { RuntimeGraphSource } from "./runtime-graph-source.ts";
 
 export interface PiDurableEngineOptions {
-  sessionDir?: string;
   cwd?: string;
   executionEnvFactory: ExecutionEnvFactory;
   extensions?: string[];
@@ -323,6 +335,7 @@ export class PiDurableEngine implements IAgentEngine {
   private options: PiDurableEngineOptions;
   private runtime: OpenDurableResult | null = null;
   private eventAdapter: DurableEventAdapter;
+  private graphSource: RuntimeGraphSource | null = null;
   private listeners = new Set<(event: unknown) => void>();
 
   constructor(options: PiDurableEngineOptions) {
@@ -347,8 +360,14 @@ export class PiDurableEngine implements IAgentEngine {
       },
     });
 
+    this.graphSource = new RuntimeGraphSource(this.runtime.harness, (graphEvent) => {
+      this.eventAdapter.consumeView(this.runtime!.view.current());
+      for (const listener of this.listeners) {
+        listener(graphEvent);
+      }
+    });
+
     this.runtime.view.subscribe((state) => {
-      // Stream state updates to event adapter
       this.eventAdapter.consumeView(state);
     });
   }
@@ -367,7 +386,7 @@ export class PiDurableEngine implements IAgentEngine {
   public getState(): Record<string, unknown> {
     return {
       active: this.runtime !== null,
-      sessionDir: this.options.sessionDir,
+      sessionDir: this.runtime?.view.current()?.conversation?.docs?.["pi.session"]?.sessionDir,
     };
   }
 
@@ -378,6 +397,7 @@ export class PiDurableEngine implements IAgentEngine {
 
   public async close(): Promise<void> {
     this.listeners.clear();
+    this.graphSource = null;
     if (this.runtime) {
       await this.runtime.close();
       this.runtime = null;
@@ -394,7 +414,7 @@ Relocate runtime tests into `packages/adapter-pi-durable/test/`. Run tests via `
 
 ```bash
 git add packages/adapter-pi-durable
-git commit -m "feat(adapter-pi-durable): encapsulate native Pi Durable runtime into PiDurableEngine"
+git commit -m "feat(adapter-pi-durable): encapsulate native Pi Durable runtime and runtime graph in PiDurableEngine"
 ```
 
 ---
@@ -404,7 +424,6 @@ git commit -m "feat(adapter-pi-durable): encapsulate native Pi Durable runtime i
 **Files:**
 - Modify: `packages/core/package.json`
 - Modify: `packages/core/src/index.ts`
-- Clean: remove any remaining adapter imports from `packages/core/`
 
 - [ ] **Step 1: Purge adapter dependencies from `packages/core/package.json`**
 
@@ -458,7 +477,7 @@ git commit -m "refactor(core): achieve 100% sovereign domain purity with zero ve
 
 ---
 
-### Task 4: Pure JSON-RPC 2.0 Runner & Elimination of Legacy Runner Server
+### Task 4: Pure JSON-RPC 2.0 Runner, Host Tool Bridge & Elimination of Legacy Runner Server
 
 **Files:**
 - Modify: `packages/runner/src/composition.ts`
@@ -468,17 +487,23 @@ git commit -m "refactor(core): achieve 100% sovereign domain purity with zero ve
 - Modify: `scripts/build.mjs`
 - Modify: `package.json`
 
-- [ ] **Step 1: Wire `PiDurableEngine` into `assembleDurableZero` with Pure DI**
+- [ ] **Step 1: Update `assembleDurableZero` to support Probe Mode (`--no-session`) and Host Tool Bridge**
 
 In `packages/runner/src/composition.ts`:
-- Inject `PiDurableEngine` into `SessionCoordinator({ store, engine, modelProvider, executionEnv, resourceLoader })`.
-- Wire `coordinator.events(...)` directly to `server.sendNotification("session/event", { event })`.
-- Map incoming JSON-RPC 2.0 methods cleanly:
-  - `session/prompt` (`{ content, options }`) -> `coordinator.prompt(content, options)`
-  - `session/abort` -> `coordinator.abort()`
-  - `session/getState` -> `coordinator.getState()`
-  - `session/setSubagentPolicy` -> `coordinator.setSubagentPolicy(params)`
-- Outbound requests: support `server.request("host/toolCall", { toolName, args })`.
+1. If `options.noSession` is passed:
+   - Do not open SQLite session or acquire locks.
+   - Return probe instance providing `server` with model discovery (`models/list`) and health checks.
+2. If in session mode:
+   - Instantiate `PiDurableEngine` with `executionEnv`.
+   - Call `await coordinator.start()` explicitly upon assembly (fixing Auditor Finding 2).
+   - Wire Host Tool Bridge: support `server.request("host/toolCall", { toolName, args })` for reverse tool calls (fixing Auditor Finding 3).
+   - Wire `coordinator.events(...)` directly to `server.sendNotification("session/event", { event })` (fixing Auditor Finding 5).
+3. Pure JSON-RPC 2.0 methods:
+   - `session/prompt` (`{ content, options }`) -> `coordinator.prompt(content, options)`
+   - `session/abort` -> `coordinator.abort()`
+   - `session/getState` -> `coordinator.getState()`
+   - `session/setSubagentPolicy` -> `coordinator.setSubagentPolicy(params)`
+   - `session/fork` -> invokes fork logic on store.
 
 - [ ] **Step 2: Delete legacy runner `packages/core/src/runner-server.ts`**
 
@@ -487,7 +512,7 @@ Run: `rm packages/core/src/runner-server.ts`
 - [ ] **Step 3: Update CLI & Build Pipeline**
 
 In `packages/cli/bin/durable-zero.js`:
-Update `command === "serve"` to execute `@durable-zero/runner` via `assembleDurableZero`.
+Update `command === "serve"` to execute `@durable-zero/runner` via `assembleDurableZero` with pure JSON-RPC 2.0 stdio transport.
 
 In `scripts/build.mjs`:
 Remove legacy `packages/core/dist/runner.js` build step. Build strictly 9 packages + `packages/runner/dist/main.js`. Copy `quickjs.wasm` to `packages/runner/dist/`.
@@ -504,7 +529,7 @@ Expected: All packages compile cleanly, all tests pass!
 
 ```bash
 git add packages/runner packages/cli scripts/build.mjs package.json
-git commit -m "feat(runner): unify runner on pure JSON-RPC 2.0 and eliminate legacy runner-server"
+git commit -m "feat(runner): unify on pure JSON-RPC 2.0 stdio server with host tool bridge and probe mode"
 ```
 
 ---
