@@ -21,6 +21,14 @@ export const hostInteractionRequestSchema = wireContextSchema.extend({
 });
 export type HostInteractionRequestEvent = z.infer<typeof hostInteractionRequestSchema>;
 
+export const turnCompleteSchema = wireContextSchema.extend({
+	type: z.literal("turn_complete"),
+	status: z.enum(["completed", "aborted", "error"]),
+	requestId: z.string().min(1),
+	error: z.string().optional(),
+});
+export type TurnCompleteEvent = z.infer<typeof turnCompleteSchema>;
+
 export const lifecycleSchemas = [
 	wireContextSchema.extend({ type: z.literal("agent_start") }),
 	wireContextSchema.extend({ type: z.literal("context_window"), usedTokens: z.number().nullable().optional(), contextWindow: z.number() }),
@@ -33,6 +41,7 @@ export const lifecycleSchemas = [
 	wireContextSchema.extend({ type: z.literal("auto_retry_end"), attempt: z.number(), success: z.boolean().optional() }),
 	runtimeGraphSnapshotEventSchema,
 	hostInteractionRequestSchema,
+	turnCompleteSchema,
 ] as const;
 
 export const sessionStatsSchema = z.object({ contextUsage: z.object({ tokens: z.number().nullable(), contextWindow: z.number() }) });

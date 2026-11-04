@@ -7,6 +7,10 @@ export interface RunnerCliArgs {
 	thinking?: string;
 	noSession?: boolean;
 	continueSession?: boolean;
+	extension?: string;
+	extensions?: string[];
+	skills?: string[];
+	noGlobalExtensions?: boolean;
 }
 
 export function parseCliArgs(argv: string[]): RunnerCliArgs {
@@ -21,7 +25,15 @@ export function parseCliArgs(argv: string[]): RunnerCliArgs {
 		else if (arg === "--thinking" && i + 1 < argv.length) args.thinking = argv[++i];
 		else if (arg === "--no-session") args.noSession = true;
 		else if (arg === "--continue") args.continueSession = true;
-		else if (arg.startsWith("-")) {
+		else if (arg === "--no-global-extensions") args.noGlobalExtensions = true;
+		else if (arg === "--extension" && i + 1 < argv.length) {
+			const ext = argv[++i];
+			args.extension = ext;
+			args.extensions = args.extensions ? [...args.extensions, ext] : [ext];
+		} else if (arg === "--skills" && i + 1 < argv.length) {
+			const s = argv[++i];
+			args.skills = args.skills ? [...args.skills, s] : [s];
+		} else if (arg.startsWith("-")) {
 			if (i + 1 < argv.length && !argv[i + 1].startsWith("-")) i++;
 		} else if (!args.cwd) {
 			args.cwd = arg;

@@ -1,5 +1,5 @@
 import type { TaskGraphNode, TaskRecord } from "@earendil-works/pi-durable";
-import type { TaskTokensUsage } from "../../contracts/src/index.ts";
+import type { TaskTokensUsage } from "@durable-zero/contracts";
 
 export function normalizeUsage(raw: unknown): TaskTokensUsage | undefined {
 	if (!raw || typeof raw !== "object") return undefined;

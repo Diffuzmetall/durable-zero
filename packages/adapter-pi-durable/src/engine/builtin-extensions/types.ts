@@ -1,6 +1,6 @@
 import type { Registry } from "@earendil-works/pi-durable";
 import type { SettingsManager } from "@earendil-works/pi-coding-agent";
-import type { SubagentPolicyRecord } from "../policy/types.ts";
+import type { SubagentPolicyRecord } from "@durable-zero/core";
 import type { PromptOptions } from "../prompt.ts";
 import type { DynamicCodemodeNamespaces } from "../codemode-namespaces.ts";
 

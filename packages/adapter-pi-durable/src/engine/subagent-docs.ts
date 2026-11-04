@@ -11,7 +11,7 @@ import type {
 	ResolvedChildConfiguration,
 	SubagentModelReference,
 	SubagentThinkingLevel,
-} from "./policy/types.ts";
+} from "@durable-zero/core";
 
 export type SubagentRecord = {
 	name: string;

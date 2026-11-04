@@ -1,6 +1,6 @@
 import type { TaskGraphNode, TaskRecord } from "@earendil-works/pi-durable";
-import type { RuntimeTaskNode } from "../../contracts/src/index.ts";
-import { MAX_LABEL_LENGTH } from "../../contracts/src/index.ts";
+import type { RuntimeTaskNode } from "@durable-zero/contracts";
+import { MAX_LABEL_LENGTH } from "@durable-zero/contracts";
 import type { RuntimeGraphConversations } from "./runtime-graph-conversations.ts";
 import type { TaskNames } from "./task-labels.ts";
 import { taskLabel } from "./task-labels.ts";

@@ -2,13 +2,23 @@ import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { ROOT_CONVERSATION_ID } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import type { OpenDurableResult } from "./runtime-types.ts";
-import type { CliArgs } from "./cli-args.ts";
 import { handleBindingCommand } from "./binding-commands.ts";
 import { handleSessionStateCommand } from "./session-state-commands.ts";
-import { subagentPolicyRecordSchema } from "./policy/schema.ts";
+import { subagentPolicyRecordSchema } from "@durable-zero/core";
 import type { CommandResponder, RunnerCommandPayload } from "@durable-zero/contracts";
 import { parseConversationId } from "./conversation-id.ts";
-import { forkSessionDatabase } from "@durable-zero/adapter-pi-durable";
+import { forkSessionDatabase } from "../session-fork.ts";
+
+export type CliArgs = {
+	readonly session?: string;
+	readonly sessionDir?: string;
+	readonly cwd?: string;
+	readonly provider?: string;
+	readonly model?: string;
+	readonly thinking?: string;
+	readonly noSession?: boolean;
+	readonly continueSession?: boolean;
+};
 
 function toDurableInput(message?: string, images?: import("@earendil-works/pi-ai").ImageContent[]): string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[] | null {
 	const msg = message ?? "";

@@ -13,9 +13,27 @@ import {
 	ROOT_CONVERSATION_ID,
 	type TaskGraph,
 } from "@earendil-works/pi-durable";
-import type { ModelRuntime, SettingsManager } from "@earendil-works/pi-coding-agent";
-import type { SubagentPolicyHolder } from "./policy/types.ts";
-import type { PromptOptions } from "./prompt.ts";
+import type { ModelRuntime, SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
+import type { Provider } from "@earendil-works/pi-ai";
+import type { SubagentPolicyHolder, ExecutionEnvFactory } from "@durable-zero/core";
+import type { PromptOptions, DynamicPromptSections } from "./prompt.ts";
+import type { BuiltinExtension } from "./builtin-extensions/types.ts";
+
+export interface IHostBridge {
+	// optional pure port in Slice 0
+}
+
+export interface PiRuntimeDependencies {
+	readonly executionEnvFactory?: ExecutionEnvFactory;
+	readonly hostBridge?: IHostBridge;
+	readonly modelRuntime?: ModelRuntime;
+	readonly nativeProviders?: readonly Provider[];
+	readonly resourceLoader?: DefaultResourceLoader;
+	readonly settingsManager?: SettingsManager;
+	readonly builtins?: readonly BuiltinExtension[];
+	readonly dynamicSections?: DynamicPromptSections;
+	readonly prompt?: PromptOptions;
+}
 
 export const runtimeContext = BACKGROUND_CONTEXT;
 
@@ -100,7 +118,8 @@ export interface OpenDurableOptions {
 	readonly builtins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 	readonly plugins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 	readonly beforeResume?: (harness: Harness) => Promise<void>;
-	readonly executionEnvFactory?: import("./tools/execution-env.ts").ExecutionEnvFactory;
+	readonly executionEnvFactory?: ExecutionEnvFactory;
+	readonly dependencies?: PiRuntimeDependencies;
 }
 
 export interface SubagentWatcherController {

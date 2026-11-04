@@ -1,5 +1,5 @@
 import type { TaskGraph, TaskGraphNode, TaskRecord } from "@earendil-works/pi-durable";
-import type { RuntimeTaskNode, TaskOutcomeName } from "../../contracts/src/index.ts";
+import type { RuntimeTaskNode, TaskOutcomeName } from "@durable-zero/contracts";
 import type { RuntimeGraphReceiptsCollector } from "./runtime-graph-receipts.ts";
 
 export interface ViewSource {

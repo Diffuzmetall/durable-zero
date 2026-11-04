@@ -1,6 +1,9 @@
-import { subagentPolicyRecordSchema } from "./policy/schema.ts";
-import { SubagentRevisionConflictError } from "./policy/errors.ts";
-import type { SubagentPolicyHolder, SubagentPolicyRecord } from "./policy/types.ts";
+import {
+	subagentPolicyRecordSchema,
+	SubagentRevisionConflictError,
+	type SubagentPolicyHolder,
+	type SubagentPolicyRecord,
+} from "@durable-zero/core";
 
 export interface CreateSubagentPolicyHolderOptions {
 	initialRecord?: SubagentPolicyRecord;

@@ -1,42 +1,43 @@
 import { resolve } from "node:path";
 import type { Readable, Writable } from "node:stream";
+import * as protocol from "@durable-zero/protocol";
 import { StdioJsonRpcServer } from "@durable-zero/protocol";
 import {
 	SessionCoordinator,
-	type ISessionStore,
-	type IModelProvider,
-	type IExecutionEnvironment,
-	type PromptOptions,
+	type IAgentEngine,
+	type ExecutionEnvFactory,
 } from "@durable-zero/core";
 import { LocalNodeExecutionEnv } from "@durable-zero/execution";
-import { PiDurableSessionStore } from "@durable-zero/adapter-pi-durable";
-import { PiAiModelProvider, setupRunnerModels } from "@durable-zero/adapter-pi-ai";
-import { CodemodeExtension } from "@durable-zero/adapter-codemode";
-import { createPiResourceExtension, type PiResourceExtension } from "@durable-zero/extension-pi-resource";
+import {
+	PiDurableEngine,
+	type PiRuntimeDependencies,
+} from "@durable-zero/adapter-pi-durable";
+import { createCodemodeBuiltinExtension } from "@durable-zero/adapter-codemode";
+import { createPiResourceExtension } from "@durable-zero/extension-pi-resource";
 
 export interface AssembleDurableZeroOptions {
 	cwd?: string;
 	sessionDir?: string;
 	session?: string;
+	continueSession?: boolean;
 	provider?: string;
 	model?: string;
 	thinking?: string;
+	extension?: string;
+	extensions?: string[];
+	skills?: string[];
+	noGlobalExtensions?: boolean;
 	stdin?: Readable;
 	stdout?: Writable;
 	onNotification?: (method: string, params: Record<string, unknown>) => void;
-	store?: ISessionStore;
-	modelProvider?: IModelProvider;
-	executionEnv?: IExecutionEnvironment;
+	executionEnvFactory?: ExecutionEnvFactory;
+	engine?: IAgentEngine;
 }
 
 export interface DurableZeroInstance {
 	coordinator: SessionCoordinator;
-	store: ISessionStore;
-	executionEnv: IExecutionEnvironment;
+	engine: IAgentEngine;
 	server: StdioJsonRpcServer;
-	resourceExt?: PiResourceExtension;
-	codemodeExt?: CodemodeExtension;
-	modelProvider?: IModelProvider;
 	close: () => Promise<void>;
 }
 
@@ -50,42 +51,79 @@ export async function assembleDurableZero(
 			? resolve(cwd, options.session)
 			: resolve(cwd, ".durable/sessions/default");
 
-	const executionEnv = options.executionEnv ?? new LocalNodeExecutionEnv({ cwd });
-	const store = options.store ?? new PiDurableSessionStore({ sessionDir, cwd });
+	const codemodeBuiltin = createCodemodeBuiltinExtension();
 	const resourceExt = createPiResourceExtension({ cwd });
-	const codemodeExt = new CodemodeExtension();
 
-	let modelProvider = options.modelProvider;
-	if (!modelProvider) {
-		try {
-			const { modelRuntime, settingsManager } = await setupRunnerModels(cwd, {
-				provider: options.provider,
-				model: options.model,
-				thinking: options.thinking as any,
-			});
-			modelProvider = new PiAiModelProvider(modelRuntime, settingsManager);
-		} catch {
-			// In test environments or when ModelRuntime fails, provider remains undefined
-		}
-	}
+	const executionEnvFactory: ExecutionEnvFactory =
+		options.executionEnvFactory ??
+		((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
+
+	const dependencies: PiRuntimeDependencies = {
+		executionEnvFactory,
+		builtins: [codemodeBuiltin],
+	};
+
+	const cli = {
+		provider: options.provider,
+		model: options.model,
+		thinking: options.thinking as any,
+		extension: options.extension,
+		extensions: options.extensions,
+		skills: options.skills,
+		noGlobalExtensions: options.noGlobalExtensions,
+	};
+
+	const engine =
+		options.engine ??
+		new PiDurableEngine({
+			sessionDir,
+			session: options.session,
+			cwd,
+			continueSession: options.continueSession,
+			cli,
+			dependencies,
+		});
 
 	const coordinator = new SessionCoordinator({
-		store,
-		modelProvider,
-		executionEnv,
+		engine,
+		sessionDir,
 	});
+
+	await coordinator.start();
 
 	const server = new StdioJsonRpcServer({
 		stdin: options.stdin,
 		stdout: options.stdout,
 		handler: async (method: string, params: Record<string, unknown>) => {
 			if (method === "session/prompt") {
-				return coordinator.prompt(params.content as string, params.options as PromptOptions);
+				return await coordinator.prompt(params.content as any, params.options as any);
 			}
-			if (method === "session/abort") return coordinator.abort();
-			if (method === "session/getState") return coordinator.getState();
-			if (method === "session/setSubagentPolicy") return coordinator.setSubagentPolicy(params);
-			throw new Error(`Unknown method: ${method}`);
+			if (method === "session/abort") {
+				return await coordinator.abort(params?.conversationId as string | undefined);
+			}
+			if (method === "session/getState") {
+				return await coordinator.getState(params?.conversationId as string | undefined);
+			}
+			if (method === "session/getTranscript") {
+				return await coordinator.getTranscript(
+					params?.conversationId as string | undefined,
+					params?.limit as number | undefined,
+				);
+			}
+			if (method === "session/getStats") {
+				return await coordinator.getStats(params?.conversationId as string | undefined);
+			}
+			if (method === "session/setSubagentPolicy") {
+				return await coordinator.setSubagentPolicy(params);
+			}
+
+			const MethodNotFoundClass = (protocol as any).JsonRpcMethodNotFoundError;
+			if (MethodNotFoundClass) {
+				throw new MethodNotFoundClass(method);
+			}
+			const err = new Error(`Method not found: ${method}`);
+			(err as any).code = -32601;
+			throw err;
 		},
 	});
 	server.start();
@@ -103,16 +141,15 @@ export async function assembleDurableZero(
 		unsubEvents();
 		server.stop();
 		await coordinator.close();
+		if (typeof codemodeBuiltin.teardown === "function") {
+			await codemodeBuiltin.teardown();
+		}
 	};
 
 	return {
 		coordinator,
-		store,
-		executionEnv,
+		engine,
 		server,
-		resourceExt,
-		codemodeExt,
-		modelProvider,
 		close,
 	};
 }

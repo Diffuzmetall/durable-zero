@@ -405,6 +405,12 @@ var hostInteractionRequestSchema = wireContextSchema.extend({
   message: z8.string().optional(),
   data: z8.unknown().optional()
 });
+var turnCompleteSchema = wireContextSchema.extend({
+  type: z8.literal("turn_complete"),
+  status: z8.enum(["completed", "aborted", "error"]),
+  requestId: z8.string().min(1),
+  error: z8.string().optional()
+});
 var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("agent_start") }),
   wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
@@ -416,7 +422,8 @@ var lifecycleSchemas = [
   wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
   wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
   runtimeGraphSnapshotEventSchema,
-  hostInteractionRequestSchema
+  hostInteractionRequestSchema,
+  turnCompleteSchema
 ];
 var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
 
@@ -706,6 +713,7 @@ export {
   toolSchemas,
   toolStartSchema,
   toolUpdateSchema,
+  turnCompleteSchema,
   wireContextSchema
 };
 //# sourceMappingURL=index.js.map

@@ -9,8 +9,7 @@ import {
 	type Registry,
 } from "@earendil-works/pi-durable";
 import { createToolSearchExtension } from "@earendil-works/pi-durable/tool-search";
-import type { SubagentPolicyRecord } from "./policy/types.ts";
-import type { ExecutionEnvFactory, IExecutionEnvironment } from "./tools/execution-env.ts";
+import type { SubagentPolicyRecord, ExecutionEnvFactory, IExecutionEnvironment } from "@durable-zero/core";
 import {
 	type ModelRuntime,
 	type SettingsManager,
@@ -20,7 +19,6 @@ import { createPiPrompt, type PromptOptions } from "./prompt.ts";
 import type { DynamicCodemodeNamespaces } from "./codemode-namespaces.ts";
 import { BuiltinExtensionRegistry } from "./builtin-extensions/registry.ts";
 import { codingToolsExtension } from "./builtin-extensions/coding-tools.ts";
-import { createCodemodeBuiltinExtension } from "@durable-zero/adapter-codemode";
 import { subagentsExtension } from "./builtin-extensions/subagents.ts";
 import type { BuiltinExtension, BuiltinExtensionContext } from "./builtin-extensions/types.ts";
 
@@ -83,7 +81,6 @@ export async function createCodingRegistry(
 	const builtinRegistry = new BuiltinExtensionRegistry();
 
 	builtinRegistry.register(codingToolsExtension);
-	builtinRegistry.register(createCodemodeBuiltinExtension());
 	builtinRegistry.register(subagentsExtension);
 
 	for (const builtin of customBuiltins) {

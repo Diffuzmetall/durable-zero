@@ -1,4 +1,4 @@
-import type { RuntimeConversationNode } from "../../contracts/src/index.ts";
+import type { RuntimeConversationNode } from "@durable-zero/contracts";
 
 export class RuntimeGraphConversations {
 	private readonly known = new Map<string, RuntimeConversationNode>();

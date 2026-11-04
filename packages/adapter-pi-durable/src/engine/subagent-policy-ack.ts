@@ -1,7 +1,10 @@
 import { defineDoc, type Harness, type JsonObject } from "@earendil-works/pi-durable";
-import { subagentPolicyRecordSchema } from "./policy/schema.ts";
-import { SubagentPolicyLoadError } from "./policy/errors.ts";
-import type { SubagentPolicyHolder, SubagentPolicyRecord } from "./policy/types.ts";
+import {
+	subagentPolicyRecordSchema,
+	SubagentPolicyLoadError,
+	type SubagentPolicyHolder,
+	type SubagentPolicyRecord,
+} from "@durable-zero/core";
 import { createSubagentPolicyHolder } from "./subagent-policy-state.ts";
 import { runtimeContext } from "./runtime-types.ts";
 

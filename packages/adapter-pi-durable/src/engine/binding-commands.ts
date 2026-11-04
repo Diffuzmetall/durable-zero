@@ -1,8 +1,8 @@
 import type { ConversationId } from "@earendil-works/pi-durable";
 import { BindingDoc, BindingIndexDoc, identityKey, type StoredBinding } from "./binding-docs.ts";
 import { runtimeContext, type OpenDurableResult } from "./runtime-types.ts";
-import type { CommandResponder, RunnerCommandPayload } from "../../contracts/src/index.ts";
-import { InvalidCommandPayloadError } from "./errors.ts";
+import type { CommandResponder, RunnerCommandPayload } from "@durable-zero/contracts";
+import { InvalidCommandPayloadError } from "@durable-zero/core";
 
 function toConversationId(id: unknown): ConversationId | undefined {
 	if (typeof id === "number" && Number.isInteger(id) && id > 0) {

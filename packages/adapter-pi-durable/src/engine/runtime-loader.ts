@@ -15,13 +15,13 @@ import {
 } from "./harness-setup.ts";
 import { createStandardExtensionFactories } from "./extension-bridge.ts";
 import { createNestedToolExecutor, mountExtensionBridge } from "./extension-mount.ts";
-import { getAgentDir, type SessionLocation } from "@durable-zero/adapter-pi-durable";
+import { getAgentDir, type SessionLocation } from "../session-storage.ts";
 import { Harness, type ModelRef } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { type OpenDurableOptions, runtimeContext } from "./runtime-types.ts";
 import { DynamicPromptSections } from "./prompt.ts";
 import { DynamicCodemodeNamespaces } from "./codemode-namespaces.ts";
-import type { SubagentPolicyHolder } from "./policy/types.ts";
+import type { SubagentPolicyHolder } from "@durable-zero/core";
 import { loadSubagentPolicyHolder } from "./subagent-policy-ack.ts";
 
 export interface LoadedHarnessEnvironment {
@@ -73,23 +73,35 @@ export async function loadHarnessEnvironment(
 	} catch (err) {
 		console.warn(`[RuntimeLoader] Theme initialization warning: ${err instanceof Error ? err.message : String(err)}`);
 	}
-	const modelRuntime = await ModelRuntime.create();
-	const settingsManager = SettingsManager.create(location.cwd);
+	const deps = options.dependencies;
+	const modelRuntime = deps?.modelRuntime ?? (await ModelRuntime.create());
+	for (const provider of deps?.nativeProviders ?? []) {
+		try {
+			modelRuntime.registerNativeProvider(provider);
+		} catch (err) {
+			logRegError("native provider", provider?.id ?? "unknown", err);
+		}
+	}
+	const settingsManager = deps?.settingsManager ?? SettingsManager.create(location.cwd);
 	const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
 	const extPaths = [
 		...(options.cli?.extensions ?? (options.cli?.extension ? [options.cli.extension] : [])),
 		...(extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []),
 	];
-	const resourceLoader = new DefaultResourceLoader({
-		cwd: location.cwd,
-		agentDir: getAgentDir(),
-		settingsManager,
-		extensionFactories: createStandardExtensionFactories(),
-		additionalSkillPaths: options.cli?.skills,
-		additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
-		noExtensions: options.cli?.noGlobalExtensions ?? false,
-	});
-	await resourceLoader.reload();
+	const resourceLoader =
+		deps?.resourceLoader ??
+		new DefaultResourceLoader({
+			cwd: location.cwd,
+			agentDir: getAgentDir(),
+			settingsManager,
+			extensionFactories: createStandardExtensionFactories(),
+			additionalSkillPaths: options.cli?.skills,
+			additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
+			noExtensions: options.cli?.noGlobalExtensions ?? false,
+		});
+	if (!deps?.resourceLoader) {
+		await resourceLoader.reload();
+	}
 	const extensionsResult = resourceLoader.getExtensions();
 
 	registerPendingProviders(modelRuntime, extensionsResult.runtime);
@@ -103,7 +115,7 @@ export async function loadHarnessEnvironment(
 		return p && m ? { provider: p, modelId: m } : undefined;
 	};
 
-	const dynamicSections = new DynamicPromptSections();
+	const dynamicSections = deps?.dynamicSections ?? new DynamicPromptSections();
 	const dynamicNamespaces = new DynamicCodemodeNamespaces();
 	const settings = createHarnessSettings(settingsManager, getActiveModel);
 
@@ -115,13 +127,18 @@ export async function loadHarnessEnvironment(
 		return subagentPolicyHolder.getRecord();
 	};
 
+	const builtins = [
+		...(deps?.builtins ?? []),
+		...(options.builtins ?? options.plugins ?? []),
+	];
+	const promptOptions = deps?.prompt ?? options.prompt;
 	const codingRegistry = await createCodingRegistry(
 		settingsManager,
 		location.cwd,
 		getSubagentPolicy,
-		{ ...options.prompt, resourceLoader, dynamicSections },
+		{ ...promptOptions, resourceLoader, dynamicSections },
 		dynamicNamespaces,
-		options.builtins ?? options.plugins,
+		builtins,
 	);
 	const registry = codingRegistry;
 

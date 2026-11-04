@@ -3,7 +3,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { DurableEngine } from "@durable-zero/core";
 
 const argv = process.argv.slice(2);
 
@@ -56,8 +55,8 @@ async function main() {
 	}
 
 	if (command === "serve") {
-		// Launch stdio/socket runner server
-		await import("../../core/src/runner-server.ts");
+		const { main: runRunner } = await import("../../runner/dist/main.js");
+		await runRunner(argv.slice(1));
 		return;
 	}
 

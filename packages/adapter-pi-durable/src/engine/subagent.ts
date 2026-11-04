@@ -10,8 +10,7 @@ import {
 import { SubagentsDoc, type SubagentRecord } from "./subagent-docs.ts";
 import { Anchor, BACKGROUND, DefaultReporter, answerText } from "./subagent-delivery.ts";
 import { buildTechnicalWorkerRole } from "./subagent-role.ts";
-import { resolveSubagentModelConfiguration } from "./policy/resolver.ts";
-import type { SubagentPolicyRecord } from "./policy/types.ts";
+import { resolveSubagentModelConfiguration, type SubagentPolicyRecord } from "@durable-zero/core";
 import { normalizeModelReference } from "./shared/model-ref.ts";
 
 export function createSubagentExtension(

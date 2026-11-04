@@ -2,8 +2,8 @@ import type { AttachedReplicatedState } from "@earendil-works/chord";
 import type { Conversation, ConversationId, ConversationView, Cursor, Harness, TaskGraph } from "@earendil-works/pi-durable";
 import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agent";
 import { ExecutionEnvs, findInitialAgentModel } from "./harness-setup.ts";
-import type { ExecutionEnvFactory } from "./tools/execution-env.ts";
-import { selectSession } from "@durable-zero/adapter-pi-durable";
+import type { ExecutionEnvFactory } from "@durable-zero/core";
+import { selectSession } from "../session-storage.ts";
 import {
 	agentOf, firstInput, titleOf, type ConversationSummary, type DurableView,
 	type ModelSummary, type Notice, type OpenDurableOptions, type OpenDurableResult, runtimeContext,
@@ -17,11 +17,12 @@ import { hydrateSessionActiveTools, loadSummaries, createConversationBinding } f
 export { hydrateSessionActiveTools } from "./runtime-hydration.ts";
 
 export async function openDurable(options: OpenDurableOptions = {}): Promise<OpenDurableResult> {
-	if (!options.executionEnvFactory) {
+	const executionEnvFactory = options.dependencies?.executionEnvFactory ?? options.executionEnvFactory;
+	if (!executionEnvFactory) {
 		throw new Error("ExecutionEnvFactory is required in openDurable (AP-012, AP-072, AP-073: no fallback in core)");
 	}
 	const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
-	const envs = new ExecutionEnvs(location.cwd, options.executionEnvFactory);
+	const envs = new ExecutionEnvs(location.cwd, executionEnvFactory);
 	let harness: Harness | undefined;
 	let envState: LoadedHarnessEnvironment | undefined;
 

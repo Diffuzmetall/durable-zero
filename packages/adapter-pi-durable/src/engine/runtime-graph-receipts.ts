@@ -1,6 +1,6 @@
 import type { TaskRecord } from "@earendil-works/pi-durable";
-import type { RuntimeTaskReceipt, TaskOutcomeName, TaskTokensUsage } from "../../contracts/src/index.ts";
-import { MAX_RECEIPTS, MAX_PREVIEW_LENGTH } from "../../contracts/src/index.ts";
+import type { RuntimeTaskReceipt, TaskOutcomeName, TaskTokensUsage } from "@durable-zero/contracts";
+import { MAX_RECEIPTS, MAX_PREVIEW_LENGTH } from "@durable-zero/contracts";
 import { normalizeUsage } from "./task-tokens.ts";
 
 export const MAX_ERROR_MESSAGE_LENGTH = 1024;
