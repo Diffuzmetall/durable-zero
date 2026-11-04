@@ -22,18 +22,18 @@ export interface IResourceLoader {
 }
 
 export interface SessionCoordinatorOptions {
-	engine?: IAgentEngine;
-	store?: ISessionStore;
+	engine: IAgentEngine;
 	sessionDir?: string;
+	store?: ISessionStore;
 	modelProvider?: IModelProvider;
 	executionEnv?: IExecutionEnvironment;
 	resourceLoader?: IResourceLoader;
 }
 
 export class SessionCoordinator {
-	private readonly engine?: IAgentEngine;
+	private readonly engine: IAgentEngine;
 	private readonly store?: ISessionStore;
-	public readonly sessionDir?: string;
+	public readonly sessionDir: string;
 	private readonly modelProvider?: IModelProvider;
 	private readonly executionEnv?: IExecutionEnvironment;
 	private readonly resourceLoader?: IResourceLoader;
@@ -43,18 +43,20 @@ export class SessionCoordinator {
 	private readonly listeners = new Set<(event: unknown) => void>();
 
 	constructor(options: SessionCoordinatorOptions) {
+		if (!options.engine) {
+			throw new Error("IAgentEngine is required by SessionCoordinator (AP-010, AP-076)");
+		}
 		this.engine = options.engine;
 		this.store = options.store;
-		this.sessionDir = options.sessionDir;
+		this.sessionDir = options.sessionDir ?? options.store?.sessionDir ?? process.cwd();
 		this.modelProvider = options.modelProvider;
 		this.executionEnv = options.executionEnv;
 		this.resourceLoader = options.resourceLoader;
 	}
 
 	public async start(): Promise<void> {
-		if (this.engine) {
-			await this.engine.start(this.sessionDir ?? "");
-		} else if (this.store) {
+		await this.engine.start(this.sessionDir);
+		if (this.store) {
 			await this.store.acquireLock();
 		}
 		this.isStarted = true;
@@ -71,7 +73,10 @@ export class SessionCoordinator {
 			throw new SessionError("SESSION_ABORTED", "Session is aborted");
 		}
 		if (!this.isStarted) {
-			throw new SessionError("SESSION_NOT_STARTED", "Session is not started. Call start() before submitting prompts");
+			throw new SessionError(
+				"SESSION_NOT_STARTED",
+				"Session is not started. Call start() before submitting prompts",
+			);
 		}
 
 		if (typeof input === "string") {
@@ -95,12 +100,7 @@ export class SessionCoordinator {
 			throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
 		}
 
-		if (this.engine) {
-			return await this.engine.submit(input, options);
-		}
-
-		const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-		return { status: "accepted", id, conversationId: "1" };
+		return await this.engine.submit(input, options);
 	}
 
 	public emitEvent(event: unknown): void {
@@ -110,64 +110,34 @@ export class SessionCoordinator {
 	}
 
 	public events(callback: (event: any) => void): () => void {
-		let unsubEngine: (() => void) | undefined;
-		if (this.engine) {
-			unsubEngine = this.engine.events(callback);
-		}
+		const unsubEngine = this.engine.events(callback);
 		this.listeners.add(callback);
 		return () => {
-			unsubEngine?.();
+			unsubEngine();
 			this.listeners.delete(callback);
 		};
 	}
 
 	public async abort(conversationId?: string): Promise<void> {
 		this.isAborted = true;
-		if (this.engine) {
-			await this.engine.abort(conversationId);
-		}
+		await this.engine.abort(conversationId);
 		this.emitEvent({ type: "session/aborted" });
 	}
 
-	public async getState(conversationId?: string): Promise<SessionStateDTO | Record<string, unknown>> {
-		if (this.engine) {
-			return await this.engine.getState(conversationId);
-		}
-		return {
-			isStarted: this.isStarted,
-			isAborted: this.isAborted,
-			isClosed: this.isClosed,
-			sessionDir: this.sessionDir ?? this.store?.sessionDir,
-		};
+	public async getState(conversationId?: string): Promise<SessionStateDTO> {
+		return await this.engine.getState(conversationId);
 	}
 
 	public async getTranscript(conversationId?: string, limit?: number): Promise<SessionTranscriptDTO> {
-		if (this.engine) {
-			return await this.engine.getTranscript(conversationId, limit);
-		}
-		return {
-			conversationId: conversationId ?? "1",
-			entries: [],
-		};
+		return await this.engine.getTranscript(conversationId, limit);
 	}
 
 	public async getStats(conversationId?: string): Promise<SessionStatsDTO> {
-		if (this.engine) {
-			return await this.engine.getStats(conversationId);
-		}
-		return {
-			contextUsage: {
-				tokens: null,
-				contextWindow: 128000,
-			},
-		};
+		return await this.engine.getStats(conversationId);
 	}
 
 	public async setSubagentPolicy(params: unknown): Promise<{ ok: boolean }> {
-		if (this.engine) {
-			await this.engine.setSubagentPolicy(params as SubagentPolicyRecord);
-			return { ok: true };
-		}
+		await this.engine.setSubagentPolicy(params as SubagentPolicyRecord);
 		if (this.store) {
 			await this.store.saveDocument("subagents", "policy_ack", params);
 		}
@@ -178,9 +148,7 @@ export class SessionCoordinator {
 		this.isClosed = true;
 		this.isStarted = false;
 		this.listeners.clear();
-		if (this.engine) {
-			await this.engine.close();
-		}
+		await this.engine.close();
 		if (this.store) {
 			await this.store.releaseLock();
 			await this.store.close();

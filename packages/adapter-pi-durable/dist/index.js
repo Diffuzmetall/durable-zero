@@ -5271,11 +5271,35 @@ var PiDurableEngine = class {
       entries
     };
   }
-  async getStats(_conversationId) {
+  async getStats(conversationId) {
+    if (!this.instance) {
+      throw new SessionError("SESSION_NOT_STARTED", "Engine not started");
+    }
+    const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID4;
+    const conv = await this.instance.harness.conversation(convId, runtimeContext);
+    if (!conv) {
+      throw new SessionError("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+    }
+    const agent = await conv.agent(runtimeContext);
+    let contextWindow = 0;
+    if (agent.model) {
+      const m = this.instance.modelRuntime.getModel(agent.model.provider, agent.model.modelId);
+      if (m?.contextWindow) {
+        contextWindow = m.contextWindow;
+      }
+    }
+    let tokens = null;
+    try {
+      const usage = await this.instance.harness.usage(runtimeContext);
+      if (typeof usage?.totalTokens === "number") {
+        tokens = usage.totalTokens;
+      }
+    } catch {
+    }
     return {
       contextUsage: {
-        tokens: null,
-        contextWindow: 128e3
+        tokens,
+        contextWindow
       }
     };
   }

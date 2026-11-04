@@ -287,17 +287,19 @@ var SessionCoordinator = class {
   isAborted = false;
   listeners = /* @__PURE__ */ new Set();
   constructor(options) {
+    if (!options.engine) {
+      throw new Error("IAgentEngine is required by SessionCoordinator (AP-010, AP-076)");
+    }
     this.engine = options.engine;
     this.store = options.store;
-    this.sessionDir = options.sessionDir;
+    this.sessionDir = options.sessionDir ?? options.store?.sessionDir ?? process.cwd();
     this.modelProvider = options.modelProvider;
     this.executionEnv = options.executionEnv;
     this.resourceLoader = options.resourceLoader;
   }
   async start() {
-    if (this.engine) {
-      await this.engine.start(this.sessionDir ?? "");
-    } else if (this.store) {
+    await this.engine.start(this.sessionDir);
+    if (this.store) {
       await this.store.acquireLock();
     }
     this.isStarted = true;
@@ -310,7 +312,10 @@ var SessionCoordinator = class {
       throw new SessionError("SESSION_ABORTED", "Session is aborted");
     }
     if (!this.isStarted) {
-      throw new SessionError("SESSION_NOT_STARTED", "Session is not started. Call start() before submitting prompts");
+      throw new SessionError(
+        "SESSION_NOT_STARTED",
+        "Session is not started. Call start() before submitting prompts"
+      );
     }
     if (typeof input === "string") {
       if (input.trim().length === 0) {
@@ -332,11 +337,7 @@ var SessionCoordinator = class {
     } else {
       throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
     }
-    if (this.engine) {
-      return await this.engine.submit(input, options);
-    }
-    const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    return { status: "accepted", id, conversationId: "1" };
+    return await this.engine.submit(input, options);
   }
   emitEvent(event) {
     for (const listener of this.listeners) {
@@ -344,59 +345,29 @@ var SessionCoordinator = class {
     }
   }
   events(callback) {
-    let unsubEngine;
-    if (this.engine) {
-      unsubEngine = this.engine.events(callback);
-    }
+    const unsubEngine = this.engine.events(callback);
     this.listeners.add(callback);
     return () => {
-      unsubEngine?.();
+      unsubEngine();
       this.listeners.delete(callback);
     };
   }
   async abort(conversationId) {
     this.isAborted = true;
-    if (this.engine) {
-      await this.engine.abort(conversationId);
-    }
+    await this.engine.abort(conversationId);
     this.emitEvent({ type: "session/aborted" });
   }
   async getState(conversationId) {
-    if (this.engine) {
-      return await this.engine.getState(conversationId);
-    }
-    return {
-      isStarted: this.isStarted,
-      isAborted: this.isAborted,
-      isClosed: this.isClosed,
-      sessionDir: this.sessionDir ?? this.store?.sessionDir
-    };
+    return await this.engine.getState(conversationId);
   }
   async getTranscript(conversationId, limit) {
-    if (this.engine) {
-      return await this.engine.getTranscript(conversationId, limit);
-    }
-    return {
-      conversationId: conversationId ?? "1",
-      entries: []
-    };
+    return await this.engine.getTranscript(conversationId, limit);
   }
   async getStats(conversationId) {
-    if (this.engine) {
-      return await this.engine.getStats(conversationId);
-    }
-    return {
-      contextUsage: {
-        tokens: null,
-        contextWindow: 128e3
-      }
-    };
+    return await this.engine.getStats(conversationId);
   }
   async setSubagentPolicy(params) {
-    if (this.engine) {
-      await this.engine.setSubagentPolicy(params);
-      return { ok: true };
-    }
+    await this.engine.setSubagentPolicy(params);
     if (this.store) {
       await this.store.saveDocument("subagents", "policy_ack", params);
     }
@@ -406,9 +377,7 @@ var SessionCoordinator = class {
     this.isClosed = true;
     this.isStarted = false;
     this.listeners.clear();
-    if (this.engine) {
-      await this.engine.close();
-    }
+    await this.engine.close();
     if (this.store) {
       await this.store.releaseLock();
       await this.store.close();
@@ -5478,11 +5447,35 @@ var PiDurableEngine = class {
       entries
     };
   }
-  async getStats(_conversationId) {
+  async getStats(conversationId) {
+    if (!this.instance) {
+      throw new SessionError2("SESSION_NOT_STARTED", "Engine not started");
+    }
+    const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID4;
+    const conv = await this.instance.harness.conversation(convId, runtimeContext);
+    if (!conv) {
+      throw new SessionError2("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+    }
+    const agent = await conv.agent(runtimeContext);
+    let contextWindow = 0;
+    if (agent.model) {
+      const m = this.instance.modelRuntime.getModel(agent.model.provider, agent.model.modelId);
+      if (m?.contextWindow) {
+        contextWindow = m.contextWindow;
+      }
+    }
+    let tokens = null;
+    try {
+      const usage = await this.instance.harness.usage(runtimeContext);
+      if (typeof usage?.totalTokens === "number") {
+        tokens = usage.totalTokens;
+      }
+    } catch {
+    }
     return {
       contextUsage: {
-        tokens: null,
-        contextWindow: 128e3
+        tokens,
+        contextWindow
       }
     };
   }
@@ -5582,6 +5575,8 @@ async function assembleDurableZero(options = {}) {
   const executionEnvFactory = options.executionEnvFactory ?? ((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
   const dependencies = {
     executionEnvFactory,
+    settingsManager: resourceExt.configProvider,
+    resourceLoader: resourceExt.resourceLoader,
     builtins: [codemodeBuiltin]
   };
   const cli = {

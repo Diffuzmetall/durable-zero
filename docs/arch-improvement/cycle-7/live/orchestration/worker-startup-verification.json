@@ -1,0 +1,114 @@
+[
+  {
+    "id": "thr_tpdann8gpi",
+    "title": "Cycle 7 · артефакты в репозиторий",
+    "status": "active",
+    "latestToolStarts": [
+      {
+        "seq": 48,
+        "at": "2026-11-04T23:14:51.850000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && git status && git log -n 5 --oneline"
+      },
+      {
+        "seq": 52,
+        "at": "2026-11-04T23:14:58.009000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "find /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7 -maxdepth 3"
+      },
+      {
+        "seq": 56,
+        "at": "2026-11-04T23:15:05.170000+03:00",
+        "type": "fileRead",
+        "path": "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/handoffs/artifact-curator.md",
+        "command": null
+      }
+    ]
+  },
+  {
+    "id": "thr_4yhrgipwed",
+    "title": "Cycle 7 · Task 4B capability dispatch",
+    "status": "active",
+    "latestToolStarts": [
+      {
+        "seq": 29,
+        "at": "2026-11-04T23:14:19.060000+03:00",
+        "type": "fileRead",
+        "path": "/Users/vanya/Projects/arch-rules/arch-rules.md",
+        "command": null
+      },
+      {
+        "seq": 32,
+        "at": "2026-11-04T23:14:50.284000+03:00",
+        "type": "fileRead",
+        "path": "/Users/vanya/Projects/arch-rules-skills/skills/arch-rules-implementation-review/SKILL.md",
+        "command": null
+      },
+      {
+        "seq": 38,
+        "at": "2026-11-04T23:14:59.103000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && git status && git log -n 5 --oneline"
+      }
+    ]
+  },
+  {
+    "id": "thr_rhrzagp727",
+    "title": "Cycle 7 · Task 5A AST architecture guards",
+    "status": "active",
+    "latestToolStarts": [
+      {
+        "seq": 46,
+        "at": "2026-11-04T23:14:20.533000+03:00",
+        "type": "fileRead",
+        "path": "/Users/vanya/Projects/arch-rules/arch-rules.md",
+        "command": null
+      },
+      {
+        "seq": 53,
+        "at": "2026-11-04T23:14:53.252000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "git status"
+      },
+      {
+        "seq": 57,
+        "at": "2026-11-04T23:15:01.959000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && git status && git log -n 5 --oneline"
+      }
+    ]
+  },
+  {
+    "id": "thr_tcbhyv8p4r",
+    "title": "Cycle 7 · Slice 0: реализация по Arch Loop",
+    "status": "active",
+    "latestToolStarts": [
+      {
+        "seq": 1118,
+        "at": "2026-11-04T23:09:35.815000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs"
+      },
+      {
+        "seq": 1123,
+        "at": "2026-11-04T23:11:56.922000+03:00",
+        "type": "commandExecution",
+        "path": null,
+        "command": "cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 30000 packages/runner/test/e2e-walking-skeleton.test.ts"
+      },
+      {
+        "seq": 1130,
+        "at": "2026-11-04T23:13:22.734000+03:00",
+        "type": "fileRead",
+        "path": "/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/src/engine/runtime-loader.ts",
+        "command": null
+      }
+    ]
+  }
+]

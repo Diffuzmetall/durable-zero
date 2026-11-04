@@ -1,0 +1,18 @@
+{
+  "reason": "All three new pi threads fail before generation: semantic-skill-loader imports missing ./types.js",
+  "operation": "Temporarily disable only broken autoload symlink; preserve target source and original link for rollback",
+  "source": "/Users/vanya/.pi/agent/extensions/semantic-skill-loader.ts",
+  "disabled": "/Users/vanya/.pi/agent/extensions/semantic-skill-loader.ts.disabled-20261104",
+  "time": "2026-11-04T23:09:41.904572+03:00",
+  "verifiedDisabled": true,
+  "rollback": "If repaired and explicitly desired, recreate symlink to preserved source. No source deleted.",
+  "installationLinkRemoved": true,
+  "sourceCodePreserved": true,
+  "authorization": "User explicitly requested uninstall of this extension",
+  "additionalInstallationLinksRemoved": [
+    {
+      "path": "/Users/vanya/Projects/.pi/extensions/semantic-skill-loader.ts",
+      "targetPreserved": "/Users/vanya/Projects/pi-semantic-skill-loader/src/index.ts"
+    }
+  ]
+}

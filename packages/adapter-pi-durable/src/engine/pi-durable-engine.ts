@@ -308,11 +308,36 @@ export class PiDurableEngine implements IAgentEngine {
 		};
 	}
 
-	public async getStats(_conversationId?: string): Promise<SessionStatsDTO> {
+	public async getStats(conversationId?: string): Promise<SessionStatsDTO> {
+		if (!this.instance) {
+			throw new SessionError("SESSION_NOT_STARTED", "Engine not started");
+		}
+		const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID;
+		const conv = await this.instance.harness.conversation(convId, runtimeContext);
+		if (!conv) {
+			throw new SessionError("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+		}
+		const agent = await conv.agent(runtimeContext);
+		let contextWindow = 0;
+		if (agent.model) {
+			const m = this.instance.modelRuntime.getModel(agent.model.provider, agent.model.modelId);
+			if (m?.contextWindow) {
+				contextWindow = m.contextWindow;
+			}
+		}
+		let tokens: number | null = null;
+		try {
+			const usage = await this.instance.harness.usage(runtimeContext);
+			if (typeof (usage as any)?.totalTokens === "number") {
+				tokens = (usage as any).totalTokens;
+			}
+		} catch {
+			// usage not yet recorded
+		}
 		return {
 			contextUsage: {
-				tokens: null,
-				contextWindow: 128000,
+				tokens,
+				contextWindow,
 			},
 		};
 	}

@@ -60,6 +60,8 @@ export async function assembleDurableZero(
 
 	const dependencies: PiRuntimeDependencies = {
 		executionEnvFactory,
+		settingsManager: resourceExt.configProvider,
+		resourceLoader: resourceExt.resourceLoader,
 		builtins: [codemodeBuiltin],
 	};
 

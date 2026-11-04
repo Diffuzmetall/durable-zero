@@ -26,6 +26,7 @@ interface JsonRpcMessage {
 
 class JsonRpcProcessClient {
 	public readonly process: ChildProcessWithoutNullStreams;
+	public stderrOutput = "";
 	private pending = new Map<
 		string | number,
 		{ resolve: (res: any) => void; reject: (err: Error) => void }
@@ -34,12 +35,42 @@ class JsonRpcProcessClient {
 	private notificationWaiters: Array<{
 		predicate: (msg: JsonRpcMessage) => boolean;
 		resolve: (msg: JsonRpcMessage) => void;
+		reject: (err: Error) => void;
 	}> = [];
 	private rl: readline.Interface;
 
 	constructor(process: ChildProcessWithoutNullStreams) {
 		this.process = process;
 		this.rl = readline.createInterface({ input: process.stdout });
+
+		process.stderr.on("data", (chunk) => {
+			this.stderrOutput += chunk.toString();
+		});
+
+		process.on("exit", (code, signal) => {
+			const err = new Error(
+				`Child process exited prematurely with code ${code}, signal ${signal}. Stderr: ${this.stderrOutput}`,
+			);
+			for (const waiter of this.pending.values()) {
+				waiter.reject(err);
+			}
+			this.pending.clear();
+			for (const waiter of this.notificationWaiters) {
+				waiter.reject(err);
+			}
+			this.notificationWaiters = [];
+		});
+
+		process.on("error", (err) => {
+			for (const waiter of this.pending.values()) {
+				waiter.reject(err);
+			}
+			this.pending.clear();
+			for (const waiter of this.notificationWaiters) {
+				waiter.reject(err);
+			}
+			this.notificationWaiters = [];
+		});
 
 		this.rl.on("line", (line) => {
 			const trimmed = line.trim();
@@ -74,6 +105,11 @@ class JsonRpcProcessClient {
 	}
 
 	public async request(id: number | string, method: string, params: Record<string, unknown> = {}): Promise<any> {
+		if (this.process.exitCode !== null) {
+			throw new Error(
+				`Child process already exited with code ${this.process.exitCode}. Stderr: ${this.stderrOutput}`,
+			);
+		}
 		return new Promise((resolve, reject) => {
 			this.pending.set(id, { resolve, reject });
 			const req: JsonRpcMessage = { jsonrpc: "2.0", id, method, params };
@@ -88,11 +124,19 @@ class JsonRpcProcessClient {
 		const existing = this.notifications.find(predicate);
 		if (existing) return Promise.resolve(existing);
 
+		if (this.process.exitCode !== null) {
+			return Promise.reject(
+				new Error(
+					`Child process already exited with code ${this.process.exitCode}. Stderr: ${this.stderrOutput}`,
+				),
+			);
+		}
+
 		return new Promise((resolve, reject) => {
 			const timer = setTimeout(() => {
 				const idx = this.notificationWaiters.findIndex((w) => w.resolve === resolve);
 				if (idx !== -1) this.notificationWaiters.splice(idx, 1);
-				reject(new Error(`Timed out after ${timeoutMs}ms waiting for notification matching predicate`));
+				reject(new Error(`Timed out after ${timeoutMs}ms waiting for notification. Stderr: ${this.stderrOutput}`));
 			}, timeoutMs);
 
 			this.notificationWaiters.push({
@@ -100,6 +144,10 @@ class JsonRpcProcessClient {
 				resolve: (msg) => {
 					clearTimeout(timer);
 					resolve(msg);
+				},
+				reject: (err) => {
+					clearTimeout(timer);
+					reject(err);
 				},
 			});
 		});
@@ -112,7 +160,13 @@ class JsonRpcProcessClient {
 				resolve(this.process.exitCode);
 				return;
 			}
-			this.process.once("exit", (code) => resolve(code));
+			const timer = setTimeout(() => {
+				this.process.kill("SIGKILL");
+			}, 4000);
+			this.process.once("exit", (code) => {
+				clearTimeout(timer);
+				resolve(code);
+			});
 			this.process.kill("SIGTERM");
 		});
 	}
@@ -145,10 +199,6 @@ function spawnClient(sessionDir: string, tmpDir: string): JsonRpcProcessClient {
 		},
 	);
 
-	child.stderr.on("data", (chunk) => {
-		// Pass stderr to debug if needed
-	});
-
 	return new JsonRpcProcessClient(child);
 }
 
@@ -163,12 +213,17 @@ test(
 		await fs.mkdir(path.join(tmpBase, "agent"), { recursive: true });
 		await fs.mkdir(sessionDir, { recursive: true });
 
+		let client1: JsonRpcProcessClient | undefined;
+		let client2: JsonRpcProcessClient | undefined;
+
 		t.after(async () => {
+			if (client1) await client1.stop().catch(() => {});
+			if (client2) await client2.stop().catch(() => {});
 			await fs.rm(tmpBase, { recursive: true, force: true }).catch(() => {});
 		});
 
 		// 1. First run: Start process
-		const client1 = spawnClient(sessionDir, tmpBase);
+		client1 = spawnClient(sessionDir, tmpBase);
 
 		// 2. Send prompt: Echo: hello world
 		const admission = await client1.request(1, "session/prompt", {
@@ -223,9 +278,10 @@ test(
 		// 6. Stop process cleanly via SIGTERM
 		const exitCode1 = await client1.stop();
 		assert.equal(exitCode1, 0, "Process must exit cleanly with code 0 on SIGTERM");
+		client1 = undefined;
 
 		// 7. Second run: Restart process with SAME sessionDir
-		const client2 = spawnClient(sessionDir, tmpBase);
+		client2 = spawnClient(sessionDir, tmpBase);
 
 		// 8. Query session/getState
 		const state2 = await client2.request(3, "session/getState", {});
@@ -261,5 +317,6 @@ test(
 		);
 
 		await client2.stop();
+		client2 = undefined;
 	},
 );
