@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSubagentExtension } from "../src/subagent.ts";
+import { createSubagentExtension } from "../src/engine/subagent.ts";
 
 test("Subagent module is exported and valid", () => {
 	const subagentExt = createSubagentExtension(() => ({

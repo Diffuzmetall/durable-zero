@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { startSubagentWatcher, type SubagentWatcherController } from "../src/subagent-watcher.ts";
-import { DurableEventAdapter } from "../src/bridge/durable-event-adapter.ts";
+import { startSubagentWatcher, type SubagentWatcherController } from "../src/engine/subagent-watcher.ts";
+import { DurableEventAdapter } from "../src/engine/bridge/durable-event-adapter.ts";
 import type { ConversationId, Harness } from "@earendil-works/pi-durable";
-import type { AgentEvent } from "../src/bridge/contracts.ts";
-import { BindingIndexDoc } from "../src/binding-docs.ts";
-import { SubagentsDoc } from "../src/subagent-docs.ts";
+import type { AgentEvent } from "../src/engine/bridge/contracts.ts";
+import { BindingIndexDoc } from "../src/engine/binding-docs.ts";
+import { SubagentsDoc } from "../src/engine/subagent-docs.ts";
 
 function createMockHarness(existingBindings: Record<string, ConversationId> = {}) {
 	const streamListeners = new Map<number, (events: readonly AgentEvent[], ctx: any) => Promise<void>>();

@@ -1,0 +1,29 @@
+▶ Task 5A Fix Round 3: Independent Adversarial Probes & Invariant Verification
+  ▶ Section 1: Verification of the Four Former Structural Bypasses (All Now Correctly Rejected)
+    ✔ BYPASS 1 NOW REJECTED: non-callable export (export const main = 17) is rejected (5.505292ms)
+    ✔ BYPASS 2 NOW REJECTED: inverted condition if (command !== 'serve') is rejected (0.499916ms)
+    ✔ BYPASS 3 NOW REJECTED: fake package prefix '@durable-zero/runner-fake-package' is rejected (0.359667ms)
+    ✔ BYPASS 4 NOW REJECTED: main() invocation inside uninvoked local function declaration is rejected (39.416708ms)
+  ✔ Section 1: Verification of the Four Former Structural Bypasses (All Now Correctly Rejected) (46.127708ms)
+  ▶ Section 2: Verification of Legitimate Positives
+    ✔ LEGITIMATE POSITIVE 1: direct destructuring of main() (26.676ms)
+    ✔ LEGITIMATE POSITIVE 2: destructured alias { main: runRunner } and execution (18.683375ms)
+    ✔ LEGITIMATE POSITIVE 3: namespace import and runner.main() property call (19.045292ms)
+    ✔ LEGITIMATE POSITIVE 4: real production CLI entrypoint in packages/cli/bin/durable-zero.js passes (21.852167ms)
+  ✔ Section 2: Verification of Legitimate Positives (86.462209ms)
+  ▶ Section 3: Subpath Exact Resolution & Callable Semantics
+    ✔ REJECTS nonexistent subpath import @durable-zero/runner/does-not-exist.js (0.489917ms)
+    ✔ DOCUMENTED BEHAVIORAL BOUNDARY: isCallableNode rejects literal primitives (17, 'text', false) while accepting CallExpressions and identifiers for esbuild bundle compatibility (0.585167ms)
+  ✔ Section 3: Subpath Exact Resolution & Callable Semantics (1.153708ms)
+  ▶ Section 4: Helper Module Purity & Modularity Verification
+    ✔ proves importing modular checker submodules is 100% side-effect free (0.056958ms)
+  ✔ Section 4: Helper Module Purity & Modularity Verification (0.089875ms)
+✔ Task 5A Fix Round 3: Independent Adversarial Probes & Invariant Verification (134.22ms)
+ℹ tests 11
+ℹ suites 5
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 379.553625

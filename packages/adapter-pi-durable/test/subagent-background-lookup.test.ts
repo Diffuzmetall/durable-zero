@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSubagentExtension } from "../src/subagent.ts";
-import { SubagentsDoc } from "../src/subagent-docs.ts";
-import { Anchor } from "../src/subagent-delivery.ts";
+import { createSubagentExtension } from "../src/engine/subagent.ts";
+import { SubagentsDoc } from "../src/engine/subagent-docs.ts";
+import { Anchor } from "../src/engine/subagent-delivery.ts";
 
 test("Subagent: background conversation lookup reuses existing anchor conversation on replay", async () => {
 	const ext = createSubagentExtension(() => ({

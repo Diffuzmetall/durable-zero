@@ -1,0 +1,75 @@
+✖ primitive-returning call (3.996583ms)
+✖ primitive identifier (0.528792ms)
+✖ primitive named re-export (0.466375ms)
+✔ genuine function (1.177791ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 256.78625
+
+✖ failing tests:
+
+test at durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/callable-target.test.mjs:17:3
+✖ primitive-returning call (3.996583ms)
+  AssertionError [ERR_ASSERTION]: export const main = Number("17");
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/callable-target.test.mjs:20:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/callable-target.test.mjs:17:3
+✖ primitive identifier (0.528792ms)
+  AssertionError [ERR_ASSERTION]: const n = 17; export const main = n;
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/callable-target.test.mjs:20:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/callable-target.test.mjs:17:3
+✖ primitive named re-export (0.466375ms)
+  AssertionError [ERR_ASSERTION]: const n = 17; export { n as main };
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/callable-target.test.mjs:20:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

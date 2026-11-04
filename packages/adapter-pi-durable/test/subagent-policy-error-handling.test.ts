@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSubagentExtension } from "../src/subagent.ts";
-import { SubagentModelUnavailableError } from "../src/policy/errors.ts";
+import { createSubagentExtension } from "../src/engine/subagent.ts";
+import { SubagentModelUnavailableError } from "@durable-zero/core";
 
 test("Subagent: rejects nested subagent recursion when conversationId > 1", { timeout: 2000 }, async () => {
 	const ext = createSubagentExtension(() => ({

@@ -384,3 +384,9 @@
 - Task4B evidence correction verified: real independent Node6 and60 reporter files, failing negative control(exit1), author timestamp retraction. Together with fixed compiled46/46 black-box PASS, bounded component acceptance granted; no Native, wiring or admin capability acceptance implied.
 - Guard author R3 candidate c248e6c4 preserved and same reviewer resumed; R2 canonical verdict remains FAIL until confirmed structural cases close. e006 contracts-cycle claim corrected: actual frozen graph cycles[].
 - Parent command check found no overdue owned commands after native diagnostic recovery; test migration batch3 and native source fix continue in separate leases.
+
+
+### Cycle7 — parent callable-target counterexample against reported Guard R3 PASS
+- Independent R3 reviewer reported PASS, but parent executed actual frozen c248 runner-verify helper with genuine Node assertions/reporter:4cases,3failures,exit1. Primitive-producing call, primitive identifier and primitive named re-export are all falsely accepted; real exported function positive succeeds. Evidence under live/task-5-guards/parent-adjudication/round-3. Guard scope remains FAIL/P2, routed to original author round4/5; no false final acceptance from literal-only tests or 'mathematically sound' language.
+- Native fix source1298 preserved; original native source reviewer and separate fresh builder resumed on1298. Old fc090 native minimum9-case product PASS retained, source fixes not yet accepted. Docs-only native product follow-up failed MALFORMED_FUNCTION_CALL; inspected provider/error then supported same-context retryattempt2 (no app regression/DB mutation).
+- Migration batch3 ready: scope/91-case adapter evidence saved, remaining batches use same owner and exclusions.

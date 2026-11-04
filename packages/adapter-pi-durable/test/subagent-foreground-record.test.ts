@@ -5,10 +5,10 @@ import { BACKGROUND_CONTEXT as ctx } from "@earendil-works/chord/context";
 import { createModels } from "@earendil-works/pi-ai";
 import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
 import { Harness, MemoryStorage, createRegistry } from "@earendil-works/pi-durable";
-import { createSubagentExtension } from "../src/subagent.ts";
-import { SubagentsDoc } from "../src/subagent-docs.ts";
-import { Anchor, DefaultCourier, DefaultReporter, BACKGROUND } from "../src/subagent-delivery.ts";
-import type { SubagentPolicyRecord } from "../src/policy/types.ts";
+import { createSubagentExtension } from "../src/engine/subagent.ts";
+import { SubagentsDoc } from "../src/engine/subagent-docs.ts";
+import { Anchor, DefaultCourier, DefaultReporter, BACKGROUND } from "../src/engine/subagent-delivery.ts";
+import type { SubagentPolicyRecord } from "@durable-zero/core";
 
 function createTestHarness(models: ReturnType<typeof createModels>, policy: SubagentPolicyRecord) {
 	const registry = createRegistry();

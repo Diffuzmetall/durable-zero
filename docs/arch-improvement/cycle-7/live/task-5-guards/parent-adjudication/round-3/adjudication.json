@@ -1,0 +1,17 @@
+{
+  "candidate": "c248e6c4e6f6db55f8fac3032ed9988d73cfeaf5",
+  "scope": "Frozen verifyFileExportsMain, external installed TypeScript; no production mutation",
+  "frozenHelperSHA256": "2f026edc4daaf79bba65d2cd46b724d1f3256548ef2ceb90b1f684dfaca07452",
+  "tests": 4,
+  "failed": 3,
+  "actualNodeExit": 1,
+  "verdict": "FAIL: unresolved P2 callable-target verification",
+  "evidence": [
+    "main=Number(\"17\") accepted",
+    "main=n where n=17 accepted",
+    "export {n as main} where n=17 accepted",
+    "genuine exported function accepted (positive control)"
+  ],
+  "sourceCause": "isCallableNode returns true for every CallExpression and Identifier; named re-export succeeds on !sf.isDeclarationFile, always true for ordinary JS/TS source.",
+  "fixDecision": "fix-now original guard author round4/5; preserve prior reported PASS as superseded, not accepted final proof"
+}

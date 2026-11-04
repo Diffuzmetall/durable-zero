@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { courierFor, clearDeliveryHold } from "../src/subagent-courier.ts";
+import { courierFor, clearDeliveryHold } from "../src/engine/subagent-courier.ts";
 
 test("Courier: recovers from uncertain delivery via hold watchdog instead of deadlocking", async () => {
 	const courier = courierFor(undefined, 50);

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "FND-TASK5-01-R3",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "CLI Serve Guard Entrypoint Invariant Verification & Bypasses Elimination",
+    "file": "packages/core/test/architecture-boundaries-cli.ts:1",
+    "evidence": "packages/core/test/architecture-boundaries-cli.ts (211 LOC) and runner-verify.ts (112 LOC); empirically verified by 11 tests in r3-counterexamples.test.ts and 17 regression tests in architecture-boundaries-regressions.test.ts.",
+    "resolution": "Resolved. auditCliServeEntrypoint now enforces: 1) AST CallExpression inspection for dynamic import; 2) tracking imported bindings and local declaration shadowing; 3) strict binary equality checking on condition (=== 'serve'); 4) exact package specifier resolution preventing blind fake-package substitutions; 5) non-recursive invocation scanning that ignores uninvoked nested function declarations; 6) AST export verification ensuring the target runner file exports a callable main function.",
+    "rule": "AP-076, AP-021",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-AP019-R3",
+    "severity": "P2",
+    "status": "RESOLVED",
+    "title": "Modular Checker Decomposition into Cohesive Submodules (All <= 250 LOC)",
+    "file": "packages/core/test/architecture-boundaries-checker.ts:1",
+    "evidence": "Decomposed into ast.ts (239 LOC), core.ts (165 LOC), cli.ts (211 LOC), runner-verify.ts (112 LOC), dag.ts (237 LOC), report.ts (234 LOC), and checker.ts (11 LOC facade).",
+    "resolution": "Resolved. All modules strictly comply with AP-019 hard limit (<= 250 LOC) with distinct single responsibilities and side-effect free imports.",
+    "rule": "AP-019, AP-018",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-02-R3",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "Unified Workspace DAG Cycle Detection via Source & Re-Exports",
+    "file": "packages/core/test/architecture-boundaries-dag.ts:1",
+    "evidence": "packages/core/test/architecture-boundaries-dag.ts (237 LOC). Scans AST source, dynamic imports, export * re-exports, and relative escapes across all workspace packages.",
+    "resolution": "Resolved. Accurately detects cross-package cycles omitted from manifests; live monorepo DAG is verified 100% acyclic with 0 cycles.",
+    "rule": "AP-025, AP-076",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-03-R3",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "Durable Evidence & Dynamic Reporting Integrity",
+    "file": "packages/core/test/architecture-boundaries-report.ts:1",
+    "evidence": "packages/core/test/architecture-boundaries-report.ts (234 LOC). Report status dynamically reflects live violations and test suite receipts.",
+    "resolution": "Resolved. Dynamic report authoring strictly outputs FAIL when defects exist and PASS with 0 violations when clean; zero false PASS receipts.",
+    "rule": "AP-076, AP-012",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-TASK5-04-R3",
+    "severity": "P2",
+    "status": "RESOLVED",
+    "title": "AST Syntax Coverage & Multi-Extension Discovery",
+    "file": "packages/core/test/architecture-boundaries-ast.ts:1",
+    "evidence": "packages/core/test/architecture-boundaries-ast.ts (239 LOC). Covers template literals, import = require, and 8 module extensions (.ts through .jsx).",
+    "resolution": "Resolved. Comprehensive syntactic extraction verified.",
+    "rule": "AP-025, AP-076",
+    "fix_decision": "fix-now"
+  },
+  {
+    "id": "FND-MONOREPO-CYCLE-01",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "Monorepo Contracts Re-Export Cycle Resolved in Commit 0d1195b",
+    "file": "packages/contracts/src/index.ts:15",
+    "evidence": "Blob SHA 1ec029828b4eb8128d2e8307b12ee2131c024acb confirms line 15 is export * from './session-fork.ts'; buildFullWorkspaceGraph returns 0 cycles.",
+    "resolution": "Resolved. Native source owner relocated session-fork.ts into packages/contracts/src/ before candidate e0066aee. Live workspace DAG in candidate c248e6c4 is verified 100% acyclic with 0 cycles.",
+    "rule": "AP-020, AP-025",
+    "fix_decision": "log-only"
+  },
+  {
+    "id": "FND-TASK5-05",
+    "severity": "P3",
+    "status": "LOGGED",
+    "title": "Unreferenced Pre-Migration Legacy Build Script on Disk",
+    "file": "packages/core/scripts/build-runner.mjs:1",
+    "evidence": "packages/core/scripts/build-runner.mjs and packages/core/dist/runner.js remain in tree from pre-migration state.",
+    "impact": "Uninvoked obsolete script left in core/scripts. package.json has no build:runner script and CLI no longer references core/dist/runner.js. Slated for whole-cycle cleanup.",
+    "rule": "AP-018",
+    "fix_decision": "log-only"
+  }
+]

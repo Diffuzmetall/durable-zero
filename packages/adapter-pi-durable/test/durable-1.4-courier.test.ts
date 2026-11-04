@@ -8,8 +8,8 @@ import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite
 import { createModels } from "@earendil-works/pi-ai";
 import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
 import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
-import { courierFor, reporterFor, courierIsIdle } from "../src/subagent-delivery.ts";
-import { SubagentsDoc } from "../src/subagent-docs.ts";
+import { courierFor, reporterFor, courierIsIdle } from "../src/engine/subagent-delivery.ts";
+import { SubagentsDoc } from "../src/engine/subagent-docs.ts";
 
 test("courier liveness retains every nonterminal native status, including sleeping and completing", () => {
 	for (const status of ["pending", "running", "waiting", "sleeping", "completing"] as const) assert.equal(courierIsIdle({ state: { status } }), false, status);

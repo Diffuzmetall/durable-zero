@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createDurableController } from "../src/runtime-controller.ts";
-import { SubagentsDoc } from "../src/subagent-docs.ts";
+import { createDurableController } from "../src/engine/runtime-controller.ts";
+import { SubagentsDoc } from "../src/engine/subagent-docs.ts";
 
 test("createDurableController: abort() performs cascading abort with { background: true } across all subagents", async () => {
 	const abortedConversations: Array<{ id: any; options?: any }> = [];
