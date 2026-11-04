@@ -1,0 +1,91 @@
+▶ Task 5A: Architecture Boundaries & Regression Guards
+  ▶ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)
+    ✔ fails on forbidden vendor import (@earendil-works/pi-durable) (4.039833ms)
+    ✔ fails on forbidden adapter import (@durable-zero/adapter-pi-durable) (0.740709ms)
+    ✔ fails on forbidden runner import (@durable-zero/runner) (0.5115ms)
+    ✔ fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net) (0.813542ms)
+    ✔ fails on forbidden type-only vendor import (import type { ... }) (0.333583ms)
+    ✔ fails on forbidden TypeScript import-type syntax (import('mod').Type) (0.324667ms)
+    ✔ fails on forbidden literal dynamic import (await import('adapter')) (0.357583ms)
+    ✔ fails on forbidden re-export barrel (export * from 'vendor') (0.275209ms)
+    ✔ fails on relative path escaping core root (../../../adapter) (0.294041ms)
+    ✔ fails on package.json declaring vendor dependencies in Core (0.215166ms)
+    ✔ fails on legacy CLI serve entrypoint pointing to deleted core runner (0.799792ms)
+    ✔ fails on cyclic workspace dependencies (A -> B -> C -> A) (0.085208ms)
+  ✔ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects) (9.25175ms)
+  ▶ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)
+    ✔ passes cleanly on pure domain service with contracts and zod (2.430042ms)
+    ✔ passes cleanly on pure TypeScript port definitions (0.363ms)
+    ✔ passes cleanly on conformant Core package.json (0.192667ms)
+    ✔ passes cleanly on real CLI serve entrypoint fixture pointing to runner (0.273208ms)
+    ✔ passes cleanly on acyclic multi-tier workspace (0.112ms)
+  ✔ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass) (3.443083ms)
+  ▶ Suite 3: Live Project Source Snapshot Execution
+    ✖ scans live packages/core/src/ and checks AST boundaries (12.93775ms)
+    ✔ verifies live packages/core/package.json contains only contracts and zod (0.073541ms)
+    ✔ verifies live workspace package DAG is strictly acyclic (3.112375ms)
+    ✔ verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner (0.876125ms)
+    ✔ verifies legacy deleted files do not exist in packages/core/src/ (0.072208ms)
+  ✖ Suite 3: Live Project Source Snapshot Execution (17.157875ms)
+  ▶ Suite 4: Durable Evidence & Report Generation
+    ✔ generates structured evidence report with file SHA hashes (6.820667ms)
+  ✔ Suite 4: Durable Evidence & Report Generation (6.859125ms)
+✖ Task 5A: Architecture Boundaries & Regression Guards (37.08075ms)
+ℹ tests 23
+ℹ suites 5
+ℹ pass 22
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 321.309417
+
+✖ failing tests:
+
+test at packages/core/test/architecture-boundaries.test.ts:753:5
+✖ scans live packages/core/src/ and checks AST boundaries (12.93775ms)
+  AssertionError [ERR_ASSERTION]: Live packages/core/src has 1 boundary violations: [
+    {
+      "file": "/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts",
+      "line": 2,
+      "character": 1,
+      "specifier": "@earendil-works/pi-durable",
+      "kind": "static-import",
+      "rule": "AP-010",
+      "severity": "P0",
+      "message": "Forbidden vendor dependency in Core: \"@earendil-works/pi-durable\". All vendor packages must live strictly in adapters."
+    }
+  ]
+  + actual - expected
+  
+  + [
+  +   {
+  +     character: 1,
+  +     file: '/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts',
+  +     kind: 'static-import',
+  +     line: 2,
+  +     message: 'Forbidden vendor dependency in Core: "@earendil-works/pi-durable". All vendor packages must live strictly in adapters.',
+  +     rule: 'AP-010',
+  +     severity: 'P0',
+  +     specifier: '@earendil-works/pi-durable'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts:778:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at node:internal/test_runner/test:1617:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { file: '/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts', line: 2, character: 1, specifier: '@earendil-works/pi-durable', kind: 'static-import', rule: 'AP-010', severity: 'P0', message: 'Forbidden vendor dependency in Core: "@earendil-works/pi-durable". All vendor packages must live strictly in adapters.' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

@@ -123,7 +123,11 @@ if (command === "serve") {
     });
   });
 
-  describe("Probe 2: Workspace DAG Cycle Detection via Source Imports / Re-exports", () => {
+  describe("Probe 2: Workspace DAG Cycle Detection via Source Imports / Re-exports (Suite 3 Manifest-Builder Logic Reproduction + Extracted AST Helpers)", () => {
+    // Note on probe methodology: The candidate suite implements the manifest graph builder inline inside
+    // Suite 3's `it("verifies live workspace package DAG is strictly acyclic")` rather than exporting a standalone
+    // production graph builder. This probe faithfully reproduces that exact inline manifest-builder logic
+    // alongside the exported AST and cycle-detection helpers to prove the blindspot.
     it("FLAW PROVEN: cross-package source import cycle evades workspace DAG check when package.json dependencies omit edge", () => {
       // Create mock workspace with 2 packages: pkg-a and pkg-b
       // pkg-a source imports from pkg-b

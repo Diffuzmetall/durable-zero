@@ -72,16 +72,17 @@ All adversarial probes were executed independently in `docs/arch-improvement/cyc
    - Result: `auditCliServeEntrypoint` matches the regex on `innerText` and returns `{ isOk: true }`.
 
 ### Probe 2: Workspace DAG Cycle Detection via Source & Re-Exports
+- **Methodology & Limitations:** The candidate test suite implements its workspace graph builder inline within `it("verifies live workspace package DAG is strictly acyclic")` (lines 771–789) rather than exporting a standalone production graph-builder function. Probe 2 faithfully reproduces this exact inline manifest-builder logic against the exported AST and cycle-detection helpers to evaluate whether it respects cross-package source and re-export edges.
 1. **Source Import Cycle with Omitted Manifest Edges:**
    - Counterexample: Package A imports Package B in TypeScript source; Package B imports Package A in source. Neither declares the other in `package.json` `dependencies`.
-   - Result: Suite 3's workspace DAG builder scans only `package.json` dependencies, finding **0 cycles**.
+   - Result: The manifest-based DAG builder scans only `package.json` dependencies, finding **0 cycles**.
    - Proof: An AST-aware source scanner run on the same packages identifies the cycle immediately.
 2. **Re-Export Barrel Cycle Evasion:**
    - Counterexample: Package X has `export * from "@mock/pkg-y"`; Package Y has `export * from "@mock/pkg-x"`. Manifests omit dependencies.
    - Result: Workspace DAG check reports `detectDependencyCycles(graph) == []` (clean PASS).
 
-### Probe 3: Suite 4 Unconditional Report Generation
-- **Finding:** Suite 4 lines 864–885 construct `reportData` with hardcoded literals:
+### Probe 3: Suite 4 Unconditional Report Generation & Genuine Failing Run Proof
+- **Source Inspection Finding:** Suite 4 lines 864–885 construct `reportData` with hardcoded literals:
   ```ts
   status: "PASS",
   summary: {
@@ -90,7 +91,31 @@ All adversarial probes were executed independently in `docs/arch-improvement/cyc
     ...
   }
   ```
-- **Consequence:** In Node's test runner, if Suite 3 fails due to a Core boundary violation, Suite 4 still runs and overwrites `report.json` and `report.md` with `status: "PASS"` and `0` violations. Automated CI jobs inspecting `report.json` are deceived.
+- **Genuine End-to-End Execution Receipt (Supplemental Isolated Run):**
+  - To eliminate any reliance on parallel simulations and definitively prove the live behavior of candidate `07609af5`, an isolated temporary `git archive` copy of commit `07609af5` was created with `node_modules` symlinked solely for TypeScript AST parsing (preserving all original Core sources and receipts unmodified).
+  - A single valid forbidden Core import (`import "@earendil-works/pi-durable";`) was added to `packages/core/src/version.ts` in that isolated copy.
+  - The actual test suite was executed:
+    `node --test --test-reporter=junit --test-reporter-destination=... --test-reporter=spec --test-reporter-destination=... packages/core/test/architecture-boundaries.test.ts`
+  - **Empirical Outcome:**
+    - Runner process exited with **exit code 1** (`fail 1`, `pass 22`).
+    - Suite 3 failed: `AssertionError [ERR_ASSERTION]: Live packages/core/src has 1 boundary violations` at line 778.
+    - Node test runner continued to Suite 4, which passed (`✔ generates structured evidence report with file SHA hashes`).
+    - Generated `report.json` was captured and verified: despite the failed test run and the fact that `report.json` lists the violation under `files[].dependencies`, the top-level report summary emitted:
+      ```json
+      "status": "PASS",
+      "summary": {
+        "coreSourceFilesScanned": 16,
+        "coreBoundaryViolations": 0,
+        "corePackageJsonValid": true,
+        "workspaceAcyclic": true,
+        "cliServeDelegationValid": true
+      }
+      ```
+  - **Saved Supplemental Artifacts:**
+    - `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/supplemental/failing-runner-output.txt`
+    - `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/supplemental/failing-runner-junit.xml`
+    - `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/supplemental/false-pass-report.json`
+    - `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/supplemental/false-pass-report.md`
 
 ### Probe 4: AST Syntax Blindspots
 1. **Dynamic Import with Template Literal:**
