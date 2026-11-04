@@ -74,9 +74,19 @@ export class HostBridge implements IHostBridge {
     kind: string,
     payload: { title?: string; message?: string; data?: unknown },
   ): Promise<unknown> {
+    const rawPayload = (payload ?? {}) as {
+      title?: string;
+      message?: string;
+      data?: unknown;
+    };
+
+    // Explicit kind parameter is authoritative; construct only declared payload fields
+    // to prevent extra payload properties (e.g. payload.kind) from overriding kind.
     const validatedParams = hostInteractionParamsSchema.parse({
       kind,
-      ...payload,
+      ...(rawPayload.title !== undefined ? { title: rawPayload.title } : {}),
+      ...(rawPayload.message !== undefined ? { message: rawPayload.message } : {}),
+      ...(rawPayload.data !== undefined ? { data: rawPayload.data } : {}),
     });
 
     const rawResult = await this.requester.request(

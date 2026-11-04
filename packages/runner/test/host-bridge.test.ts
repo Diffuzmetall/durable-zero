@@ -259,6 +259,31 @@ describe("HostBridge Component (Task 2A / S7)", () => {
       assert.deepEqual(result, { choice: "option-a" });
     });
 
+    it("ensures explicit interaction kind is authoritative and cannot be overridden by payload field", async () => {
+      let capturedMethod = "";
+      let capturedParams: Record<string, unknown> | undefined;
+
+      const fakeRequester: HostRequester = {
+        request: async (method, params) => {
+          capturedMethod = method;
+          capturedParams = params;
+          return { confirmed: true };
+        },
+      };
+
+      const bridge: IHostBridge = new HostBridge({ requester: fakeRequester });
+      const payloadWithExtraKind = JSON.parse(
+        '{"title":"Confirm operation","kind":"notify","message":"Please confirm"}',
+      );
+      const result = await bridge.requestInteraction("confirm", payloadWithExtraKind);
+
+      assert.equal(capturedMethod, "host/interaction");
+      assert.equal(capturedParams?.kind, "confirm");
+      assert.equal(capturedParams?.title, "Confirm operation");
+      assert.equal(capturedParams?.message, "Please confirm");
+      assert.deepEqual(result, { confirmed: true });
+    });
+
     it("validates and accepts opaque JSON responses (null, boolean, number, string, array, object)", async () => {
       const responses: unknown[] = [
         null,
