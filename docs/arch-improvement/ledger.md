@@ -172,8 +172,51 @@
   - Line budgets: All 25 files across all adapter packages are strictly under the 120 lines budget (AP-019/AP-070).
   - Singletons: Zero top-level mutable singletons in adapter packages (AP-074).
 
+### Cycle 7 — Task 1 S7 preflight and bounded execution authorization (2026-11-04)
 
+- User authorization: start Task 1 / Slice 0 in a separate **pi** subthread while the remaining plan is finalized. This is NOT approval of Tasks 2–6, a release, a merge, or a global S7/S9 PASS.
+- Base: `5b15b5e` on `cycle-7-runtime-adapter-ioc-migration`; the plan author's existing uncommitted canonical-plan edits are preserved and excluded from code ownership.
+- Frozen Task 1 brief SHA-256: `d95945724e6ce77c3c7c43754c31d2fd862ba17f93db993bc1d45c6ab85c7b67`. Parent retains orchestration; plan author owns only canonical plan; the new implementer owns Task-1 source/tests/build changes. Parent owns this preflight entry; implementer may append Task-1 execution evidence below it.
 
+#### Shared-file/interface preflight
 
+| Tasks | Producer → consumer / shared surface | Finding and ruling |
+| --- | --- | --- |
+| 1 / 2 | Optional `IHostBridge`, composition, relocated extension UI → reverse RPC | R1: Task 1 creates required pure bridge types but does not require Task-2 concrete HostBridge. |
+| 1 / 3 | Engine lifecycle/main → no-session composition | Normal session first; probe branching remains Task 3 and must not acquire storage before its capability check. |
+| 1 / 4 | Typed engine/RPC methods/events → full method dispatch and conformance | R2/R3: Slice 0 includes its own executable request handlers/event schemas; full protocol taxonomy remains Task 4. |
+| 1 / 5 | Closure/import/export/build relocation → final boundary guard | R4: atomically repair the actual closure now; no temporary adapter↔core/adapter↔adapter cycle waiting for Task 5. |
+| 1 / 6 | Fresh compiled CLI + focused E2E → final verification gate | R5: genuine RED/GREEN, model-only substitution, real native persistence and restart now; whole-cycle acceptance later. |
+| 2 / 3 | Host bridge versus no-session capabilities | Host-only operations may work without a session; session operations return typed capability errors. |
+| 2 / 4 | Host request/response schemas → bidirectional dispatcher | Distinct RPC hops retain distinct correlation ID spaces; no BB migration. |
+| 2 / 5 | Injected bridge/extension contracts → boundary cleanup | No core imports of runner or adapter implementations. |
+| 2 / 6 | Host tool/interaction E2E → final product verification | Real model-issued tool call, response consumption and continued output required. |
+| 3 / 4 | Probe method registry → JSON-RPC errors | Unsupported session capabilities are domain errors, not malformed envelopes. |
+| 3 / 5 | Probe composition → pure core | Catalogue use must not instantiate/acquire session storage. |
+| 3 / 6 | No-session executable → probe acceptance | Later gate checks no session-directory or lock creation. |
+| 4 / 5 | Method/event schemas → package boundaries | Transport DTOs stay in contracts/protocol; no SDK types leak into core. |
+| 4 / 6 | Standard errors/notifications/batches → conformance suite | Existing protocol defects remain explicit Task-4 work, not a present compliance claim. |
+| 5 / 6 | Boundary/typecheck/build scripts → final gates | No green result through stale dist, excluded tests, duplicate runtimes or hollow stubs. |
 
+#### Task self-consistency scan
 
+| Task | Test/code/file consistency |
+| --- | --- |
+| 1 | Executable with R1–R7 below; stale examples are superseded, not silently copied. S7 selected-slice gate passes with these binding technical rulings. |
+| 2 | Scope coherent; detailed final plan acceptance remains pending. Numeric reverse-RPC test IDs must come from injected ID source, not guessed server IDs. |
+| 3 | Scope coherent; validate capability gating before stateful composition in its own S7. |
+| 4 | Scope coherent; must define explicit additive transcript query and terminal schemas produced by Task 1. |
+| 5 | Cannot defer dependency-cycle repair required to execute Task 1; residual pure-core cleanup only remains later. |
+| 6 | Final acceptance is not established by the current planning audit or author report. |
+
+#### Binding Task-1 rulings
+
+- **R1 — Bootstrap dependencies:** optional bridge dependency is absent until Task 2 or backed by a minimal fail-fast unsupported boundary, never a fabricated HostBridge or legacy wire singleton. Create required pure interface files/exports in Task 1. No automatic-success stub. Native extensions are assembled with actual exported factories and valid options. Remove concrete Codemode creation/import from relocated harness setup: composition supplies builtins, so the chosen one-way `adapter-codemode → adapter-pi-durable` type dependency cannot form a cycle. Define any used `ISandboxExtension` signature explicitly or retain the existing adapter-owned factory contract without inventing a new decorative port.
+- **R2 — Native identity and readback:** root wire ID is `"1"`; parse wire IDs at the adapter boundary using existing validated conversion, never pass arbitrary strings to native numeric IDs. Native admission uses `Submission.id`, transcript uses `EntryRecord.id`; never conflate them. Public `session/getTranscript` returns typed entry IDs and user/assistant text. Its limit/window semantics are explicit; `entryCount` called a total must paginate all native `conversation.entries()` pages, not count only the first 50. Restart assertions compare the same native entry IDs and exact user AND assistant output.
+- **R3 — Real typed events:** retain existing canonical `RunnerEvent` stream (`message_update.assistantMessageEvent.type === "text_delta"`, text in `.delta`), not the draft's invented top-level text-delta object. The additive `turn_complete` notification must be declared in contracts schemas/types/exports and implemented from native `Submission.wait()` settlement, correlated by its actual admission ID; it is never emitted merely on admission or local event counting. Extend only the necessary contracts/bridge/dispatcher consumers. Preserve existing event payloads.
+- **R4 — Mechanical closure:** inventory and `baseline-import-graph.json` are evidence, not a fixed 50-file target. Move/split the actual runtime executable dependency closure, update ALL affected imports/exports/tests/package dependencies/build entries atomically, including pure CLI option types moved inward if needed. Do not make adapters import runner or concrete core. Preserve native runtime logic, policy, hooks, watcher/cancellation behavior and existing tests; no feature deletion, wholesale rewrite or dual production runner.
+- **R5 — Real offline oracle:** test provider loads through public `--extension <ABSOLUTE fixture path> --provider scripted-e2e --model echo`. A public coding-agent extension registers the native provider via actual `ExtensionAPI.registerProvider(provider)`; ModelRuntime then consumes pending native provider registration. Do not assume a public `runtime.registerNativeProvider` extension method and do not import fixtures into production. Use real Harness/SQLite/CLI transport; isolate subprocess HOME/agent/settings/session paths to temporary directories, deny/observe unexpected network use, and assert a second distinct prompt gets its own generated reply after restart. Capture real RED before implementation and GREEN after; focused tests/commands bounded to 60s, tests to 30s except the explicitly justified 60s two-process E2E.
+- **R6 — First-slice runnable wiring:** implement minimal `session/prompt`, `session/getState`, `session/getTranscript` handlers and canonical `session/event` delivery now; these are Task-1 prerequisites, not something deferred to Task 4 while an E2E only mocks dispatch. Broader method conformance/host registration/probe remains later. The actual CLI imports runner's callable main and builds fresh output; no production test switch. Signal cleanup must release the same engine-owned lock exactly once.
+- **R7 — Acceptance and parallel ownership:** implement Task 1 only. New technical ambiguity gets a bounded source-backed ruling, not another whole-plan rewrite. No changes to canonical plan/master plan, skills, provider plugin, original session databases, live deployments or releases. No push until remote visibility/authorization is verified. Implementation is NOT accepted until parent inspects the diff and independent architecture + product circuits pass; the author must not spawn reviewers or additional workers.
+
+- **Global design assessment:** mature native runtime retained behind sovereign contracts; one composition root, acyclic adapters and one JSON-RPC transport is the intended direction. No proven global design blocker requires postponing this bounded vertical slice. Known remaining plan work is not relabeled as completed or as permission to execute later tasks.
