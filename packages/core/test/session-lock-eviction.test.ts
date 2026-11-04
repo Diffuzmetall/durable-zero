@@ -9,7 +9,7 @@ import {
 	selectSession,
 	isProcessAlive,
 	type SessionOwnerInfo,
-} from "../src/session-storage.ts";
+} from "@durable-zero/adapter-pi-durable";
 
 describe("Session Lock Eviction and Ownership Tracking (Cycle 71, D-20)", () => {
 	it("isProcessAlive correctly checks process liveness", () => {

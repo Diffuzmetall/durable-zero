@@ -15,7 +15,7 @@ import {
 } from "./harness-setup.ts";
 import { createStandardExtensionFactories } from "./extension-bridge.ts";
 import { createNestedToolExecutor, mountExtensionBridge } from "./extension-mount.ts";
-import { getAgentDir, type SessionLocation } from "./session-storage.ts";
+import { getAgentDir, type SessionLocation } from "@durable-zero/adapter-pi-durable";
 import { Harness, type ModelRef } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { type OpenDurableOptions, runtimeContext } from "./runtime-types.ts";

@@ -184,11 +184,6 @@ var DurableHarnessError = class extends Error {
     this.code = code;
   }
 };
-var DurableStorageError = class extends DurableHarnessError {
-  constructor(message, cause, code = "STORAGE_ERROR") {
-    super(message, code, cause);
-  }
-};
 var DurableCommandError = class extends DurableHarnessError {
   constructor(message, cause, code = "COMMAND_ERROR") {
     super(message, code, cause);
@@ -274,7 +269,7 @@ var codingToolsExtension = {
   }
 };
 
-// packages/adapter-codemode/src/codemode.ts
+// packages/adapter-codemode/dist/index.js
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 var CodemodeExtension = class {
@@ -321,7 +316,6 @@ var CodemodeExtension = class {
 function createCodemodeBuiltinExtension() {
   return new CodemodeExtension();
 }
-var codemodeExtension = new CodemodeExtension();
 
 // packages/core/src/subagent.ts
 import { Type } from "@sinclair/typebox";
@@ -462,20 +456,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve3) => {
-            const timer = setTimeout(() => resolve3(), holdTimeoutMs);
+          await new Promise((resolve5) => {
+            const timer = setTimeout(() => resolve5(), holdTimeoutMs);
             timer.unref?.();
             watch.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve3();
+                resolve5();
               }
               return Promise.resolve();
             });
             void watch.closed.then(() => {
               clearTimeout(timer);
-              resolve3();
+              resolve5();
             });
           });
         } finally {
@@ -974,17 +968,38 @@ async function findInitialAgentModel(settingsManager, modelRuntime, cli) {
   return {};
 }
 
-// packages/adapter-pi-durable/src/session-storage.ts
-import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, realpath } from "node:fs/promises";
-import { homedir } from "node:os";
-import { basename, join as join2, resolve } from "node:path";
-
-// packages/adapter-pi-durable/src/session-lock-eviction.ts
+// packages/adapter-pi-durable/dist/index.js
+import { basename, join as join3, resolve as resolve2 } from "node:path";
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import {
+  createSession,
+  defineDocFamily
+} from "@earendil-works/pi-durable";
+import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { execFileSync } from "node:child_process";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import lockfile from "proper-lockfile";
+import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { join as join2, resolve } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readdir, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename as basename2, join as join4, resolve as resolve3 } from "node:path";
+var DurableHarnessError2 = class extends Error {
+  code;
+  constructor(message, code, cause) {
+    super(message, { cause });
+    this.name = new.target.name;
+    this.code = code;
+  }
+};
+var DurableStorageError = class extends DurableHarnessError2 {
+  constructor(message, cause, code = "STORAGE_ERROR") {
+    super(message, code, cause);
+  }
+};
 function isProcessAlive(pid) {
   if (!pid || pid <= 0) return false;
   try {
@@ -1075,22 +1090,161 @@ async function acquireSessionLock(directory, cwd, id) {
     }
   };
 }
-
-// packages/adapter-pi-durable/src/session-storage.ts
+function forkSessionDatabase(options) {
+  let sourceDir = resolve(options.sourceDir);
+  if (sourceDir.endsWith(".sqlite")) {
+    sourceDir = resolve(sourceDir, "..");
+  }
+  const sourceDb = join2(sourceDir, "session.sqlite");
+  if (!existsSync2(sourceDir) || !existsSync2(sourceDb)) {
+    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
+  }
+  let targetDir = resolve(options.targetDir);
+  if (targetDir.endsWith(".sqlite")) {
+    targetDir = resolve(targetDir, "..");
+  }
+  mkdirSync(targetDir, { recursive: true });
+  const targetDb = join2(targetDir, "session.sqlite");
+  for (const suffix of ["", "-wal", "-shm"]) {
+    const targetFile = `${targetDb}${suffix}`;
+    if (existsSync2(targetFile)) rmSync(targetFile, { force: true });
+  }
+  const sourceConn = new DatabaseSync(sourceDb);
+  try {
+    try {
+      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    } catch {
+    }
+    const escapedTarget = targetDb.replace(/'/g, "''");
+    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
+  } finally {
+    sourceConn.close();
+  }
+  const db = new DatabaseSync(targetDb);
+  try {
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    if (options.checkpointId !== void 0) {
+      const entryId = Number(options.checkpointId);
+      if (Number.isFinite(entryId) && entryId > 0) {
+        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
+        if (hasEntries) {
+          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
+        }
+        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
+        if (hasTasks) {
+          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
+        }
+      }
+    }
+  } finally {
+    db.close();
+  }
+  const targetLockDir = `${targetDir}.lock`;
+  if (existsSync2(targetLockDir)) {
+    rmSync(targetLockDir, { recursive: true, force: true });
+  }
+  if (existsSync2(targetDir)) {
+    const entries = readdirSync(targetDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
+        rmSync(join2(targetDir, entry.name), { recursive: true, force: true });
+      }
+    }
+  }
+}
+var genericDocFamily = defineDocFamily({
+  checkpointWhen: () => false,
+  kind: "dz.document",
+  version: 1,
+  scope: "session",
+  initial: () => ({})
+});
+var PiDurableSessionStore = class {
+  sessionDir;
+  cwd;
+  releaseLockFn = null;
+  sessionInstance = null;
+  constructor(options) {
+    this.sessionDir = resolve2(options.sessionDir);
+    this.cwd = options.cwd ? resolve2(options.cwd) : process.cwd();
+  }
+  get isLocked() {
+    return this.releaseLockFn !== null;
+  }
+  async getSession() {
+    if (!this.sessionInstance) {
+      const dbPath = join3(this.sessionDir, "session.sqlite");
+      const storage = await openNodeSqliteStorage(dbPath);
+      this.sessionInstance = createSession(storage);
+    }
+    return this.sessionInstance;
+  }
+  async acquireLock() {
+    if (this.isLocked) throw new Error(`Lock already held for session: ${this.sessionDir}`);
+    const id = basename(this.sessionDir);
+    this.releaseLockFn = await acquireSessionLock(this.sessionDir, this.cwd, id);
+  }
+  async releaseLock() {
+    if (this.releaseLockFn) {
+      const release = this.releaseLockFn;
+      this.releaseLockFn = null;
+      await release();
+    }
+  }
+  async saveDocument(collection, docId, data) {
+    const session = await this.getSession();
+    await session.commit(async (tx) => {
+      const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`);
+      for (const key of Object.keys(doc)) {
+        delete doc[key];
+      }
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        Object.assign(doc, structuredClone(data));
+      } else {
+        doc._value = structuredClone(data);
+      }
+    }, BACKGROUND_CONTEXT);
+  }
+  async readDocument(collection, docId) {
+    const session = await this.getSession();
+    const snap = await session.snapshot(genericDocFamily, `${collection}:${docId}`, BACKGROUND_CONTEXT);
+    if (!snap || Object.keys(snap).length === 0) return void 0;
+    if ("_value" in snap && Object.keys(snap).length === 1) {
+      return snap._value;
+    }
+    return structuredClone(snap);
+  }
+  async forkSession(checkpointId, newSessionDir) {
+    forkSessionDatabase({ sourceDir: this.sessionDir, targetDir: newSessionDir, checkpointId });
+  }
+  watchTasks(onUpdate) {
+    onUpdate([]);
+    return { close: () => {
+    } };
+  }
+  async close() {
+    if (this.sessionInstance) {
+      const session = this.sessionInstance;
+      this.sessionInstance = null;
+      await session.close(BACKGROUND_CONTEXT);
+    }
+    await this.releaseLock();
+  }
+};
 function getAgentDir() {
   const custom = process.env.PI_CODING_AGENT_DIR;
-  if (custom) return resolve(custom);
-  return join2(homedir(), ".pi", "agent");
+  if (custom) return resolve3(custom);
+  return join4(homedir(), ".pi", "agent");
 }
 async function selectSession(cwdInput, continueSession, targetSession) {
-  const cwd = await realpath(resolve(cwdInput));
-  const root = join2(getAgentDir(), "experimental", "durable-sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 24));
+  const cwd = await realpath(resolve3(cwdInput));
+  const root = join4(getAgentDir(), "experimental", "durable-sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 24));
   await mkdir(root, { recursive: true });
   let directory;
   let created = false;
   if (targetSession) {
-    const clean = targetSession.endsWith(".sqlite") ? resolve(targetSession, "..") : targetSession;
-    directory = clean.includes("/") || clean.includes("\\") ? resolve(clean) : join2(root, clean);
+    const clean = targetSession.endsWith(".sqlite") ? resolve3(targetSession, "..") : targetSession;
+    directory = clean.includes("/") || clean.includes("\\") ? resolve3(clean) : join4(root, clean);
     try {
       await mkdir(directory, { recursive: true });
       const entries = await readdir(directory);
@@ -1106,15 +1260,15 @@ async function selectSession(cwdInput, continueSession, targetSession) {
     const entries = await readdir(root, { withFileTypes: true });
     const newest = entries.filter((entry) => entry.isDirectory() && /^\d{13}-[0-9a-f-]{36}$/u.test(entry.name)).map((entry) => entry.name).sort().at(-1);
     if (!newest) throw new Error(`No durable session exists for ${cwd}`);
-    directory = join2(root, newest);
+    directory = join4(root, newest);
   } else {
-    directory = join2(root, `${String(Date.now()).padStart(13, "0")}-${randomUUID()}`);
+    directory = join4(root, `${String(Date.now()).padStart(13, "0")}-${randomUUID()}`);
     await mkdir(directory);
     created = true;
   }
-  const id = basename(directory);
+  const id = basename2(directory);
   const release = await acquireSessionLock(directory, cwd, id);
-  return { id, directory, database: join2(directory, "session.sqlite"), cwd, created, release };
+  return { id, directory, database: join4(directory, "session.sqlite"), cwd, created, release };
 }
 function safeCloneRecord(record) {
   if (record === null || typeof record !== "object") {
@@ -1127,11 +1281,11 @@ function safeCloneRecord(record) {
 }
 
 // packages/core/src/runtime-types.ts
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
 import {
   ROOT_CONVERSATION_ID
 } from "@earendil-works/pi-durable";
-var runtimeContext = BACKGROUND_CONTEXT;
+var runtimeContext = BACKGROUND_CONTEXT2;
 function agentOf(view) {
   return view.docs["pi.agent"] ?? {};
 }
@@ -1588,23 +1742,23 @@ var HostRpcManager = class {
   }
   forwardToolCall = (toolName, args) => {
     const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
-    return new Promise((resolve3) => {
+    return new Promise((resolve5) => {
       const timer = setTimeout(() => {
         this.pendingToolCalls.delete(callId);
-        resolve3({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+        resolve5({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
       }, 12e4);
-      this.pendingToolCalls.set(callId, { resolve: resolve3, timer });
+      this.pendingToolCalls.set(callId, { resolve: resolve5, timer });
       this.output({ type: "host_tool_call", callId, toolName, arguments: args ?? {} });
     });
   };
   requestInteraction = (kind, payload) => {
     const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
-    return new Promise((resolve3) => {
+    return new Promise((resolve5) => {
       const timer = setTimeout(() => {
         this.pendingInteractions.delete(id);
-        resolve3(null);
+        resolve5(null);
       }, 18e4);
-      this.pendingInteractions.set(id, { resolve: resolve3, timer });
+      this.pendingInteractions.set(id, { resolve: resolve5, timer });
       this.output({
         type: "host_interaction_request",
         id,
@@ -2205,7 +2359,7 @@ async function mountExtensionBridge(location, modelRuntime, extensionsResult, re
 
 // packages/core/src/runtime-loader.ts
 import { Harness } from "@earendil-works/pi-durable";
-import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
+import { openNodeSqliteStorage as openNodeSqliteStorage2 } from "@earendil-works/pi-durable/storage/sqlite/node";
 
 // packages/core/src/codemode-namespaces.ts
 var DynamicCodemodeNamespaces = class {
@@ -2320,7 +2474,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve5, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2333,7 +2487,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve3();
+                resolve5();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2342,7 +2496,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve3();
+            resolve5();
           } catch (error) {
             reject(error);
           }
@@ -2506,7 +2660,7 @@ async function loadHarnessEnvironment(location, options, envs) {
   };
   try {
     harness = await Harness.open(
-      await openNodeSqliteStorage(location.database),
+      await openNodeSqliteStorage2(location.database),
       { models: modelRuntime, registry, settings, env: envs.env, onReport: report },
       runtimeContext
     );
@@ -3819,7 +3973,7 @@ var DurableEventAdapter = class {
 import {
   ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID2
 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
 
 // packages/core/src/binding-docs.ts
 import { defineDoc as defineDoc3 } from "@earendil-works/pi-durable";
@@ -3861,7 +4015,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
     const isChild = parentCallId !== void 0;
     const childAdapter = isChild ? adapter.createChildAdapter(parentCallId, conversationId) : void 0;
     try {
-      const stream = await watch(harness, conversationId, BACKGROUND_CONTEXT2);
+      const stream = await watch(harness, conversationId, BACKGROUND_CONTEXT3);
       activeStreams.set(conversationId, stream);
       stream.start(async (batch) => {
         try {
@@ -3888,7 +4042,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
   };
   await attach(ROOT_CONVERSATION_ID2);
   try {
-    const index = await harness.snapshot(BindingIndexDoc, BACKGROUND_CONTEXT2);
+    const index = await harness.snapshot(BindingIndexDoc, BACKGROUND_CONTEXT3);
     if (index?.byThreadId) {
       for (const convId of Object.values(index.byThreadId)) {
         if (convId && convId !== ROOT_CONVERSATION_ID2) {
@@ -3896,7 +4050,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
         }
       }
     }
-    const subagents = await harness.snapshot(SubagentsDoc, ROOT_CONVERSATION_ID2, BACKGROUND_CONTEXT2);
+    const subagents = await harness.snapshot(SubagentsDoc, ROOT_CONVERSATION_ID2, BACKGROUND_CONTEXT3);
     if (subagents?.agents) {
       for (const agent of Object.values(subagents.agents)) {
         if (agent?.conversationId && agent.conversationId !== ROOT_CONVERSATION_ID2) {
@@ -4005,7 +4159,7 @@ var SessionDaemon = class {
     if (!fs.existsSync(this.socketPath)) {
       return null;
     }
-    return new Promise((resolve3) => {
+    return new Promise((resolve5) => {
       let settled = false;
       const socket = net.createConnection({ path: this.socketPath });
       const cleanup = (result) => {
@@ -4021,14 +4175,14 @@ var SessionDaemon = class {
           } catch {
           }
         }
-        resolve3(result);
+        resolve5(result);
       };
       const timer = setTimeout(() => cleanup(null), timeoutMs);
       socket.once("connect", () => {
         clearTimeout(timer);
         if (!settled) {
           settled = true;
-          resolve3(socket);
+          resolve5(socket);
         }
       });
       socket.once("error", () => {
@@ -4047,7 +4201,7 @@ var SessionDaemon = class {
       } catch {
       }
     }
-    return new Promise((resolve3, reject) => {
+    return new Promise((resolve5, reject) => {
       const server = net.createServer((socket) => {
         this.activeSockets.add(socket);
         socket.on("close", () => this.activeSockets.delete(socket));
@@ -4059,7 +4213,7 @@ var SessionDaemon = class {
       });
       server.listen(this.socketPath, () => {
         this.server = server;
-        resolve3(true);
+        resolve5(true);
       });
     });
   }
@@ -4072,8 +4226,8 @@ var SessionDaemon = class {
     }
     this.activeSockets.clear();
     if (this.server) {
-      await new Promise((resolve3) => {
-        this.server.close(() => resolve3());
+      await new Promise((resolve5) => {
+        this.server.close(() => resolve5());
       });
       this.server = null;
     }
@@ -4122,16 +4276,16 @@ var ViewStreamProjector = class {
 };
 
 // packages/core/src/shared/version.ts
-import { existsSync as existsSync2, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join as join3 } from "node:path";
+import { dirname, join as join5 } from "node:path";
 import { fileURLToPath } from "node:url";
 var esmRequire = createRequire(import.meta.url);
 var currentDir = dirname(fileURLToPath(import.meta.url));
 function getPiDurableVersion() {
   try {
     const durablePkg = esmRequire.resolve("@earendil-works/pi-durable/package.json");
-    if (existsSync2(durablePkg)) {
+    if (existsSync3(durablePkg)) {
       const parsed = JSON.parse(readFileSync2(durablePkg, "utf8"));
       if (parsed.version) return parsed.version;
     }
@@ -4142,8 +4296,8 @@ function getPiDurableVersion() {
     }
   }
   try {
-    const pluginPkg = join3(currentDir, "..", "..", "package.json");
-    if (existsSync2(pluginPkg)) {
+    const pluginPkg = join5(currentDir, "..", "..", "package.json");
+    if (existsSync3(pluginPkg)) {
       const parsed = JSON.parse(readFileSync2(pluginPkg, "utf8"));
       const dep = parsed.dependencies?.["@earendil-works/pi-durable"]?.replace(/^[\^~]/, "");
       if (dep) return dep;
@@ -4769,71 +4923,9 @@ var runnerResponseSchema = z11.discriminatedUnion("success", [
 ]);
 
 // packages/adapter-pi-durable/src/session-fork.ts
-import { existsSync as existsSync3, mkdirSync, readdirSync, rmSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import { join as join4, resolve as resolve2 } from "node:path";
-function forkSessionDatabase(options) {
-  let sourceDir = resolve2(options.sourceDir);
-  if (sourceDir.endsWith(".sqlite")) {
-    sourceDir = resolve2(sourceDir, "..");
-  }
-  const sourceDb = join4(sourceDir, "session.sqlite");
-  if (!existsSync3(sourceDir) || !existsSync3(sourceDb)) {
-    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
-  }
-  let targetDir = resolve2(options.targetDir);
-  if (targetDir.endsWith(".sqlite")) {
-    targetDir = resolve2(targetDir, "..");
-  }
-  mkdirSync(targetDir, { recursive: true });
-  const targetDb = join4(targetDir, "session.sqlite");
-  for (const suffix of ["", "-wal", "-shm"]) {
-    const targetFile = `${targetDb}${suffix}`;
-    if (existsSync3(targetFile)) rmSync(targetFile, { force: true });
-  }
-  const sourceConn = new DatabaseSync(sourceDb);
-  try {
-    try {
-      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
-    } catch {
-    }
-    const escapedTarget = targetDb.replace(/'/g, "''");
-    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
-  } finally {
-    sourceConn.close();
-  }
-  const db = new DatabaseSync(targetDb);
-  try {
-    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
-    if (options.checkpointId !== void 0) {
-      const entryId = Number(options.checkpointId);
-      if (Number.isFinite(entryId) && entryId > 0) {
-        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
-        if (hasEntries) {
-          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
-        }
-        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
-        if (hasTasks) {
-          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
-        }
-      }
-    }
-  } finally {
-    db.close();
-  }
-  const targetLockDir = `${targetDir}.lock`;
-  if (existsSync3(targetLockDir)) {
-    rmSync(targetLockDir, { recursive: true, force: true });
-  }
-  if (existsSync3(targetDir)) {
-    const entries = readdirSync(targetDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
-        rmSync(join4(targetDir, entry.name), { recursive: true, force: true });
-      }
-    }
-  }
-}
+import { existsSync as existsSync4, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
+import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
+import { join as join6, resolve as resolve4 } from "node:path";
 
 // packages/core/src/runtime-graph-state.ts
 function extractTaskGraph(current) {
@@ -4980,7 +5072,7 @@ function recordTerminalWithDetails(receipts, task, names, nativeStartedAt, curre
 
 // packages/core/src/session-commands.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID5 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
 
 // packages/core/src/binding-commands.ts
 function toConversationId(id) {
@@ -5058,19 +5150,19 @@ async function handleBindingCommand(cmd, durable, responder) {
 
 // packages/core/src/session-state-commands.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
 import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
 async function handleSessionStateCommand(cmd, durable, modelRuntime, args, respond) {
   if (cmd.type === "get_state") {
     const targetId = parseConversationId(cmd.conversationId);
     let agentDoc;
     if (targetId !== ROOT_CONVERSATION_ID4) {
-      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
       if (!conv) {
         respond.error(cmd.id, "get_state", `Conversation not found: ${cmd.conversationId}`);
         return true;
       }
-      const agentState = await conv.agent(BACKGROUND_CONTEXT3);
+      const agentState = await conv.agent(BACKGROUND_CONTEXT4);
       agentDoc = agentState;
     } else {
       const current = durable.view.current();
@@ -5093,8 +5185,8 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args, respo
     const targetId = parseConversationId(cmd.conversationId);
     let agentDoc;
     if (targetId !== ROOT_CONVERSATION_ID4) {
-      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
-      const agentState = conv ? await conv.agent(BACKGROUND_CONTEXT3) : void 0;
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+      const agentState = conv ? await conv.agent(BACKGROUND_CONTEXT4) : void 0;
       agentDoc = agentState ?? {};
     } else {
       const current = durable.view.current();
@@ -5109,9 +5201,9 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args, respo
     }
     let tokens = null;
     try {
-      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
       if (conv) {
-        const ctxView = await conv.context(BACKGROUND_CONTEXT3);
+        const ctxView = await conv.context(BACKGROUND_CONTEXT4);
         const estimate = estimateContextTokens(ctxView.messages);
         tokens = estimate.tokens;
       }
@@ -5156,12 +5248,12 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
       const targetId = parseConversationId(cmd.conversationId);
       if (targetId !== ROOT_CONVERSATION_ID5) {
         if (durable.watcher) await durable.watcher.ensureAttached(targetId);
-        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT5);
         if (!conv) {
           respond.error(cmd.id, "prompt", `Conversation not found: ${cmd.conversationId}`);
           return;
         }
-        await conv.submit({ type: "input", content, whenBusy: behavior }, BACKGROUND_CONTEXT4);
+        await conv.submit({ type: "input", content, whenBusy: behavior }, BACKGROUND_CONTEXT5);
       } else {
         await durable.controller.submit(content, behavior);
       }
@@ -5177,12 +5269,12 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
       const targetId = parseConversationId(cmd.conversationId);
       if (targetId !== ROOT_CONVERSATION_ID5) {
         if (durable.watcher) await durable.watcher.ensureAttached(targetId);
-        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT5);
         if (!conv) {
           respond.error(cmd.id, "steer", `Conversation not found: ${cmd.conversationId}`);
           return;
         }
-        await conv.submit({ type: "input", content, whenBusy: "steer" }, BACKGROUND_CONTEXT4);
+        await conv.submit({ type: "input", content, whenBusy: "steer" }, BACKGROUND_CONTEXT5);
       } else {
         await durable.controller.submit(content, "steer");
       }
@@ -5191,9 +5283,9 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
     case "abort": {
       const targetId = parseConversationId(cmd.conversationId);
       if (targetId !== ROOT_CONVERSATION_ID5) {
-        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT5);
         if (conv) {
-          await conv.abort(BACKGROUND_CONTEXT4, { background: true });
+          await conv.abort(BACKGROUND_CONTEXT5, { background: true });
         }
       } else {
         await durable.controller.abort();
@@ -5206,7 +5298,7 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
         respond.error(cmd.id, "abort_task", "Missing taskId");
         return;
       }
-      await durable.harness.abortTask(cmd.taskId, BACKGROUND_CONTEXT4);
+      await durable.harness.abortTask(cmd.taskId, BACKGROUND_CONTEXT5);
       respond.success(cmd.id, "abort_task", { ok: true });
       break;
     }
@@ -5272,9 +5364,9 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args, resp
 
 // packages/core/src/stdout-guard.ts
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join5 } from "node:path";
+import { join as join7 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync4, readFileSync as readFileSync3 } from "node:fs";
+import { existsSync as existsSync5, readFileSync as readFileSync3 } from "node:fs";
 var SUPPORTED_PI_VERSION_PREFIXES = ["1.4.", "1.5."];
 var EXPECTED_GUARD_RELATIVE_PATH = "dist/core/output-guard.js";
 var UpstreamStdoutGuardPortError = class extends Error {
@@ -5309,8 +5401,8 @@ function validateUpstreamGuardShape(mod) {
 async function loadUpstreamGuard() {
   if (activeGuard) return activeGuard;
   const pkgDir = getPackageDir();
-  const pkgJsonPath = join5(pkgDir, "package.json");
-  if (!existsSync4(pkgJsonPath)) {
+  const pkgJsonPath = join7(pkgDir, "package.json");
+  if (!existsSync5(pkgJsonPath)) {
     throw new UpstreamStdoutGuardPortError(`Cannot locate package.json at ${pkgJsonPath}`, "MISSING_PACKAGE_JSON");
   }
   let version;
@@ -5324,8 +5416,8 @@ async function loadUpstreamGuard() {
     );
   }
   validateUpstreamGuardVersion(version);
-  const guardPath = join5(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
-  if (!existsSync4(guardPath)) {
+  const guardPath = join7(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
+  if (!existsSync5(guardPath)) {
     throw new UpstreamStdoutGuardPortError(`Missing upstream output guard artifact at ${guardPath}`, "MISSING_ARTIFACT");
   }
   let mod;
@@ -5453,6 +5545,7 @@ export {
   DynamicPromptSections,
   EXPECTED_GUARD_RELATIVE_PATH,
   HostRpcManager,
+  PiDurableSessionStore,
   SUPPORTED_PI_VERSION_PREFIXES,
   SchemaPort,
   SessionCoordinator,
@@ -5467,7 +5560,6 @@ export {
   answerText,
   buildMappedNode,
   clearDeliveryHold,
-  codemodeExtension,
   codingToolsExtension,
   courierFor,
   courierIsIdle,
@@ -5483,6 +5575,7 @@ export {
   findSubagentMeta,
   firstInput,
   flushWireStdout,
+  forceUnlock,
   forkSessionDatabase,
   forwardHostToolCall,
   getAgentDir,
@@ -5505,8 +5598,10 @@ export {
   openDurable,
   parseCliArgs,
   parseConversationId,
+  readOwnerFile,
   recordSubagentOwnership,
   recordTerminalWithDetails,
+  removeOwnerFile,
   reporterFor,
   requestHostInteraction,
   restoreRunnerStdout,
@@ -5524,6 +5619,7 @@ export {
   validateUpstreamGuardShape,
   validateUpstreamGuardVersion,
   watchEvents,
+  writeOwnerFile,
   writeWireStdout
 };
 //# sourceMappingURL=index.js.map

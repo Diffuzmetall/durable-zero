@@ -158,18 +158,20 @@
   - Remediation Cycle 4.1 (@thread:thr_kwizs25xch): Landed commit `7f7b99a` fixing all 3 defects via strict TDD (Red -> Green).
   - Re-Review Circuit 2 (@thread:thr_m83nee7n7m): **UNANIMOUS PASS** (All P1/P2 defects confirmed fixed, 202/202 tests passing in 14.8s, 8/8 packages compiled).
 
-### S10 Cycle 5 Closure: True Composition Root & 9-Package Monorepo (2026-11-03)
+### S10 Cycle 6 Closure: Pure Core Decoupling, Executable Runner & Zero Boundary Leaks (2026-11-04)
 - **Scope Implemented:**
-  1. `@durable-zero/runner`: True Composition Root package (AP-020, AP-073) wiring all Core ports and Infrastructure adapters:
-     - Inbound: `@durable-zero/protocol` (`StdioJsonRpcServer`).
-     - Pure Domain: `@durable-zero/core` (`SessionCoordinator`).
-     - Adapters: `@durable-zero/execution`, `@durable-zero/adapter-pi-durable`, `@durable-zero/adapter-pi-ai`, `@durable-zero/adapter-codemode`, `@durable-zero/extension-pi-resource`.
-  2. `packages/runner/src/cli-args.ts`: Strict CLI parser for `--session`, `--cwd`, `--provider`, `--model`, `--thinking` (31 lines, < 80 limit).
-  3. `packages/runner/src/composition.ts`: Explicit dependency injection factory `assembleDurableZero` (118 lines, < 120 limit, AP-074).
-  4. Finalized 9-package build pipeline in `scripts/build.mjs` and root `package.json`.
-- **S9 Dual-Circuit Verification:**
-  - Circuit 1 (Arch Reviewer @thread:thr_cwvdzjuud4): **UNANIMOUS PASS** (Zero reverse dependencies, Composition Root strictly bounded, all files < 120 lines, acyclic package graph).
-  - Circuit 2 (Product Reviewer @thread:thr_a6tvnr4vxa): **UNANIMOUS PASS** (Three Golden Journeys verified: CLI args parsing, lock lifecycle, JSON-RPC streaming, 9/9 packages compiled, 204/204 tests passing in 15.5s).
+  1. `packages/protocol/src/transport/request-dispatcher.ts`: Decomposed `StdioJsonRpcServer` by extracting request/response parsing and outbound promise tracking into `RequestDispatcher` (86 lines). Reduced `stdio-server.ts` to 88 lines (< 120 limit, AP-019).
+  2. `packages/runner/src/main.ts`: Implemented executable CLI entrypoint for `@durable-zero/runner` (43 lines, AP-020, AP-021) with signal trapping (`SIGINT`, `SIGTERM`), unhandled exception/rejection safety handlers, and clean session unlock. Configured `"bin": { "durable-runner": "./dist/main.js" }` and updated `scripts/build.mjs` to bundle executable with WASM assets.
+  3. `packages/adapter-codemode/src/codemode.ts`: Purged module-scoped mutable singleton `export const codemodeExtension` and `export default` in compliance with AP-074. Updated tests to use factory `createCodemodeBuiltinExtension()`.
+  4. `packages/core`: Eliminated all inverted cross-package boundary shims (`session-storage.ts`, `session-fork.ts`, `session-lock-eviction.ts`, `model-setup.ts`, `builtin-extensions/codemode.ts`). Replaced relative `../../adapter-*` imports with canonical `@durable-zero/adapter-*` imports via pnpm workspaces.
+  5. `packages/core/package.json`: Decoupled core from all `@earendil-works/*`, `quickjs-wasi`, and `proper-lockfile` dependencies. Core now depends strictly on `@durable-zero/*` and `zod`.
+  6. Aligned CLI package version to `0.8.1` in `packages/cli/bin/durable-zero.js` and `packages/cli/test/cli.test.ts`.
+- **Verification Evidence:**
+  - `npm run build`: All 9 packages + `runner/dist/main.js` build with code 0; `quickjs.wasm` copied to `packages/core/dist` and `packages/runner/dist`.
+  - `npm test -- --test-timeout 30000`: **205/205 tests PASS (100% green)** across 13 suites in 16.0s.
+  - Line budgets: All 25 files across all adapter packages are strictly under the 120 lines budget (AP-019/AP-070).
+  - Singletons: Zero top-level mutable singletons in adapter packages (AP-074).
+
 
 
 

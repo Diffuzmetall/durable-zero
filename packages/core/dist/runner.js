@@ -78,13 +78,13 @@ function buildRules(tools) {
   if (tools.some((t) => t.name === "bash")) {
     addRule("Use bash for file operations like ls, rg, find");
   }
-  for (const tool2 of tools) {
-    const def = CANONICAL_TOOL_DEFS[tool2.name];
+  for (const tool3 of tools) {
+    const def = CANONICAL_TOOL_DEFS[tool3.name];
     if (def?.promptGuidelines) {
       for (const guideline of def.promptGuidelines) addRule(guideline);
     }
-    if (tool2.promptGuidelines) {
-      for (const guideline of tool2.promptGuidelines) addRule(guideline);
+    if (tool3.promptGuidelines) {
+      for (const guideline of tool3.promptGuidelines) addRule(guideline);
     }
   }
   addRule("Be concise in your responses");
@@ -187,11 +187,6 @@ var DurableHarnessError = class extends Error {
     this.code = code;
   }
 };
-var DurableStorageError = class extends DurableHarnessError {
-  constructor(message, cause, code = "STORAGE_ERROR") {
-    super(message, code, cause);
-  }
-};
 var DurableCommandError = class extends DurableHarnessError {
   constructor(message, cause, code = "COMMAND_ERROR") {
     super(message, code, cause);
@@ -277,7 +272,7 @@ var codingToolsExtension = {
   }
 };
 
-// packages/adapter-codemode/src/codemode.ts
+// packages/adapter-codemode/dist/index.js
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 var CodemodeExtension = class {
@@ -324,7 +319,6 @@ var CodemodeExtension = class {
 function createCodemodeBuiltinExtension() {
   return new CodemodeExtension();
 }
-var codemodeExtension = new CodemodeExtension();
 
 // packages/core/src/subagent.ts
 import { Type } from "@sinclair/typebox";
@@ -462,20 +456,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve4) => {
-            const timer = setTimeout(() => resolve4(), holdTimeoutMs);
+          await new Promise((resolve7) => {
+            const timer = setTimeout(() => resolve7(), holdTimeoutMs);
             timer.unref?.();
             watch2.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve4();
+                resolve7();
               }
               return Promise.resolve();
             });
             void watch2.closed.then(() => {
               clearTimeout(timer);
-              resolve4();
+              resolve7();
             });
           });
         } finally {
@@ -970,17 +964,38 @@ async function findInitialAgentModel(settingsManager, modelRuntime, cli) {
   return {};
 }
 
-// packages/adapter-pi-durable/src/session-storage.ts
-import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, realpath } from "node:fs/promises";
-import { homedir } from "node:os";
-import { basename, join as join2, resolve } from "node:path";
-
-// packages/adapter-pi-durable/src/session-lock-eviction.ts
+// packages/adapter-pi-durable/dist/index.js
+import { basename, join as join3, resolve as resolve2 } from "node:path";
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import {
+  createSession,
+  defineDocFamily
+} from "@earendil-works/pi-durable";
+import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { execFileSync } from "node:child_process";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import lockfile from "proper-lockfile";
+import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { join as join2, resolve } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readdir, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename as basename2, join as join4, resolve as resolve3 } from "node:path";
+var DurableHarnessError2 = class extends Error {
+  code;
+  constructor(message, code, cause) {
+    super(message, { cause });
+    this.name = new.target.name;
+    this.code = code;
+  }
+};
+var DurableStorageError = class extends DurableHarnessError2 {
+  constructor(message, cause, code = "STORAGE_ERROR") {
+    super(message, code, cause);
+  }
+};
 function isProcessAlive(pid) {
   if (!pid || pid <= 0) return false;
   try {
@@ -1071,22 +1086,89 @@ async function acquireSessionLock(directory, cwd, id) {
     }
   };
 }
-
-// packages/adapter-pi-durable/src/session-storage.ts
+function forkSessionDatabase(options) {
+  let sourceDir = resolve(options.sourceDir);
+  if (sourceDir.endsWith(".sqlite")) {
+    sourceDir = resolve(sourceDir, "..");
+  }
+  const sourceDb = join2(sourceDir, "session.sqlite");
+  if (!existsSync2(sourceDir) || !existsSync2(sourceDb)) {
+    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
+  }
+  let targetDir = resolve(options.targetDir);
+  if (targetDir.endsWith(".sqlite")) {
+    targetDir = resolve(targetDir, "..");
+  }
+  mkdirSync(targetDir, { recursive: true });
+  const targetDb = join2(targetDir, "session.sqlite");
+  for (const suffix of ["", "-wal", "-shm"]) {
+    const targetFile = `${targetDb}${suffix}`;
+    if (existsSync2(targetFile)) rmSync(targetFile, { force: true });
+  }
+  const sourceConn = new DatabaseSync(sourceDb);
+  try {
+    try {
+      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    } catch {
+    }
+    const escapedTarget = targetDb.replace(/'/g, "''");
+    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
+  } finally {
+    sourceConn.close();
+  }
+  const db = new DatabaseSync(targetDb);
+  try {
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    if (options.checkpointId !== void 0) {
+      const entryId = Number(options.checkpointId);
+      if (Number.isFinite(entryId) && entryId > 0) {
+        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
+        if (hasEntries) {
+          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
+        }
+        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
+        if (hasTasks) {
+          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
+        }
+      }
+    }
+  } finally {
+    db.close();
+  }
+  const targetLockDir = `${targetDir}.lock`;
+  if (existsSync2(targetLockDir)) {
+    rmSync(targetLockDir, { recursive: true, force: true });
+  }
+  if (existsSync2(targetDir)) {
+    const entries = readdirSync(targetDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
+        rmSync(join2(targetDir, entry.name), { recursive: true, force: true });
+      }
+    }
+  }
+}
+var genericDocFamily = defineDocFamily({
+  checkpointWhen: () => false,
+  kind: "dz.document",
+  version: 1,
+  scope: "session",
+  initial: () => ({})
+});
 function getAgentDir() {
   const custom = process.env.PI_CODING_AGENT_DIR;
-  if (custom) return resolve(custom);
-  return join2(homedir(), ".pi", "agent");
+  if (custom) return resolve3(custom);
+  return join4(homedir(), ".pi", "agent");
 }
 async function selectSession(cwdInput, continueSession, targetSession) {
-  const cwd = await realpath(resolve(cwdInput));
-  const root = join2(getAgentDir(), "experimental", "durable-sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 24));
+  const cwd = await realpath(resolve3(cwdInput));
+  const root = join4(getAgentDir(), "experimental", "durable-sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 24));
   await mkdir(root, { recursive: true });
   let directory;
   let created = false;
   if (targetSession) {
-    const clean = targetSession.endsWith(".sqlite") ? resolve(targetSession, "..") : targetSession;
-    directory = clean.includes("/") || clean.includes("\\") ? resolve(clean) : join2(root, clean);
+    const clean = targetSession.endsWith(".sqlite") ? resolve3(targetSession, "..") : targetSession;
+    directory = clean.includes("/") || clean.includes("\\") ? resolve3(clean) : join4(root, clean);
     try {
       await mkdir(directory, { recursive: true });
       const entries = await readdir(directory);
@@ -1102,23 +1184,23 @@ async function selectSession(cwdInput, continueSession, targetSession) {
     const entries = await readdir(root, { withFileTypes: true });
     const newest = entries.filter((entry) => entry.isDirectory() && /^\d{13}-[0-9a-f-]{36}$/u.test(entry.name)).map((entry) => entry.name).sort().at(-1);
     if (!newest) throw new Error(`No durable session exists for ${cwd}`);
-    directory = join2(root, newest);
+    directory = join4(root, newest);
   } else {
-    directory = join2(root, `${String(Date.now()).padStart(13, "0")}-${randomUUID()}`);
+    directory = join4(root, `${String(Date.now()).padStart(13, "0")}-${randomUUID()}`);
     await mkdir(directory);
     created = true;
   }
-  const id = basename(directory);
+  const id = basename2(directory);
   const release = await acquireSessionLock(directory, cwd, id);
-  return { id, directory, database: join2(directory, "session.sqlite"), cwd, created, release };
+  return { id, directory, database: join4(directory, "session.sqlite"), cwd, created, release };
 }
 
 // packages/core/src/runtime-types.ts
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
 import {
   ROOT_CONVERSATION_ID
 } from "@earendil-works/pi-durable";
-var runtimeContext = BACKGROUND_CONTEXT;
+var runtimeContext = BACKGROUND_CONTEXT2;
 function agentOf(view) {
   return view.docs["pi.agent"] ?? {};
 }
@@ -1427,10 +1509,10 @@ var RuntimeBindings = class {
   taskEpoch = 0;
   closed = false;
   update;
-  constructor(conversation, view, update2) {
+  constructor(conversation, view, update3) {
     this.conversation = conversation;
     this.view = view;
-    this.update = update2;
+    this.update = update3;
     try {
       this.unsubscribe = view.subscribe((value) => {
         if (!this.closed && this.epoch === 0) this.update({ conversation: value });
@@ -1575,23 +1657,23 @@ var HostRpcManager = class {
   }
   forwardToolCall = (toolName, args2) => {
     const callId = `call_${Date.now()}_${++this.nextCallSeq}`;
-    return new Promise((resolve4) => {
+    return new Promise((resolve7) => {
       const timer = setTimeout(() => {
         this.pendingToolCalls.delete(callId);
-        resolve4({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
+        resolve7({ content: [{ type: "text", text: `Tool call ${toolName} timed out` }], isError: true });
       }, 12e4);
-      this.pendingToolCalls.set(callId, { resolve: resolve4, timer });
+      this.pendingToolCalls.set(callId, { resolve: resolve7, timer });
       this.output({ type: "host_tool_call", callId, toolName, arguments: args2 ?? {} });
     });
   };
   requestInteraction = (kind, payload) => {
     const id = `interact_${Date.now()}_${++this.nextInteractionSeq}`;
-    return new Promise((resolve4) => {
+    return new Promise((resolve7) => {
       const timer = setTimeout(() => {
         this.pendingInteractions.delete(id);
-        resolve4(null);
+        resolve7(null);
       }, 18e4);
-      this.pendingInteractions.set(id, { resolve: resolve4, timer });
+      this.pendingInteractions.set(id, { resolve: resolve7, timer });
       this.output({
         type: "host_interaction_request",
         id,
@@ -1933,16 +2015,16 @@ function adaptExtensionTool(toolDef, executeToolFn, createToolContext, getExtens
           };
         }
       }
-      const base2 = createToolContext?.(api.callId);
+      const base3 = createToolContext?.(api.callId);
       const descriptors = {
-        ...Object.getOwnPropertyDescriptors(base2 ?? {}),
+        ...Object.getOwnPropertyDescriptors(base3 ?? {}),
         tools: {
-          get: () => base2?.tools ?? [],
+          get: () => base3?.tools ?? [],
           configurable: true,
           enumerable: true
         },
         executeTool: {
-          value: async (name, nestedArgs, options) => base2?.executeTool ? base2.executeTool(name, nestedArgs, options) : executeToolFn(api.callId, name, nestedArgs, options),
+          value: async (name, nestedArgs, options) => base3?.executeTool ? base3.executeTool(name, nestedArgs, options) : executeToolFn(api.callId, name, nestedArgs, options),
           configurable: true,
           enumerable: true,
           writable: true
@@ -1955,9 +2037,9 @@ function adaptExtensionTool(toolDef, executeToolFn, createToolContext, getExtens
           api.callId,
           coercedArgs,
           abortSignal,
-          (update2) => {
-            if (update2?.content && hasOutput(api)) {
-              const textChunks = update2.content.filter((c) => c.type === "text").map((c) => c.text).join("");
+          (update3) => {
+            if (update3?.content && hasOutput(api)) {
+              const textChunks = update3.content.filter((c) => c.type === "text").map((c) => c.text).join("");
               if (textChunks.length > 0) api.output(textChunks);
             }
           },
@@ -2180,7 +2262,7 @@ async function mountExtensionBridge(location, modelRuntime, extensionsResult, re
 
 // packages/core/src/runtime-loader.ts
 import { Harness } from "@earendil-works/pi-durable";
-import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
+import { openNodeSqliteStorage as openNodeSqliteStorage2 } from "@earendil-works/pi-durable/storage/sqlite/node";
 
 // packages/core/src/codemode-namespaces.ts
 var DynamicCodemodeNamespaces = class {
@@ -2295,7 +2377,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve4, reject) => {
+      return new Promise((resolve7, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2308,7 +2390,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve4();
+                resolve7();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2317,7 +2399,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve4();
+            resolve7();
           } catch (error) {
             reject(error);
           }
@@ -2481,7 +2563,7 @@ async function loadHarnessEnvironment(location, options, envs) {
   };
   try {
     harness = await Harness.open(
-      await openNodeSqliteStorage(location.database),
+      await openNodeSqliteStorage2(location.database),
       { models: modelRuntime, registry, settings, env: envs.env, onReport: report },
       runtimeContext
     );
@@ -2572,7 +2654,7 @@ async function openDurable(options = {}) {
     };
     const listeners = /* @__PURE__ */ new Set();
     let notifying = false;
-    const update2 = (patch) => {
+    const update3 = (patch) => {
       state = { ...state, ...patch };
       if (notifying) return;
       notifying = true;
@@ -2583,7 +2665,7 @@ async function openDurable(options = {}) {
     };
     let nextNotice = 1;
     const notice = (level, message) => {
-      update2({ notices: [...state.notices, { id: nextNotice++, level, message }].slice(-20) });
+      update3({ notices: [...state.notices, { id: nextNotice++, level, message }].slice(-20) });
     };
     const fail = (err) => notice("error", err instanceof Error ? err.message : String(err));
     for (const report of activeEnvState.pendingReports) {
@@ -2595,7 +2677,7 @@ async function openDurable(options = {}) {
       }
     }
     activeEnvState.setNoticeForwarder?.((level, message) => notice(level, message));
-    const bindings = new RuntimeBindings(root, conversation, update2);
+    const bindings = new RuntimeBindings(root, conversation, update3);
     const handlePublication = (pub) => {
       let convs = state.conversations;
       for (const ch of pub.changes ?? []) {
@@ -2606,7 +2688,7 @@ async function openDurable(options = {}) {
           convs = convs.map((s) => s.id === id && !s.title ? { ...s, ...titleOf(ch.value) } : s);
         }
       }
-      if (convs !== state.conversations) update2({ conversations: convs });
+      if (convs !== state.conversations) update3({ conversations: convs });
     };
     const observation = typeof harness.observeCommits === "function" ? harness.observeCommits({ advance: handlePublication, end: () => {
     } }) : void 0;
@@ -3503,13 +3585,13 @@ var DurableChildEventAdapter = class {
         break;
       }
       case "tool_execution_update": {
-        const update2 = this.toolProjector.projectToolUpdate(
+        const update3 = this.toolProjector.projectToolUpdate(
           { ...event, toolCallId: `${this.parentRef}:${event.toolCallId}` },
           this.parentRef
         );
-        if (update2) {
+        if (update3) {
           this.output({
-            ...update2,
+            ...update3,
             ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
           });
         }
@@ -3663,15 +3745,15 @@ var DurableEventAdapter = class {
     if (summary.lastCheckpointId) this.lastCheckpointId = summary.lastCheckpointId;
     const isAborted = summary.isAborted;
     const isError = summary.isError && !isAborted;
-    const base2 = {
+    const base3 = {
       contextWindow: summary.cw,
       ...this.lastCheckpointId && { providerCheckpointId: this.lastCheckpointId },
       ...summary.cumulativeUsage && { cumulativeUsage: summary.cumulativeUsage },
       ...isAborted && { aborted: true, stopReason: "aborted" },
       ...isError && { stopReason: "error", ...summary.errorMessage && { errorMessage: summary.errorMessage } }
     };
-    if (type === "turn_end") this.output({ type: "turn_end", message: summary.finalMsg, ...base2 });
-    else this.output({ type: "agent_end", messages: [summary.finalMsg], ...base2 });
+    if (type === "turn_end") this.output({ type: "turn_end", message: summary.finalMsg, ...base3 });
+    else this.output({ type: "agent_end", messages: [summary.finalMsg], ...base3 });
   }
   handleBatch(batch, current) {
     for (const ev of batch) {
@@ -3729,8 +3811,8 @@ var DurableEventAdapter = class {
         break;
       }
       case "tool_execution_update": {
-        const update2 = this.toolProjector.projectToolUpdate(event, this.resolveParentRef(event.parentToolCallId));
-        if (update2) this.output(update2);
+        const update3 = this.toolProjector.projectToolUpdate(event, this.resolveParentRef(event.parentToolCallId));
+        if (update3) this.output(update3);
         break;
       }
       case "tool_execution_end": {
@@ -3794,7 +3876,7 @@ var DurableEventAdapter = class {
 import {
   ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID2
 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
 
 // packages/core/src/binding-docs.ts
 import { defineDoc as defineDoc3 } from "@earendil-works/pi-durable";
@@ -3836,7 +3918,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
     const isChild = parentCallId !== void 0;
     const childAdapter = isChild ? adapter.createChildAdapter(parentCallId, conversationId) : void 0;
     try {
-      const stream = await watch2(harness, conversationId, BACKGROUND_CONTEXT2);
+      const stream = await watch2(harness, conversationId, BACKGROUND_CONTEXT3);
       activeStreams.set(conversationId, stream);
       stream.start(async (batch) => {
         try {
@@ -3863,7 +3945,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
   };
   await attach(ROOT_CONVERSATION_ID2);
   try {
-    const index = await harness.snapshot(BindingIndexDoc, BACKGROUND_CONTEXT2);
+    const index = await harness.snapshot(BindingIndexDoc, BACKGROUND_CONTEXT3);
     if (index?.byThreadId) {
       for (const convId of Object.values(index.byThreadId)) {
         if (convId && convId !== ROOT_CONVERSATION_ID2) {
@@ -3871,7 +3953,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
         }
       }
     }
-    const subagents = await harness.snapshot(SubagentsDoc, ROOT_CONVERSATION_ID2, BACKGROUND_CONTEXT2);
+    const subagents = await harness.snapshot(SubagentsDoc, ROOT_CONVERSATION_ID2, BACKGROUND_CONTEXT3);
     if (subagents?.agents) {
       for (const agent of Object.values(subagents.agents)) {
         if (agent?.conversationId && agent.conversationId !== ROOT_CONVERSATION_ID2) {
@@ -3961,18 +4043,16 @@ var DurableEngine = class _DurableEngine {
   }
 };
 
-// packages/adapter-pi-ai/src/model-setup.ts
+// packages/adapter-pi-ai/dist/index.js
+import {
+  resolveCliModel as resolveCliModel2
+} from "@earendil-works/pi-coding-agent";
 import {
   DefaultResourceLoader as DefaultResourceLoader2,
   ModelRuntime as ModelRuntime2,
   SettingsManager as SettingsManager2,
   getAgentDir as getAgentDir2,
   resolveModelScopeWithDiagnostics as resolveModelScopeWithDiagnostics2
-} from "@earendil-works/pi-coding-agent";
-
-// packages/adapter-pi-ai/src/model-provider.ts
-import {
-  resolveCliModel as resolveCliModel2
 } from "@earendil-works/pi-coding-agent";
 var PiAiModelProvider = class {
   #modelRuntime;
@@ -4032,8 +4112,6 @@ var PiAiModelProvider = class {
     return {};
   }
 };
-
-// packages/adapter-pi-ai/src/model-setup.ts
 async function setupRunnerModels(cwd, args2) {
   const agentDir = getAgentDir2();
   const settingsManager = SettingsManager2.create(cwd, agentDir);
@@ -4135,7 +4213,7 @@ function attachJsonlLineReader(stream, onLine) {
   };
 }
 
-// packages/execution/src/adapters/local-node-env.ts
+// packages/execution/dist/index.js
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { exec, execFile } from "node:child_process";
@@ -4158,7 +4236,7 @@ var LocalNodeExecutionEnv = class {
     await fs.writeFile(fullPath, content, "utf8");
   }
   async exec(argvOrCommand, options, context) {
-    return new Promise((resolve4) => {
+    return new Promise((resolve22) => {
       const execCwd = options?.cwd ?? this.cwd;
       const execEnv = { ...process.env, ...options?.env };
       const timeout = options?.timeoutMs ?? 3e4;
@@ -4182,7 +4260,7 @@ var LocalNodeExecutionEnv = class {
       child.stdout?.on("data", (chunk) => handleOutput(chunk, false));
       child.stderr?.on("data", (chunk) => handleOutput(chunk, true));
       child.on("error", (err) => {
-        resolve4({
+        resolve22({
           ok: false,
           value: { exitCode: 1 },
           stdout,
@@ -4192,7 +4270,7 @@ var LocalNodeExecutionEnv = class {
       });
       child.on("close", (code) => {
         const exitCode = code ?? 0;
-        resolve4({
+        resolve22({
           ok: exitCode === 0,
           value: { exitCode },
           stdout,
@@ -4257,7 +4335,7 @@ function parseCliArgs(argv2) {
 
 // packages/core/src/session-commands.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID5 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
 
 // packages/core/src/binding-commands.ts
 function toConversationId(id) {
@@ -4335,7 +4413,7 @@ async function handleBindingCommand(cmd, durable, responder) {
 
 // packages/core/src/session-state-commands.ts
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
 import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
 
 // packages/core/src/conversation-id.ts
@@ -4359,12 +4437,12 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
     const targetId = parseConversationId(cmd.conversationId);
     let agentDoc;
     if (targetId !== ROOT_CONVERSATION_ID4) {
-      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
       if (!conv) {
         respond.error(cmd.id, "get_state", `Conversation not found: ${cmd.conversationId}`);
         return true;
       }
-      const agentState = await conv.agent(BACKGROUND_CONTEXT3);
+      const agentState = await conv.agent(BACKGROUND_CONTEXT4);
       agentDoc = agentState;
     } else {
       const current = durable.view.current();
@@ -4387,8 +4465,8 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
     const targetId = parseConversationId(cmd.conversationId);
     let agentDoc;
     if (targetId !== ROOT_CONVERSATION_ID4) {
-      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
-      const agentState = conv ? await conv.agent(BACKGROUND_CONTEXT3) : void 0;
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+      const agentState = conv ? await conv.agent(BACKGROUND_CONTEXT4) : void 0;
       agentDoc = agentState ?? {};
     } else {
       const current = durable.view.current();
@@ -4403,9 +4481,9 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
     }
     let tokens = null;
     try {
-      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT3);
+      const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
       if (conv) {
-        const ctxView = await conv.context(BACKGROUND_CONTEXT3);
+        const ctxView = await conv.context(BACKGROUND_CONTEXT4);
         const estimate = estimateContextTokens(ctxView.messages);
         tokens = estimate.tokens;
       }
@@ -4421,73 +4499,6 @@ async function handleSessionStateCommand(cmd, durable, modelRuntime, args2, resp
     return true;
   }
   return false;
-}
-
-// packages/adapter-pi-durable/src/session-fork.ts
-import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import { join as join3, resolve as resolve3 } from "node:path";
-function forkSessionDatabase(options) {
-  let sourceDir = resolve3(options.sourceDir);
-  if (sourceDir.endsWith(".sqlite")) {
-    sourceDir = resolve3(sourceDir, "..");
-  }
-  const sourceDb = join3(sourceDir, "session.sqlite");
-  if (!existsSync2(sourceDir) || !existsSync2(sourceDb)) {
-    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
-  }
-  let targetDir = resolve3(options.targetDir);
-  if (targetDir.endsWith(".sqlite")) {
-    targetDir = resolve3(targetDir, "..");
-  }
-  mkdirSync(targetDir, { recursive: true });
-  const targetDb = join3(targetDir, "session.sqlite");
-  for (const suffix of ["", "-wal", "-shm"]) {
-    const targetFile = `${targetDb}${suffix}`;
-    if (existsSync2(targetFile)) rmSync(targetFile, { force: true });
-  }
-  const sourceConn = new DatabaseSync(sourceDb);
-  try {
-    try {
-      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
-    } catch {
-    }
-    const escapedTarget = targetDb.replace(/'/g, "''");
-    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
-  } finally {
-    sourceConn.close();
-  }
-  const db = new DatabaseSync(targetDb);
-  try {
-    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
-    if (options.checkpointId !== void 0) {
-      const entryId = Number(options.checkpointId);
-      if (Number.isFinite(entryId) && entryId > 0) {
-        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
-        if (hasEntries) {
-          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
-        }
-        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
-        if (hasTasks) {
-          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
-        }
-      }
-    }
-  } finally {
-    db.close();
-  }
-  const targetLockDir = `${targetDir}.lock`;
-  if (existsSync2(targetLockDir)) {
-    rmSync(targetLockDir, { recursive: true, force: true });
-  }
-  if (existsSync2(targetDir)) {
-    const entries = readdirSync(targetDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
-        rmSync(join3(targetDir, entry.name), { recursive: true, force: true });
-      }
-    }
-  }
 }
 
 // packages/core/src/session-commands.ts
@@ -4517,12 +4528,12 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
       const targetId = parseConversationId(cmd.conversationId);
       if (targetId !== ROOT_CONVERSATION_ID5) {
         if (durable.watcher) await durable.watcher.ensureAttached(targetId);
-        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT5);
         if (!conv) {
           respond.error(cmd.id, "prompt", `Conversation not found: ${cmd.conversationId}`);
           return;
         }
-        await conv.submit({ type: "input", content, whenBusy: behavior }, BACKGROUND_CONTEXT4);
+        await conv.submit({ type: "input", content, whenBusy: behavior }, BACKGROUND_CONTEXT5);
       } else {
         await durable.controller.submit(content, behavior);
       }
@@ -4538,12 +4549,12 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
       const targetId = parseConversationId(cmd.conversationId);
       if (targetId !== ROOT_CONVERSATION_ID5) {
         if (durable.watcher) await durable.watcher.ensureAttached(targetId);
-        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT5);
         if (!conv) {
           respond.error(cmd.id, "steer", `Conversation not found: ${cmd.conversationId}`);
           return;
         }
-        await conv.submit({ type: "input", content, whenBusy: "steer" }, BACKGROUND_CONTEXT4);
+        await conv.submit({ type: "input", content, whenBusy: "steer" }, BACKGROUND_CONTEXT5);
       } else {
         await durable.controller.submit(content, "steer");
       }
@@ -4552,9 +4563,9 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
     case "abort": {
       const targetId = parseConversationId(cmd.conversationId);
       if (targetId !== ROOT_CONVERSATION_ID5) {
-        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT4);
+        const conv = await durable.harness.conversation(targetId, BACKGROUND_CONTEXT5);
         if (conv) {
-          await conv.abort(BACKGROUND_CONTEXT4, { background: true });
+          await conv.abort(BACKGROUND_CONTEXT5, { background: true });
         }
       } else {
         await durable.controller.abort();
@@ -4567,7 +4578,7 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
         respond.error(cmd.id, "abort_task", "Missing taskId");
         return;
       }
-      await durable.harness.abortTask(cmd.taskId, BACKGROUND_CONTEXT4);
+      await durable.harness.abortTask(cmd.taskId, BACKGROUND_CONTEXT5);
       respond.success(cmd.id, "abort_task", { ok: true });
       break;
     }
@@ -4631,8 +4642,20 @@ async function handleActiveSessionCommand(cmd, durable, modelRuntime, args2, res
   }
 }
 
-// packages/contracts/src/diagnostics.ts
+// packages/contracts/dist/index.js
 import { z as z2 } from "zod";
+import { z as z22 } from "zod";
+import { z as z4 } from "zod";
+import { z as z3 } from "zod";
+import { z as z9 } from "zod";
+import { z as z5 } from "zod";
+import { z as z6 } from "zod";
+import { z as z8 } from "zod";
+import { z as z7 } from "zod";
+import { z as z10 } from "zod";
+import { existsSync as existsSync3, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
+import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
+import { join as join5, resolve as resolve5 } from "node:path";
 var piPathStatusSchema = z2.object({
   path: z2.string(),
   exists: z2.boolean(),
@@ -4673,75 +4696,64 @@ var piDiagnosticsReportSchema = z2.object({
   status: z2.enum(["healthy", "warning", "error"]),
   summary: z2.string()
 });
-
-// packages/contracts/src/runner-channel.ts
-import { z as z3 } from "zod";
-var runnerChannelSchema = z3.discriminatedUnion("kind", [
-  z3.object({ kind: z3.literal("ready"), ready: z3.boolean().optional() }).passthrough(),
-  z3.object({ kind: z3.literal("model-scope"), scopedModelIds: z3.array(z3.string()).optional(), defaultModelId: z3.string().optional() }).passthrough(),
-  z3.object({ kind: z3.literal("reply"), id: z3.union([z3.string(), z3.number()]), result: z3.unknown().optional(), error: z3.unknown().optional() }).passthrough(),
-  z3.object({
-    kind: z3.literal("tool_call_request"),
-    callId: z3.string(),
-    toolName: z3.string(),
-    arguments: z3.unknown().default({})
+var runnerChannelSchema = z22.discriminatedUnion("kind", [
+  z22.object({ kind: z22.literal("ready"), ready: z22.boolean().optional() }).passthrough(),
+  z22.object({ kind: z22.literal("model-scope"), scopedModelIds: z22.array(z22.string()).optional(), defaultModelId: z22.string().optional() }).passthrough(),
+  z22.object({ kind: z22.literal("reply"), id: z22.union([z22.string(), z22.number()]), result: z22.unknown().optional(), error: z22.unknown().optional() }).passthrough(),
+  z22.object({
+    kind: z22.literal("tool_call_request"),
+    callId: z22.string(),
+    toolName: z22.string(),
+    arguments: z22.unknown().default({})
   }).passthrough(),
-  z3.object({
-    kind: z3.literal("tool_call_response"),
-    callId: z3.string(),
-    result: z3.unknown().optional(),
-    isError: z3.boolean().optional()
+  z22.object({
+    kind: z22.literal("tool_call_response"),
+    callId: z22.string(),
+    result: z22.unknown().optional(),
+    isError: z22.boolean().optional()
   }).passthrough(),
-  z3.object({
-    kind: z3.literal("interaction_request"),
-    id: z3.union([z3.string(), z3.number()]),
-    interactionKind: z3.string().optional(),
-    dialogKind: z3.string().optional(),
-    title: z3.string().optional(),
-    message: z3.string().optional(),
-    data: z3.unknown().optional()
+  z22.object({
+    kind: z22.literal("interaction_request"),
+    id: z22.union([z22.string(), z22.number()]),
+    interactionKind: z22.string().optional(),
+    dialogKind: z22.string().optional(),
+    title: z22.string().optional(),
+    message: z22.string().optional(),
+    data: z22.unknown().optional()
   }).passthrough(),
-  z3.object({
-    kind: z3.literal("interaction_response"),
-    id: z3.union([z3.string(), z3.number()]),
-    result: z3.unknown().optional(),
-    error: z3.unknown().optional()
+  z22.object({
+    kind: z22.literal("interaction_response"),
+    id: z22.union([z22.string(), z22.number()]),
+    result: z22.unknown().optional(),
+    error: z22.unknown().optional()
   }).passthrough()
 ]);
-var runnerBridgeRequestSchema = z3.object({
-  kind: z3.literal("request"),
-  id: z3.union([z3.string(), z3.number()]),
-  method: z3.string(),
-  params: z3.unknown().optional()
+var runnerBridgeRequestSchema = z22.object({
+  kind: z22.literal("request"),
+  id: z22.union([z22.string(), z22.number()]),
+  method: z22.string(),
+  params: z22.unknown().optional()
 }).passthrough();
 var knownChannelKinds = new Set(runnerChannelSchema.options.map((schema) => schema.shape.kind.value));
-
-// packages/contracts/src/runner-command.ts
-import { z as z5 } from "zod";
-
-// packages/contracts/src/wire-context.ts
-import { z as z4 } from "zod";
-var conversationIdSchema = z4.union([z4.number().int().positive(), z4.string().regex(/^[1-9]\d*$/)]);
-var cumulativeUsageSchema = z4.object({
-  totalTokens: z4.number(),
-  inputTokens: z4.number(),
-  outputTokens: z4.number(),
-  cachedInputTokens: z4.number().optional(),
-  cacheWriteInputTokens: z4.number().optional()
+var conversationIdSchema = z3.union([z3.number().int().positive(), z3.string().regex(/^[1-9]\d*$/)]);
+var cumulativeUsageSchema = z3.object({
+  totalTokens: z3.number(),
+  inputTokens: z3.number(),
+  outputTokens: z3.number(),
+  cachedInputTokens: z3.number().optional(),
+  cacheWriteInputTokens: z3.number().optional()
 }).passthrough();
-var wireContextSchema = z4.object({
-  parentRef: z4.string().optional(),
+var wireContextSchema = z3.object({
+  parentRef: z3.string().optional(),
   conversationId: conversationIdSchema.optional(),
-  providerCheckpointId: z4.string().optional(),
+  providerCheckpointId: z3.string().optional(),
   cumulativeUsage: cumulativeUsageSchema.optional(),
-  aborted: z4.boolean().optional(),
-  stopReason: z4.string().optional(),
-  errorMessage: z4.string().optional()
+  aborted: z3.boolean().optional(),
+  stopReason: z3.string().optional(),
+  errorMessage: z3.string().optional()
 }).passthrough();
-
-// packages/contracts/src/runner-command.ts
-var runnerCommandSchema = z5.object({
-  type: z5.enum([
+var runnerCommandSchema = z4.object({
+  type: z4.enum([
     "prompt",
     "steer",
     "abort",
@@ -4759,33 +4771,33 @@ var runnerCommandSchema = z5.object({
     "host_tool_result",
     "host_interaction_response"
   ]),
-  id: z5.string().optional(),
-  message: z5.string().optional(),
-  images: z5.array(z5.object({ type: z5.literal("image"), data: z5.string(), mimeType: z5.string() })).optional(),
-  streamingBehavior: z5.enum(["steer", "followUp"]).optional(),
-  provider: z5.string().optional(),
-  modelId: z5.string().optional(),
-  instructions: z5.string().optional(),
-  level: z5.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
+  id: z4.string().optional(),
+  message: z4.string().optional(),
+  images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
+  streamingBehavior: z4.enum(["steer", "followUp"]).optional(),
+  provider: z4.string().optional(),
+  modelId: z4.string().optional(),
+  instructions: z4.string().optional(),
+  level: z4.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
   conversationId: conversationIdSchema.optional(),
-  threadId: z5.string().optional(),
-  parentThreadId: z5.string().optional(),
-  sessionId: z5.string().optional(),
-  policyRecord: z5.unknown().optional(),
-  taskId: z5.number().int().positive().optional(),
-  sourceDir: z5.string().optional(),
-  targetDir: z5.string().optional(),
-  checkpointId: z5.union([z5.number(), z5.string()]).optional(),
-  sourceProviderThreadId: z5.string().optional(),
-  targetProviderThreadId: z5.string().optional(),
-  callId: z5.string().optional(),
-  result: z5.unknown().optional(),
-  isError: z5.boolean().optional(),
-  dialogKind: z5.string().optional(),
-  interactionId: z5.string().optional()
+  threadId: z4.string().optional(),
+  parentThreadId: z4.string().optional(),
+  sessionId: z4.string().optional(),
+  policyRecord: z4.unknown().optional(),
+  taskId: z4.number().int().positive().optional(),
+  sourceDir: z4.string().optional(),
+  targetDir: z4.string().optional(),
+  checkpointId: z4.union([z4.number(), z4.string()]).optional(),
+  sourceProviderThreadId: z4.string().optional(),
+  targetProviderThreadId: z4.string().optional(),
+  callId: z4.string().optional(),
+  result: z4.unknown().optional(),
+  isError: z4.boolean().optional(),
+  dialogKind: z4.string().optional(),
+  interactionId: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
-var runnerRequestHeaderSchema = z5.object({ type: z5.string().min(1), id: z5.string().optional() }).passthrough();
+var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
 function parseRunnerCommand(line) {
   let value;
   try {
@@ -4797,190 +4809,175 @@ function parseRunnerCommand(line) {
   if (!parsed.success) throw new Error("INVALID_COMMAND", { cause: parsed.error });
   return parsed.data;
 }
-
-// packages/contracts/src/runner-event.ts
-import { z as z10 } from "zod";
-
-// packages/contracts/src/wire-message.ts
-import { z as z6 } from "zod";
-var number = z6.number().optional();
-var assistantUsageSchema = z6.object({
+var number = z5.number().optional();
+var assistantUsageSchema = z5.object({
   input: number,
   output: number,
   cacheRead: number,
   cacheWrite: number,
   totalTokens: number,
-  cost: z6.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
+  cost: z5.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
 }).passthrough();
-var assistantMessageSchema = z6.object({
-  role: z6.literal("assistant"),
-  content: z6.array(z6.discriminatedUnion("type", [
-    z6.object({ type: z6.literal("text"), text: z6.string() }),
-    z6.object({ type: z6.literal("thinking"), thinking: z6.string() }),
-    z6.object({ type: z6.literal("toolCall"), id: z6.string(), name: z6.string(), arguments: z6.record(z6.string(), z6.unknown()) })
+var assistantMessageSchema = z5.object({
+  role: z5.literal("assistant"),
+  content: z5.array(z5.discriminatedUnion("type", [
+    z5.object({ type: z5.literal("text"), text: z5.string() }),
+    z5.object({ type: z5.literal("thinking"), thinking: z5.string() }),
+    z5.object({ type: z5.literal("toolCall"), id: z5.string(), name: z5.string(), arguments: z5.record(z5.string(), z5.unknown()) })
   ])),
-  stopReason: z6.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
-  errorMessage: z6.string().optional(),
+  stopReason: z5.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
+  errorMessage: z5.string().optional(),
   usage: assistantUsageSchema.optional()
 }).passthrough();
-var contentIndex = z6.number().int().nonnegative();
-var update = z6.discriminatedUnion("type", [
-  z6.object({ type: z6.literal("thinking_delta"), contentIndex, delta: z6.string() }).passthrough(),
-  z6.object({ type: z6.literal("thinking_end"), contentIndex, content: z6.string() }).passthrough(),
-  z6.object({ type: z6.literal("text_delta"), contentIndex, delta: z6.string() }).passthrough(),
-  z6.object({ type: z6.literal("thinking_start"), contentIndex }).passthrough(),
-  z6.object({ type: z6.literal("text_start"), contentIndex }).passthrough(),
-  z6.object({ type: z6.literal("text_end"), contentIndex, content: z6.string() }).passthrough()
+var contentIndex = z5.number().int().nonnegative();
+var update = z5.discriminatedUnion("type", [
+  z5.object({ type: z5.literal("thinking_delta"), contentIndex, delta: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("thinking_end"), contentIndex, content: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("text_delta"), contentIndex, delta: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("thinking_start"), contentIndex }).passthrough(),
+  z5.object({ type: z5.literal("text_start"), contentIndex }).passthrough(),
+  z5.object({ type: z5.literal("text_end"), contentIndex, content: z5.string() }).passthrough()
 ]);
-var messageUpdateSchema = wireContextSchema.extend({ type: z6.literal("message_update"), assistantMessageEvent: update });
+var messageUpdateSchema = wireContextSchema.extend({ type: z5.literal("message_update"), assistantMessageEvent: update });
 var messageSchemas = [
   messageUpdateSchema,
-  wireContextSchema.extend({ type: z6.literal("message_end"), message: assistantMessageSchema })
+  wireContextSchema.extend({ type: z5.literal("message_end"), message: assistantMessageSchema })
 ];
-
-// packages/contracts/src/wire-tool.ts
-import { z as z7 } from "zod";
 var tool = wireContextSchema.extend({
-  toolCallId: z7.union([z7.string().min(1), z7.number().int().nonnegative()]),
-  toolName: z7.string().min(1)
+  toolCallId: z6.union([z6.string().min(1), z6.number().int().nonnegative()]),
+  toolName: z6.string().min(1)
 });
-var toolStartSchema = tool.extend({ type: z7.literal("tool_execution_start"), args: z7.record(z7.string(), z7.unknown()) });
+var toolStartSchema = tool.extend({ type: z6.literal("tool_execution_start"), args: z6.record(z6.string(), z6.unknown()) });
 var toolUpdateSchema = tool.extend({
-  type: z7.literal("tool_execution_update"),
-  partialResult: z7.string(),
-  trimStart: z7.number().optional(),
-  details: z7.unknown().optional()
+  type: z6.literal("tool_execution_update"),
+  partialResult: z6.string(),
+  trimStart: z6.number().optional(),
+  details: z6.unknown().optional()
 });
 var toolEndSchema = tool.extend({
-  type: z7.literal("tool_execution_end"),
-  result: z7.string(),
-  isError: z7.boolean(),
-  args: z7.record(z7.string(), z7.unknown()).optional(),
-  details: z7.unknown().optional()
+  type: z6.literal("tool_execution_end"),
+  result: z6.string(),
+  isError: z6.boolean(),
+  args: z6.record(z6.string(), z6.unknown()).optional(),
+  details: z6.unknown().optional()
 });
 var hostToolCallSchema = wireContextSchema.extend({
-  type: z7.literal("host_tool_call"),
-  callId: z7.string().min(1),
-  toolName: z7.string().min(1),
-  arguments: z7.record(z7.string(), z7.unknown()).default({})
+  type: z6.literal("host_tool_call"),
+  callId: z6.string().min(1),
+  toolName: z6.string().min(1),
+  arguments: z6.record(z6.string(), z6.unknown()).default({})
 });
 var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema];
-
-// packages/contracts/src/wire-lifecycle.ts
-import { z as z9 } from "zod";
-
-// packages/contracts/src/runtime-graph/schema.ts
-import { z as z8 } from "zod";
 var MAX_LIVE_NODES = 512;
 var MAX_RECEIPTS = 128;
 var MAX_LABEL_LENGTH = 160;
 var MAX_PREVIEW_LENGTH = 500;
 var MAX_SNAPSHOT_BYTES = 1048576;
 var TASK_OUTCOMES = ["completed", "failed", "aborted", "faulted", "orphaned"];
-var taskOutcomeSchema = z8.enum(TASK_OUTCOMES);
+var taskOutcomeSchema = z7.enum(TASK_OUTCOMES);
 var LIVE_TASK_STATUSES = ["pending", "running", "waiting", "sleeping", "completing"];
-var liveTaskStatusSchema = z8.enum(LIVE_TASK_STATUSES);
+var liveTaskStatusSchema = z7.enum(LIVE_TASK_STATUSES);
 var BLOCKED_REASONS = ["missing_task", "task_too_old", "migration_failed", "restart_limit"];
-var blockedReasonSchema = z8.enum(BLOCKED_REASONS);
-var graphScopeSchema = z8.object({
-  sessionId: z8.string().min(1).max(256),
-  rootConversationId: z8.string().min(1).max(64),
-  buildId: z8.string().min(1).max(64)
+var blockedReasonSchema = z7.enum(BLOCKED_REASONS);
+var graphScopeSchema = z7.object({
+  sessionId: z7.string().min(1).max(256),
+  rootConversationId: z7.string().min(1).max(64),
+  buildId: z7.string().min(1).max(64)
 });
-var graphObservationSchema = z8.object({
-  epoch: z8.string().min(1).max(64),
-  revision: z8.number().int().nonnegative(),
-  observedAt: z8.number().int().positive(),
-  completeness: z8.enum(["complete", "limited"])
+var graphObservationSchema = z7.object({
+  epoch: z7.string().min(1).max(64),
+  revision: z7.number().int().nonnegative(),
+  observedAt: z7.number().int().positive(),
+  completeness: z7.enum(["complete", "limited"])
 });
-var runtimeTaskStateSchema = z8.discriminatedUnion("status", [
-  z8.object({
-    status: z8.literal("pending"),
-    phase: z8.string().max(64).optional()
+var runtimeTaskStateSchema = z7.discriminatedUnion("status", [
+  z7.object({
+    status: z7.literal("pending"),
+    phase: z7.string().max(64).optional()
   }),
-  z8.object({
-    status: z8.literal("running"),
-    phase: z8.string().max(64).optional()
+  z7.object({
+    status: z7.literal("running"),
+    phase: z7.string().max(64).optional()
   }),
-  z8.object({
-    status: z8.literal("waiting"),
-    phase: z8.string().max(64).optional(),
-    on: z8.array(z8.number().int().positive()).max(MAX_LIVE_NODES),
-    policy: z8.enum(["failFast", "allSettled", "all", "first"]).optional()
+  z7.object({
+    status: z7.literal("waiting"),
+    phase: z7.string().max(64).optional(),
+    on: z7.array(z7.number().int().positive()).max(MAX_LIVE_NODES),
+    policy: z7.enum(["failFast", "allSettled", "all", "first"]).optional()
   }),
-  z8.object({
-    status: z8.literal("sleeping"),
-    phase: z8.string().max(64).optional(),
-    until: z8.number().int().positive()
+  z7.object({
+    status: z7.literal("sleeping"),
+    phase: z7.string().max(64).optional(),
+    until: z7.number().int().positive()
   }),
-  z8.object({
-    status: z8.literal("completing"),
+  z7.object({
+    status: z7.literal("completing"),
     outcome: taskOutcomeSchema
   })
 ]);
-var taskTokensUsageSchema = z8.object({
-  total: z8.number().int().nonnegative().optional(),
-  input: z8.number().int().nonnegative().optional(),
-  output: z8.number().int().nonnegative().optional(),
-  reasoning: z8.number().int().nonnegative().optional(),
-  cacheRead: z8.number().int().nonnegative().optional()
+var taskTokensUsageSchema = z7.object({
+  total: z7.number().int().nonnegative().optional(),
+  input: z7.number().int().nonnegative().optional(),
+  output: z7.number().int().nonnegative().optional(),
+  reasoning: z7.number().int().nonnegative().optional(),
+  cacheRead: z7.number().int().nonnegative().optional()
 });
-var runtimeTaskNodeSchema = z8.object({
-  id: z8.number().int().positive(),
-  kind: z8.string().min(1).max(64),
-  conversationId: z8.number().int().positive(),
-  owner: z8.number().int().positive().optional(),
-  background: z8.boolean(),
-  abortRequested: z8.boolean(),
+var runtimeTaskNodeSchema = z7.object({
+  id: z7.number().int().positive(),
+  kind: z7.string().min(1).max(64),
+  conversationId: z7.number().int().positive(),
+  owner: z7.number().int().positive().optional(),
+  background: z7.boolean(),
+  abortRequested: z7.boolean(),
   state: runtimeTaskStateSchema,
   blocked: blockedReasonSchema.optional(),
-  label: z8.string().min(1).max(MAX_LABEL_LENGTH),
-  startedAt: z8.number().int().positive().optional(),
-  endedAt: z8.number().int().positive().optional(),
-  durationMs: z8.number().int().nonnegative().optional(),
-  toolName: z8.string().max(64).optional(),
-  targetHint: z8.string().max(128).optional(),
-  model: z8.object({
-    provider: z8.string().max(64),
-    modelId: z8.string().max(128)
+  label: z7.string().min(1).max(MAX_LABEL_LENGTH),
+  startedAt: z7.number().int().positive().optional(),
+  endedAt: z7.number().int().positive().optional(),
+  durationMs: z7.number().int().nonnegative().optional(),
+  toolName: z7.string().max(64).optional(),
+  targetHint: z7.string().max(128).optional(),
+  model: z7.object({
+    provider: z7.string().max(64),
+    modelId: z7.string().max(128)
   }).optional(),
-  thinkingLevel: z8.string().max(32).optional(),
+  thinkingLevel: z7.string().max(32).optional(),
   tokens: taskTokensUsageSchema.optional()
 });
-var runtimeConversationNodeSchema = z8.object({
-  id: z8.number().int().positive(),
-  owner: z8.object({
-    conversationId: z8.number().int().positive(),
-    taskId: z8.number().int().positive()
+var runtimeConversationNodeSchema = z7.object({
+  id: z7.number().int().positive(),
+  owner: z7.object({
+    conversationId: z7.number().int().positive(),
+    taskId: z7.number().int().positive()
   }).optional(),
-  parent: z8.object({
-    conversationId: z8.number().int().positive(),
-    at: z8.number().int().positive()
+  parent: z7.object({
+    conversationId: z7.number().int().positive(),
+    at: z7.number().int().positive()
   }).optional()
 });
-var runtimeTaskReceiptSchema = z8.object({
-  taskId: z8.number().int().positive(),
-  conversationId: z8.number().int().positive(),
-  owner: z8.number().int().positive().optional(),
-  kind: z8.string().min(1).max(64),
+var runtimeTaskReceiptSchema = z7.object({
+  taskId: z7.number().int().positive(),
+  conversationId: z7.number().int().positive(),
+  owner: z7.number().int().positive().optional(),
+  kind: z7.string().min(1).max(64),
   outcome: taskOutcomeSchema,
-  isToolError: z8.boolean().optional(),
-  error: z8.object({
-    message: z8.string().max(1024),
-    code: z8.string().max(64).optional()
+  isToolError: z7.boolean().optional(),
+  error: z7.object({
+    message: z7.string().max(1024),
+    code: z7.string().max(64).optional()
   }).optional(),
-  endedAt: z8.number().int().positive(),
-  durationMs: z8.number().int().nonnegative().optional(),
-  preview: z8.string().max(MAX_PREVIEW_LENGTH).optional(),
-  toolName: z8.string().max(64).optional(),
-  targetHint: z8.string().max(128).optional(),
-  startedAt: z8.number().int().positive().optional(),
+  endedAt: z7.number().int().positive(),
+  durationMs: z7.number().int().nonnegative().optional(),
+  preview: z7.string().max(MAX_PREVIEW_LENGTH).optional(),
+  toolName: z7.string().max(64).optional(),
+  targetHint: z7.string().max(128).optional(),
+  startedAt: z7.number().int().positive().optional(),
   tokens: taskTokensUsageSchema.optional()
 });
-var runtimeGraphStatsSchema = z8.object({
-  liveCount: z8.number().int().nonnegative(),
-  terminalCount: z8.number().int().nonnegative(),
-  totalCount: z8.number().int().nonnegative()
+var runtimeGraphStatsSchema = z7.object({
+  liveCount: z7.number().int().nonnegative(),
+  terminalCount: z7.number().int().nonnegative(),
+  totalCount: z7.number().int().nonnegative()
 });
 function getUtf8ByteLength(str) {
   if (typeof Buffer !== "undefined") {
@@ -5001,15 +4998,15 @@ function getUtf8ByteLength(str) {
   }
   return bytes;
 }
-var runtimeGraphSnapshotSchema = z8.object({
-  version: z8.literal(1),
+var runtimeGraphSnapshotSchema = z7.object({
+  version: z7.literal(1),
   scope: graphScopeSchema,
   observation: graphObservationSchema,
-  nodes: z8.record(z8.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
+  nodes: z7.record(z7.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
     message: `Live nodes exceed maximum of ${MAX_LIVE_NODES}`
   }),
-  conversations: z8.record(z8.string(), runtimeConversationNodeSchema),
-  receipts: z8.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
+  conversations: z7.record(z7.string(), runtimeConversationNodeSchema),
+  receipts: z7.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
   stats: runtimeGraphStatsSchema
 }).refine(
   (snapshot) => {
@@ -5022,60 +5019,53 @@ var runtimeGraphSnapshotSchema = z8.object({
   },
   { message: "Runtime graph snapshot exceeds 1 MiB payload limit" }
 );
-
-// packages/contracts/src/wire-lifecycle.ts
 var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
-  type: z9.literal("runtime_graph_snapshot"),
+  type: z8.literal("runtime_graph_snapshot"),
   snapshot: runtimeGraphSnapshotSchema
 });
 var hostInteractionRequestSchema = wireContextSchema.extend({
-  type: z9.literal("host_interaction_request"),
-  id: z9.union([z9.string().min(1), z9.number().int()]),
-  interactionId: z9.string().min(1).optional(),
-  dialogKind: z9.string().min(1),
-  interactionKind: z9.string().optional(),
-  title: z9.string().optional(),
-  message: z9.string().optional(),
-  data: z9.unknown().optional()
+  type: z8.literal("host_interaction_request"),
+  id: z8.union([z8.string().min(1), z8.number().int()]),
+  interactionId: z8.string().min(1).optional(),
+  dialogKind: z8.string().min(1),
+  interactionKind: z8.string().optional(),
+  title: z8.string().optional(),
+  message: z8.string().optional(),
+  data: z8.unknown().optional()
 });
 var lifecycleSchemas = [
-  wireContextSchema.extend({ type: z9.literal("agent_start") }),
-  wireContextSchema.extend({ type: z9.literal("context_window"), usedTokens: z9.number().nullable().optional(), contextWindow: z9.number() }),
-  wireContextSchema.extend({ type: z9.literal("turn_start") }),
-  wireContextSchema.extend({ type: z9.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z9.number().optional() }),
-  wireContextSchema.extend({ type: z9.literal("agent_end"), messages: z9.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z9.number().optional() }),
-  wireContextSchema.extend({ type: z9.literal("compaction_start"), reason: z9.enum(["manual", "threshold"]) }),
-  wireContextSchema.extend({ type: z9.literal("compaction_end"), reason: z9.enum(["manual", "threshold"]), aborted: z9.boolean() }),
-  wireContextSchema.extend({ type: z9.literal("auto_retry_start"), attempt: z9.number(), at: z9.number().optional() }),
-  wireContextSchema.extend({ type: z9.literal("auto_retry_end"), attempt: z9.number(), success: z9.boolean().optional() }),
+  wireContextSchema.extend({ type: z8.literal("agent_start") }),
+  wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
+  wireContextSchema.extend({ type: z8.literal("turn_start") }),
+  wireContextSchema.extend({ type: z8.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("agent_end"), messages: z8.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("compaction_start"), reason: z8.enum(["manual", "threshold"]) }),
+  wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
+  wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
   runtimeGraphSnapshotEventSchema,
   hostInteractionRequestSchema
 ];
-var sessionStatsSchema = z9.object({ contextUsage: z9.object({ tokens: z9.number().nullable(), contextWindow: z9.number() }) });
-
-// packages/contracts/src/runner-event.ts
-var runnerEventSchema = z10.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
+var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
+var runnerEventSchema = z9.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
 var knownEventTypes = new Set(runnerEventSchema.options.map((schema) => schema.shape.type.value));
-
-// packages/contracts/src/runner-response.ts
-import { z as z11 } from "zod";
-var base = z11.object({ id: z11.string().optional(), type: z11.literal("response"), command: z11.string().min(1) });
-var runnerResponseSchema = z11.discriminatedUnion("success", [
-  base.extend({ success: z11.literal(true), data: z11.unknown().optional() }).passthrough(),
-  base.extend({ success: z11.literal(false), error: z11.string() }).passthrough()
+var base = z10.object({ id: z10.string().optional(), type: z10.literal("response"), command: z10.string().min(1) });
+var runnerResponseSchema = z10.discriminatedUnion("success", [
+  base.extend({ success: z10.literal(true), data: z10.unknown().optional() }).passthrough(),
+  base.extend({ success: z10.literal(false), error: z10.string() }).passthrough()
 ]);
 
 // packages/core/src/shared/version.ts
-import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync4, readFileSync as readFileSync2 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname as dirname2, join as join4 } from "node:path";
+import { dirname as dirname2, join as join6 } from "node:path";
 import { fileURLToPath } from "node:url";
 var esmRequire = createRequire(import.meta.url);
 var currentDir = dirname2(fileURLToPath(import.meta.url));
 function getPiDurableVersion() {
   try {
     const durablePkg = esmRequire.resolve("@earendil-works/pi-durable/package.json");
-    if (existsSync3(durablePkg)) {
+    if (existsSync4(durablePkg)) {
       const parsed = JSON.parse(readFileSync2(durablePkg, "utf8"));
       if (parsed.version) return parsed.version;
     }
@@ -5086,8 +5076,8 @@ function getPiDurableVersion() {
     }
   }
   try {
-    const pluginPkg = join4(currentDir, "..", "..", "package.json");
-    if (existsSync3(pluginPkg)) {
+    const pluginPkg = join6(currentDir, "..", "..", "package.json");
+    if (existsSync4(pluginPkg)) {
       const parsed = JSON.parse(readFileSync2(pluginPkg, "utf8"));
       const dep = parsed.dependencies?.["@earendil-works/pi-durable"]?.replace(/^[\^~]/, "");
       if (dep) return dep;
@@ -5100,6 +5090,434 @@ function getPiDurableVersion() {
   }
   return "1.0.0";
 }
+
+// packages/contracts/src/diagnostics.ts
+import { z as z11 } from "zod";
+var piPathStatusSchema2 = z11.object({
+  path: z11.string(),
+  exists: z11.boolean(),
+  type: z11.enum(["file", "directory"]),
+  required: z11.boolean()
+});
+var extensionDiagnosticSchema2 = z11.object({
+  path: z11.string(),
+  resolvedPath: z11.string(),
+  tools: z11.array(z11.string()),
+  commands: z11.array(z11.string()),
+  supportedHooks: z11.array(z11.string()),
+  unsupportedHooks: z11.array(z11.string())
+});
+var count2 = z11.number().int().nonnegative();
+var strings2 = z11.array(z11.string());
+var piDiagnosticsReportSchema2 = z11.object({
+  version: z11.string(),
+  durableVersion: z11.string(),
+  agentDir: z11.string(),
+  paths: z11.record(z11.string(), piPathStatusSchema2),
+  settings: z11.object({
+    defaultProvider: z11.string().optional(),
+    defaultModel: z11.string().optional(),
+    thinkingLevel: z11.string().optional(),
+    packages: strings2,
+    extensions: strings2
+  }),
+  models: z11.object({ total: count2, providers: strings2, defaultModelAvailable: z11.boolean() }),
+  extensions: z11.object({
+    total: count2,
+    errors: z11.array(z11.object({ path: z11.string(), error: z11.string() })),
+    warnings: z11.array(z11.object({ path: z11.string(), warning: z11.string() })),
+    items: z11.array(extensionDiagnosticSchema2)
+  }),
+  skills: z11.object({ total: count2, sample: strings2 }),
+  tools: z11.object({ total: count2, system: strings2, custom: strings2, mcp: strings2 }),
+  status: z11.enum(["healthy", "warning", "error"]),
+  summary: z11.string()
+});
+
+// packages/contracts/src/runner-channel.ts
+import { z as z12 } from "zod";
+var runnerChannelSchema2 = z12.discriminatedUnion("kind", [
+  z12.object({ kind: z12.literal("ready"), ready: z12.boolean().optional() }).passthrough(),
+  z12.object({ kind: z12.literal("model-scope"), scopedModelIds: z12.array(z12.string()).optional(), defaultModelId: z12.string().optional() }).passthrough(),
+  z12.object({ kind: z12.literal("reply"), id: z12.union([z12.string(), z12.number()]), result: z12.unknown().optional(), error: z12.unknown().optional() }).passthrough(),
+  z12.object({
+    kind: z12.literal("tool_call_request"),
+    callId: z12.string(),
+    toolName: z12.string(),
+    arguments: z12.unknown().default({})
+  }).passthrough(),
+  z12.object({
+    kind: z12.literal("tool_call_response"),
+    callId: z12.string(),
+    result: z12.unknown().optional(),
+    isError: z12.boolean().optional()
+  }).passthrough(),
+  z12.object({
+    kind: z12.literal("interaction_request"),
+    id: z12.union([z12.string(), z12.number()]),
+    interactionKind: z12.string().optional(),
+    dialogKind: z12.string().optional(),
+    title: z12.string().optional(),
+    message: z12.string().optional(),
+    data: z12.unknown().optional()
+  }).passthrough(),
+  z12.object({
+    kind: z12.literal("interaction_response"),
+    id: z12.union([z12.string(), z12.number()]),
+    result: z12.unknown().optional(),
+    error: z12.unknown().optional()
+  }).passthrough()
+]);
+var runnerBridgeRequestSchema2 = z12.object({
+  kind: z12.literal("request"),
+  id: z12.union([z12.string(), z12.number()]),
+  method: z12.string(),
+  params: z12.unknown().optional()
+}).passthrough();
+var knownChannelKinds2 = new Set(runnerChannelSchema2.options.map((schema) => schema.shape.kind.value));
+
+// packages/contracts/src/runner-command.ts
+import { z as z14 } from "zod";
+
+// packages/contracts/src/wire-context.ts
+import { z as z13 } from "zod";
+var conversationIdSchema2 = z13.union([z13.number().int().positive(), z13.string().regex(/^[1-9]\d*$/)]);
+var cumulativeUsageSchema2 = z13.object({
+  totalTokens: z13.number(),
+  inputTokens: z13.number(),
+  outputTokens: z13.number(),
+  cachedInputTokens: z13.number().optional(),
+  cacheWriteInputTokens: z13.number().optional()
+}).passthrough();
+var wireContextSchema2 = z13.object({
+  parentRef: z13.string().optional(),
+  conversationId: conversationIdSchema2.optional(),
+  providerCheckpointId: z13.string().optional(),
+  cumulativeUsage: cumulativeUsageSchema2.optional(),
+  aborted: z13.boolean().optional(),
+  stopReason: z13.string().optional(),
+  errorMessage: z13.string().optional()
+}).passthrough();
+
+// packages/contracts/src/runner-command.ts
+var runnerCommandSchema2 = z14.object({
+  type: z14.enum([
+    "prompt",
+    "steer",
+    "abort",
+    "abort_task",
+    "compact",
+    "set_subagent_policy",
+    "get_available_models",
+    "set_model",
+    "set_thinking_level",
+    "get_state",
+    "get_session_stats",
+    "register_binding",
+    "get_all_bindings",
+    "session_fork",
+    "host_tool_result",
+    "host_interaction_response"
+  ]),
+  id: z14.string().optional(),
+  message: z14.string().optional(),
+  images: z14.array(z14.object({ type: z14.literal("image"), data: z14.string(), mimeType: z14.string() })).optional(),
+  streamingBehavior: z14.enum(["steer", "followUp"]).optional(),
+  provider: z14.string().optional(),
+  modelId: z14.string().optional(),
+  instructions: z14.string().optional(),
+  level: z14.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
+  conversationId: conversationIdSchema2.optional(),
+  threadId: z14.string().optional(),
+  parentThreadId: z14.string().optional(),
+  sessionId: z14.string().optional(),
+  policyRecord: z14.unknown().optional(),
+  taskId: z14.number().int().positive().optional(),
+  sourceDir: z14.string().optional(),
+  targetDir: z14.string().optional(),
+  checkpointId: z14.union([z14.number(), z14.string()]).optional(),
+  sourceProviderThreadId: z14.string().optional(),
+  targetProviderThreadId: z14.string().optional(),
+  callId: z14.string().optional(),
+  result: z14.unknown().optional(),
+  isError: z14.boolean().optional(),
+  dialogKind: z14.string().optional(),
+  interactionId: z14.string().optional()
+}).passthrough();
+var knownCommandTypes2 = new Set(runnerCommandSchema2.shape.type.options);
+var runnerRequestHeaderSchema2 = z14.object({ type: z14.string().min(1), id: z14.string().optional() }).passthrough();
+
+// packages/contracts/src/runner-event.ts
+import { z as z19 } from "zod";
+
+// packages/contracts/src/wire-message.ts
+import { z as z15 } from "zod";
+var number2 = z15.number().optional();
+var assistantUsageSchema2 = z15.object({
+  input: number2,
+  output: number2,
+  cacheRead: number2,
+  cacheWrite: number2,
+  totalTokens: number2,
+  cost: z15.object({ input: number2, output: number2, cacheRead: number2, cacheWrite: number2, total: number2 }).passthrough().optional()
+}).passthrough();
+var assistantMessageSchema2 = z15.object({
+  role: z15.literal("assistant"),
+  content: z15.array(z15.discriminatedUnion("type", [
+    z15.object({ type: z15.literal("text"), text: z15.string() }),
+    z15.object({ type: z15.literal("thinking"), thinking: z15.string() }),
+    z15.object({ type: z15.literal("toolCall"), id: z15.string(), name: z15.string(), arguments: z15.record(z15.string(), z15.unknown()) })
+  ])),
+  stopReason: z15.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
+  errorMessage: z15.string().optional(),
+  usage: assistantUsageSchema2.optional()
+}).passthrough();
+var contentIndex2 = z15.number().int().nonnegative();
+var update2 = z15.discriminatedUnion("type", [
+  z15.object({ type: z15.literal("thinking_delta"), contentIndex: contentIndex2, delta: z15.string() }).passthrough(),
+  z15.object({ type: z15.literal("thinking_end"), contentIndex: contentIndex2, content: z15.string() }).passthrough(),
+  z15.object({ type: z15.literal("text_delta"), contentIndex: contentIndex2, delta: z15.string() }).passthrough(),
+  z15.object({ type: z15.literal("thinking_start"), contentIndex: contentIndex2 }).passthrough(),
+  z15.object({ type: z15.literal("text_start"), contentIndex: contentIndex2 }).passthrough(),
+  z15.object({ type: z15.literal("text_end"), contentIndex: contentIndex2, content: z15.string() }).passthrough()
+]);
+var messageUpdateSchema2 = wireContextSchema2.extend({ type: z15.literal("message_update"), assistantMessageEvent: update2 });
+var messageSchemas2 = [
+  messageUpdateSchema2,
+  wireContextSchema2.extend({ type: z15.literal("message_end"), message: assistantMessageSchema2 })
+];
+
+// packages/contracts/src/wire-tool.ts
+import { z as z16 } from "zod";
+var tool2 = wireContextSchema2.extend({
+  toolCallId: z16.union([z16.string().min(1), z16.number().int().nonnegative()]),
+  toolName: z16.string().min(1)
+});
+var toolStartSchema2 = tool2.extend({ type: z16.literal("tool_execution_start"), args: z16.record(z16.string(), z16.unknown()) });
+var toolUpdateSchema2 = tool2.extend({
+  type: z16.literal("tool_execution_update"),
+  partialResult: z16.string(),
+  trimStart: z16.number().optional(),
+  details: z16.unknown().optional()
+});
+var toolEndSchema2 = tool2.extend({
+  type: z16.literal("tool_execution_end"),
+  result: z16.string(),
+  isError: z16.boolean(),
+  args: z16.record(z16.string(), z16.unknown()).optional(),
+  details: z16.unknown().optional()
+});
+var hostToolCallSchema2 = wireContextSchema2.extend({
+  type: z16.literal("host_tool_call"),
+  callId: z16.string().min(1),
+  toolName: z16.string().min(1),
+  arguments: z16.record(z16.string(), z16.unknown()).default({})
+});
+var toolSchemas2 = [toolStartSchema2, toolUpdateSchema2, toolEndSchema2, hostToolCallSchema2];
+
+// packages/contracts/src/wire-lifecycle.ts
+import { z as z18 } from "zod";
+
+// packages/contracts/src/runtime-graph/schema.ts
+import { z as z17 } from "zod";
+var MAX_LIVE_NODES2 = 512;
+var MAX_RECEIPTS2 = 128;
+var MAX_LABEL_LENGTH2 = 160;
+var MAX_PREVIEW_LENGTH2 = 500;
+var MAX_SNAPSHOT_BYTES2 = 1048576;
+var TASK_OUTCOMES2 = ["completed", "failed", "aborted", "faulted", "orphaned"];
+var taskOutcomeSchema2 = z17.enum(TASK_OUTCOMES2);
+var LIVE_TASK_STATUSES2 = ["pending", "running", "waiting", "sleeping", "completing"];
+var liveTaskStatusSchema2 = z17.enum(LIVE_TASK_STATUSES2);
+var BLOCKED_REASONS2 = ["missing_task", "task_too_old", "migration_failed", "restart_limit"];
+var blockedReasonSchema2 = z17.enum(BLOCKED_REASONS2);
+var graphScopeSchema2 = z17.object({
+  sessionId: z17.string().min(1).max(256),
+  rootConversationId: z17.string().min(1).max(64),
+  buildId: z17.string().min(1).max(64)
+});
+var graphObservationSchema2 = z17.object({
+  epoch: z17.string().min(1).max(64),
+  revision: z17.number().int().nonnegative(),
+  observedAt: z17.number().int().positive(),
+  completeness: z17.enum(["complete", "limited"])
+});
+var runtimeTaskStateSchema2 = z17.discriminatedUnion("status", [
+  z17.object({
+    status: z17.literal("pending"),
+    phase: z17.string().max(64).optional()
+  }),
+  z17.object({
+    status: z17.literal("running"),
+    phase: z17.string().max(64).optional()
+  }),
+  z17.object({
+    status: z17.literal("waiting"),
+    phase: z17.string().max(64).optional(),
+    on: z17.array(z17.number().int().positive()).max(MAX_LIVE_NODES2),
+    policy: z17.enum(["failFast", "allSettled", "all", "first"]).optional()
+  }),
+  z17.object({
+    status: z17.literal("sleeping"),
+    phase: z17.string().max(64).optional(),
+    until: z17.number().int().positive()
+  }),
+  z17.object({
+    status: z17.literal("completing"),
+    outcome: taskOutcomeSchema2
+  })
+]);
+var taskTokensUsageSchema2 = z17.object({
+  total: z17.number().int().nonnegative().optional(),
+  input: z17.number().int().nonnegative().optional(),
+  output: z17.number().int().nonnegative().optional(),
+  reasoning: z17.number().int().nonnegative().optional(),
+  cacheRead: z17.number().int().nonnegative().optional()
+});
+var runtimeTaskNodeSchema2 = z17.object({
+  id: z17.number().int().positive(),
+  kind: z17.string().min(1).max(64),
+  conversationId: z17.number().int().positive(),
+  owner: z17.number().int().positive().optional(),
+  background: z17.boolean(),
+  abortRequested: z17.boolean(),
+  state: runtimeTaskStateSchema2,
+  blocked: blockedReasonSchema2.optional(),
+  label: z17.string().min(1).max(MAX_LABEL_LENGTH2),
+  startedAt: z17.number().int().positive().optional(),
+  endedAt: z17.number().int().positive().optional(),
+  durationMs: z17.number().int().nonnegative().optional(),
+  toolName: z17.string().max(64).optional(),
+  targetHint: z17.string().max(128).optional(),
+  model: z17.object({
+    provider: z17.string().max(64),
+    modelId: z17.string().max(128)
+  }).optional(),
+  thinkingLevel: z17.string().max(32).optional(),
+  tokens: taskTokensUsageSchema2.optional()
+});
+var runtimeConversationNodeSchema2 = z17.object({
+  id: z17.number().int().positive(),
+  owner: z17.object({
+    conversationId: z17.number().int().positive(),
+    taskId: z17.number().int().positive()
+  }).optional(),
+  parent: z17.object({
+    conversationId: z17.number().int().positive(),
+    at: z17.number().int().positive()
+  }).optional()
+});
+var runtimeTaskReceiptSchema2 = z17.object({
+  taskId: z17.number().int().positive(),
+  conversationId: z17.number().int().positive(),
+  owner: z17.number().int().positive().optional(),
+  kind: z17.string().min(1).max(64),
+  outcome: taskOutcomeSchema2,
+  isToolError: z17.boolean().optional(),
+  error: z17.object({
+    message: z17.string().max(1024),
+    code: z17.string().max(64).optional()
+  }).optional(),
+  endedAt: z17.number().int().positive(),
+  durationMs: z17.number().int().nonnegative().optional(),
+  preview: z17.string().max(MAX_PREVIEW_LENGTH2).optional(),
+  toolName: z17.string().max(64).optional(),
+  targetHint: z17.string().max(128).optional(),
+  startedAt: z17.number().int().positive().optional(),
+  tokens: taskTokensUsageSchema2.optional()
+});
+var runtimeGraphStatsSchema2 = z17.object({
+  liveCount: z17.number().int().nonnegative(),
+  terminalCount: z17.number().int().nonnegative(),
+  totalCount: z17.number().int().nonnegative()
+});
+function getUtf8ByteLength2(str) {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.byteLength(str, "utf8");
+  }
+  if (typeof TextEncoder !== "undefined") {
+    return new TextEncoder().encode(str).length;
+  }
+  let bytes = 0;
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code <= 127) bytes += 1;
+    else if (code <= 2047) bytes += 2;
+    else if (code >= 55296 && code <= 56319) {
+      bytes += 4;
+      i++;
+    } else bytes += 3;
+  }
+  return bytes;
+}
+var runtimeGraphSnapshotSchema2 = z17.object({
+  version: z17.literal(1),
+  scope: graphScopeSchema2,
+  observation: graphObservationSchema2,
+  nodes: z17.record(z17.string(), runtimeTaskNodeSchema2).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES2, {
+    message: `Live nodes exceed maximum of ${MAX_LIVE_NODES2}`
+  }),
+  conversations: z17.record(z17.string(), runtimeConversationNodeSchema2),
+  receipts: z17.array(runtimeTaskReceiptSchema2).max(MAX_RECEIPTS2),
+  stats: runtimeGraphStatsSchema2
+}).refine(
+  (snapshot) => {
+    try {
+      const json = JSON.stringify(snapshot);
+      return getUtf8ByteLength2(json) <= MAX_SNAPSHOT_BYTES2;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Runtime graph snapshot exceeds 1 MiB payload limit" }
+);
+
+// packages/contracts/src/wire-lifecycle.ts
+var runtimeGraphSnapshotEventSchema2 = wireContextSchema2.extend({
+  type: z18.literal("runtime_graph_snapshot"),
+  snapshot: runtimeGraphSnapshotSchema2
+});
+var hostInteractionRequestSchema2 = wireContextSchema2.extend({
+  type: z18.literal("host_interaction_request"),
+  id: z18.union([z18.string().min(1), z18.number().int()]),
+  interactionId: z18.string().min(1).optional(),
+  dialogKind: z18.string().min(1),
+  interactionKind: z18.string().optional(),
+  title: z18.string().optional(),
+  message: z18.string().optional(),
+  data: z18.unknown().optional()
+});
+var lifecycleSchemas2 = [
+  wireContextSchema2.extend({ type: z18.literal("agent_start") }),
+  wireContextSchema2.extend({ type: z18.literal("context_window"), usedTokens: z18.number().nullable().optional(), contextWindow: z18.number() }),
+  wireContextSchema2.extend({ type: z18.literal("turn_start") }),
+  wireContextSchema2.extend({ type: z18.literal("turn_end"), message: assistantMessageSchema2.optional(), contextWindow: z18.number().optional() }),
+  wireContextSchema2.extend({ type: z18.literal("agent_end"), messages: z18.array(assistantMessageSchema2), message: assistantMessageSchema2.optional(), contextWindow: z18.number().optional() }),
+  wireContextSchema2.extend({ type: z18.literal("compaction_start"), reason: z18.enum(["manual", "threshold"]) }),
+  wireContextSchema2.extend({ type: z18.literal("compaction_end"), reason: z18.enum(["manual", "threshold"]), aborted: z18.boolean() }),
+  wireContextSchema2.extend({ type: z18.literal("auto_retry_start"), attempt: z18.number(), at: z18.number().optional() }),
+  wireContextSchema2.extend({ type: z18.literal("auto_retry_end"), attempt: z18.number(), success: z18.boolean().optional() }),
+  runtimeGraphSnapshotEventSchema2,
+  hostInteractionRequestSchema2
+];
+var sessionStatsSchema2 = z18.object({ contextUsage: z18.object({ tokens: z18.number().nullable(), contextWindow: z18.number() }) });
+
+// packages/contracts/src/runner-event.ts
+var runnerEventSchema2 = z19.discriminatedUnion("type", [...messageSchemas2, ...toolSchemas2, ...lifecycleSchemas2]);
+var knownEventTypes2 = new Set(runnerEventSchema2.options.map((schema) => schema.shape.type.value));
+
+// packages/contracts/src/runner-response.ts
+import { z as z20 } from "zod";
+var base2 = z20.object({ id: z20.string().optional(), type: z20.literal("response"), command: z20.string().min(1) });
+var runnerResponseSchema2 = z20.discriminatedUnion("success", [
+  base2.extend({ success: z20.literal(true), data: z20.unknown().optional() }).passthrough(),
+  base2.extend({ success: z20.literal(false), error: z20.string() }).passthrough()
+]);
+
+// packages/adapter-pi-durable/src/session-fork.ts
+import { existsSync as existsSync5, mkdirSync as mkdirSync3, readdirSync as readdirSync3, rmSync as rmSync3 } from "node:fs";
+import { DatabaseSync as DatabaseSync3 } from "node:sqlite";
+import { join as join7, resolve as resolve6 } from "node:path";
 
 // packages/core/src/task-tokens.ts
 function normalizeUsage(raw) {
@@ -5165,7 +5583,7 @@ var RuntimeGraphReceiptsCollector = class {
   receipts = [];
   knownTaskIds = /* @__PURE__ */ new Set();
   pendingEntryIds = /* @__PURE__ */ new Map();
-  constructor(capacity = MAX_RECEIPTS) {
+  constructor(capacity = MAX_RECEIPTS2) {
     this.capacity = capacity;
   }
   recordTerminal(task, options) {
@@ -5201,8 +5619,8 @@ var RuntimeGraphReceiptsCollector = class {
     let preview = options?.preview;
     let toolName = options?.toolName;
     let targetHint = options?.targetHint;
-    if (preview && preview.length > MAX_PREVIEW_LENGTH) {
-      preview = preview.slice(0, MAX_PREVIEW_LENGTH);
+    if (preview && preview.length > MAX_PREVIEW_LENGTH2) {
+      preview = preview.slice(0, MAX_PREVIEW_LENGTH2);
     }
     if (toolName && toolName.length > 64) {
       toolName = toolName.slice(0, 64);
@@ -5514,7 +5932,7 @@ function buildMappedNode(node, current, rootConvId, names, nativeStartedAt, cloc
   if (node.kind === "durable.subagent-anchor" && subMeta?.name) {
     label = `durable.subagent-anchor \xB7 subagent: ${subMeta.name}`;
   }
-  if (label.length > MAX_LABEL_LENGTH) label = label.slice(0, MAX_LABEL_LENGTH);
+  if (label.length > MAX_LABEL_LENGTH2) label = label.slice(0, MAX_LABEL_LENGTH2);
   const startedAt = node.startedAt !== void 0 && node.startedAt !== null ? Number(node.startedAt) : nativeStartedAt.get(id);
   const durationMs = startedAt !== void 0 ? Math.max(0, clock() - startedAt) : void 0;
   return {
@@ -5670,7 +6088,7 @@ var RuntimeGraphSource = class {
     this.learnNames(current);
     const rawNodes = extractTaskGraph(current).tasks ?? {};
     const totalLiveCount = Object.keys(rawNodes).length;
-    const liveNodeEntries = Object.entries(rawNodes).slice(0, MAX_LIVE_NODES);
+    const liveNodeEntries = Object.entries(rawNodes).slice(0, MAX_LIVE_NODES2);
     const currentLiveIds = /* @__PURE__ */ new Set();
     const mappedNodes = {};
     const rootConvId = Number(this.scope.rootConversationId);
@@ -5683,7 +6101,7 @@ var RuntimeGraphSource = class {
     this.previousNodes = new Map(
       liveNodeEntries.map(([_, n]) => [Number(n.id), { conversationId: Number(n.conversationId), kind: n.kind }])
     );
-    const completeness = totalLiveCount > MAX_LIVE_NODES || hasMissingReceipts ? "limited" : "complete";
+    const completeness = totalLiveCount > MAX_LIVE_NODES2 || hasMissingReceipts ? "limited" : "complete";
     const conversations = this.conversations.snapshot();
     const receipts = this.receipts.getReceipts();
     const allTaskIds = /* @__PURE__ */ new Set();
@@ -5737,9 +6155,9 @@ import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID6 } from "@earendil-works/p
 
 // packages/core/src/stdout-guard.ts
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join5 } from "node:path";
+import { join as join8 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync4, readFileSync as readFileSync3 } from "node:fs";
+import { existsSync as existsSync6, readFileSync as readFileSync3 } from "node:fs";
 var SUPPORTED_PI_VERSION_PREFIXES = ["1.4.", "1.5."];
 var EXPECTED_GUARD_RELATIVE_PATH = "dist/core/output-guard.js";
 var UpstreamStdoutGuardPortError = class extends Error {
@@ -5774,8 +6192,8 @@ function validateUpstreamGuardShape(mod) {
 async function loadUpstreamGuard() {
   if (activeGuard) return activeGuard;
   const pkgDir = getPackageDir();
-  const pkgJsonPath = join5(pkgDir, "package.json");
-  if (!existsSync4(pkgJsonPath)) {
+  const pkgJsonPath = join8(pkgDir, "package.json");
+  if (!existsSync6(pkgJsonPath)) {
     throw new UpstreamStdoutGuardPortError(`Cannot locate package.json at ${pkgJsonPath}`, "MISSING_PACKAGE_JSON");
   }
   let version;
@@ -5789,8 +6207,8 @@ async function loadUpstreamGuard() {
     );
   }
   validateUpstreamGuardVersion(version);
-  const guardPath = join5(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
-  if (!existsSync4(guardPath)) {
+  const guardPath = join8(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
+  if (!existsSync6(guardPath)) {
     throw new UpstreamStdoutGuardPortError(`Missing upstream output guard artifact at ${guardPath}`, "MISSING_ARTIFACT");
   }
   let mod;
@@ -5827,16 +6245,16 @@ async function flushWireStdout() {
 }
 
 // packages/core/src/control-channel.ts
-import { existsSync as existsSync5, readFileSync as readFileSync4, watch } from "node:fs";
-import { join as join6 } from "node:path";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
+import { existsSync as existsSync7, readFileSync as readFileSync4, watch } from "node:fs";
+import { join as join9 } from "node:path";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT6 } from "@earendil-works/chord/context";
 function startRunnerControlChannel(sessionDir, harness, onNotice) {
-  const controlFile = join6(sessionDir, "control.jsonl");
+  const controlFile = join9(sessionDir, "control.jsonl");
   let fileOffset = 0;
   let isClosed = false;
   let watcher = null;
   const processPendingLines = async () => {
-    if (isClosed || !existsSync5(controlFile)) return;
+    if (isClosed || !existsSync7(controlFile)) return;
     try {
       const content = readFileSync4(controlFile, "utf8");
       if (content.length <= fileOffset) return;
@@ -5849,7 +6267,7 @@ function startRunnerControlChannel(sessionDir, harness, onNotice) {
         try {
           const msg = JSON.parse(trimmed);
           if (msg.type === "abort_task" && typeof msg.taskId === "number") {
-            await harness.abortTask(msg.taskId, BACKGROUND_CONTEXT5);
+            await harness.abortTask(msg.taskId, BACKGROUND_CONTEXT6);
             onNotice?.(`Aborted task #${msg.taskId} via control channel`);
           }
         } catch (parseErr) {

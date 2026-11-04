@@ -1,14 +1,14 @@
 export { DurableEngine, type DurableEngineOptions } from "./engine.ts";
-import { setupRunnerModels } from "./model-setup.ts";
+import { setupRunnerModels } from "@durable-zero/adapter-pi-ai";
 import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";
 import { openDurable } from "./runtime.ts";
-import { LocalNodeExecutionEnv } from "../../execution/src/index.ts";
+import { LocalNodeExecutionEnv } from "@durable-zero/execution";
 import type { OpenDurableOptions, OpenDurableResult } from "./runtime-types.ts";
 import { DurableEventAdapter } from "./bridge/durable-event-adapter.ts";
 import type { RunnerEvent } from "./bridge/contracts.ts";
 import { parseCliArgs } from "./cli-args.ts";
 import { handleActiveSessionCommand } from "./session-commands.ts";
-import { parseRunnerCommand, type RunnerCommandPayload } from "../../contracts/src/index.ts";
+import { parseRunnerCommand, type RunnerCommandPayload } from "@durable-zero/contracts";
 import { getPiDurableVersion } from "./version.ts";
 import { HostRpcManager, setHostToolForwarder, setHostInteractionRequester } from "./host-rpc.ts";
 import { startSubagentWatcher, type SubagentWatcherController } from "./subagent-watcher.ts";

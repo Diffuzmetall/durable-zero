@@ -21,7 +21,7 @@ function parseCliArgs(argv) {
 }
 
 // packages/runner/src/composition.ts
-import { resolve as resolve5 } from "node:path";
+import { resolve as resolve7 } from "node:path";
 
 // packages/protocol/dist/index.js
 import { z } from "zod";
@@ -49,61 +49,14 @@ var jsonRpcNotificationSchema = z.object({
   method: z.string().min(1),
   params: z.record(z.string(), z.unknown()).optional()
 });
-var StdioJsonRpcServer = class {
-  stdin;
-  stdout;
+var RequestDispatcher = class {
   handler;
-  decoder = new StringDecoder("utf8");
-  buffer = "";
-  nextRequestId = 0;
-  pendingOutbound = /* @__PURE__ */ new Map();
-  onDataHandler = (chunk) => {
-    void this.handleChunk(chunk);
-  };
-  constructor(options) {
-    this.stdin = options.stdin ?? process.stdin;
-    this.stdout = options.stdout ?? process.stdout;
-    this.handler = options.handler;
-  }
-  start() {
-    this.stdin.on("data", this.onDataHandler);
-  }
-  stop() {
-    this.stdin.off("data", this.onDataHandler);
-    for (const pending of this.pendingOutbound.values()) {
-      clearTimeout(pending.timer);
-      pending.reject(new Error("Server stopped"));
-    }
-    this.pendingOutbound.clear();
-  }
-  close() {
-    this.stop();
-  }
-  send(message) {
-    this.stdout.write(JSON.stringify(message) + "\n");
-  }
-  sendNotification(method, params) {
-    this.send({ jsonrpc: "2.0", method, params });
-  }
-  request(method, params, timeoutMs = 12e4) {
-    const id = `req_${Date.now()}_${++this.nextRequestId}`;
-    return new Promise((resolve6, reject) => {
-      const timer = setTimeout(() => {
-        this.pendingOutbound.delete(id);
-        reject(new Error(`Request ${method} (id: ${id}) timed out after ${timeoutMs}ms`));
-      }, timeoutMs);
-      this.pendingOutbound.set(id, { resolve: resolve6, reject, timer });
-      this.send({ jsonrpc: "2.0", id, method, params });
-    });
-  }
-  async handleChunk(chunk) {
-    this.buffer += this.decoder.write(chunk);
-    const lines = this.buffer.split("\n");
-    this.buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      await this.processLine(line);
-    }
+  send;
+  pendingOutbound;
+  constructor(handler, send, pendingOutbound) {
+    this.handler = handler;
+    this.send = send;
+    this.pendingOutbound = pendingOutbound;
   }
   async processLine(line) {
     try {
@@ -132,26 +85,85 @@ var StdioJsonRpcServer = class {
       }
       const validated = jsonRpcRequestSchema.safeParse(parsed);
       if (!validated.success) {
-        const requestId = parsed && typeof parsed === "object" && "id" in parsed && (typeof parsed.id === "string" || typeof parsed.id === "number") ? parsed.id : null;
-        this.sendError(requestId, -32600, "Invalid Request");
+        const reqId = parsed && typeof parsed === "object" && "id" in parsed && (typeof parsed.id === "string" || typeof parsed.id === "number") ? parsed.id : null;
+        this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
         return;
       }
       const { id, method, params } = validated.data;
       try {
         const result = await this.handler(method, params ?? {});
-        this.sendResult(id, result);
+        this.send({ jsonrpc: "2.0", id, result });
       } catch (err) {
-        this.sendError(id, -32603, err instanceof Error ? err.message : String(err));
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32603, message: err instanceof Error ? err.message : String(err) }
+        });
       }
     } catch {
-      this.sendError(null, -32700, "Parse error");
+      this.send({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
     }
   }
-  sendResult(id, result) {
-    this.send({ jsonrpc: "2.0", id, result });
+};
+var StdioJsonRpcServer = class {
+  stdin;
+  stdout;
+  decoder = new StringDecoder("utf8");
+  buffer = "";
+  nextRequestId = 0;
+  pendingOutbound = /* @__PURE__ */ new Map();
+  dispatcher;
+  onDataHandler = (chunk) => {
+    void this.handleChunk(chunk);
+  };
+  constructor(options) {
+    this.stdin = options.stdin ?? process.stdin;
+    this.stdout = options.stdout ?? process.stdout;
+    this.dispatcher = new RequestDispatcher(
+      options.handler,
+      (msg) => this.send(msg),
+      this.pendingOutbound
+    );
   }
-  sendError(id, code, message) {
-    this.send({ jsonrpc: "2.0", id, error: { code, message } });
+  start() {
+    this.stdin.on("data", this.onDataHandler);
+  }
+  stop() {
+    this.stdin.off("data", this.onDataHandler);
+    for (const pending of this.pendingOutbound.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(new Error("Server stopped"));
+    }
+    this.pendingOutbound.clear();
+  }
+  close() {
+    this.stop();
+  }
+  send(message) {
+    this.stdout.write(JSON.stringify(message) + "\n");
+  }
+  sendNotification(method, params) {
+    this.send({ jsonrpc: "2.0", method, params });
+  }
+  request(method, params, timeoutMs = 12e4) {
+    const id = `req_${Date.now()}_${++this.nextRequestId}`;
+    return new Promise((resolve8, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingOutbound.delete(id);
+        reject(new Error(`Request ${method} (id: ${id}) timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+      this.pendingOutbound.set(id, { resolve: resolve8, reject, timer });
+      this.send({ jsonrpc: "2.0", id, method, params });
+    });
+  }
+  async handleChunk(chunk) {
+    this.buffer += this.decoder.write(chunk);
+    const lines = this.buffer.split("\n");
+    this.buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      await this.dispatcher.processLine(line);
+    }
   }
 };
 
@@ -193,15 +205,25 @@ import {
 } from "@earendil-works/pi-durable";
 import { defineTask } from "@earendil-works/pi-durable";
 import { getSupportedThinkingLevels } from "@earendil-works/pi-ai/models";
-import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, realpath } from "node:fs/promises";
-import { homedir } from "node:os";
-import { basename, join as join2, resolve } from "node:path";
+import { basename, join as join3, resolve as resolve2 } from "node:path";
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import {
+  createSession,
+  defineDocFamily
+} from "@earendil-works/pi-durable";
+import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { execFileSync } from "node:child_process";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import lockfile from "proper-lockfile";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { join as join2, resolve } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readdir, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename as basename2, join as join4, resolve as resolve3 } from "node:path";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
 import {
   ROOT_CONVERSATION_ID
 } from "@earendil-works/pi-durable";
@@ -228,7 +250,7 @@ import {
 import { Value } from "@sinclair/typebox/value";
 import "@earendil-works/pi-coding-agent";
 import { Harness } from "@earendil-works/pi-durable";
-import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
+import { openNodeSqliteStorage as openNodeSqliteStorage2 } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { defineDoc as defineDoc2 } from "@earendil-works/pi-durable";
 import { z as z2 } from "zod";
 import "@earendil-works/pi-durable";
@@ -241,14 +263,14 @@ import {
 import {
   ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID2
 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
 import { defineDoc as defineDoc3 } from "@earendil-works/pi-durable";
 import net from "node:net";
 import fs from "node:fs";
 import path from "node:path";
-import { existsSync as existsSync2, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join as join3 } from "node:path";
+import { dirname, join as join5 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID3 } from "@earendil-works/pi-durable";
 import { z as z22 } from "zod";
@@ -261,18 +283,18 @@ import { z as z7 } from "zod";
 import { z as z9 } from "zod";
 import { z as z8 } from "zod";
 import { z as z11 } from "zod";
-import { existsSync as existsSync3, mkdirSync, readdirSync, rmSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import { join as join4, resolve as resolve2 } from "node:path";
+import { existsSync as existsSync4, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
+import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
+import { join as join6, resolve as resolve4 } from "node:path";
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID5 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
 import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
 import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join5 } from "node:path";
+import { join as join7 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync4, readFileSync as readFileSync3 } from "node:fs";
+import { existsSync as existsSync5, readFileSync as readFileSync3 } from "node:fs";
 var CANONICAL_TOOL_DEFS = {
   read: createReadToolDefinition(process.cwd()),
   write: createWriteToolDefinition(process.cwd()),
@@ -295,48 +317,6 @@ var CANONICAL_TOOL_DEFS = {
     ]
   }
 };
-var CodemodeExtension = class {
-  id = "codemode";
-  name = "Codemode";
-  version = "1.0.0";
-  #activeSandbox;
-  #sandboxes = /* @__PURE__ */ new Set();
-  #contextSandboxes = /* @__PURE__ */ new WeakMap();
-  get sandbox() {
-    return this.#activeSandbox;
-  }
-  getSandboxFor(ctx) {
-    return this.#contextSandboxes.get(ctx);
-  }
-  register(ctx) {
-    if (!ctx.registry) return;
-    const sandbox = new CodemodeSandbox();
-    this.#activeSandbox = sandbox;
-    this.#sandboxes.add(sandbox);
-    this.#contextSandboxes.set(ctx, sandbox);
-    const ext = createCodemodeExtension({
-      sandbox,
-      get namespaces() {
-        return ctx.dynamicNamespaces?.getNamespaces?.() ?? [];
-      }
-    });
-    ctx.registry.install(ext);
-  }
-  async teardown() {
-    const sandboxes = Array.from(this.#sandboxes);
-    this.#sandboxes.clear();
-    this.#activeSandbox = void 0;
-    for (const sb of sandboxes) {
-      const target = sb;
-      if (typeof target.close === "function") {
-        await target.close();
-      } else if (typeof target.dispose === "function") {
-        await target.dispose();
-      }
-    }
-  }
-};
-var codemodeExtension = new CodemodeExtension();
 var SubagentsDoc = defineDoc({
   kind: "durable.subagents",
   version: 1,
@@ -443,20 +423,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve33) => {
-            const timer = setTimeout(() => resolve33(), holdTimeoutMs);
+          await new Promise((resolve52) => {
+            const timer = setTimeout(() => resolve52(), holdTimeoutMs);
             timer.unref?.();
             watch.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve33();
+                resolve52();
               }
               return Promise.resolve();
             });
             void watch.closed.then(() => {
               clearTimeout(timer);
-              resolve33();
+              resolve52();
             });
           });
         } finally {
@@ -536,6 +516,13 @@ function reporterFor(courier, admit) {
 }
 var DefaultCourier = courierFor();
 var DefaultReporter = reporterFor(DefaultCourier);
+var genericDocFamily = defineDocFamily({
+  checkpointWhen: () => false,
+  kind: "dz.document",
+  version: 1,
+  scope: "session",
+  initial: () => ({})
+});
 var SchemaPort = class {
   coerce(schema, value) {
     if (!value || typeof value !== "object" || !schema) {
@@ -1184,20 +1171,20 @@ var LocalNodeExecutionEnv = class {
 };
 
 // packages/adapter-pi-durable/dist/index.js
-import { basename as basename2, join as join32, resolve as resolve22 } from "node:path";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
+import { basename as basename3, join as join32, resolve as resolve22 } from "node:path";
+import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT6 } from "@earendil-works/chord/context";
 import {
-  createSession,
-  defineDocFamily
+  createSession as createSession2,
+  defineDocFamily as defineDocFamily2
 } from "@earendil-works/pi-durable";
-import { openNodeSqliteStorage as openNodeSqliteStorage2 } from "@earendil-works/pi-durable/storage/sqlite/node";
+import { openNodeSqliteStorage as openNodeSqliteStorage3 } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { execFileSync as execFileSync2 } from "node:child_process";
 import { readFile as readFile2, rm as rm2, writeFile as writeFile2 } from "node:fs/promises";
-import { join as join6 } from "node:path";
+import { join as join8 } from "node:path";
 import lockfile2 from "proper-lockfile";
-import { existsSync as existsSync5, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
-import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
-import { join as join22, resolve as resolve4 } from "node:path";
+import { existsSync as existsSync6, mkdirSync as mkdirSync3, readdirSync as readdirSync3, rmSync as rmSync3 } from "node:fs";
+import { DatabaseSync as DatabaseSync3 } from "node:sqlite";
+import { join as join22, resolve as resolve6 } from "node:path";
 import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
 import { mkdir as mkdir2, readdir as readdir2, realpath as realpath2 } from "node:fs/promises";
 import { homedir as homedir2 } from "node:os";
@@ -1243,11 +1230,11 @@ function logUnexpectedErr(err, allowedCode, context) {
   }
 }
 async function writeOwnerFile(directory, owner) {
-  await writeFile2(join6(directory, "session.owner.json"), JSON.stringify(owner, null, 2), "utf8");
+  await writeFile2(join8(directory, "session.owner.json"), JSON.stringify(owner, null, 2), "utf8");
 }
 async function readOwnerFile(directory) {
   try {
-    const content = await readFile2(join6(directory, "session.owner.json"), "utf8");
+    const content = await readFile2(join8(directory, "session.owner.json"), "utf8");
     return JSON.parse(content);
   } catch (err) {
     logUnexpectedErr(err, "ENOENT", `Corrupted or unreadable session.owner.json in ${directory}`);
@@ -1255,7 +1242,7 @@ async function readOwnerFile(directory) {
   }
 }
 async function removeOwnerFile(directory) {
-  await rm2(join6(directory, "session.owner.json"), { force: true }).catch(
+  await rm2(join8(directory, "session.owner.json"), { force: true }).catch(
     (err) => logUnexpectedErr(err, "ENOENT", `Failed to remove owner file in ${directory}`)
   );
 }
@@ -1306,25 +1293,25 @@ async function acquireSessionLock(directory, cwd, id) {
   };
 }
 function forkSessionDatabase(options) {
-  let sourceDir = resolve4(options.sourceDir);
+  let sourceDir = resolve6(options.sourceDir);
   if (sourceDir.endsWith(".sqlite")) {
-    sourceDir = resolve4(sourceDir, "..");
+    sourceDir = resolve6(sourceDir, "..");
   }
   const sourceDb = join22(sourceDir, "session.sqlite");
-  if (!existsSync5(sourceDir) || !existsSync5(sourceDb)) {
+  if (!existsSync6(sourceDir) || !existsSync6(sourceDb)) {
     throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
   }
-  let targetDir = resolve4(options.targetDir);
+  let targetDir = resolve6(options.targetDir);
   if (targetDir.endsWith(".sqlite")) {
-    targetDir = resolve4(targetDir, "..");
+    targetDir = resolve6(targetDir, "..");
   }
-  mkdirSync2(targetDir, { recursive: true });
+  mkdirSync3(targetDir, { recursive: true });
   const targetDb = join22(targetDir, "session.sqlite");
   for (const suffix of ["", "-wal", "-shm"]) {
     const targetFile = `${targetDb}${suffix}`;
-    if (existsSync5(targetFile)) rmSync2(targetFile, { force: true });
+    if (existsSync6(targetFile)) rmSync3(targetFile, { force: true });
   }
-  const sourceConn = new DatabaseSync2(sourceDb);
+  const sourceConn = new DatabaseSync3(sourceDb);
   try {
     try {
       sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
@@ -1335,7 +1322,7 @@ function forkSessionDatabase(options) {
   } finally {
     sourceConn.close();
   }
-  const db = new DatabaseSync2(targetDb);
+  const db = new DatabaseSync3(targetDb);
   try {
     db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
     if (options.checkpointId !== void 0) {
@@ -1355,19 +1342,19 @@ function forkSessionDatabase(options) {
     db.close();
   }
   const targetLockDir = `${targetDir}.lock`;
-  if (existsSync5(targetLockDir)) {
-    rmSync2(targetLockDir, { recursive: true, force: true });
+  if (existsSync6(targetLockDir)) {
+    rmSync3(targetLockDir, { recursive: true, force: true });
   }
-  if (existsSync5(targetDir)) {
-    const entries = readdirSync2(targetDir, { withFileTypes: true });
+  if (existsSync6(targetDir)) {
+    const entries = readdirSync3(targetDir, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
-        rmSync2(join22(targetDir, entry.name), { recursive: true, force: true });
+        rmSync3(join22(targetDir, entry.name), { recursive: true, force: true });
       }
     }
   }
 }
-var genericDocFamily = defineDocFamily({
+var genericDocFamily2 = defineDocFamily2({
   checkpointWhen: () => false,
   kind: "dz.document",
   version: 1,
@@ -1389,14 +1376,14 @@ var PiDurableSessionStore = class {
   async getSession() {
     if (!this.sessionInstance) {
       const dbPath = join32(this.sessionDir, "session.sqlite");
-      const storage = await openNodeSqliteStorage2(dbPath);
-      this.sessionInstance = createSession(storage);
+      const storage = await openNodeSqliteStorage3(dbPath);
+      this.sessionInstance = createSession2(storage);
     }
     return this.sessionInstance;
   }
   async acquireLock() {
     if (this.isLocked) throw new Error(`Lock already held for session: ${this.sessionDir}`);
-    const id = basename2(this.sessionDir);
+    const id = basename3(this.sessionDir);
     this.releaseLockFn = await acquireSessionLock(this.sessionDir, this.cwd, id);
   }
   async releaseLock() {
@@ -1409,7 +1396,7 @@ var PiDurableSessionStore = class {
   async saveDocument(collection, docId, data) {
     const session = await this.getSession();
     await session.commit(async (tx) => {
-      const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`);
+      const doc = await tx.doc(genericDocFamily2, `${collection}:${docId}`);
       for (const key of Object.keys(doc)) {
         delete doc[key];
       }
@@ -1418,11 +1405,11 @@ var PiDurableSessionStore = class {
       } else {
         doc._value = structuredClone(data);
       }
-    }, BACKGROUND_CONTEXT5);
+    }, BACKGROUND_CONTEXT6);
   }
   async readDocument(collection, docId) {
     const session = await this.getSession();
-    const snap = await session.snapshot(genericDocFamily, `${collection}:${docId}`, BACKGROUND_CONTEXT5);
+    const snap = await session.snapshot(genericDocFamily2, `${collection}:${docId}`, BACKGROUND_CONTEXT6);
     if (!snap || Object.keys(snap).length === 0) return void 0;
     if ("_value" in snap && Object.keys(snap).length === 1) {
       return snap._value;
@@ -1441,7 +1428,7 @@ var PiDurableSessionStore = class {
     if (this.sessionInstance) {
       const session = this.sessionInstance;
       this.sessionInstance = null;
-      await session.close(BACKGROUND_CONTEXT5);
+      await session.close(BACKGROUND_CONTEXT6);
     }
     await this.releaseLock();
   }
@@ -1582,7 +1569,7 @@ async function setupRunnerModels(cwd, args) {
 // packages/adapter-codemode/dist/index.js
 import { CodemodeSandbox as CodemodeSandbox2 } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension as createCodemodeExtension2 } from "@earendil-works/pi-durable/codemode";
-var CodemodeExtension2 = class {
+var CodemodeExtension = class {
   id = "codemode";
   name = "Codemode";
   version = "1.0.0";
@@ -1623,7 +1610,6 @@ var CodemodeExtension2 = class {
     }
   }
 };
-var codemodeExtension2 = new CodemodeExtension2();
 
 // packages/extension-pi-resource/dist/index.js
 import { defineExtension as defineExtension4 } from "@earendil-works/pi-durable";
@@ -1648,12 +1634,12 @@ function createPiResourceExtension(options = {}) {
 
 // packages/runner/src/composition.ts
 async function assembleDurableZero(options = {}) {
-  const cwd = resolve5(options.cwd ?? process.cwd());
-  const sessionDir = options.sessionDir ? resolve5(options.sessionDir) : options.session ? resolve5(cwd, options.session) : resolve5(cwd, ".durable/sessions/default");
+  const cwd = resolve7(options.cwd ?? process.cwd());
+  const sessionDir = options.sessionDir ? resolve7(options.sessionDir) : options.session ? resolve7(cwd, options.session) : resolve7(cwd, ".durable/sessions/default");
   const executionEnv = options.executionEnv ?? new LocalNodeExecutionEnv({ cwd });
   const store = options.store ?? new PiDurableSessionStore({ sessionDir, cwd });
   const resourceExt = createPiResourceExtension({ cwd });
-  const codemodeExt = new CodemodeExtension2();
+  const codemodeExt = new CodemodeExtension();
   let modelProvider = options.modelProvider;
   if (!modelProvider) {
     try {
@@ -1709,8 +1695,49 @@ async function assembleDurableZero(options = {}) {
     close
   };
 }
+
+// packages/runner/src/main.ts
+async function main() {
+  const args = parseCliArgs(process.argv.slice(2));
+  const instance = await assembleDurableZero({
+    cwd: args.cwd,
+    session: args.session,
+    provider: args.provider,
+    model: args.model,
+    thinking: args.thinking
+  });
+  const cleanup = async () => {
+    try {
+      await instance.close();
+    } catch (err) {
+      console.warn("[Runner] Cleanup error on exit:", err instanceof Error ? err.message : String(err));
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", () => {
+    void cleanup();
+  });
+  process.on("SIGTERM", () => {
+    void cleanup();
+  });
+  process.on("uncaughtException", (err) => {
+    console.error("[Runner] Uncaught exception:", err);
+    void cleanup().then(() => process.exit(1));
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error("[Runner] Unhandled rejection:", reason);
+    void cleanup().then(() => process.exit(1));
+  });
+}
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/"))) {
+  main().catch((err) => {
+    console.error("Fatal runner error:", err);
+    process.exit(1);
+  });
+}
 export {
   assembleDurableZero,
+  main,
   parseCliArgs
 };
 //# sourceMappingURL=index.js.map
