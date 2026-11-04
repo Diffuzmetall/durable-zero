@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Child Native Batch Outcome Truth (Task 7)" time="0.005648" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="run_end followed by submission unanswered with reason aborted emits wire aborted" time="0.002081" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/child-native-batch-outcome.test.ts"/>
+		<testcase name="run_end followed by submission unanswered with reason cancelled emits wire aborted" time="0.000228" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/child-native-batch-outcome.test.ts"/>
+		<testcase name="DONE input submission wins over intermediate recoverable tool task_failed" time="0.000200" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/child-native-batch-outcome.test.ts"/>
+		<testcase name="unanswered submission without abort reason emits stopReason error with details" time="0.000256" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/child-native-batch-outcome.test.ts"/>
+	</testsuite>
+	<testcase name="forkSessionDatabase: forks database, prunes entries and tasks above checkpointId, and cleans locks" time="0.010919" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-fork.test.ts"/>
+	<testsuite name="Session Lock Eviction and Ownership Tracking (Cycle 71, D-20)" time="0.959482" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="isProcessAlive correctly checks process liveness" time="0.001299" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-lock-eviction.test.ts"/>
+		<testcase name="writes session.owner.json upon lock acquisition and removes it on release" time="0.029455" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-lock-eviction.test.ts"/>
+		<testcase name="forcibly evicts stale lock and session.owner.json left by dead PID" time="0.307244" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-lock-eviction.test.ts"/>
+		<testcase name="fails closed when another live runner process holds the session lock" time="0.310663" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-lock-eviction.test.ts"/>
+		<testcase name="fails with actionable error containing holding PID if process is alive" time="0.309042" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-lock-eviction.test.ts"/>
+	</testsuite>
+	<testcase name="isProcessAlive accurately identifies process liveness and handles invalid pids" time="0.000762" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-storage-errors.test.ts"/>
+	<testcase name="isVerifiedRunnerProcess: returns true for current node process" time="0.006686" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-storage-pid-safety.test.ts"/>
+	<testcase name="isVerifiedRunnerProcess: returns false for non-existent or invalid PID" time="0.000306" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-storage-pid-safety.test.ts"/>
+	<testcase name="isVerifiedRunnerProcess: returns false for PID 0 or negative" time="0.000072" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-storage-pid-safety.test.ts"/>
+	<testcase name="acquireSessionLock fails closed and does not kill live runner process" time="0.343022" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-storage-pid-safety.test.ts"/>
+	<testsuite name="@durable-zero/adapter-pi-durable (SQLite Storage Integration)" time="0.021493" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="acquires lock, persists documents in SQLite, and releases lock safely" time="0.020806" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/sqlite-storage.test.ts"/>
+	</testsuite>
+	<testcase name="buildTechnicalWorkerRole creates a focused, non-meta instruction envelope" time="0.013621" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-async-envelope.test.ts"/>
+	<testcase name="Subagent tool parameters accept task and optional background flag" time="0.004259" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-async-envelope.test.ts"/>
+	<testcase name="Subagent tool in background mode returns immediately without waiting for completion" time="0.000542" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-async-envelope.test.ts"/>
+	<testcase name="Subagent tool in foreground mode (background: false) waits for child completion" time="0.000570" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-async-envelope.test.ts"/>
+	<testcase name="Subagent tool execution returns output property according to Durable 1.2.0 contract" time="0.000225" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-async-envelope.test.ts"/>
+	<testcase name="formatSubagentMirrorPrompt generates sovereign pi prefix when requested" time="0.001226" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope-generic.test.ts"/>
+	<testcase name="parseSubagentMirrorPrompt parses both sovereign pi and legacy bb prefixes" time="0.000735" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope-generic.test.ts"/>
+	<testcase name="formatSubagentMirrorPrompt formats explicit versioned envelope with session, parent, conv, and task" time="0.001689" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="formatSubagentMirrorPrompt formats numeric conversation IDs cleanly" time="0.000251" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="parseSubagentMirrorPrompt detects and extracts envelope and task" time="0.000493" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="parseSubagentMirrorPrompt handles whitespace gracefully" time="0.000383" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="parseSubagentMirrorPrompt returns isMirror: false for ordinary prompts not using reserved prefix" time="0.000285" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="parseSubagentMirrorPrompt throws InvalidSubagentMirrorEnvelopeError for reserved prefix with invalid schema or unsupported version" time="0.000695" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="parseSubagentMirrorPrompt permits safe dots in session key for .jsonl formats" time="0.000131" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="stripSubagentMirrorEnvelope strips envelope if present and returns clean task" time="0.000137" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/subagent-envelope.test.ts"/>
+	<testcase name="Slice 3: DurableEventAdapter routes nested tool end cleanly with projector" time="0.001284" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/tool-result-routing.test.ts"/>
+	<testcase name="Remediation P1 RED: DurableChildEventAdapter seeds snapshot with PREFIXED keys and resets on run_start" time="0.000632" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/tool-result-routing.test.ts"/>
+	<testcase name="Remediation P1 RED: DurableEventAdapter clears scoped projection state on run_end" time="0.001071" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/tool-result-routing.test.ts"/>
+	<testcase name="Slice 3: DurableChildEventAdapter prefixes toolCallId and preserves conversationId" time="0.000228" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/tool-result-routing.test.ts"/>
+	<testcase name="Slice 3: Subagent terminal discovery resolves conversationId from canonical details" time="0.000099" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/tool-result-routing.test.ts"/>
+	<testcase name="ViewStreamProjector: synthesizes agent_start and turn_start on live run transition" time="0.005702" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/view-stream-projector.test.ts"/>
+	<testcase name="ViewStreamProjector: synthesizes turn_end and agent_end when live run completes" time="0.000318" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/view-stream-projector.test.ts"/>
+	<testcase name="watchEvents: emits message_update with incremental text deltas from pi.live.generation" time="0.002219" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/watch-events-compat.test.ts"/>
+	<testcase name="watchEvents: emits tool_execution_start with arguments from assistant toolCall entries" time="0.004224" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/watch-events-tools-compat.test.ts"/>
+	<testcase name="watchEvents: emits tool_execution_start from liveTools with generation content arguments" time="0.008469" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/watch-events-tools-compat.test.ts"/>
+	<!-- tests 41 -->
+	<!-- suites 3 -->
+	<!-- pass 41 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2089.45575 -->
+</testsuites>

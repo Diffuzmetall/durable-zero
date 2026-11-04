@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
 	formatSubagentMirrorPrompt,
 	parseSubagentMirrorPrompt,
-} from "../src/shared/subagent-envelope.ts";
+} from "../src/engine/shared/subagent-envelope.ts";
 
 test("formatSubagentMirrorPrompt generates sovereign pi prefix when requested", () => {
 	const formatted = formatSubagentMirrorPrompt("session-1", "parent-1", "2", "Do work", "pi");

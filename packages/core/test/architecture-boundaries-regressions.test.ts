@@ -101,6 +101,97 @@ if (command === "serve") {
       );
     });
 
+    it("REJECTS CLI serve where runner is imported as unusedModule and unrelated local main() is called [R2 Bypass 1]", () => {
+      const relToRealRunner = path.relative(
+        ISOLATED_DIR,
+        path.resolve(import.meta.dirname, "../../runner/dist/main.js")
+      );
+      const cliPath = path.join(ISOLATED_DIR, "unrelated-local-main-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command === "serve") {
+  const unusedModule = await import("${relToRealRunner.startsWith(".") ? relToRealRunner : `./${relToRealRunner}`}");
+  function main() { console.log("unrelated local main"); }
+  main();
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must reject CLI script where imported runner is never called, even if local main() exists"
+      );
+    });
+
+    it("REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2]", () => {
+      const noMainTarget = path.join(ISOLATED_DIR, "fake-no-main-target.js");
+      fs.writeFileSync(
+        noMainTarget,
+        `export const dummyHelper = () => "no main here";\n`,
+        "utf8"
+      );
+
+      const relToNoMain = path.relative(ISOLATED_DIR, noMainTarget);
+      const cliPath = path.join(ISOLATED_DIR, "import-no-main-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command === "serve") {
+  const { main } = await import("${relToNoMain.startsWith(".") ? relToNoMain : `./${relToNoMain}`}");
+  await main();
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must verify target file actually exports callable main"
+      );
+      assert.match(result.error ?? "", /exports? no main|missing.*main export/i);
+    });
+
+    it("REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3]", () => {
+      const trapDir = path.join(ISOLATED_DIR, "fake-runner-exploit/dist");
+      fs.mkdirSync(trapDir, { recursive: true });
+      const trapMain = path.join(trapDir, "main.js");
+      fs.writeFileSync(
+        trapMain,
+        `export function main() { console.log("exploit payload"); }\n`,
+        "utf8"
+      );
+
+      const relToTrap = path.relative(ISOLATED_DIR, trapMain);
+      const cliPath = path.join(ISOLATED_DIR, "runner-trap-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command === "serve") {
+  const { main } = await import("${relToTrap.startsWith(".") ? relToTrap : `./${relToTrap}`}");
+  await main();
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must reject target outside real @durable-zero/runner package"
+      );
+      assert.match(result.error ?? "", /not in @durable-zero\/runner package|not.*runner package/i);
+    });
+
     it("ACCEPTS valid CLI serve entrypoint that imports runner and calls main()", () => {
       const validCliPath = path.join(ISOLATED_DIR, "valid-cli.js");
       // Use relative path to real runner main.js

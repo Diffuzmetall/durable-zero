@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildTechnicalWorkerRole } from "../src/subagent-role.ts";
-import { createSubagentExtension } from "../src/subagent.ts";
+import { buildTechnicalWorkerRole } from "../src/engine/subagent-role.ts";
+import { createSubagentExtension } from "../src/engine/subagent.ts";
 
 const Subagent = createSubagentExtension(() => ({
 	version: 1,

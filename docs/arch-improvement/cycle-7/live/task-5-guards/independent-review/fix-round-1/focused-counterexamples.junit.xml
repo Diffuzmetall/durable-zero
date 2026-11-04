@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Focused Adversarial Counterexamples against Frozen 2d0 Checker" time="0.008642" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="COUNTEREXAMPLE 1 (FALSE GREEN PROVEN): import real runner as unusedModule + call unrelated local main() falsely passes" time="0.005874" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.test.ts"/>
+		<testcase name="COUNTEREXAMPLE 2 (FALSE GREEN PROVEN): target file under runner package with NO exported main falsely passes" time="0.001094" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.test.ts"/>
+		<testcase name="COUNTEREXAMPLE 3 (FALSE GREEN PROVEN): wrong package whose directory name merely contains 'runner' falsely passes package check" time="0.000586" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.test.ts"/>
+		<testcase name="GENUINE POSITIVE: legitimately accepts authentic runner import and main invocation" time="0.000397" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.test.ts"/>
+	</testsuite>
+	<!-- tests 4 -->
+	<!-- suites 1 -->
+	<!-- pass 4 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 324.29325 -->
+</testsuites>

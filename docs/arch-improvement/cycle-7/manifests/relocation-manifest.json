@@ -1,30 +1,196 @@
 {
-  "title": "durable-zero Cycle 7 Deliverables Relocation Manifest",
-  "created_at": "2026-11-05T00:05:00+03:00",
-  "scope_ownership": [
-    "docs/arch-improvement/cycle-7/README.md",
-    "docs/arch-improvement/cycle-7/architecture/",
-    "docs/arch-improvement/cycle-7/reviews/",
-    "docs/arch-improvement/cycle-7/evidence/",
-    "docs/arch-improvement/cycle-7/audit/",
-    "docs/arch-improvement/cycle-7/historical/",
-    "docs/arch-improvement/cycle-7/manifests/"
-  ],
-  "untouched_paths": [
-    "docs/arch-improvement/cycle-7/handoffs/",
-    "docs/arch-improvement/cycle-7/live/",
-    "docs/arch-improvement/ledger.md",
-    "AGENTS.md",
-    "product source"
-  ],
-  "packaged_deliverables_count": 118,
+  "title": "Cycle 7 current packaged-artifact integrity (not product acceptance)",
+  "created_at": "2026-11-05T01:30:53.256611+03:00",
+  "packaged_deliverables_count": 128,
   "packaged_deliverables": [
     {
       "path": "README.md",
       "category": "root",
-      "sha256": "fbf8b6900beca31121b95060aa5f3b02659235df592e6b7f17421a80c7e5e380",
-      "bytes": 10830,
+      "sha256": "6d42128dd0eab88a1c9fa0a56b410d6d1e0077c60d912f58ce2aa788011ac215",
+      "bytes": 11190,
       "source_provenance": "workspace"
+    },
+    {
+      "path": "architecture/architecture-map-migration-metrics.json",
+      "category": "architecture",
+      "sha256": "e18c26bb6236c7a4136dae612416a08f35c84de7b3e8b4f906780b4f13b7ae09",
+      "bytes": 10381,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/architecture-map-migration-metrics.json"
+    },
+    {
+      "path": "architecture/architecture-map-slice0-command-receipts.json",
+      "category": "architecture",
+      "sha256": "d0d6e4c0cd7c3763972e75149ab1f9afea2786e0428fed424aea0a1f71ec82d8",
+      "bytes": 1087,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/architecture-map-slice0-command-receipts.json"
+    },
+    {
+      "path": "architecture/architecture-map-source-snapshot.json",
+      "category": "architecture",
+      "sha256": "242279d46b7adca229e1e6e4a3dbf3d8d0c61178147d4ad419bf0467035cb073",
+      "bytes": 74609,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/architecture-map-source-snapshot.json"
+    },
+    {
+      "path": "architecture/architecture-status-source-current.json",
+      "category": "architecture",
+      "sha256": "4ceb07645843290a5b31df124d49032c7f8a376ed5faca3ce9e2f321c7ea5b2c",
+      "bytes": 64626,
+      "source_provenance": "workspace"
+    },
+    {
+      "path": "architecture/durable-zero-architecture-asis.svg",
+      "category": "architecture",
+      "sha256": "96c01997efd8a51e7e5cf1c598a7669836cdc552a17555b36511d7808ea39212",
+      "bytes": 4698,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-asis.svg"
+    },
+    {
+      "path": "architecture/durable-zero-architecture-status.html",
+      "category": "architecture",
+      "sha256": "a8adbf6e9ddecbf11a4d805cfddb98021f816197c0de03d66db6f7570f21e7de",
+      "bytes": 23298,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
+    },
+    {
+      "path": "architecture/durable-zero-architecture-status.json",
+      "category": "architecture",
+      "sha256": "ffaa9dcb34499908b36251ac5bb5a04a7304dcdf8de7bf05dbeb7b08d82b1ff3",
+      "bytes": 10530,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.json"
+    },
+    {
+      "path": "architecture/durable-zero-architecture-status.md",
+      "category": "architecture",
+      "sha256": "5b6dcfb8d8c0bfae9f69510d950a71056246b37a18c5cb5028e5250b5e8a4e44",
+      "bytes": 4096,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.md"
+    },
+    {
+      "path": "architecture/durable-zero-architecture-tobe.svg",
+      "category": "architecture",
+      "sha256": "de8c4163e5529411b7515bfa81eea8e2d594ce1a855b59b2c2f5ac68630810a2",
+      "bytes": 4645,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-tobe.svg"
+    },
+    {
+      "path": "architecture/render-architecture-status.py",
+      "category": "architecture",
+      "sha256": "e701858b287612eeb10aead96e6fbab67d1d3330dcd04fc5e918a6d999130cee",
+      "bytes": 10749,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/render-architecture-status.py"
+    },
+    {
+      "path": "audit/audited-plan-ab637a6.md",
+      "category": "audit",
+      "sha256": "6104b17cce0620e094ef3206768c415306be750b8f9f921597ec5fdffe9bf8c5",
+      "bytes": 20998,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/audited-plan-ab637a6.md"
+    },
+    {
+      "path": "audit/baseline-import-graph.json",
+      "category": "audit",
+      "sha256": "faa2010fab97bd1ae4999716c71fae2b2d0348d3f0729a6ec5acefd33dc60f50",
+      "bytes": 90896,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/baseline-import-graph.json"
+    },
+    {
+      "path": "audit/core-vendor-imports.json",
+      "category": "audit",
+      "sha256": "ba812b0bf8a4c5b4a72ab0262d4351dfbb303c00f50d5f2c86ec5e1fc56e389e",
+      "bytes": 17578,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/core-vendor-imports.json"
+    },
+    {
+      "path": "audit/cycle7-plan-audit.md",
+      "category": "audit",
+      "sha256": "0db8f712781d13f7f77f6eebbe32a2e0e02c86949b80708f7ad2c1372efcbe36",
+      "bytes": 48632,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/cycle7-plan-audit.md"
+    },
+    {
+      "path": "audit/initial-cycle7-plan.md",
+      "category": "audit",
+      "sha256": "201f5a23ad5e5b90ac23b85bded8333c095e24415d820758db975be772801a56",
+      "bytes": 19719,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/initial-cycle7-plan.md"
+    },
+    {
+      "path": "audit/latest-plan-change.patch",
+      "category": "audit",
+      "sha256": "e73d7a1027ec922c094e6cfc3f3a09355966f5e5dd37060cd03bf98416df9473",
+      "bytes": 19155,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/latest-plan-change.patch"
+    },
+    {
+      "path": "audit/plan-76145d4-commit-proof.txt",
+      "category": "audit",
+      "sha256": "6c0f0a8d7c96ba7d3e028959d7b3e2225120ac00bafa46bb91f557e592d6893a",
+      "bytes": 454,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-76145d4-commit-proof.txt"
+    },
+    {
+      "path": "audit/plan-76145d4-frozen.md",
+      "category": "audit",
+      "sha256": "765f9c653458e30a21d0feded85ef65eedb62edc03e0ab1c7b5c1312714d6fe5",
+      "bytes": 71749,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-76145d4-frozen.md"
+    },
+    {
+      "path": "audit/plan-76145d4-review.diff",
+      "category": "audit",
+      "sha256": "76faddf2146be97a3d690505e8f727ec11179604305bd5f1868018646bd9d253",
+      "bytes": 42861,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-76145d4-review.diff"
+    },
+    {
+      "path": "audit/plan-candidate-5b15b5e.md",
+      "category": "audit",
+      "sha256": "9ed1638c35decededc5870aabac77b17c771490c4fbf4d537f23722e14f5fc6b",
+      "bytes": 53881,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-candidate-5b15b5e.md"
+    },
+    {
+      "path": "audit/plan-contracts-wip-source-check.md",
+      "category": "audit",
+      "sha256": "7b14d2349aab48ea1d74af93a67d4a5fab3a3074ed700f5d9b1f0e6a80593618",
+      "bytes": 4369,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-contracts-wip-source-check.md"
+    },
+    {
+      "path": "audit/plan-final-contracts-author-report.md",
+      "category": "audit",
+      "sha256": "bb264358c22342d27405f4586facb8456ea62bdb54db49e54140251d9e76c303",
+      "bytes": 10790,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-final-contracts-author-report.md"
+    },
+    {
+      "path": "audit/plan-findings.json",
+      "category": "audit",
+      "sha256": "922f28641bee474885fdbff976676a808a0c3f47b8a89473c130f3008924360b",
+      "bytes": 41635,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-findings.json"
+    },
+    {
+      "path": "audit/plan-repair-review-round1.md",
+      "category": "audit",
+      "sha256": "45c6d6bafa3558dbe729c1c0b78969b733a85e2a83b2a5e225457962e9d62d63",
+      "bytes": 8643,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-repair-review-round1.md"
+    },
+    {
+      "path": "audit/plan-repair-review-round2.md",
+      "category": "audit",
+      "sha256": "3f4e2e29b27e0503cfcce56c20174c763e1ca81d80297b5508ecd71bc054a1ca",
+      "bytes": 7992,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-repair-review-round2.md"
+    },
+    {
+      "path": "audit/third-party-adjudication.json",
+      "category": "audit",
+      "sha256": "aecc027206d9b802444b0b1c2548fb95f195a522861c3ab0071eb1f464305690",
+      "bytes": 5564,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/third-party-adjudication.json"
     },
     {
       "path": "evidence/cycle7-task-1-red.log",
@@ -279,11 +445,81 @@
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-named-generic-probe.json"
     },
     {
+      "path": "evidence/protocol-package/dist/index.js",
+      "category": "evidence",
+      "sha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
+      "bytes": 764537,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js"
+    },
+    {
+      "path": "evidence/protocol-package/generate-journey-artifacts.mjs",
+      "category": "evidence",
+      "sha256": "1d6b668076cc54a6868de6a9c448002f18c0e009da5f72350e1bbb54d6910bd3",
+      "bytes": 16130,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/generate-journey-artifacts.mjs"
+    },
+    {
+      "path": "evidence/protocol-package/package.json",
+      "category": "evidence",
+      "sha256": "95a473643b1c21c738105034614a08696706eaef8f90aaf6edc0d909877729db",
+      "bytes": 310,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/package.json"
+    },
+    {
+      "path": "evidence/protocol-package/test-consumer-server.mjs",
+      "category": "evidence",
+      "sha256": "924d8d4f85f5ad841f13dc7042f2bf28b3c2d287a821316cf587d7bc2e531732",
+      "bytes": 1972,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-consumer-server.mjs"
+    },
+    {
+      "path": "evidence/protocol-package/test-suite.mjs",
+      "category": "evidence",
+      "sha256": "4f70d3434ac2ddf8542011ffe5079128b15ac29e5645694cde5ea0da6403f7ac",
+      "bytes": 17587,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"
+    },
+    {
       "path": "evidence/protocol-package-build.log",
       "category": "evidence",
       "sha256": "841a44aab0adbb137a47de0f25f54cc9fca25743258921fb118cfaba4bebcf9a",
       "bytes": 637,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-build.log"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/dist/index.js",
+      "category": "evidence",
+      "sha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
+      "bytes": 764468,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/generate-journey-artifacts.mjs",
+      "category": "evidence",
+      "sha256": "79f16c0edd5c88dac4b3f01a4646c8b744a495eebbd41189d059f79d82cde936",
+      "bytes": 16809,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/generate-journey-artifacts.mjs"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/package.json",
+      "category": "evidence",
+      "sha256": "95a473643b1c21c738105034614a08696706eaef8f90aaf6edc0d909877729db",
+      "bytes": 310,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/package.json"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/test-consumer-server.mjs",
+      "category": "evidence",
+      "sha256": "6e8f43fee2c236b97cb23db3d24f2c6fcf6a0d5b574eeb612d9fafe328a52eb4",
+      "bytes": 2210,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/test-consumer-server.mjs"
+    },
+    {
+      "path": "evidence/protocol-package-fix-r1/test-suite.mjs",
+      "category": "evidence",
+      "sha256": "312e67feeaadc9910ecb93b51027f06d6e575ace9a7cea07cb4184bde5c5df0a",
+      "bytes": 16736,
+      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/test-suite.mjs"
     },
     {
       "path": "evidence/protocol-package-fix-r1-build.log",
@@ -412,74 +648,67 @@
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/redo-host-methods-behavioral-red.log"
     },
     {
-      "path": "evidence/protocol-package/generate-journey-artifacts.mjs",
-      "category": "evidence",
-      "sha256": "1d6b668076cc54a6868de6a9c448002f18c0e009da5f72350e1bbb54d6910bd3",
-      "bytes": 16130,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/generate-journey-artifacts.mjs"
+      "path": "historical/architecture-before-native-green/durable-zero-architecture-asis.svg",
+      "category": "historical",
+      "sha256": "d83edda3436220f77123c00f46fb82b97aac366e75c9aeb1d5f7258026d99432",
+      "bytes": 7781,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package/package.json",
-      "category": "evidence",
-      "sha256": "95a473643b1c21c738105034614a08696706eaef8f90aaf6edc0d909877729db",
-      "bytes": 310,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/package.json"
+      "path": "historical/architecture-before-native-green/durable-zero-architecture-status.html",
+      "category": "historical",
+      "sha256": "b027eba8e570dbdcd96b74697fbb0cbc8bd91207ba5f3c963a07d2f1974eb756",
+      "bytes": 45903,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package/test-consumer-server.mjs",
-      "category": "evidence",
-      "sha256": "924d8d4f85f5ad841f13dc7042f2bf28b3c2d287a821316cf587d7bc2e531732",
-      "bytes": 1972,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-consumer-server.mjs"
+      "path": "historical/architecture-before-native-green/durable-zero-architecture-status.json",
+      "category": "historical",
+      "sha256": "cc0ef331f174d4cebd73d371a4a9922467296b6d93cc1f4deb7b29e168781e7e",
+      "bytes": 25554,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package/test-suite.mjs",
-      "category": "evidence",
-      "sha256": "4f70d3434ac2ddf8542011ffe5079128b15ac29e5645694cde5ea0da6403f7ac",
-      "bytes": 17587,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"
+      "path": "historical/architecture-before-native-green/durable-zero-architecture-status.md",
+      "category": "historical",
+      "sha256": "d6c4f2b230b5e822707f9fc43c3a089cb51e7c441af423708ef3923a03dc621b",
+      "bytes": 13103,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package/dist/index.js",
-      "category": "evidence",
-      "sha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
-      "bytes": 764537,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js"
+      "path": "historical/architecture-before-native-green/durable-zero-architecture-tobe.svg",
+      "category": "historical",
+      "sha256": "a379d140c6b153f10536df188f4f3fe9758394ec28f8a9dc560b03bdcd3a3bb9",
+      "bytes": 7365,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package-fix-r1/generate-journey-artifacts.mjs",
-      "category": "evidence",
-      "sha256": "79f16c0edd5c88dac4b3f01a4646c8b744a495eebbd41189d059f79d82cde936",
-      "bytes": 16809,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/generate-journey-artifacts.mjs"
+      "path": "historical/architecture-before-native-green/final-validation-report.md",
+      "category": "historical",
+      "sha256": "9d4e80f549b2e8e61adb502cb0a95eee3554a71f6c11b542edc44479da3c1f45",
+      "bytes": 5746,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package-fix-r1/package.json",
-      "category": "evidence",
-      "sha256": "95a473643b1c21c738105034614a08696706eaef8f90aaf6edc0d909877729db",
-      "bytes": 310,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/package.json"
+      "path": "historical/architecture-before-native-green/generate_reports_and_verify.py",
+      "category": "historical",
+      "sha256": "b728cf33e26addfe82e202d6fafe8eb91c2db8afe432f50ea58c1d8c1271f46f",
+      "bytes": 14376,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package-fix-r1/test-consumer-server.mjs",
-      "category": "evidence",
-      "sha256": "6e8f43fee2c236b97cb23db3d24f2c6fcf6a0d5b574eeb612d9fafe328a52eb4",
-      "bytes": 2210,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/test-consumer-server.mjs"
+      "path": "historical/architecture-before-native-green/relocation-manifest.json",
+      "category": "historical",
+      "sha256": "b1c461d4131414cd1edec4530c076f9f0060e8d779e5ff635617625a739a2a68",
+      "bytes": 41455,
+      "source_provenance": "workspace"
     },
     {
-      "path": "evidence/protocol-package-fix-r1/test-suite.mjs",
-      "category": "evidence",
-      "sha256": "312e67feeaadc9910ecb93b51027f06d6e575ace9a7cea07cb4184bde5c5df0a",
-      "bytes": 16736,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/test-suite.mjs"
-    },
-    {
-      "path": "evidence/protocol-package-fix-r1/dist/index.js",
-      "category": "evidence",
-      "sha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
-      "bytes": 764468,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js"
+      "path": "historical/architecture-before-native-green/render-architecture-status.py",
+      "category": "historical",
+      "sha256": "972c53f091ea8ea67d14a4b168d1b16e631fb7a4aa384894404fdf4e2de9f3b1",
+      "bytes": 42308,
+      "source_provenance": "workspace"
     },
     {
       "path": "historical/durable-zero-architecture.html",
@@ -587,192 +816,17 @@
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-product-review.md"
     },
     {
-      "path": "architecture/architecture-map-migration-metrics.json",
-      "category": "architecture",
-      "sha256": "e18c26bb6236c7a4136dae612416a08f35c84de7b3e8b4f906780b4f13b7ae09",
-      "bytes": 10381,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/architecture-map-migration-metrics.json"
-    },
-    {
-      "path": "architecture/architecture-map-slice0-command-receipts.json",
-      "category": "architecture",
-      "sha256": "d0d6e4c0cd7c3763972e75149ab1f9afea2786e0428fed424aea0a1f71ec82d8",
-      "bytes": 1087,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/architecture-map-slice0-command-receipts.json"
-    },
-    {
-      "path": "architecture/architecture-map-source-snapshot.json",
-      "category": "architecture",
-      "sha256": "242279d46b7adca229e1e6e4a3dbf3d8d0c61178147d4ad419bf0467035cb073",
-      "bytes": 74609,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/architecture-map-source-snapshot.json"
-    },
-    {
-      "path": "architecture/durable-zero-architecture-asis.svg",
-      "category": "architecture",
-      "sha256": "d83edda3436220f77123c00f46fb82b97aac366e75c9aeb1d5f7258026d99432",
-      "bytes": 7781,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-asis.svg"
-    },
-    {
-      "path": "architecture/durable-zero-architecture-status.html",
-      "category": "architecture",
-      "sha256": "b027eba8e570dbdcd96b74697fbb0cbc8bd91207ba5f3c963a07d2f1974eb756",
-      "bytes": 45903,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
-    },
-    {
-      "path": "architecture/durable-zero-architecture-status.json",
-      "category": "architecture",
-      "sha256": "cc0ef331f174d4cebd73d371a4a9922467296b6d93cc1f4deb7b29e168781e7e",
-      "bytes": 25554,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.json"
-    },
-    {
-      "path": "architecture/durable-zero-architecture-status.md",
-      "category": "architecture",
-      "sha256": "d6c4f2b230b5e822707f9fc43c3a089cb51e7c441af423708ef3923a03dc621b",
-      "bytes": 13103,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.md"
-    },
-    {
-      "path": "architecture/durable-zero-architecture-tobe.svg",
-      "category": "architecture",
-      "sha256": "a379d140c6b153f10536df188f4f3fe9758394ec28f8a9dc560b03bdcd3a3bb9",
-      "bytes": 7365,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-tobe.svg"
-    },
-    {
-      "path": "architecture/render-architecture-status.py",
-      "category": "architecture",
-      "sha256": "972c53f091ea8ea67d14a4b168d1b16e631fb7a4aa384894404fdf4e2de9f3b1",
-      "bytes": 42308,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/render-architecture-status.py"
-    },
-    {
-      "path": "audit/audited-plan-ab637a6.md",
-      "category": "audit",
-      "sha256": "6104b17cce0620e094ef3206768c415306be750b8f9f921597ec5fdffe9bf8c5",
-      "bytes": 20998,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/audited-plan-ab637a6.md"
-    },
-    {
-      "path": "audit/baseline-import-graph.json",
-      "category": "audit",
-      "sha256": "faa2010fab97bd1ae4999716c71fae2b2d0348d3f0729a6ec5acefd33dc60f50",
-      "bytes": 90896,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/baseline-import-graph.json"
-    },
-    {
-      "path": "audit/core-vendor-imports.json",
-      "category": "audit",
-      "sha256": "ba812b0bf8a4c5b4a72ab0262d4351dfbb303c00f50d5f2c86ec5e1fc56e389e",
-      "bytes": 17578,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/core-vendor-imports.json"
-    },
-    {
-      "path": "audit/cycle7-plan-audit.md",
-      "category": "audit",
-      "sha256": "0db8f712781d13f7f77f6eebbe32a2e0e02c86949b80708f7ad2c1372efcbe36",
-      "bytes": 48632,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/cycle7-plan-audit.md"
-    },
-    {
-      "path": "audit/initial-cycle7-plan.md",
-      "category": "audit",
-      "sha256": "201f5a23ad5e5b90ac23b85bded8333c095e24415d820758db975be772801a56",
-      "bytes": 19719,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/initial-cycle7-plan.md"
-    },
-    {
-      "path": "audit/latest-plan-change.patch",
-      "category": "audit",
-      "sha256": "e73d7a1027ec922c094e6cfc3f3a09355966f5e5dd37060cd03bf98416df9473",
-      "bytes": 19155,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/latest-plan-change.patch"
-    },
-    {
-      "path": "audit/plan-76145d4-commit-proof.txt",
-      "category": "audit",
-      "sha256": "6c0f0a8d7c96ba7d3e028959d7b3e2225120ac00bafa46bb91f557e592d6893a",
-      "bytes": 454,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-76145d4-commit-proof.txt"
-    },
-    {
-      "path": "audit/plan-76145d4-frozen.md",
-      "category": "audit",
-      "sha256": "765f9c653458e30a21d0feded85ef65eedb62edc03e0ab1c7b5c1312714d6fe5",
-      "bytes": 71749,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-76145d4-frozen.md"
-    },
-    {
-      "path": "audit/plan-76145d4-review.diff",
-      "category": "audit",
-      "sha256": "76faddf2146be97a3d690505e8f727ec11179604305bd5f1868018646bd9d253",
-      "bytes": 42861,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-76145d4-review.diff"
-    },
-    {
-      "path": "audit/plan-candidate-5b15b5e.md",
-      "category": "audit",
-      "sha256": "9ed1638c35decededc5870aabac77b17c771490c4fbf4d537f23722e14f5fc6b",
-      "bytes": 53881,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-candidate-5b15b5e.md"
-    },
-    {
-      "path": "audit/plan-contracts-wip-source-check.md",
-      "category": "audit",
-      "sha256": "7b14d2349aab48ea1d74af93a67d4a5fab3a3074ed700f5d9b1f0e6a80593618",
-      "bytes": 4369,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-contracts-wip-source-check.md"
-    },
-    {
-      "path": "audit/plan-final-contracts-author-report.md",
-      "category": "audit",
-      "sha256": "bb264358c22342d27405f4586facb8456ea62bdb54db49e54140251d9e76c303",
-      "bytes": 10790,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-final-contracts-author-report.md"
-    },
-    {
-      "path": "audit/plan-findings.json",
-      "category": "audit",
-      "sha256": "922f28641bee474885fdbff976676a808a0c3f47b8a89473c130f3008924360b",
-      "bytes": 41635,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-findings.json"
-    },
-    {
-      "path": "audit/plan-repair-review-round1.md",
-      "category": "audit",
-      "sha256": "45c6d6bafa3558dbe729c1c0b78969b733a85e2a83b2a5e225457962e9d62d63",
-      "bytes": 8643,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-repair-review-round1.md"
-    },
-    {
-      "path": "audit/plan-repair-review-round2.md",
-      "category": "audit",
-      "sha256": "3f4e2e29b27e0503cfcce56c20174c763e1ca81d80297b5508ecd71bc054a1ca",
-      "bytes": 7992,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/plan-repair-review-round2.md"
-    },
-    {
-      "path": "audit/third-party-adjudication.json",
-      "category": "audit",
-      "sha256": "aecc027206d9b802444b0b1c2548fb95f195a522861c3ab0071eb1f464305690",
-      "bytes": 5564,
-      "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/third-party-adjudication.json"
-    },
-    {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "9d4e80f549b2e8e61adb502cb0a95eee3554a71f6c11b542edc44479da3c1f45",
-      "bytes": 5746,
+      "sha256": "573dede16561149978568bbd44042665d72fef69e636880fc78670049becb383",
+      "bytes": 975,
       "source_provenance": "workspace"
     },
     {
       "path": "manifests/generate_reports_and_verify.py",
       "category": "manifests",
-      "sha256": "b728cf33e26addfe82e202d6fafe8eb91c2db8afe432f50ea58c1d8c1271f46f",
-      "bytes": 14376,
+      "sha256": "4e68ede83547b4f3cacf5c7c955a8a0ccd50ec899fd89b636d956f04235aaf1e",
+      "bytes": 4251,
       "source_provenance": "workspace"
     },
     {
@@ -846,6 +900,12 @@
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-product-rereview-r1.md"
     }
   ],
+  "excluded_from_hash_ownership": [
+    "live/",
+    "handoffs/",
+    "ledger.md",
+    "product sources"
+  ],
   "explicit_internal_exclusions": [
     {
       "pattern": "thread-rfpk*.json / dialogue.md",
@@ -888,49 +948,30 @@
       "reason": "Ephemeral multi-megabyte raw event log JSONs with hundreds of thousands of internal stream events; summarized into durable review reports and JUnit logs instead."
     }
   ],
-  "missing_referenced_artifacts": [
-    {
-      "artifact": "packages/runner/test/e2e-walking-skeleton.test.ts (passing green receipt)",
-      "status": "GENUINELY_MISSING_NOT_PASSING",
-      "detail": "Author claimed in report that walking skeleton is in progress, but no passing receipt exists. Verified that cycle7-task-1-red.log is the genuine last test output (timeout at 60s)."
-    }
-  ],
+  "missing_referenced_artifacts": [],
   "verification_receipts": {
-    "cycle7_task_1_red_log": {
-      "verified_physical_existence": true,
-      "sha256": "1030641e06cabf95b5f64de61178d233d77a05f6fe5739e221dc8b02200437bf",
-      "line_count": 23,
-      "exit_code": 1,
-      "failure_mode": "timeout after 60000ms in Slice 0 Walking Skeleton"
-    },
-    "frozen_candidates": {
-      "protocol_package_original_dist": {
-        "path": "evidence/protocol-package/dist/index.js",
-        "sha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
-        "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/dist/index.js",
-        "verified_match": true
-      },
-      "protocol_package_fix_r1_dist": {
-        "path": "evidence/protocol-package-fix-r1/dist/index.js",
-        "sha256": "24e9a99fb89f6383390c19998d3df1e50b0fb05a244b7d627e08f260105e1514",
-        "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-fix-r1/dist/index.js",
-        "verified_match": true
-      }
-    },
     "html_links_verified": {
       "target": "architecture/durable-zero-architecture-status.html",
-      "total_links": 29,
-      "broken_links": 0,
-      "status": "ALL_RESOLVED"
+      "total_links": 15,
+      "broken_links": 0
     },
     "svgs_verified": {
-      "asis": "architecture/durable-zero-architecture-asis.svg (valid XML, viewBox 0 0 1360 690)",
-      "tobe": "architecture/durable-zero-architecture-tobe.svg (valid XML, viewBox 0 0 1360 690)"
+      "asis": {
+        "validXML": true,
+        "viewBox": "0 0 1060 690",
+        "sha256": "96c01997efd8a51e7e5cf1c598a7669836cdc552a17555b36511d7808ea39212"
+      },
+      "tobe": {
+        "validXML": true,
+        "viewBox": "0 0 1060 690",
+        "sha256": "de8c4163e5529411b7515bfa81eea8e2d594ce1a855b59b2c2f5ac68630810a2"
+      }
     },
     "source_snapshot_immutable": {
-      "target": "architecture/architecture-map-source-snapshot.json",
       "sha256": "242279d46b7adca229e1e6e4a3dbf3d8d0c61178147d4ad419bf0467035cb073",
-      "status": "IMMUTABLE_MATCH_PRESERVED"
-    }
+      "unchanged": true
+    },
+    "product_acceptance": "NOT_ACCEPTED",
+    "status_snapshot": "2026-11-05T01:24:06.884289+03:00"
   }
 }

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ViewStreamProjector } from "../src/bridge/view-stream-projector.ts";
-import type { RunnerEvent } from "../src/bridge/contracts.ts";
+import { ViewStreamProjector } from "../src/engine/bridge/view-stream-projector.ts";
+import type { RunnerEvent } from "../src/engine/bridge/contracts.ts";
 
 test("ViewStreamProjector: synthesizes agent_start and turn_start on live run transition", () => {
 	const emitted: RunnerEvent[] = [];

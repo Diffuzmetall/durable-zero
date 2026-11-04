@@ -883,20 +883,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve5) => {
-            const timer = setTimeout(() => resolve5(), holdTimeoutMs);
+          await new Promise((resolve4) => {
+            const timer = setTimeout(() => resolve4(), holdTimeoutMs);
             timer.unref?.();
             watch.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve5();
+                resolve4();
               }
               return Promise.resolve();
             });
             void watch.closed.then(() => {
               clearTimeout(timer);
-              resolve5();
+              resolve4();
             });
           });
         } finally {
@@ -2369,7 +2369,7 @@ function createSubagentPolicyHolder(options) {
     },
     async setRecord(record) {
       const validated = subagentPolicyRecordSchema.parse(record);
-      return new Promise((resolve5, reject) => {
+      return new Promise((resolve4, reject) => {
         writeQueue = writeQueue.catch(() => {
         }).then(async () => {
           try {
@@ -2382,7 +2382,7 @@ function createSubagentPolicyHolder(options) {
               const currentStr = JSON.stringify(currentRecord);
               const incomingStr = JSON.stringify(validated);
               if (currentStr === incomingStr) {
-                resolve5();
+                resolve4();
                 return;
               }
               throw new SubagentRevisionConflictError(
@@ -2391,7 +2391,7 @@ function createSubagentPolicyHolder(options) {
             }
             await options.persist(validated);
             currentRecord = validated;
-            resolve5();
+            resolve4();
           } catch (error) {
             reject(error);
           }
@@ -4072,9 +4072,6 @@ import { z as z6 } from "zod";
 import { z as z8 } from "zod";
 import { z as z7 } from "zod";
 import { z as z10 } from "zod";
-import { existsSync as existsSync3, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
-import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
-import { join as join5, resolve as resolve4 } from "node:path";
 var piPathStatusSchema = z2.object({
   path: z2.string(),
   exists: z2.boolean(),
@@ -5417,9 +5414,9 @@ var ViewStreamProjector = class {
 
 // packages/adapter-pi-durable/src/engine/stdout-guard.ts
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join6 } from "node:path";
+import { join as join5 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync4, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
 var SUPPORTED_PI_VERSION_PREFIXES = ["1.4.", "1.5."];
 var EXPECTED_GUARD_RELATIVE_PATH = "dist/core/output-guard.js";
 var UpstreamStdoutGuardPortError = class extends Error {
@@ -5454,8 +5451,8 @@ function validateUpstreamGuardShape(mod) {
 async function loadUpstreamGuard() {
   if (activeGuard) return activeGuard;
   const pkgDir = getPackageDir();
-  const pkgJsonPath = join6(pkgDir, "package.json");
-  if (!existsSync4(pkgJsonPath)) {
+  const pkgJsonPath = join5(pkgDir, "package.json");
+  if (!existsSync3(pkgJsonPath)) {
     throw new UpstreamStdoutGuardPortError(`Cannot locate package.json at ${pkgJsonPath}`, "MISSING_PACKAGE_JSON");
   }
   let version;
@@ -5469,8 +5466,8 @@ async function loadUpstreamGuard() {
     );
   }
   validateUpstreamGuardVersion(version);
-  const guardPath = join6(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
-  if (!existsSync4(guardPath)) {
+  const guardPath = join5(pkgDir, EXPECTED_GUARD_RELATIVE_PATH);
+  if (!existsSync3(guardPath)) {
     throw new UpstreamStdoutGuardPortError(`Missing upstream output guard artifact at ${guardPath}`, "MISSING_ARTIFACT");
   }
   let mod;
@@ -5533,7 +5530,7 @@ var SessionDaemon = class {
     if (!fs.existsSync(this.socketPath)) {
       return null;
     }
-    return new Promise((resolve5) => {
+    return new Promise((resolve4) => {
       let settled = false;
       const socket = net.createConnection({ path: this.socketPath });
       const cleanup = (result) => {
@@ -5549,14 +5546,14 @@ var SessionDaemon = class {
           } catch {
           }
         }
-        resolve5(result);
+        resolve4(result);
       };
       const timer = setTimeout(() => cleanup(null), timeoutMs);
       socket.once("connect", () => {
         clearTimeout(timer);
         if (!settled) {
           settled = true;
-          resolve5(socket);
+          resolve4(socket);
         }
       });
       socket.once("error", () => {
@@ -5575,7 +5572,7 @@ var SessionDaemon = class {
       } catch {
       }
     }
-    return new Promise((resolve5, reject) => {
+    return new Promise((resolve4, reject) => {
       const server = net.createServer((socket) => {
         this.activeSockets.add(socket);
         socket.on("close", () => this.activeSockets.delete(socket));
@@ -5587,7 +5584,7 @@ var SessionDaemon = class {
       });
       server.listen(this.socketPath, () => {
         this.server = server;
-        resolve5(true);
+        resolve4(true);
       });
     });
   }
@@ -5600,8 +5597,8 @@ var SessionDaemon = class {
     }
     this.activeSockets.clear();
     if (this.server) {
-      await new Promise((resolve5) => {
-        this.server.close(() => resolve5());
+      await new Promise((resolve4) => {
+        this.server.close(() => resolve4());
       });
       this.server = null;
     }

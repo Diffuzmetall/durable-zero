@@ -2,7 +2,7 @@
 
 Branch: `cycle-7-runtime-adapter-ioc-migration`  
 Source Baseline: `7d4b235` and docs checkpoints `6891b73`, `cafd5f9`, `07609af`.  
-Current Status: **Native walking skeleton NOT accepted.** Protocol 4A candidate `f3fff38` has bounded architecture/product PASS; HostBridge candidate `efc9eab` has component architecture PASS only. Global S9 acceptance is pending.
+Current Status: **Native walking skeleton has a genuine author GREEN; independent acceptance remains pending.** Candidate `fc090960` proves the compiled CLI/Harness/SQLite/restart path in focused tests. The foundational dependency cycle is fixed in subsequent WIP; legacy test migration is underway. Dispatcher fix `ea21bf5` needs fresh compiled re-review; guard re-review is FAIL after three additional false-green counterexamples. Protocol 4A and HostBridge 2A retain their bounded passes. **Global Cycle 7 S9 is NOT accepted.** The architecture page is an evidence-pinned snapshot, not a live dashboard.
 
 ---
 
@@ -27,7 +27,7 @@ All deliverables have been promoted from ephemeral thread storage into permanent
 docs/arch-improvement/cycle-7/
 ├── README.md                              # This index
 ├── architecture/                          # Architecture status, diagrams, snapshot, and renderer
-│   ├── durable-zero-architecture-status.html # Responsive status dashboard (29 verified relative links)
+│   ├── durable-zero-architecture-status.html # Updated evidence-pinned status dashboard
 │   ├── durable-zero-architecture-status.md   # Analysis markdown
 │   ├── durable-zero-architecture-status.json # Status JSON schema
 │   ├── durable-zero-architecture-asis.svg    # Valid standalone SVG

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="forkSessionDatabase: forks database, prunes entries and tasks above checkpointId, and cleans locks" time="0.021793" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/session-fork.test.ts"/>
+	<testcase name="watchEvents: emits message_update with incremental text deltas from pi.live.generation" time="0.002181" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/watch-events-compat.test.ts"/>
+	<testcase name="CLI: --version prints version string" time="0.289254" classname="test" file="/Users/vanya/Projects/durable-zero/packages/cli/test/cli.test.ts"/>
+	<testcase name="CLI: doctor checks runtime capabilities" time="0.156644" classname="test" file="/Users/vanya/Projects/durable-zero/packages/cli/test/cli.test.ts"/>
+	<testcase name="CLI: serve starts JSON-RPC server and responds to requests" time="1.929601" classname="test" file="/Users/vanya/Projects/durable-zero/packages/cli/test/cli.test.ts"/>
+	<testsuite name="SessionCoordinator (AP-010, AP-012, AP-074, AP-076)" time="0.008001" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="coordinates session lifecycle: lock, prompt admission, abort cascade, and release" time="0.002614" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+		<testcase name="fails fast when prompt is called on aborted session" time="0.001072" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+		<testcase name="fails fast when prompt is called before start() (Defect 2)" time="0.001518" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+		<testcase name="fails fast when prompt is called after close() (Defect 1)" time="0.000550" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+	</testsuite>
+	<testsuite name="@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)" time="0.018432" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="exports executable main function" time="0.000958" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+		<testcase name="parseCliArgs: parses --session, --cwd, --provider, --model, and --thinking flags" time="0.000274" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+		<testcase name="assembleDurableZero: assembles coordinator, streams session/event notifications, and safely closes" time="0.015464" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+	</testsuite>
+	<testcase name="Slice 0 Walking Skeleton: End-to-end CLI JSON-RPC prompt streaming, persistence, and restart" time="3.706873" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/e2e-walking-skeleton.test.ts"/>
+	<!-- tests 13 -->
+	<!-- suites 2 -->
+	<!-- pass 13 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 3953.482458 -->
+</testsuites>

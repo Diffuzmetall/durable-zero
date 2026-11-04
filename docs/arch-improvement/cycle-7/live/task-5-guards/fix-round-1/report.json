@@ -1,17 +1,17 @@
 {
   "task": "Task 5A: Architecture Boundary & Regression Guards (Remediated)",
-  "timestamp": "2026-11-04T21:31:43.058Z",
-  "status": "FAIL",
+  "timestamp": "2026-11-04T22:19:19.266Z",
+  "status": "PASS",
   "sourceBaseline": "7d4b235",
   "summary": {
     "coreSourceFilesScanned": 16,
     "coreBoundaryViolationsCount": 0,
     "corePackageJsonViolationsCount": 0,
-    "workspaceCyclesCount": 1,
-    "layeringViolationsCount": 1,
+    "workspaceCyclesCount": 0,
+    "layeringViolationsCount": 0,
     "cliServeDelegationValid": true,
     "legacyFilesFoundCount": 0,
-    "totalViolations": 2,
+    "totalViolations": 0,
     "testSuiteResults": {
       "note": "Standalone audit execution"
     }
@@ -23,25 +23,8 @@
     "callsMain": true,
     "invokedIdentifier": "runRunner"
   },
-  "workspaceCycles": [
-    [
-      "@durable-zero/adapter-pi-durable",
-      "@durable-zero/contracts",
-      "@durable-zero/adapter-pi-durable"
-    ]
-  ],
-  "layeringViolations": [
-    {
-      "file": "packages/contracts/src/index.ts",
-      "line": 15,
-      "character": 1,
-      "specifier": "@durable-zero/adapter-pi-durable",
-      "kind": "relative-cross-package",
-      "rule": "AP-020",
-      "severity": "P0",
-      "message": "Contracts package (tier 0) must never depend on higher tier package \"@durable-zero/adapter-pi-durable\"."
-    }
-  ],
+  "workspaceCycles": [],
+  "layeringViolations": [],
   "coreBoundaryViolations": [],
   "corePackageJsonViolations": [],
   "legacyFilesFound": [],
@@ -62,9 +45,7 @@
       "@durable-zero/core",
       "@durable-zero/runner"
     ],
-    "@durable-zero/contracts": [
-      "@durable-zero/adapter-pi-durable"
-    ],
+    "@durable-zero/contracts": [],
     "@durable-zero/core": [
       "@durable-zero/contracts"
     ],

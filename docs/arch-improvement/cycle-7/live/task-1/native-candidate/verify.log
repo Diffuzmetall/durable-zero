@@ -1,0 +1,12 @@
+[2026-11-04T22:16:41.204Z] Starting isolated native candidate bootstrap verification...
+[2026-11-04T22:16:41.207Z] CLI Bin: /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate/packages/cli/bin/durable-zero.js
+[2026-11-04T22:16:41.208Z] Extension Fixture: /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate/fixtures/scripted-provider-extension.mjs
+[2026-11-04T22:16:41.208Z] Temp Root: /var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/dz-native-candidate-verify-HSmj42
+[2026-11-04T22:16:41.632Z] Sending JSON-RPC readiness request: session/getState (id: 1)
+[2026-11-04T22:16:44.605Z] Received getState response: {"jsonrpc":"2.0","id":1,"result":{"sessionId":"session","cwd":"/private/var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/dz-native-candidate-verify-HSmj42/work","activeConversationId":"1","activeModel":{"provider":"scripted-e2e","modelId":"echo"},"thinkingLevel":"off","models":[{"provider":"scripted-e2e","modelId":"echo","name":"Echo Model","contextWindow":128000}],"entryCount":0}}
+[2026-11-04T22:16:44.605Z] Readiness verification PASSED: activeModel is scripted-e2e:echo, session initialized.
+[2026-11-04T22:16:44.605Z] Initiating bounded clean shutdown via SIGTERM...
+[2026-11-04T22:16:44.621Z] Process exited cleanly with code: 0, signal: null
+[2026-11-04T22:16:44.629Z] Verification completed in 3430ms
+ALL SMOKE CHECKS PASSED.
+Exit code: 0

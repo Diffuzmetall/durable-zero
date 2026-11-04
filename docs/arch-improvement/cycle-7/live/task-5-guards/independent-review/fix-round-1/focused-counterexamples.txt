@@ -1,0 +1,14 @@
+▶ Focused Adversarial Counterexamples against Frozen 2d0 Checker
+  ✔ COUNTEREXAMPLE 1 (FALSE GREEN PROVEN): import real runner as unusedModule + call unrelated local main() falsely passes (5.873541ms)
+  ✔ COUNTEREXAMPLE 2 (FALSE GREEN PROVEN): target file under runner package with NO exported main falsely passes (1.094083ms)
+  ✔ COUNTEREXAMPLE 3 (FALSE GREEN PROVEN): wrong package whose directory name merely contains 'runner' falsely passes package check (0.586416ms)
+  ✔ GENUINE POSITIVE: legitimately accepts authentic runner import and main invocation (0.397334ms)
+✔ Focused Adversarial Counterexamples against Frozen 2d0 Checker (8.64175ms)
+ℹ tests 4
+ℹ suites 1
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 324.29325

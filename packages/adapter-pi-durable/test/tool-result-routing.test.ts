@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DurableEventAdapter } from "../src/bridge/durable-event-adapter.ts";
-import { DurableChildEventAdapter } from "../src/bridge/durable-child-event-adapter.ts";
-import { extractCanonicalToolDetails } from "../src/bridge/native-tool-result.ts";
+import { DurableEventAdapter } from "../src/engine/bridge/durable-event-adapter.ts";
+import { DurableChildEventAdapter } from "../src/engine/bridge/durable-child-event-adapter.ts";
+import { extractCanonicalToolDetails } from "../src/engine/bridge/native-tool-result.ts";
 
 test("Slice 3: DurableEventAdapter routes nested tool end cleanly with projector", () => {
 	const wireEvents: any[] = [];

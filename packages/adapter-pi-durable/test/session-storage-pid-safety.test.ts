@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isVerifiedRunnerProcess } from "@durable-zero/adapter-pi-durable";
+import { isVerifiedRunnerProcess } from "../src/index.ts";
 
 test("isVerifiedRunnerProcess: returns true for current node process", () => {
 	const currentOwner = {

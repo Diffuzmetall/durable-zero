@@ -1,6 +1,6 @@
 # Task 5A: Architecture Boundary & Regression Guards Report (Fix Round 1)
 
-**Date:** 2026-11-04T21:32:10.665Z  
+**Date:** 2026-11-04T21:57:35.502Z  
 **Branch:** `cycle-7-runtime-adapter-ioc-migration`  
 **Target Package:** `@durable-zero/core`  
 **Audit Status:** **FAIL** (1 violations detected)

@@ -1,0 +1,70 @@
+[
+  {
+    "id": "probe-1-invalid-params",
+    "name": "Invalid params maps to -32602 over protocol transport",
+    "pass": false,
+    "expectedCode": -32602,
+    "actualCode": -32603,
+    "response": {
+      "jsonrpc": "2.0",
+      "id": "probe-1",
+      "error": {
+        "code": -32603,
+        "message": "Prompt content string must not be empty"
+      }
+    },
+    "details": "FAIL: got -32603"
+  },
+  {
+    "id": "probe-2-unmapped-method",
+    "name": "Unmapped method maps to -32601 over protocol transport",
+    "pass": false,
+    "expectedCode": -32601,
+    "actualCode": -32603,
+    "response": {
+      "jsonrpc": "2.0",
+      "id": "probe-2",
+      "error": {
+        "code": -32603,
+        "message": "Method not found: unmapped/method"
+      }
+    },
+    "details": "FAIL: got -32603"
+  },
+  {
+    "id": "probe-3-generic-spoof",
+    "name": "Generic spoofed error object maps to -32603, not -32602 (Anti-gaming nominal check)",
+    "pass": true,
+    "expectedCode": -32603,
+    "actualCode": -32603,
+    "response": {
+      "jsonrpc": "2.0",
+      "id": "probe-3",
+      "error": {
+        "code": -32603,
+        "message": "Spoofed error"
+      }
+    },
+    "details": "PASS: returned -32603"
+  },
+  {
+    "id": "probe-4-numeric-conv-id",
+    "name": "Numeric conversationId: 42 normalized to string '42' for Core port",
+    "pass": true,
+    "expected": "42",
+    "actual": "42",
+    "details": "PASS: normalized to '42'"
+  },
+  {
+    "id": "probe-5-invalid-conv-id",
+    "name": "Invalid conversationId values (0, negative, non-digit, '0') rejected with -32602",
+    "pass": false,
+    "details": "FAIL: some invalid IDs were not rejected with -32602"
+  },
+  {
+    "id": "probe-6-root-abort-undefined",
+    "name": "Root session/abort without conversationId forwards undefined to coordinator.abort",
+    "pass": true,
+    "details": "PASS: undefined forwarded"
+  }
+]

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { watchEvents } from "../src/bridge/watch-events-compat.ts";
-import type { AgentEvent } from "../src/bridge/durable-contracts.ts";
+import { watchEvents } from "../src/engine/bridge/watch-events-compat.ts";
+import type { AgentEvent } from "../src/engine/bridge/durable-contracts.ts";
 
 test("watchEvents: emits tool_execution_start with arguments from assistant toolCall entries", async () => {
 	let streamListener: ((events: readonly AgentEvent[], ctx: any) => Promise<void>) | undefined;

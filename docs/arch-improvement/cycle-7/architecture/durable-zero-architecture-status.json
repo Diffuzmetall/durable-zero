@@ -1,505 +1,184 @@
 {
-  "snapshot": "2026-11-04T22:21:47.952157+03:00",
-  "head": "f3fff38a84154a36f017514c234421aef5215ced",
-  "scope": "Source WIP snapshot; component/package evidence pinned separately; not global acceptance",
-  "metrics": {
-    "coreFilesDeletedFromOldLocation": 73,
-    "samePathDestinationsPresent": 69,
-    "newEngineTsFiles": 71,
-    "oldLocationToNewPairs": [
-      {
-        "from": "packages/core/src/binding-commands.ts",
-        "to": "packages/adapter-pi-durable/src/engine/binding-commands.ts"
-      },
-      {
-        "from": "packages/core/src/binding-docs.ts",
-        "to": "packages/adapter-pi-durable/src/engine/binding-docs.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/assistant-message-builder.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/assistant-message-builder.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/child-run-outcome.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/child-run-outcome.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/contracts.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/contracts.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/durable-child-event-adapter.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/durable-contracts.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/durable-contracts.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/durable-event-adapter.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/native-tool-result.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/native-tool-result.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/tool-args-resolver.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/tool-args-resolver.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/tool-progress-state.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/tool-progress-state.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/tool-result-extractor.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/tool-result-extractor.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/tool-result-presentation.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/tool-result-presentation.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/turn-summary.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/turn-summary.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/view-stream-projector.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/view-stream-projector.ts"
-      },
-      {
-        "from": "packages/core/src/bridge/watch-events-compat.ts",
-        "to": "packages/adapter-pi-durable/src/engine/bridge/watch-events-compat.ts"
-      },
-      {
-        "from": "packages/core/src/builtin-extensions/coding-tools.ts",
-        "to": "packages/adapter-pi-durable/src/engine/builtin-extensions/coding-tools.ts"
-      },
-      {
-        "from": "packages/core/src/builtin-extensions/index.ts",
-        "to": "packages/adapter-pi-durable/src/engine/builtin-extensions/index.ts"
-      },
-      {
-        "from": "packages/core/src/builtin-extensions/registry.ts",
-        "to": "packages/adapter-pi-durable/src/engine/builtin-extensions/registry.ts"
-      },
-      {
-        "from": "packages/core/src/builtin-extensions/subagents.ts",
-        "to": "packages/adapter-pi-durable/src/engine/builtin-extensions/subagents.ts"
-      },
-      {
-        "from": "packages/core/src/builtin-extensions/types.ts",
-        "to": "packages/adapter-pi-durable/src/engine/builtin-extensions/types.ts"
-      },
-      {
-        "from": "packages/core/src/codemode-namespaces.ts",
-        "to": "packages/adapter-pi-durable/src/engine/codemode-namespaces.ts"
-      },
-      {
-        "from": "packages/core/src/compaction-hooks.ts",
-        "to": "packages/adapter-pi-durable/src/engine/compaction-hooks.ts"
-      },
-      {
-        "from": "packages/core/src/control-channel.ts",
-        "to": "packages/adapter-pi-durable/src/engine/control-channel.ts"
-      },
-      {
-        "from": "packages/core/src/conversation-id.ts",
-        "to": "packages/adapter-pi-durable/src/engine/conversation-id.ts"
-      },
-      {
-        "from": "packages/core/src/extension-actions.ts",
-        "to": "packages/adapter-pi-durable/src/engine/extension-actions.ts"
-      },
-      {
-        "from": "packages/core/src/extension-bridge.ts",
-        "to": "packages/adapter-pi-durable/src/engine/extension-bridge.ts"
-      },
-      {
-        "from": "packages/core/src/extension-mount.ts",
-        "to": "packages/adapter-pi-durable/src/engine/extension-mount.ts"
-      },
-      {
-        "from": "packages/core/src/harness-setup.ts",
-        "to": "packages/adapter-pi-durable/src/engine/harness-setup.ts"
-      },
-      {
-        "from": "packages/core/src/host-rpc.ts",
-        "to": "packages/adapter-pi-durable/src/engine/host-rpc.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-bindings.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-bindings.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-cleanup.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-cleanup.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-controller.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-controller.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-graph-conversations.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-graph-conversations.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-graph-mapper.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-graph-receipts.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-graph-scope.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-graph-scope.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-graph-source.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-graph-source.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-graph-state.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-graph-state.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-hydration.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-hydration.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-loader.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-loader.ts"
-      },
-      {
-        "from": "packages/core/src/runtime-types.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime-types.ts"
-      },
-      {
-        "from": "packages/core/src/runtime.ts",
-        "to": "packages/adapter-pi-durable/src/engine/runtime.ts"
-      },
-      {
-        "from": "packages/core/src/schema-port.ts",
-        "to": "packages/adapter-pi-durable/src/engine/schema-port.ts"
-      },
-      {
-        "from": "packages/core/src/session-commands.ts",
-        "to": "packages/adapter-pi-durable/src/engine/session-commands.ts"
-      },
-      {
-        "from": "packages/core/src/session-daemon.ts",
-        "to": "packages/adapter-pi-durable/src/engine/session-daemon.ts"
-      },
-      {
-        "from": "packages/core/src/session-state-commands.ts",
-        "to": "packages/adapter-pi-durable/src/engine/session-state-commands.ts"
-      },
-      {
-        "from": "packages/core/src/shared/agent-dir.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/agent-dir.ts"
-      },
-      {
-        "from": "packages/core/src/shared/child-title.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/child-title.ts"
-      },
-      {
-        "from": "packages/core/src/shared/errors.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/errors.ts"
-      },
-      {
-        "from": "packages/core/src/shared/extension-runner.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/extension-runner.ts"
-      },
-      {
-        "from": "packages/core/src/shared/extension-ui-context.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/extension-ui-context.ts"
-      },
-      {
-        "from": "packages/core/src/shared/model-ref.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/model-ref.ts"
-      },
-      {
-        "from": "packages/core/src/shared/subagent-envelope.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/subagent-envelope.ts"
-      },
-      {
-        "from": "packages/core/src/shared/version.ts",
-        "to": "packages/adapter-pi-durable/src/engine/shared/version.ts"
-      },
-      {
-        "from": "packages/core/src/stdout-guard.ts",
-        "to": "packages/adapter-pi-durable/src/engine/stdout-guard.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-courier.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-courier.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-delivery-types.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-delivery-types.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-delivery.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-delivery.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-docs.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-docs.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-policy-ack.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-policy-ack.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-policy-state.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-policy-state.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-role.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-role.ts"
-      },
-      {
-        "from": "packages/core/src/subagent-watcher.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent-watcher.ts"
-      },
-      {
-        "from": "packages/core/src/subagent.ts",
-        "to": "packages/adapter-pi-durable/src/engine/subagent.ts"
-      },
-      {
-        "from": "packages/core/src/task-labels.ts",
-        "to": "packages/adapter-pi-durable/src/engine/task-labels.ts"
-      },
-      {
-        "from": "packages/core/src/task-tokens.ts",
-        "to": "packages/adapter-pi-durable/src/engine/task-tokens.ts"
-      },
-      {
-        "from": "packages/core/src/tool-adapter.ts",
-        "to": "packages/adapter-pi-durable/src/engine/tool-adapter.ts"
-      },
-      {
-        "from": "packages/core/src/watcher-compat.ts",
-        "to": "packages/adapter-pi-durable/src/engine/watcher-compat.ts"
-      }
-    ],
-    "warning": "Counts describe migration breadth, NOT functional completion or verified preservation."
-  },
+  "capturedAt": "2026-11-05T01:24:06.884289+03:00",
+  "head": "ea21bf5a645d148c0767716b099d387bb0bce822",
+  "overall": "NOT ACCEPTED",
+  "nativeCandidate": "fc0909602e7969df080259a2e2d4a7114be450b8",
+  "dispatcherFixCandidate": "ea21bf5a645d148c0767716b099d387bb0bce822",
   "tasks": [
     {
-      "task": "1 · Slice 0",
-      "component": "CLI → runner → Core → PiDurableEngine → native Harness",
-      "status": "В работе",
+      "name": "1 · Native Slice 0",
       "tone": "warn",
-      "proof": "CLI переведён на runner/dist/main.js; реальный engine передан coordinator; runtime перенесён. Сборка проходила. Последний записанный E2E: таймаут, не PASS.",
-      "remaining": "Зелёный сквозной stream → settlement → SQLite → restart/readback; убрать обходную fake-admission ветку; независимая приёмка.",
-      "permission": "Разрешено"
+      "status": "Сквозной авторский тест прошёл",
+      "proof": "Реальный CLI, native Harness, text_delta, SQLite и повторный процесс; отдельный frozen CLI собран. Начата независимая source-проверка.",
+      "remaining": "Независимая native black-box приёмка; полный перенос тестовых потребителей и регрессионный прогон."
     },
     {
-      "task": "2A · часть Task 2",
-      "component": "IHostBridge + схемы + requester-адаптер",
-      "status": "Проверен компонент",
+      "name": "2A / полный Task 2",
       "tone": "good",
-      "proof": "36 компонентных случаев; архитектурное ревью efc9eab — PASS в ограниченном scope. Исправлены kind override и качество RED-пруфа.",
-      "remaining": "Task 2 целиком: exports, composition, tools/register, actual model tool call → client result → continuation; убрать legacy globals.",
-      "permission": "Только 2A разрешён; полная интеграция отдельно"
+      "status": "Компонент HostBridge принят",
+      "proof": "Независимый component architecture PASS; это не полный native tool loop.",
+      "remaining": "Включить в composition, tools/register и настоящий model-issued tool call → client result → continuation; убрать globals."
     },
     {
-      "task": "3 · Probe",
-      "component": "--no-session, models/list без открытия сессии",
-      "status": "Остаётся",
+      "name": "3 · Probe",
       "tone": "neutral",
-      "proof": "Продуктовой приёмки probe нет. Наличие модели в каталоге не доказывает отсутствие SQLite/lock side effects.",
-      "remaining": "Запуск с чистым временным каталогом; список моделей; ноль session DB, locks и watchers.",
-      "permission": "Не запускался как новый scope"
+      "status": "Не подтверждён",
+      "proof": "Нет принятого запуска --no-session без побочных эффектов.",
+      "remaining": "models/list с нулём DB/locks/watchers; отдельная продуктовая проверка."
     },
     {
-      "task": "4A · часть Task 4",
-      "component": "JSON-RPC dispatcher / response schema / error identity",
-      "status": "Проверен пакет",
+      "name": "4A · JSON-RPC",
       "tone": "good",
-      "proof": "f3fff38: архитектурный re-review PASS и black-box публичного пакета PASS; проверены notifications, IDs, XOR, reverse RPC, ошибки и shutdown.",
-      "remaining": "Task 4 целиком: capability dispatcher, все нативные команды, images/root-child/steer/fork/model/policy/abortTask; endpoint-интеграция.",
-      "permission": "Только 4A разрешён; не весь Task 4"
+      "status": "Пакет принят",
+      "proof": "f3fff38: независимые architecture и compiled-public-package PASS в ограниченном scope.",
+      "remaining": "Не переносить этот PASS на все endpoint/capability и production composition."
     },
     {
-      "task": "5 · Pure Core",
-      "component": "Импорты, manifests, exports, удаление legacy",
-      "status": "Частично затронут Task 1",
+      "name": "4B · Capability dispatcher",
       "tone": "warn",
-      "proof": "Механическая часть переноса уже идёт. Это не равно независимому AST/build/package acceptance чистого Core.",
-      "remaining": "AST: zero vendor/adapter/I/O imports в Core; ацикличный DAG; корректные public exports; чистая сборка без старого dist.",
-      "permission": "Полный Task 5 отдельно не запущен"
+      "status": "Fix round 1 готов к перепроверке",
+      "proof": "Исходный compiled-кандидат: 5 падений на nominal error identity. Исправление: 60 source cases без падений.",
+      "remaining": "Свежая frozen-сборка и оба независимых re-review; затем wiring. binding/list/register, session/fork и tools/register пока unsupported."
     },
     {
-      "task": "6 · S9 и ledger",
-      "component": "Приёмка всего продукта, а не отдельных файлов",
-      "status": "Остаётся",
+      "name": "5A · Architecture guards",
+      "tone": "bad",
+      "status": "Повторное ревью FAIL",
+      "proof": "Сканирование DAG и правдивый FAIL-отчёт работают; дополнительная проверка доказала 3 обхода CLI main checker и нарушение AP-019.",
+      "remaining": "Привязать реальный imported main, проверить экспорт и точную границу пакета; осмысленно декомпозировать checker; повторить независимые probes."
+    },
+    {
+      "name": "5 / 6 · Полная чистота и S9",
       "tone": "neutral",
-      "proof": "Есть только ограниченные component/package PASS. Глобального Cycle-7 PASS нет.",
-      "remaining": "Независимое architecture + compiled-product review, реальные journeys и orchestrator diff gate на одном кандидате.",
-      "permission": "Не означает release / merge / plugin reload"
+      "status": "Общий PASS не выдан",
+      "proof": "Цикл contracts → adapter устранён автором, guard и focused native suite зелёные; это ещё не приёмка всего монорепо.",
+      "remaining": "Чистая сборка, отдельный typecheck, полный набор тестов, capability parity, lifecycle/изоляция и оба независимых контура на одном кандидате."
     }
   ],
-  "findings": [
+  "remaining": [
     {
-      "id": "fallback",
-      "severity": "P1",
-      "title": "В Core ещё есть синтетический accepted без engine",
-      "evidence": [
-        {
-          "path": "packages/core/src/session/coordinator.ts",
-          "from": 24,
-          "to": 28,
-          "sha256": "4fd20bb87aa3abcccc7e11bcbf6b1d8dd45b73dd16eb273be6b1166dbb9c80ec",
-          "text": "  24  export interface SessionCoordinatorOptions {\n  25  \tengine?: IAgentEngine;\n  26  \tstore?: ISessionStore;\n  27  \tsessionDir?: string;\n  28  \tmodelProvider?: IModelProvider;"
-        },
-        {
-          "path": "packages/core/src/session/coordinator.ts",
-          "from": 98,
-          "to": 104,
-          "sha256": "4fd20bb87aa3abcccc7e11bcbf6b1d8dd45b73dd16eb273be6b1166dbb9c80ec",
-          "text": "  98  \t\tif (this.engine) {\n  99  \t\t\treturn await this.engine.submit(input, options);\n 100  \t\t}\n 101  \n 102  \t\tconst id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;\n 103  \t\treturn { status: \"accepted\", id, conversationId: \"1\" };\n 104  \t}"
-        }
-      ],
-      "impact": "Стандартный assembly уже передаёт настоящий engine. Но публичный coordinator всё ещё допускает другой режим: принять prompt, придумать rec_… и ничего не исполнить. Старые unit-тесты этого пути могут оставаться зелёными. Это именно остаточная заглушка, а не доказательство исполнения.",
-      "rule": "AP-012 / AP-075 / AP-076; canonical plan: Assertion Integrity",
-      "decision": "Block acceptance while this production fallback exists; code remains owned by Slice 0. No new work launched."
+      "title": "Закрыть native Slice 0 независимо",
+      "detail": "Проверить собранный CLI извне: поток до завершения модели, реальные тексты/EntryId после restart, повторные ответы и корректный shutdown. Артефакт уже готов; source-review идёт."
     },
     {
-      "id": "resources",
-      "severity": "P1",
-      "title": "Ресурсный адаптер создан, но не включён в DI-цепочку",
-      "evidence": [
-        {
-          "path": "packages/runner/src/composition.ts",
-          "from": 54,
-          "to": 69,
-          "sha256": "e1c0b701951fabdd994012ed715bf1b1c5f1b36082e28f3c8f302c18dd80c82b",
-          "text": "  54  \tconst codemodeBuiltin = createCodemodeBuiltinExtension();\n  55  \tconst resourceExt = createPiResourceExtension({ cwd });\n  56  \n  57  \tconst executionEnvFactory: ExecutionEnvFactory =\n  58  \t\toptions.executionEnvFactory ??\n  59  \t\t((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));\n  60  \n  61  \tconst dependencies: PiRuntimeDependencies = {\n  62  \t\texecutionEnvFactory,\n  63  \t\tbuiltins: [codemodeBuiltin],\n  64  \t};\n  65  \n  66  \tconst cli = {\n  67  \t\tprovider: options.provider,\n  68  \t\tmodel: options.model,\n  69  \t\tthinking: options.thinking as any,"
-        }
-      ],
-      "impact": "resourceExt создаётся, но его configProvider/resourceLoader не передаются в dependencies. Нативный loader может загрузить свои ресурсы по умолчанию — это не доказывает использование инжектированного адаптера. Нужна проверка, что подставленный ресурс реально меняет рабочий prompt/skills.",
-      "rule": "AP-074 / AP-076; canonical Dependency Assembly & Injection Boundaries",
-      "decision": "Block complete-DI acceptance until constructor → loader → native consumer trace and substitution are verified. No source edits in this assessment."
+      "title": "Довести тестовую миграцию",
+      "detail": "Первый пакет перенесён и проверен: 41 adapter cases без падений. Остальные старые импорты не объявлены починенными; это остаток Task 1, а не отложенная потеря покрытия."
     },
     {
-      "id": "stats",
-      "severity": "P2",
-      "title": "getStats пока возвращает константу вместо измерения",
-      "evidence": [
-        {
-          "path": "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
-          "from": 311,
-          "to": 320,
-          "sha256": "6def4e70f5d74f6d0c16b458eccd6a7c8966a90ae49eb2366ebf14dbba2e1e13",
-          "text": " 311  \tpublic async getStats(_conversationId?: string): Promise<SessionStatsDTO> {\n 312  \t\treturn {\n 313  \t\t\tcontextUsage: {\n 314  \t\t\t\ttokens: null,\n 315  \t\t\t\tcontextWindow: 128000,\n 316  \t\t\t},\n 317  \t\t};\n 318  \t}\n 319  \n 320  \tpublic events(listener: (event: RunnerEvent) => void): () => void {"
-        }
-      ],
-      "impact": "Метод есть, но tokens: null и contextWindow: 128000 не читаются из текущей модели или сессии. Его нельзя отмечать как сохранённую нативную метрику. Это незавершённая capability, даже если RPC отвечает успешно.",
-      "rule": "AP-012 / AP-026 / AP-076; preserve token metrics",
-      "decision": "Block full capability-parity acceptance; implement real metric or an explicit unavailable contract, never invented successful data."
+      "title": "Перепроверить исправленный dispatcher и guards",
+      "detail": "Source GREEN у dispatcher не заменяет повторный compiled-run. У AST-checker переоткрыт настоящий false-green: произвольный main, отсутствующий экспорт и поддельный runner-путь проходят проверку."
     },
     {
-      "id": "abort",
-      "severity": "P2",
-      "title": "После abort coordinator блокирует все следующие prompts",
-      "evidence": [
-        {
-          "path": "packages/core/src/session/coordinator.ts",
-          "from": 70,
-          "to": 73,
-          "sha256": "4fd20bb87aa3abcccc7e11bcbf6b1d8dd45b73dd16eb273be6b1166dbb9c80ec",
-          "text": "  70  \t\tif (this.isAborted) {\n  71  \t\t\tthrow new SessionError(\"SESSION_ABORTED\", \"Session is aborted\");\n  72  \t\t}\n  73  \t\tif (!this.isStarted) {"
-        },
-        {
-          "path": "packages/core/src/session/coordinator.ts",
-          "from": 124,
-          "to": 131,
-          "sha256": "4fd20bb87aa3abcccc7e11bcbf6b1d8dd45b73dd16eb273be6b1166dbb9c80ec",
-          "text": " 124  \tpublic async abort(conversationId?: string): Promise<void> {\n 125  \t\tthis.isAborted = true;\n 126  \t\tif (this.engine) {\n 127  \t\t\tawait this.engine.abort(conversationId);\n 128  \t\t}\n 129  \t\tthis.emitEvent({ type: \"session/aborted\" });\n 130  \t}\n 131  "
-        }
-      ],
-      "impact": "Флаг isAborted проверяется до submit и не сбрасывается в start/prompt. Это наблюдаемое поведение исходников. Отдельный сценарий abort → новый prompt должен подтвердить требуемую семантику живой сессии; существующий happy-path этого не доказывает.",
-      "rule": "AP-021 / AP-028 / AP-076; lifecycle and capability preservation",
-      "decision": "Resolve lifecycle contract and verify abort/reuse before accepting session behavior. This is an unaccepted WIP finding, not a released-regression claim."
+      "title": "Замкнуть оставшиеся рабочие возможности",
+      "detail": "Host tool round-trip, bindings/fork/tools registration, probe без сессии, корректные metrics, abort → новый prompt и отсутствие разделяемых globals."
+    },
+    {
+      "title": "Принять один целый кандидат",
+      "detail": "Свежий build + отдельный typecheck + полный regression suite + native product/architecture review. Без этого не объявляем Cycle 7 готовым и не делаем release/deploy."
     }
   ],
-  "acceptance": [
+  "testReceipts": [
     {
-      "name": "Реальный ход модели",
-      "status": "Не подтверждено",
-      "detail": "CLI bin → настоящий Harness; nonce в model output; canonical text_delta; native Submission.wait() завершён с тем же requestId."
+      "name": "Native walking skeleton",
+      "path": "live/task-1/test-report.junit.xml",
+      "tests": 12,
+      "failed": 0,
+      "scope": "Авторский focused-run; не независимая приёмка",
+      "sha256": "4b612166eabfef6ff5bed9a9f53770885ca034c1580f969a0556ccd43dc09efa"
     },
     {
-      "name": "Durability, не «файл появился»",
-      "status": "Не подтверждено",
-      "detail": "Записи user/assistant читаются через native entries; процесс закрыт; после restart те же EntryId и текст; второй ответ действительно завершён."
+      "name": "Native + DAG fix",
+      "path": "live/task-1/fix-round-1/native-suite.junit.xml",
+      "tests": 13,
+      "failed": 0,
+      "scope": "Авторский новый прогон после устранения цикла",
+      "sha256": "e2ae0179b5a39fe92abcce511ba66107adad042e365524c86349c84c7c648b16"
     },
     {
-      "name": "Нет умных заглушек",
-      "status": "Есть открытые места",
-      "detail": "Без engine — явная ошибка, не rec_…; метрики из runtime либо explicit unavailable; каждая внедрённая зависимость доходит до реального потребителя."
+      "name": "Migration batch 1",
+      "path": "live/task-1-test-migration/batch-1.junit.xml",
+      "tests": 41,
+      "failed": 0,
+      "scope": "Перенесённые тесты + существующие adapter tests; не полный набор",
+      "sha256": "f910f271b60d23922d1e559ba17df3c581239e796ff4b99bb7f6b01c5b5088b2"
     },
     {
-      "name": "Полнота capability",
-      "status": "Остаётся",
-      "detail": "Images-only, root/child, steer/followUp, abort/reuse, abortTask, compact, model/thinking, policy, bindings/fork и история проверяются отдельно."
+      "name": "Dispatcher fix round 1",
+      "path": "live/task-4b/fix-round-1/junit.xml",
+      "tests": 60,
+      "failed": 0,
+      "scope": "Source tests; compiled fix ещё не перепроверен",
+      "sha256": "8badd4c540f706b512c674c289d0ea5b924512077d875e8dc3306a4a4382ab24"
     },
     {
-      "name": "Настоящий host tool round-trip",
-      "status": "Остаётся",
-      "detail": "Модель сама вызывает инструмент; client отвечает reverse RPC; engine использует результат и продолжает генерацию. Один server.request не заменяет этот путь."
+      "name": "Original compiled dispatcher",
+      "path": "live/task-4b/independent-product-review/junit.xml",
+      "tests": 49,
+      "failed": 5,
+      "scope": "Независимый black-box исходного, не исправленного артефакта",
+      "sha256": "5b17f9516934ef2237524119e0433c927b3ec2b6e35f50982947b75e42b08886"
     },
     {
-      "name": "Изоляция и lifecycle",
-      "status": "Остаётся",
-      "detail": "Два instance не делят host/global state; один владелец session lock; abort/failure/shutdown освобождают ресурсы; probe не открывает сессию."
-    },
-    {
-      "name": "Один собранный кандидат",
-      "status": "Остаётся",
-      "detail": "Чистый build + отдельный typecheck + full tests + AST boundaries; потребитель читает public exports/реальный bin, а не случайный stale dist."
+      "name": "Guard counterexamples",
+      "path": "live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.junit.xml",
+      "tests": 4,
+      "failed": 0,
+      "scope": "Зелёные probes доказывают три дефекта checker",
+      "sha256": "20c2dbee805939005cf3290715b2413488c96bd16b8eb156d81dae58362134da"
     }
   ],
-  "commandReceipts": [
+  "evidence": [
     {
-      "seq": 210,
-      "time": "2026-11-04T20:11:05.463000",
-      "command": "cd /Users/vanya/Projects/durable-zero && pnpm test",
-      "exit": 0
+      "path": "live/task-1/test-report.junit.xml",
+      "label": "Native walking skeleton · JUnit"
     },
     {
-      "seq": 345,
-      "time": "2026-11-04T20:32:02.257000",
-      "command": "cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts",
-      "exit": 1
+      "path": "live/task-1/fix-round-1/native-suite.junit.xml",
+      "label": "Native + DAG fix · JUnit"
     },
     {
-      "seq": 799,
-      "time": "2026-11-04T21:43:13.092000",
-      "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs",
-      "exit": 1
+      "path": "live/task-1-test-migration/batch-1.junit.xml",
+      "label": "Migration batch 1 · JUnit"
     },
     {
-      "seq": 871,
-      "time": "2026-11-04T22:07:15.786000",
-      "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs",
-      "exit": 1
+      "path": "live/task-4b/fix-round-1/junit.xml",
+      "label": "Dispatcher fix round 1 · JUnit"
     },
     {
-      "seq": 935,
-      "time": "2026-11-04T22:11:31.808000",
-      "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs",
-      "exit": 0
+      "path": "live/task-4b/independent-product-review/junit.xml",
+      "label": "Original compiled dispatcher · JUnit"
     },
     {
-      "seq": 939,
-      "time": "2026-11-04T22:13:42.298000",
-      "command": "cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts",
-      "exit": 1
+      "path": "live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.junit.xml",
+      "label": "Guard counterexamples · JUnit"
+    },
+    {
+      "path": "live/task-1/checkpoint-report.md",
+      "label": "Авторский native milestone (scope adjudication см. ledger)"
+    },
+    {
+      "path": "live/task-1/fix-round-1/remediation-report.md",
+      "label": "Устранение contracts → adapter cycle"
+    },
+    {
+      "path": "live/task-1/native-candidate/README.md",
+      "label": "Frozen native CLI · build / startup smoke, не product acceptance"
+    },
+    {
+      "path": "live/task-5-guards/independent-review/fix-round-1/review.md",
+      "label": "Architecture guards · amended FAIL"
+    },
+    {
+      "path": "live/task-4b/independent-product-review/report.md",
+      "label": "Оригинальный compiled dispatcher · black-box review"
     }
   ],
-  "judgment": "Direction fits preservation + ports/adapters. Product completeness is unproven; concrete hollow/decorative behaviors remain in WIP."
+  "changes": [
+    "Вместо прежнего E2E-таймаута есть зелёный авторский native walking skeleton с реальным сохранением и перезапуском.",
+    "Синтетическая ветка accepted без engine удалена: constructor требует IAgentEngine. Это проверено по текущему исходнику, но не означает принятую чистоту всего Core.",
+    "Ресурсный адаптер теперь передаётся в native dependencies; поведенческая подмена ресурсов остаётся отдельным проверяемым условием DI.",
+    "getStats уже читает модель/runtime вместо прежней фиксированной 128000; точность и unavailable-семантика ещё не приняты независимо.",
+    "Найденный старый contracts → adapter цикл исправлен автором; исходный FAIL и последующий GREEN сохранены.",
+    "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом."
+  ]
 }

@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { forkSessionDatabase } from "@durable-zero/adapter-pi-durable";
+import { forkSessionDatabase } from "../src/index.ts";
 
 test("forkSessionDatabase: forks database, prunes entries and tasks above checkpointId, and cleans locks", () => {
 	const tempDir = mkdtempSync(join(tmpdir(), "pi-session-fork-test-"));

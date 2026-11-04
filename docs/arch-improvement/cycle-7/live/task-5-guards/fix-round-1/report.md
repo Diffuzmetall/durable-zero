@@ -1,9 +1,9 @@
 # Task 5A: Architecture Boundary & Regression Guards Report (Fix Round 1)
 
-**Date:** 2026-11-04T21:31:43.058Z  
+**Date:** 2026-11-04T22:19:19.266Z  
 **Branch:** `cycle-7-runtime-adapter-ioc-migration`  
 **Target Package:** `@durable-zero/core`  
-**Audit Status:** **FAIL** (2 violations detected)
+**Audit Status:** **PASS** (0 violations detected)
 
 ---
 
@@ -13,8 +13,8 @@
 | :--- | :---: | :--- |
 | **Core Source AST Boundaries** | **PASS** | 16 files scanned. 0 violations. |
 | **Core Manifest Purity** | **PASS** | `packages/core/package.json` dependencies strictly contracts and zod. |
-| **Workspace DAG Acyclicity** | **FAIL** | Full AST source + manifest scan found 1 circular dependencies. |
-| **Package Layering Rules** | **FAIL** | Clean architecture tier enforcement found 1 layering violations. |
+| **Workspace DAG Acyclicity** | **PASS** | Full AST source + manifest scan found 0 circular dependencies. |
+| **Package Layering Rules** | **PASS** | Clean architecture tier enforcement found 0 layering violations. |
 | **CLI Serve Resolution** | **PASS** | AST confirms dynamic import to `../../runner/dist/main.js` with active `callsMain` binding (`runRunner`). |
 | **Legacy Files Purge** | **PASS** | 0 legacy runtime files in core/src/ |
 
@@ -22,9 +22,8 @@
 
 ## 2. Dynamic Evidence & Audit Findings
 
-### Detected Violations (2)
-- **[P0] AP-020:** `packages/contracts/src/index.ts` — Contracts package (tier 0) must never depend on higher tier package "@durable-zero/adapter-pi-durable".
-- **[P0] AP-020 Cycle:** `@durable-zero/adapter-pi-durable -> @durable-zero/contracts -> @durable-zero/adapter-pi-durable`
+### Zero Active Violations Detected in Live Production Core
+All audited core source files, manifests, and CLI entry points strictly comply with AP-010, AP-012, AP-020, AP-025, and AP-076.
 
 ---
 

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isProcessAlive } from "@durable-zero/adapter-pi-durable";
+import { isProcessAlive } from "../src/index.ts";
 
 test("isProcessAlive accurately identifies process liveness and handles invalid pids", () => {
 	assert.equal(isProcessAlive(process.pid), true);

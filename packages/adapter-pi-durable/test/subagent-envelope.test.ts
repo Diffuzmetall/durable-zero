@@ -5,7 +5,7 @@ import {
 	parseSubagentMirrorPrompt,
 	stripSubagentMirrorEnvelope,
 	InvalidSubagentMirrorEnvelopeError,
-} from "../src/shared/subagent-envelope.ts";
+} from "../src/engine/shared/subagent-envelope.ts";
 
 test("formatSubagentMirrorPrompt formats explicit versioned envelope with session, parent, conv, and task", () => {
 	const prompt = formatSubagentMirrorPrompt(

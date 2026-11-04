@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="NativeCandidateSmokeBootstrap" tests="3" failures="0" skipped="0" errors="0" time="0.517">
+		<testcase name="CLI bootstrap and readiness handshake (session/getState)" time="0.103" classname="NativeCandidateSmokeBootstrap" file="docs/arch-improvement/cycle-7/live/task-1/native-candidate/verify-smoke.mjs"/>
+		<testcase name="External scripted provider extension registration via --extension" time="0.001" classname="NativeCandidateSmokeBootstrap" file="docs/arch-improvement/cycle-7/live/task-1/native-candidate/verify-smoke.mjs"/>
+		<testcase name="Bounded clean SIGTERM termination with exit code 0" time="0.007" classname="NativeCandidateSmokeBootstrap" file="docs/arch-improvement/cycle-7/live/task-1/native-candidate/verify-smoke.mjs"/>
+	</testsuite>
+</testsuites>
