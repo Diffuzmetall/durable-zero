@@ -1,6 +1,6 @@
 {
   "title": "Cycle 7 current packaged-artifact integrity (not product acceptance)",
-  "created_at": "2026-11-05T02:42:17.371994+03:00",
+  "created_at": "2026-11-05T02:45:40.937265+03:00",
   "packaged_deliverables_count": 128,
   "packaged_deliverables": [
     {
@@ -41,15 +41,15 @@
     {
       "path": "architecture/durable-zero-architecture-asis.svg",
       "category": "architecture",
-      "sha256": "21d76e42ba253955a30e0e90a898a2aac1280f0f67d6e4dd681dcb48119fc43f",
-      "bytes": 4704,
+      "sha256": "b05cc90f569e0a9ff11a9368aa2693012948f180c5bb0c85b8fdb4180c00f45a",
+      "bytes": 4700,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-asis.svg"
     },
     {
       "path": "architecture/durable-zero-architecture-status.html",
       "category": "architecture",
-      "sha256": "a33e3e9cbfffac9ef076a78516802f2929367165938416482aa5b026122931f5",
-      "bytes": 24995,
+      "sha256": "7bccd0621f5b19c1f42d8148af8a78af2b768197ff1516bde97b8274aac1621a",
+      "bytes": 25089,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
     },
     {
@@ -69,15 +69,15 @@
     {
       "path": "architecture/durable-zero-architecture-tobe.svg",
       "category": "architecture",
-      "sha256": "41999fca13fa8a22d0c6c18515eeaf3a8a5bc9010a4556915a0bb47d9bc146ab",
-      "bytes": 4651,
+      "sha256": "b6bf5c348466bfc9227407e8423f446ab3ec8c06534b34bb24d95c55ea6d0572",
+      "bytes": 4647,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-tobe.svg"
     },
     {
       "path": "architecture/render-architecture-status.py",
       "category": "architecture",
-      "sha256": "211c9aaaf410dfba158b99c59c37d6cd088531ab9cbf55fcc26ff8933ee884e0",
-      "bytes": 11081,
+      "sha256": "34cbd09d53fa7682990547dcac062e965de1f086cd54fa638f5046b43b8b91f8",
+      "bytes": 11348,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/render-architecture-status.py"
     },
     {
@@ -818,7 +818,7 @@
     {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "fefd3a92702c427064b5b995fd10ec950b03446fad8f51bf3b7da2bb66377a22",
+      "sha256": "f7cd8243e1f8089a712682294425de17770682b208669af0239abc9ac274f3b3",
       "bytes": 975,
       "source_provenance": "workspace"
     },
@@ -959,12 +959,12 @@
       "asis": {
         "validXML": true,
         "viewBox": "0 0 1060 690",
-        "sha256": "21d76e42ba253955a30e0e90a898a2aac1280f0f67d6e4dd681dcb48119fc43f"
+        "sha256": "b05cc90f569e0a9ff11a9368aa2693012948f180c5bb0c85b8fdb4180c00f45a"
       },
       "tobe": {
         "validXML": true,
         "viewBox": "0 0 1060 690",
-        "sha256": "41999fca13fa8a22d0c6c18515eeaf3a8a5bc9010a4556915a0bb47d9bc146ab"
+        "sha256": "b6bf5c348466bfc9227407e8423f446ab3ec8c06534b34bb24d95c55ea6d0572"
       }
     },
     "source_snapshot_immutable": {
