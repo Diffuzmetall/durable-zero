@@ -2,34 +2,34 @@
   {
     "id": "probe-1-invalid-params",
     "name": "Invalid params maps to -32602 over protocol transport",
-    "pass": false,
+    "pass": true,
     "expectedCode": -32602,
-    "actualCode": -32603,
+    "actualCode": -32602,
     "response": {
       "jsonrpc": "2.0",
       "id": "probe-1",
       "error": {
-        "code": -32603,
+        "code": -32602,
         "message": "Prompt content string must not be empty"
       }
     },
-    "details": "FAIL: got -32603"
+    "details": "PASS: returned -32602"
   },
   {
     "id": "probe-2-unmapped-method",
     "name": "Unmapped method maps to -32601 over protocol transport",
-    "pass": false,
+    "pass": true,
     "expectedCode": -32601,
-    "actualCode": -32603,
+    "actualCode": -32601,
     "response": {
       "jsonrpc": "2.0",
       "id": "probe-2",
       "error": {
-        "code": -32603,
+        "code": -32601,
         "message": "Method not found: unmapped/method"
       }
     },
-    "details": "FAIL: got -32603"
+    "details": "PASS: returned -32601"
   },
   {
     "id": "probe-3-generic-spoof",
@@ -58,8 +58,8 @@
   {
     "id": "probe-5-invalid-conv-id",
     "name": "Invalid conversationId values (0, negative, non-digit, '0') rejected with -32602",
-    "pass": false,
-    "details": "FAIL: some invalid IDs were not rejected with -32602"
+    "pass": true,
+    "details": "PASS: all invalid IDs rejected with -32602"
   },
   {
     "id": "probe-6-root-abort-undefined",

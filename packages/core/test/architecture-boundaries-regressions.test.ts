@@ -129,7 +129,15 @@ if (command === "serve") {
     });
 
     it("REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2]", () => {
-      const noMainTarget = path.join(ISOLATED_DIR, "fake-no-main-target.js");
+      const mockRunnerDir = path.join(ISOLATED_DIR, "mock-runner-pkg/dist");
+      fs.mkdirSync(mockRunnerDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(ISOLATED_DIR, "mock-runner-pkg/package.json"),
+        JSON.stringify({ name: "@durable-zero/runner" }),
+        "utf8"
+      );
+
+      const noMainTarget = path.join(mockRunnerDir, "no-main-target.js");
       fs.writeFileSync(
         noMainTarget,
         `export const dummyHelper = () => "no main here";\n`,

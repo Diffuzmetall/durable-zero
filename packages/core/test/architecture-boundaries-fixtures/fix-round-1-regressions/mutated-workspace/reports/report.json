@@ -1,6 +1,6 @@
 {
-  "task": "Task 5A: Architecture Boundary & Regression Guards (Remediated)",
-  "timestamp": "2026-11-04T22:19:19.268Z",
+  "task": "Task 5A: Architecture Boundary & Regression Guards (Round 2)",
+  "timestamp": "2026-11-04T22:35:14.937Z",
   "status": "FAIL",
   "sourceBaseline": "7d4b235",
   "summary": {

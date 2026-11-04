@@ -1,0 +1,96 @@
+▶ Task 5A Remediation: Regression Tests on Independent Review Findings
+  ▶ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement
+    ✔ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (5.602959ms)
+    ✔ REJECTS CLI serve target pointing to nonexistent runner file on disk (0.773417ms)
+    ✔ REJECTS CLI script that matches import only in string literal or comment (0.310166ms)
+    ✖ REJECTS CLI serve where runner is imported as unusedModule and unrelated local main() is called [R2 Bypass 1] (2.141416ms)
+    ✖ REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2] (2.245125ms)
+    ✖ REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3] (0.7775ms)
+    ✔ ACCEPTS valid CLI serve entrypoint that imports runner and calls main() (0.830334ms)
+  ✖ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement (13.130625ms)
+  ▶ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports
+    ✔ DETECTS cross-package source import cycle even when package.json dependencies omit edges (2.946375ms)
+    ✔ DETECTS cross-package barrel re-export cycle when package.json dependencies omit edges (0.894125ms)
+  ✔ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports (3.944416ms)
+  ▶ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting
+    ✔ GENERATES failing report and non-zero violation count when violations exist (no false PASS) (4.245667ms)
+  ✔ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting (4.285167ms)
+  ▶ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage
+    ✔ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.609833ms)
+    ✔ DETECTS TypeScript import = require(...) syntax (0.408042ms)
+    ✔ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.787333ms)
+  ✔ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage (1.869ms)
+✖ Task 5A Remediation: Regression Tests on Independent Review Findings (23.648292ms)
+ℹ tests 13
+ℹ suites 5
+ℹ pass 10
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 361.397208
+
+✖ failing tests:
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:104:5
+✖ REJECTS CLI serve where runner is imported as unusedModule and unrelated local main() is called [R2 Bypass 1] (2.141416ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject CLI script where imported runner is never called, even if local main() exists
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:124:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:131:5
+✖ REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2] (2.245125ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /exports? no main|missing.*main export/i. Input:
+  
+  'Target import "./fake-no-main-target.js" resolves to "/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/fake-no-main-target.js" which is not in runner package.'
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:159:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Target import "./fake-no-main-target.js" resolves to "/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/fake-no-main-target.js" which is not in runner package.',
+    expected: /exports? no main|missing.*main export/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:162:5
+✖ REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3] (0.7775ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject target outside real @durable-zero/runner package
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:187:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

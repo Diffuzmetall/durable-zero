@@ -32,7 +32,7 @@ const CLI_BIN_FILE = path.resolve(
 );
 const REPORT_DIR = path.resolve(
   REPO_ROOT,
-  "docs/arch-improvement/cycle-7/live/task-5-guards/fix-round-1"
+  "docs/arch-improvement/cycle-7/live/task-5-guards/fix-round-2"
 );
 
 describe("Task 5A: Architecture Boundaries & Regression Guards (Fix Round 1)", () => {

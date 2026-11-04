@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 4B Fix Round 1 Independent Semantic Probes (Native node:test Harness)" time="0.064317" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="Probe 1: Invalid params over compiled protocol transport maps to code -32602" time="0.058229" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-architecture-review/fix-round-1/semantic-re-review.test.mjs"/>
+		<testcase name="Probe 2: Unmapped method over compiled protocol transport maps to code -32601" time="0.000365" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-architecture-review/fix-round-1/semantic-re-review.test.mjs"/>
+		<testcase name="Probe 3: Generic spoofed Error object maps to code -32603, not -32602 (Anti-gaming check)" time="0.000255" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-architecture-review/fix-round-1/semantic-re-review.test.mjs"/>
+		<testcase name="Probe 4: Numeric conversationId: 42 is normalized to string '42' for Core port" time="0.000496" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-architecture-review/fix-round-1/semantic-re-review.test.mjs"/>
+		<testcase name="Probe 5: Invalid conversationId values (0, negative, non-digit, '0') are rejected with -32602" time="0.000761" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-architecture-review/fix-round-1/semantic-re-review.test.mjs"/>
+		<testcase name="Probe 6: Root session/abort without conversationId forwards undefined to coordinator.abort" time="0.000196" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-architecture-review/fix-round-1/semantic-re-review.test.mjs"/>
+	</testsuite>
+	<!-- tests 6 -->
+	<!-- suites 1 -->
+	<!-- pass 6 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 984.395042 -->
+</testsuites>

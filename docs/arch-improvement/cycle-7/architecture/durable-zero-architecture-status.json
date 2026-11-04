@@ -7,10 +7,10 @@
   "tasks": [
     {
       "name": "1 · Native Slice 0",
-      "tone": "warn",
-      "status": "Сквозной авторский тест прошёл",
-      "proof": "Реальный CLI, native Harness, text_delta, SQLite и повторный процесс; отдельный frozen CLI собран. Начата независимая source-проверка.",
-      "remaining": "Независимая native black-box приёмка; полный перенос тестовых потребителей и регрессионный прогон."
+      "tone": "bad",
+      "status": "Независимый source-review FAIL",
+      "proof": "Авторский native E2E проходит, но независимое ревью нашло дефекты abort/reuse, contentIndex, DI, teardown, EOF и качества oracle. Полный текст второго ответа тестом не проверялся.",
+      "remaining": "Исправления исходным автором; усиленный oracle и независимая native black-box приёмка; оставшаяся миграция тестов."
     },
     {
       "name": "2A / полный Task 2",
@@ -36,16 +36,16 @@
     {
       "name": "4B · Capability dispatcher",
       "tone": "warn",
-      "status": "Fix round 1 готов к перепроверке",
-      "proof": "Исходный compiled-кандидат: 5 падений на nominal error identity. Исправление: 60 source cases без падений.",
-      "remaining": "Свежая frozen-сборка и оба независимых re-review; затем wiring. binding/list/register, session/fork и tools/register пока unsupported."
+      "status": "Compiled component PASS; evidence gate открыт",
+      "proof": "Независимый Node black-box исправленного fixture-компонента: 46 cases, без падений. Source-review сообщает behavioral PASS; собственный probe-harness ревьюера требует исправления.",
+      "remaining": "Закрыть достоверность review receipts; затем отдельно production wiring и неподдержанные admin/host seams."
     },
     {
       "name": "5A · Architecture guards",
       "tone": "bad",
-      "status": "Повторное ревью FAIL",
-      "proof": "Сканирование DAG и правдивый FAIL-отчёт работают; дополнительная проверка доказала 3 обхода CLI main checker и нарушение AP-019.",
-      "remaining": "Привязать реальный imported main, проверить экспорт и точную границу пакета; осмысленно декомпозировать checker; повторить независимые probes."
+      "status": "Fix round 2 ждёт независимого ревью",
+      "proof": "После подтверждённых false-green bypasses автор разделил checker на модули и представил новую реализацию; авторский GREEN ещё не означает, что обходы устранены.",
+      "remaining": "Независимо перепроверить настоящее выполнение imported callable main, реальный serve branch, точное разрешение пакета/экспорта и прежние counterexamples."
     },
     {
       "name": "5 / 6 · Полная чистота и S9",
@@ -58,7 +58,7 @@
   "remaining": [
     {
       "title": "Закрыть native Slice 0 независимо",
-      "detail": "Проверить собранный CLI извне: поток до завершения модели, реальные тексты/EntryId после restart, повторные ответы и корректный shutdown. Артефакт уже готов; source-review идёт."
+      "detail": "Исправить найденные Native source-review дефекты, доказать поток до завершения модели и полный второй текст/EntryId после restart; затем пройти независимую product-проверку на реальном CLI."
     },
     {
       "title": "Довести тестовую миграцию",
@@ -125,6 +125,13 @@
       "failed": 0,
       "scope": "Зелёные probes доказывают три дефекта checker",
       "sha256": "20c2dbee805939005cf3290715b2413488c96bd16b8eb156d81dae58362134da"
+    },
+    {
+      "name": "Fixed compiled dispatcher",
+      "path": "live/task-4b/independent-product-review/fix-round-1/junit.xml",
+      "tests": 46,
+      "failed": 0,
+      "scope": "Независимый fixture-компонент; НЕ native Harness/SQLite"
     }
   ],
   "evidence": [
@@ -171,6 +178,10 @@
     {
       "path": "live/task-4b/independent-product-review/report.md",
       "label": "Оригинальный compiled dispatcher · black-box review"
+    },
+    {
+      "path": "live/task-1/independent-source-review/review.md",
+      "label": "Native source/spec review · FAIL"
     }
   ],
   "changes": [
@@ -179,6 +190,8 @@
     "Ресурсный адаптер теперь передаётся в native dependencies; поведенческая подмена ресурсов остаётся отдельным проверяемым условием DI.",
     "getStats уже читает модель/runtime вместо прежней фиксированной 128000; точность и unavailable-семантика ещё не приняты независимо.",
     "Найденный старый contracts → adapter цикл исправлен автором; исходный FAIL и последующий GREEN сохранены.",
-    "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом."
-  ]
+    "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом.",
+    "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
+  ],
+  "reviewUpdateAt": "2026-11-05T01:46:54.368771+03:00"
 }

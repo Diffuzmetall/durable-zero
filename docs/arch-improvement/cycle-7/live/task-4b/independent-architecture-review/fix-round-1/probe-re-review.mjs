@@ -1,6 +1,6 @@
 import { createSessionDispatcher } from "../../../../../../../packages/runner/src/dispatch/session-dispatcher.ts";
 import { normalizeConversationId } from "../../../../../../../packages/runner/src/dispatch/normalizers.ts";
-import { RequestDispatcher, JsonRpcInvalidParamsError, JsonRpcMethodNotFoundError } from "../../../../../../../packages/protocol/src/index.ts";
+import { RequestDispatcher, JsonRpcInvalidParamsError, JsonRpcMethodNotFoundError } from "../../../../../../../packages/protocol/dist/index.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

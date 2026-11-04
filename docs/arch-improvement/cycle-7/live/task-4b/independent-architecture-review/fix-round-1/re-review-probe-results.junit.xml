@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
-  <testsuite name="Task 4B Fix Round 1 Independent Re-Review Probes" tests="6" failures="3" errors="0" skipped="0">
+  <testsuite name="Task 4B Fix Round 1 Independent Re-Review Probes" tests="6" failures="0" errors="0" skipped="0">
     <testcase name="Invalid params maps to -32602 over protocol transport" classname="FixRound1Probe" time="0.005">
-      <failure message="FAIL: got -32603">FAIL: got -32603</failure>
+
     </testcase>
     <testcase name="Unmapped method maps to -32601 over protocol transport" classname="FixRound1Probe" time="0.005">
-      <failure message="FAIL: got -32603">FAIL: got -32603</failure>
+
     </testcase>
     <testcase name="Generic spoofed error object maps to -32603, not -32602 (Anti-gaming nominal check)" classname="FixRound1Probe" time="0.005">
 
@@ -14,7 +14,7 @@
 
     </testcase>
     <testcase name="Invalid conversationId values (0, negative, non-digit, '0') rejected with -32602" classname="FixRound1Probe" time="0.005">
-      <failure message="FAIL: some invalid IDs were not rejected with -32602">FAIL: some invalid IDs were not rejected with -32602</failure>
+
     </testcase>
     <testcase name="Root session/abort without conversationId forwards undefined to coordinator.abort" classname="FixRound1Probe" time="0.005">
 
