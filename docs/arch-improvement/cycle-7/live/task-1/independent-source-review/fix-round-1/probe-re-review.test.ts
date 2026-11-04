@@ -62,7 +62,7 @@ test("PROBE 1 (REMEDIATED FND-T1-01): Root abort and child abort allow subsequen
 	await coord.close();
 });
 
-test("PROBE 2 (REMEDIATED FND-T1-02): Real contentIndex preserved in DurableEventAdapter & ChildAdapter", () => {
+test("PROBE 2 (REMEDIATED FND-T1-02): Real contentIndex and partial block mapping preserved", () => {
 	const emitted: RunnerEvent[] = [];
 	const adapter = new DurableEventAdapter((event) => {
 		emitted.push(event);
@@ -108,32 +108,13 @@ test("PROBE 2 (REMEDIATED FND-T1-02): Real contentIndex preserved in DurableEven
 	assert.equal(textUpdate.type, "text_delta");
 	assert.equal(textUpdate.contentIndex, 1, "Real contentIndex 1 preserved for text_delta!");
 
-	// Also verify child adapter
-	const childEmitted: RunnerEvent[] = [];
-	const childAdapter = new DurableChildEventAdapter(
-		(ev) => childEmitted.push(ev),
-		"parent-call-1",
-		"child-1",
-	);
-
-	childAdapter.handleEvent({
-		type: "message_update",
-		usage: {},
-		changes: [
-			{
-				type: "text_delta",
-				contentIndex: 3,
-				delta: "Child block 3",
-			},
-		],
-	} as any);
-
-	const childUpdates = childEmitted.filter((e) => e.type === "message_update") as Array<{
-		type: "message_update";
-		assistantMessageEvent: { type: string; contentIndex: number; delta?: string };
-	}>;
-	assert.equal(childUpdates.length, 1);
-	assert.equal(childUpdates[0].assistantMessageEvent.contentIndex, 3, "Child adapter preserved contentIndex 3!");
+	// Verify internal Map structure
+	const internalBlocks = (adapter as any).contentBlocks as Map<number, { type: string; text?: string; thinking?: string }>;
+	assert.ok(internalBlocks instanceof Map);
+	assert.equal(internalBlocks.get(0)?.type, "thinking");
+	assert.equal(internalBlocks.get(0)?.thinking, "Pondering...");
+	assert.equal(internalBlocks.get(1)?.type, "text");
+	assert.equal(internalBlocks.get(1)?.text, "First text block");
 });
 
 test("PROBE 3 (REMEDIATED FND-T1-03 & FND-T1-08): SessionCoordinator constructor & single lock", () => {
@@ -149,7 +130,6 @@ test("PROBE 3 (REMEDIATED FND-T1-03 & FND-T1-08): SessionCoordinator constructor
 		close: async () => {},
 	};
 
-	// Constructor fails if sessionDir is missing
 	assert.throws(
 		() => new SessionCoordinator({ engine: mockEngine } as any),
 		/sessionDir must be a non-empty string/,
@@ -160,7 +140,6 @@ test("PROBE 3 (REMEDIATED FND-T1-03 & FND-T1-08): SessionCoordinator constructor
 		sessionDir: "/tmp/single-lock-test",
 	});
 
-	// Check that coordinator does not hold store or decorative properties
 	assert.equal((coord as any).store, undefined);
 	assert.equal((coord as any).modelProvider, undefined);
 	assert.equal((coord as any).executionEnv, undefined);
@@ -189,77 +168,83 @@ test("PROBE 4 (REMEDIATED FND-T1-05): Custom injected engine does not eagerly cr
 
 	const inStream = new PassThrough();
 	const outStream = new PassThrough();
+	let instance: any;
 
-	const instance = await assembleDurableZero({
-		sessionDir: "/tmp/custom-engine-probe",
-		engine: customEngine as any,
-		stdin: inStream,
-		stdout: outStream,
-	});
+	try {
+		instance = await assembleDurableZero({
+			sessionDir: "/tmp/custom-engine-probe",
+			engine: customEngine as any,
+			stdin: inStream,
+			stdout: outStream,
+		});
 
-	assert.equal(customStarted, true);
-	assert.equal(instance.engine, customEngine);
-
-	await instance.close();
+		assert.equal(customStarted, true);
+		assert.equal(instance.engine, customEngine);
+	} finally {
+		if (instance) {
+			await instance.close();
+		}
+		inStream.destroy();
+		outStream.destroy();
+	}
 	assert.equal(customClosed, true);
-	inStream.destroy();
-	outStream.destroy();
 });
 
-test("PROBE 5 (RESIDUAL RISK AUDIT in DurableEventAdapter message_end): Stale this.currentText reference", () => {
-	const emitted: RunnerEvent[] = [];
-	const adapter = new DurableEventAdapter((event) => {
-		emitted.push(event);
-	});
+test("PROBE 5 (PROVEN DEFECT in DurableChildEventAdapter): Unsynchronized currentText causes duplicate full delta on turn 2", () => {
+	const childEmitted: RunnerEvent[] = [];
+	const childAdapter = new DurableChildEventAdapter(
+		(ev) => childEmitted.push(ev),
+		"parent-call-1",
+		"child-1",
+	);
 
-	// If entry.model[0] has content, it is preserved
-	adapter.handleEvent(
-		{
-			type: "message_end",
-			entry: {
-				id: "100",
-				kind: "pi.assistant",
-				model: [{ role: "assistant", content: [{ type: "text", text: "Verified Content" }] }],
+	// Turn 1 message_end executes: this.currentText is undefined, so no catchup delta, and sets this.currentText = ""
+	childAdapter.handleEvent({
+		type: "message_end",
+		entry: {
+			id: "entry-1",
+			kind: "pi.assistant",
+			model: [{ role: "assistant", content: [{ type: "text", text: "Turn 1 output" }] }],
+		},
+	} as any);
+
+	// Now in Turn 2: stream deltas
+	childAdapter.handleEvent({
+		type: "message_update",
+		usage: {},
+		changes: [
+			{
+				type: "text_delta",
+				contentIndex: 0,
+				delta: "Turn 2 output",
 			},
-		} as any,
-		{} as any,
-	);
+		],
+	} as any);
 
-	const endEvt = emitted.find((e) => e.type === "message_end") as any;
-	assert.ok(endEvt);
-	assert.equal(endEvt.message.content[0].text, "Verified Content");
+	// Now Turn 2 message_end arrives with completed content: "Turn 2 output"
+	// Because this.currentText was set to "" at the end of Turn 1 and NEVER updated during message_update:
+	// fullText.startsWith(this.currentText) is true ("Turn 2 output".startsWith(""))
+	// fullText.length > this.currentText.length is true (13 > 0)
+	// IT EMITS A SECOND DUPLICATE DELTA FOR THE ENTIRE STRING "Turn 2 output" AT contentIndex: 0!
+	childAdapter.handleEvent({
+		type: "message_end",
+		entry: {
+			id: "entry-2",
+			kind: "pi.assistant",
+			model: [{ role: "assistant", content: [{ type: "text", text: "Turn 2 output" }] }],
+		},
+	} as any);
 
-	// BUT if entry.model[0].content is undefined, it falls back to this.currentText which is undefined!
-	const emitted2: RunnerEvent[] = [];
-	const adapter2 = new DurableEventAdapter((event) => {
-		emitted2.push(event);
-	});
-	// Feed deltas
-	adapter2.handleEvent(
-		{
-			type: "message_update",
-			changes: [{ type: "text_delta", contentIndex: 0, delta: "Delta text" }],
-		} as any,
-		{} as any,
-	);
-	adapter2.handleEvent(
-		{
-			type: "message_end",
-			entry: {
-				id: "101",
-				kind: "pi.assistant",
-				model: [{ role: "assistant" }], // content omitted
-			},
-		} as any,
-		{} as any,
-	);
+	const textDeltas = childEmitted
+		.filter((e) => e.type === "message_update")
+		.map((e: any) => e.assistantMessageEvent)
+		.filter((ame) => ame?.type === "text_delta");
 
-	const endEvt2 = emitted2.find((e) => e.type === "message_end") as any;
-	assert.ok(endEvt2);
-	// Notice: endEvt2.message.content[0].text is undefined because this.currentText was deleted from the class
-	assert.equal(
-		endEvt2.message.content[0].text,
-		undefined,
-		"AUDIT CONFIRMATION: message_end reads undeclared this.currentText when model.content is undefined",
-	);
+	// PROVEN BEHAVIOR:
+	// First delta was streamed during message_update: "Turn 2 output"
+	// Second delta was duplicate emitted during message_end because currentText was stuck at "": "Turn 2 output"
+	assert.equal(textDeltas.length, 2, "DUPLICATE text_delta emitted on turn 2!");
+	assert.equal(textDeltas[0].delta, "Turn 2 output");
+	assert.equal(textDeltas[1].delta, "Turn 2 output", "CONFIRMED DEFECT: message_end emitted duplicate full text");
+	assert.equal(textDeltas[1].contentIndex, 0, "CONFIRMED DEFECT: message_end hardcoded contentIndex 0");
 });

@@ -1,0 +1,38 @@
+{
+  "milestone": "1298b479c5a6cf9087f7e01fc56325feb54a3dbd",
+  "review_type": "independent-source-spec-architecture-re-review-round-1",
+  "verdict": "FAIL",
+  "prior_blockers_status": {
+    "FND-T1-01": "CLOSED (PASS)",
+    "FND-T1-02": "REOPENED_AS_P2 (PARTIAL - Parent event adapter remediated, child event adapter has duplicate catchup defect)",
+    "FND-T1-03": "CLOSED (PASS)",
+    "FND-T1-04": "CLOSED (PASS)",
+    "FND-T1-05": "CLOSED (PASS)",
+    "FND-T1-06": "CLOSED (PASS)",
+    "FND-T1-07": "CLOSED (PASS)",
+    "FND-T1-08": "CLOSED (PASS)",
+    "FND-T1-09": "LOG-ONLY (P3)"
+  },
+  "findings": [
+    {
+      "id": "FND-T1-10",
+      "severity": "P2",
+      "title": "Unsynchronized currentText in DurableChildEventAdapter Emits Duplicate Full-Text Delta at contentIndex 0 on Subsequent Turns",
+      "file": "packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts:122-138",
+      "evidence": "In DurableChildEventAdapter, field declaration currentText was removed in favor of contentBlocks Map, and message_update no longer updates this.currentText. However, in message_end (lines 125-138), the code still checks fullText.startsWith(this.currentText) and fullText.length > this.currentText.length. At the end of turn 1, this.currentText = '' is assigned dynamically. On turn 2, fullText.startsWith('') evaluates to true and fullText.length > 0 evaluates to true, causing message_end to slice the entire fullText from 0 and broadcast a duplicate delta of the entire turn output at hardcoded contentIndex: 0. Empirically verified in probe-re-review.test.ts (PROBE 5).",
+      "impact": "Child subagent streams on multi-turn conversations broadcast duplicate full-text output deltas at contentIndex 0 during message_end, corrupting child streaming output.",
+      "rule": "AP-026, AP-076",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-11",
+      "severity": "P3",
+      "title": "Stale currentText Fallback in DurableEventAdapter message_end",
+      "file": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts:155, 167-168",
+      "evidence": "In DurableEventAdapter.case 'message_end', if entry.model[0].content is undefined, it attempts fallback let content = msg.content ?? [{ type: 'text', text: this.currentText }]. Because this.currentText was removed from the class, this evaluates to undefined rather than pulling from this.contentBlocks. While standard native Pi entries provide model[0].content, this residual fallback reference is stale.",
+      "impact": "If an unconventional entry arrives without content, text evaluates to undefined and an undeclared property this.currentText = '' is dynamically attached.",
+      "rule": "AP-026, AP-076",
+      "fix_decision": "log-only"
+    }
+  ]
+}
