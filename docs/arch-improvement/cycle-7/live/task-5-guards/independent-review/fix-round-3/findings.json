@@ -1,12 +1,12 @@
 [
   {
     "id": "FND-TASK5-01-R3",
-    "severity": "P1",
-    "status": "RESOLVED",
-    "title": "CLI Serve Guard Entrypoint Invariant Verification & Bypasses Elimination",
-    "file": "packages/core/test/architecture-boundaries-cli.ts:1",
-    "evidence": "packages/core/test/architecture-boundaries-cli.ts (211 LOC) and runner-verify.ts (112 LOC); empirically verified by 11 tests in r3-counterexamples.test.ts and 17 regression tests in architecture-boundaries-regressions.test.ts.",
-    "resolution": "Resolved. auditCliServeEntrypoint now enforces: 1) AST CallExpression inspection for dynamic import; 2) tracking imported bindings and local declaration shadowing; 3) strict binary equality checking on condition (=== 'serve'); 4) exact package specifier resolution preventing blind fake-package substitutions; 5) non-recursive invocation scanning that ignores uninvoked nested function declarations; 6) AST export verification ensuring the target runner file exports a callable main function.",
+    "severity": "P2",
+    "status": "OPEN",
+    "title": "verifyFileExportsMain Falsely Accepts Non-Callable Exports via Unconstrained CallExpression/Identifier and Default !sf.isDeclarationFile Fallback",
+    "file": "packages/core/test/architecture-boundaries-runner-verify.ts:25",
+    "evidence": "packages/core/test/architecture-boundaries-runner-verify.ts lines 22-75; empirically proven by parent-adjudication/round-3/ (callable-target.test.mjs: 3 failed, 1 passed, exit 1).",
+    "impact": "1) export const main = Number('17') falsely accepted because isCallableNode returns true for all CallExpressions; 2) export const main = n (n=17) falsely accepted because isCallableNode returns true for all Identifiers; 3) export { n as main } (n=17) falsely accepted because !sf.isDeclarationFile is unconditionally true for non-d.ts files. Fails to verify that target file exports a genuinely callable entrypoint function. Blocks scope acceptance.",
     "rule": "AP-076, AP-021",
     "fix_decision": "fix-now"
   },
@@ -28,7 +28,7 @@
     "title": "Unified Workspace DAG Cycle Detection via Source & Re-Exports",
     "file": "packages/core/test/architecture-boundaries-dag.ts:1",
     "evidence": "packages/core/test/architecture-boundaries-dag.ts (237 LOC). Scans AST source, dynamic imports, export * re-exports, and relative escapes across all workspace packages.",
-    "resolution": "Resolved. Accurately detects cross-package cycles omitted from manifests; live monorepo DAG is verified 100% acyclic with 0 cycles.",
+    "resolution": "Resolved. Accurately detects cross-package cycles omitted from manifests; live monorepo DAG in candidate c248e6c4 is verified 100% acyclic with 0 cycles.",
     "rule": "AP-025, AP-076",
     "fix_decision": "fix-now"
   },

@@ -1,4 +1,4 @@
-# Independent Architecture & Adversarial Final Review: Task 5A (Fix Round 3)
+# Independent Architecture & Adversarial Review: Task 5A (Fix Round 3 - Superseded / FAIL)
 
 **Date:** 2026-11-05  
 **Reviewer Role:** Independent Architecture / Adversarial Reviewer (Pi Provider, zero subagents)  
@@ -13,110 +13,74 @@
 - `packages/core/test/architecture-boundaries-dag.ts` (237 LOC)
 - `packages/core/test/architecture-boundaries-report.ts` (234 LOC)
 - `packages/core/test/architecture-boundaries-checker.ts` (11 LOC facade)  
-**Regression Tests:** `packages/core/test/architecture-boundaries-regressions.test.ts` (542 LOC)  
-**Main Test Suite:** `packages/core/test/architecture-boundaries.test.ts` (47/47 passing tests)  
 **Deliverables Directory:** `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/`
 
 ---
 
-## 1. Executive Summary & Final Verdict
+## 1. Executive Summary & Canonical Verdict (Amended & Superseded)
 
-In Fix Round 3 (`c248e6c4`), the author resolved all remaining structural bypasses in the CLI serve entrypoint guard and perfected the modular architecture under AP-019. 
+The initial Round 3 review verified that literal primitive values (`export const main = 17;`), inverted if conditions (`!== "serve"`), fake runner package prefixes, and uninvoked nested calls were structurally rejected.
 
-An independent adversarial verification suite (`r3-counterexamples.test.ts`, 11 tests) was executed against the frozen codebase. **All original and round-two defects are fully resolved:**
-1. **FND-TASK5-01 (CLI Serve Guard Invariant): RESOLVED.**
-   - Enforces strict binary equality (`=== "serve"` or `== "serve"`), rejecting inverted conditions (`!== "serve"`).
-   - Rejects uninvoked local function declarations containing `main()`, scanning only top-level executable statements.
-   - Enforces exact package specifiers, rejecting `@durable-zero/runner-fake-package` and resolving subpaths accurately.
-   - Inspects target exports to ensure `main` is a callable entity (function declaration, arrow function, function expression, or factory call), strictly rejecting non-callable constants (`export const main = 17;`).
-2. **FND-TASK5-AP019 (Modular Decomposition): RESOLVED.**
-   - The former monolithic 1128 LOC helper is now 6 cleanly decoupled modules, each strictly **<= 250 LOC** (from 11 to 239 LOC), adhering to AP-019 hard limits.
-   - All modules import with zero side-effects.
-3. **FND-TASK5-02 (Unified Workspace DAG): RESOLVED.**
-   - Full AST source, dynamic import, and re-export scanning verified across all packages. Monorepo DAG in `c248e6c4` is verified 100% acyclic (0 cycles).
-4. **FND-TASK5-03 (Durable Reporting Integrity): RESOLVED.**
-   - Dynamic report authoring verified. When tests or live audits detect defects, report strictly emits `status: "FAIL"`; when clean, it emits `status: "PASS"`.
-5. **FND-TASK5-04 (AST Syntax & Extension Coverage): RESOLVED.**
-   - Full coverage across 8 module extensions (`.ts` through `.jsx`), template literals, and `import = require`.
+However, subsequent critical parent adjudication (`docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/`) empirically proved that **`verifyFileExportsMain` still fails to enforce genuine callable semantics**:
+- `isCallableNode` returns `true` unconditionally for any `CallExpression` (accepting `export const main = Number("17");`).
+- `isCallableNode` returns `true` unconditionally for any `Identifier` (accepting `export const main = n;` where `n = 17`).
+- Named re-exports (`export { n as main };` where `n = 17`) fall back to `!sf.isDeclarationFile`, which is unconditionally `true` for all ordinary JavaScript/TypeScript source files, accepting non-callable re-exports.
 
-With zero open P0, P1, or P2 defects remaining in Task 5A scope, the architecture boundary guard is mathematically and empirically sound.
+Native Node testing of the exact frozen helper (`frozen-runner-verify.ts`, SHA `2f026edc4d...`) resulted in **3 test failures and exit code 1**.
 
-### **FINAL VERDICT: PASS**
+Because these defects leave the target export verification vulnerable to false greens, finding `FND-TASK5-01-R3` is **re-opened as an unresolved P2 defect**. Per canonical architecture rules (`arch-improvement-review/SKILL.md`), all P0, P1, and P2 findings block scope acceptance.
+
+### **FINAL VERDICT: FAIL (BLOCKED by P2 FND-TASK5-01-R3)**
 
 ---
 
-## 2. Mandatory Semantic Probes (Evidence-Backed)
+## 2. Parent Empirical Counterexample Adjudication Receipts
 
-### Probe 1: Dependency Traceability (AP-074, AP-076)
-- **Status:** PASS
-- **Evidence:** `auditCliServeEntrypoint` actively traces the imported binding from dynamic import declarations (`importType: "destructured-main" | "namespace"`) to actual top-level CallExpressions, filtering out locally declared variables and shadowed functions.
+Documented in `docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/adjudication.json`:
+- **Frozen Helper SHA-256:** `2f026edc4daaf79bba65d2cd46b724d1f3256548ef2ceb90b1f684dfaca07452`
+- **Native Test Runner:** `callable-target.test.mjs`
+- **Exit Code:** 1 (3 failed, 1 passed)
+- **JUnit Log:** `docs/arch-improvement/cycle-7/live/task-5-guards/parent-adjudication/round-3/junit.xml`
 
-### Probe 2: Runtime Completeness & Split-Brain Detection
-- **Status:** PASS
-- **Evidence:** Clean deletion of legacy files in `packages/core/src/` verified. `packages/core/scripts/build-runner.mjs` remains logged as [P3] for whole-cycle cleanup.
-
-### Probe 3: Entry Point Wiring (AP-020, AP-075)
-- **Status:** PASS
-- **Evidence:** Production `packages/cli/bin/durable-zero.js` wiring is verified to dynamically import `runner` (`../../runner/dist/main.js`) and execute `main(args)`, with the target file existing on disk and exporting a callable `main` function.
-
-### Probe 4: Anti-Gaming & Line Budget Reality (AP-019, AP-076)
-- **Status:** PASS (AP-019 Hard Limit Satisfied)
-- **Evidence:** Every single modular checker file is strictly <= 250 LOC:
-  - `architecture-boundaries-checker.ts`: 11 LOC
-  - `architecture-boundaries-runner-verify.ts`: 112 LOC
-  - `architecture-boundaries-core.ts`: 165 LOC
-  - `architecture-boundaries-cli.ts`: 211 LOC
-  - `architecture-boundaries-report.ts`: 234 LOC
-  - `architecture-boundaries-dag.ts`: 237 LOC
-  - `architecture-boundaries-ast.ts`: 239 LOC
+### Confirmed False-Green Bypasses:
+1. `export const main = Number("17");` -> **Falsely Accepted**  
+   *Root Cause:* `isCallableNode` checks `ts.isCallExpression(node)` without validating whether the called entity is a known primitive constructor (`Number`, `String`, `Boolean`, `Symbol`) or an actual function factory.
+2. `export const main = n;` (where `const n = 17;`) -> **Falsely Accepted**  
+   *Root Cause:* `isCallableNode` checks `ts.isIdentifier(node)` unconditionally, treating any local variable identifier as callable.
+3. `export { n as main };` (where `const n = 17;`) -> **Falsely Accepted**  
+   *Root Cause:* Lines 66–70 check `localFunctions.has(localName) || !sf.isDeclarationFile`. Because `!sf.isDeclarationFile` is always `true` for standard `.ts`/`.js` implementation files, non-function local variables exported as `main` completely bypass validation.
+4. Positive Control: `export function main() {}` -> **Correctly Accepted**.
 
 ---
 
-## 3. Independent Adversarial Probes Summary (`r3-counterexamples.test.ts`)
+## 3. Retained Historical Probes & Invariants
 
-- **Command:** `node --test docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts`
-- **Results:** 11 tests executed, **11 passed, 0 failed** (duration: 139ms).
-- **Log:** `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/test-output.txt`
-- **JUnit:** `docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/junit.xml`
-
-### Breakdown:
-1. **Non-Callable Target Export:** `export const main = 17;` is **properly rejected** (`error matches /exports no callable main\(\) entrypoint function/`).
-2. **Inverted Condition:** `if (command !== "serve")` is **properly rejected** (`error matches /does not declare an if \(command === "serve"\) branch/`).
-3. **Fake Package Prefix:** `@durable-zero/runner-fake-package` is **properly rejected** (`error matches /not @durable-zero\/runner package/`).
-4. **Uninvoked Nested Function Call:** `main()` inside uncalled `function backgroundTask() { main(); }` is **properly rejected** (`error matches /Hollow implementation detected.*never invokes main/`).
-5. **Legitimate Positives:** Direct destructuring, alias binding (`runRunner`), namespace property call (`runner.main()`), and real production CLI entrypoint all pass green (`callsMain: true`).
-6. **Subpath Exact Resolution:** Valid subpath resolves and passes; nonexistent subpath `@durable-zero/runner/does-not-exist.js` is **properly rejected**.
-7. **Module Purity:** Importing all checker submodules is 100% side-effect free.
+All prior structural and modular invariants remain verified and historically preserved:
+- **AP-019 Modular Decomposition:** All 6 submodules are strictly **<= 250 LOC** (11 to 239 LOC) with zero import side-effects.
+- **Inverted Condition:** `if (command !== "serve")` is properly rejected via `cond.operatorToken.kind === EqualsEqualsEqualsToken`.
+- **Nested Dead-Code Invocations:** `main()` inside uninvoked local function declarations is properly rejected by skipping nested function bodies in `scanInvocations`.
+- **Package Exact Matching:** `@durable-zero/runner-fake-package` is rejected; `@durable-zero/runner/subpath` resolves to the exact subpath on disk.
+- **Unified Workspace DAG:** Acyclic monorepo DAG confirmed (0 cycles in candidate `c248e6c4`).
+- **Dynamic Report Integrity:** Dynamic status authoring prevents false PASS generation.
 
 ---
 
-## 4. Findings Matrix (Fix Round 3)
+## 4. Findings Matrix (Fix Round 3 - Amended)
 
-| Finding ID | Severity | Status | Title & Rule | Action / Outcome |
+| Finding ID | Severity | Status | Title & Rule | Action / Fix Decision |
 | :--- | :---: | :---: | :--- | :--- |
-| **FND-TASK5-01-R3** | **P1** | **RESOLVED** | CLI Serve Guard Invariant Enforcement & Bypasses Elimination (AP-076, AP-021) | Verified PASS |
+| **FND-TASK5-01-R3** | **P2** | **OPEN** | `verifyFileExportsMain` Falsely Accepts Non-Callable Exports via CallExpression/Identifier/DeclarationFile Bypasses (AP-076, AP-021) | **BLOCKING (fix-now in round 4/5)** |
 | **FND-TASK5-AP019-R3** | **P2** | **RESOLVED** | Modular Checker Decomposition into Cohesive Submodules <= 250 LOC (AP-019, AP-018) | Verified PASS |
 | **FND-TASK5-02-R3** | **P1** | **RESOLVED** | Unified Workspace DAG Cycle Detection via Source & Re-Exports (AP-025, AP-076) | Verified PASS |
 | **FND-TASK5-03-R3** | **P1** | **RESOLVED** | Durable Evidence & Dynamic Reporting Integrity (AP-076, AP-012) | Verified PASS |
 | **FND-TASK5-04-R3** | **P2** | **RESOLVED** | AST Syntax Coverage & Multi-Extension Discovery (AP-025, AP-076) | Verified PASS |
-| **FND-MONOREPO-CYCLE-01** | **P1** | **RESOLVED** | Monorepo Contracts Re-Export Cycle Resolved in Commit 0d1195b (AP-020, AP-025) | Verified PASS |
+| **FND-MONOREPO-CYCLE-01** | **P1** | **RESOLVED** | Monorepo Contracts Re-Export Cycle Resolved in Commit 0d1195b (AP-020, AP-025) | Verified PASS (0 cycles in c248e6c4) |
 | **FND-TASK5-05** | **P3** | **LOGGED** | Unreferenced `packages/core/scripts/build-runner.mjs` on disk (AP-018) | log-only (whole-cycle cleanup) |
 
 ---
 
-## 5. Architecture Verification
+## 5. Reviewer State
 
-- **Passed AP Rules:**
-  - **AP-010 (Modular Monolith + Ports & Adapters):** Core SPIs pure and decoupled.
-  - **AP-012 (Fail-Fast & Zero Concrete I/O in Core):** Node I/O forbidden modules enforced.
-  - **AP-019 (Line Budget & Meaningful Decomposition):** All checker submodules strictly <= 250 LOC.
-  - **AP-020 (Clean Architecture & Inversion of Control):** Monorepo package DAG strictly acyclic; layering enforced.
-  - **AP-021 (Thin Entry Points):** Production CLI serve delegation verified with strict AST and callable target checks.
-  - **AP-025 (Import Discipline & Boundary Enforcement):** Dynamic import template literals, `import = require`, and all module extensions handled.
-  - **AP-076 (Assertion Integrity & Anti-Hollow Abstraction):** Guard verified with exhaustive behavioral tests, zero false PASS generation.
-
-- **Residual Risk:**
-  - `packages/core/scripts/build-runner.mjs` and stale `packages/core/dist/runner.js` remain logged as [P3] for scheduled deletion in whole-cycle cleanup.
-  - Task 5A checker infrastructure is complete, modular, and ready for acceptance.
-
-Reviewer is now on **HOLD** for parent checkpoint and push.
+- Scope acceptance of Task 5A is **BLOCKED** by P2 defect `FND-TASK5-01-R3`.
+- The defect has been assigned to the original guard author for Fix Round 4/5.
+- Reviewer is on **HOLD** for parent notification and frozen candidate commit for Round 4. Zero production source changes made.
