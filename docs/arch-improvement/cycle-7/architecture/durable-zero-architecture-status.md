@@ -2,11 +2,11 @@
 
 Срез 2026-11-05T01:24:06.884289+03:00; ea21bf5a645d148c0767716b099d387bb0bce822 + WIP. Global S9: NOT ACCEPTED.
 
-## 1 · Native Slice 0 — Native product PASS / source FAIL
+## 1 · Native Slice 0 — Source R2 PASS; свежий compiled gate идёт
 
-Независимый gated black-box: 9 случаев без падений; полный второй/третий текст и EntryId после restart проверены. Source-review блокирует Slice0: lifecycle, contentIndex, DI, teardown/EOF/CLI и постоянный regression-oracle.
+Независимый source R2 закрыл все выявленные native blockers; four-probe reporter без падений и физические source bytes совпадают с ad99873e. Прежний compiled R1 прошёл 11 сценариев; новый R2 runner76ec1265 собран и передан на повторный black-box.
 
-Осталось: Исправления исходным автором; усиленный oracle и независимая native black-box приёмка; оставшаяся миграция тестов.
+Осталось: Подтвердить новую compiled-сборку и закончить тестовую миграцию/общий прогон; production capability wiring остаётся отдельно.
 
 ## 2A / полный Task 2 — Компонент HostBridge принят
 

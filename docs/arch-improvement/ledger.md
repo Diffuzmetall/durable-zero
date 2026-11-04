@@ -405,3 +405,9 @@
 ### Task5A R4 bounded acceptance
 - Parent verified genuine independent Node22/0 JUnit and helper/CLI exact byte match to475745bb, alongside exact parent4/0 replay. Known blocking guard findings closed; Task5A infrastructure PASS in checked/supported structural scope. No 'mathematically sound for all JS'/blanket global proof claim.
 - P3 unused legacy build script tracked. Task5 whole clean build/typecheck/full-suite gates and Native residual child-stream P2 remain open. No new development scope opened; continue closing already-owned work.
+
+
+### Native Source R2 acceptance / fresh compiled R2 verification
+- Sourcead99873e same independent reviewer PASS, all selected P1/P2 Native findings closed; physical Core/parent/child files match frozen source and probe4/0 reporter verified. Component/source scope only; atomic consumer migration/full gates remain open.
+- Separate native builder produced fresh sourcead99873e CLI exact byte match, runner76ec126543cc131986cdc12246f8fdd0a35a596d62c6a7a235ff9c0857f1b05c physically verified. Artifact preserved before same independent product reviewer resumed on fresh R2. Old9-case and R1 11-case native proofs remain pinned to old artifacts, not automatically transferred.
+- Continue closing already-started scope; no new host/probe/admin features, provider/model changes, merge/release/deploy authorized.
