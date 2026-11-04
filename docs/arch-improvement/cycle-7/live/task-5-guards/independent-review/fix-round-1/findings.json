@@ -1,0 +1,60 @@
+[
+  {
+    "id": "FND-TASK5-01-RECHECK",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "CLI Serve Entrypoint Checker Invariant Enforcement",
+    "evidence": "packages/core/test/architecture-boundaries-checker.ts lines 405-645; verified by 5 independent behavioral probes in adversarial-re-review.test.ts",
+    "resolution": "Resolved. auditCliServeEntrypoint now parses AST CallExpressions for dynamic import, tracks imported identifier or object destructuring binding (main, runRunner, runner.main), resolves path on disk via fs.existsSync, and explicitly fails with descriptive error if callsMain is false or target file does not exist.",
+    "rule": "AP-076, AP-021"
+  },
+  {
+    "id": "FND-TASK5-02-RECHECK",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "Unified Workspace DAG Cycle Detection via Source & Re-Exports",
+    "evidence": "packages/core/test/architecture-boundaries-checker.ts lines 650-815; verified by 3 independent behavioral probes in adversarial-re-review.test.ts",
+    "resolution": "Resolved. buildFullWorkspaceGraph now performs full AST source scans across src/ and bin/ for all workspace packages, capturing package imports, dynamic imports, export * re-exports, and relative cross-package imports, accurately detecting cycles even when package.json manifests omit edges.",
+    "rule": "AP-025, AP-076"
+  },
+  {
+    "id": "FND-TASK5-03-RECHECK",
+    "severity": "P1",
+    "status": "RESOLVED",
+    "title": "Durable Evidence & Report Integrity (Anti-False-Pass)",
+    "evidence": "packages/core/test/architecture-boundaries-checker.ts lines 900-1128; verified by 2 independent behavioral probes in adversarial-re-review.test.ts",
+    "resolution": "Resolved. generateAuditReport now dynamically computes effectiveStatus from live audit violations and test suite receipts. When violations exist or test tests fail, report.json and report.md strictly output FAIL and list all detected violations.",
+    "rule": "AP-076, AP-012"
+  },
+  {
+    "id": "FND-TASK5-04-RECHECK",
+    "severity": "P2",
+    "status": "RESOLVED",
+    "title": "AST Syntax Coverage & Multi-Extension File Discovery",
+    "evidence": "packages/core/test/architecture-boundaries-checker.ts lines 90-250; verified by 3 independent behavioral probes in adversarial-re-review.test.ts",
+    "resolution": "Resolved. extractAstDependencies now handles NoSubstitutionTemplateLiteral for dynamic imports and static re-exports, inspects ts.isImportEqualsDeclaration for import = require, and collectAllSourceFiles discovers .ts, .mts, .cts, .js, .mjs, .cjs, .tsx, .jsx while excluding node_modules and dist.",
+    "rule": "AP-025, AP-076"
+  },
+  {
+    "id": "FND-MONOREPO-CYCLE-01",
+    "severity": "P1",
+    "status": "OPEN",
+    "title": "Active Monorepo Circular Dependency & Layering Breach Detected in packages/contracts",
+    "file": "packages/contracts/src/index.ts:15",
+    "evidence": "packages/contracts/src/index.ts line 15: export * from '../../adapter-pi-durable/src/session-fork.ts'; detected by buildFullWorkspaceGraph and verifyPackageLayering in packages/core/test/architecture-boundaries.test.ts:379",
+    "impact": "Tier 0 contracts package imports and re-exports from Tier 2 adapter-pi-durable, creating an active circular dependency (@durable-zero/adapter-pi-durable <-> @durable-zero/contracts) and inverted Clean Architecture layering. This was uncovered by the newly strengthened Task 5A guard and causes Suite 3 of the live snapshot to legitimately fail.",
+    "rule": "AP-020, AP-025",
+    "fix_decision": "blocked"
+  },
+  {
+    "id": "FND-TASK5-AP019-SMELL",
+    "severity": "P3",
+    "status": "LOGGED",
+    "title": "architecture-boundaries-checker.ts Exceeds AP-019 Hard 250 LOC Limit (Testing Pipeline Exception)",
+    "file": "packages/core/test/architecture-boundaries-checker.ts:1",
+    "evidence": "packages/core/test/architecture-boundaries-checker.ts contains 1128 lines.",
+    "impact": "Exceeds 250 LOC hard limit. However, under AP-019, inseparable testing/guard pipelines that avoid hollow implementations are classified as P3 maintainability smell rather than blocking functional acceptance.",
+    "rule": "AP-019",
+    "fix_decision": "log-only"
+  }
+]

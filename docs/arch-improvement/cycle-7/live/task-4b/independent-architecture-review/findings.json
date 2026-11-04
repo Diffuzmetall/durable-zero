@@ -3,54 +3,60 @@
     "severity": "P1",
     "title": "Cross-package source-relative imports break nominal error identity and map to -32603 in compiled distribution",
     "file": "packages/runner/src/dispatch/session-dispatcher.ts:11-12",
-    "evidence": "packages/runner/src/dispatch/session-dispatcher.ts imports JsonRpcMethodNotFoundError and JsonRpcInvalidParamsError from '../../../protocol/src/index.ts' rather than '@durable-zero/protocol'. When executed against compiled @durable-zero/protocol transport, 'err instanceof JsonRpcInvalidParamsError' evaluates to false due to dual module instances in Node ESM. Executable counterexample in probe-nominal-identity.mjs proved that session/prompt with invalid content returns -32603 instead of -32602, and unmapped method returns -32603 instead of -32601.",
+    "evidence": "packages/runner/src/dispatch/session-dispatcher.ts imports JsonRpcMethodNotFoundError and JsonRpcInvalidParamsError from '../../../protocol/src/index.ts' rather than '@durable-zero/protocol'. When executed against compiled @durable-zero/protocol transport (verified against frozen commit dist blob eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d), 'err instanceof JsonRpcInvalidParamsError' evaluates to false due to dual module instances in Node ESM. Executable counterexample in probe-nominal-identity.mjs proved that session/prompt with invalid content returns -32603 instead of -32602, and unmapped method returns -32603 instead of -32601. Parent critically adjudicated and accepted this finding; routed to author fix round 1/5.",
     "impact": "Severe public protocol contract regression in production runtime and compiled bundles; all dispatcher validation errors and method-not-found errors are misclassified over the wire as internal errors (-32603).",
     "rule": "AP-010, AP-022, AP-025, AP-026",
-    "fix_decision": "fix-now"
-  },
-  {
-    "severity": "P1",
-    "title": "createSessionDispatcher factory is omitted from @durable-zero/runner public package export entrypoint",
-    "file": "packages/runner/src/index.ts:1-3",
-    "evidence": "packages/runner/src/index.ts exports only cli-args, composition, and main; it does not export ./dispatch/index.ts. Furthermore, packages/runner/package.json does not declare a ./dispatch subpath in its exports field. Attempting 'import { createSessionDispatcher } from \"@durable-zero/runner\"' fails with SyntaxError: The requested module '@durable-zero/runner' does not provide an export named 'createSessionDispatcher'. Verified by probe-nominal-identity.mjs.",
-    "impact": "Sibling packages and composition root cannot consume createSessionDispatcher via standard package imports, breaking package encapsulation and blocking clean integration into composition.ts.",
-    "rule": "AP-010, AP-020, AP-026",
-    "fix_decision": "fix-now"
+    "fix_decision": "fix-now",
+    "status": "accepted-blocker"
   },
   {
     "severity": "P2",
     "title": "Test suite count discrepancy in author report (claimed 61 tests, actual test runner executed 57 tests)",
     "file": "docs/arch-improvement/cycle-7/live/task-4b/report.md:98,102",
-    "evidence": "Author report claimed 27 protocol conformance tests, 34 capability dispatch tests, and 61 combined tests (repeated in report.json). However, packages/protocol/test/protocol-conformance.test.ts contains exactly 23 test cases (5 in Defect 1, 6 in Defect 2, 9 in Defect 3, 3 in Defect 4). Running both test files via node --test outputs 'tests 57, pass 57', matching junit.xml 'tests 57'.",
+    "evidence": "Author report claimed 27 protocol conformance tests, 34 capability dispatch tests, and 61 combined tests (repeated in report.json). However, packages/protocol/test/protocol-conformance.test.ts contains exactly 23 test cases (5 in Defect 1, 6 in Defect 2, 9 in Defect 3, 3 in Defect 4). Running both test files via node --test outputs 'tests 57, pass 57', matching junit.xml 'tests 57' and parent testcase node count. Parent critically adjudicated and accepted this finding; routed to author fix round 1/5.",
     "impact": "Inaccurate test inventory metrics undermine audit receipts and verification integrity.",
     "rule": "AP-028, AP-076",
-    "fix_decision": "fix-now"
+    "fix_decision": "fix-now",
+    "status": "accepted-blocker"
   },
   {
     "severity": "P2",
     "title": "Dispatcher RED artifact capability-dispatch-red.log is an unlabeled truncated excerpt with manual headers",
     "file": "docs/arch-improvement/cycle-7/live/task-4b/capability-dispatch-red.log:1-125",
-    "evidence": "The file has manually prepended comment headers and is 7,554 bytes, truncating abruptly after the 4th failure instead of the full ~32,611 byte output for all 34 assertion failures. It lacks an explicit label designating it as an excerpt. While BB command receipt at seq328 confirms a genuine behavioral RED occurred, the saved log is incomplete without an excerpt disclaimer.",
+    "evidence": "The file has manually prepended comment headers and is 7,554 bytes, truncating abruptly after the 4th failure instead of the full ~32,611 byte output for all 34 assertion failures. It lacks an explicit label designating it as an excerpt. Parent verification confirmed a genuine behavioral RED occurred at seq328, but the saved log requires explicit labeling and artifact bounds. Parent critically adjudicated and accepted this finding; routed to author fix round 1/5.",
     "impact": "Incomplete RED log creates ambiguity for independent auditors regarding whether execution completed or terminated prematurely.",
     "rule": "AP-028, AP-076",
-    "fix_decision": "fix-now"
+    "fix_decision": "fix-now",
+    "status": "accepted-blocker"
+  },
+  {
+    "severity": "observation",
+    "title": "createSessionDispatcher factory omission from @durable-zero/runner root export (Adjudicated non-blocking for Task 4B component)",
+    "file": "packages/runner/src/index.ts:1-3",
+    "evidence": "packages/runner/src/index.ts does not export ./dispatch/index.ts. Parent adjudication ruling: Task 4B handoff explicitly specified an internal runner/src/dispatch/index.ts factory for the composition root owner to integrate inside runner/src/composition.ts, with composition integration reserved to the entrypoint owner. Since composition.ts is inside runner, it imports ./dispatch/index.ts directly; requiring root package export is outside bounded Task 4B scope and risks circular imports. Reclassified from P1 blocker to pending whole-Task4 composition gate observation.",
+    "impact": "No blocker on Task 4B component; tracked as an integration verification gate when wiring composition.ts.",
+    "rule": "AP-020, AP-075",
+    "fix_decision": "log-only",
+    "status": "adjudicated-non-blocking"
   },
   {
     "severity": "P3",
-    "title": "File line budget exceeded in packages/runner/src/dispatch/session-dispatcher.ts (300 LOC > 250 LOC Baseline)",
+    "title": "File line budget exceeded in packages/runner/src/dispatch/session-dispatcher.ts (300 LOC > 250 LOC Hard Limit)",
     "file": "packages/runner/src/dispatch/session-dispatcher.ts:1-300",
-    "evidence": "packages/runner/src/dispatch/session-dispatcher.ts contains 300 lines of code, exceeding the AP-019 baseline of 250 LOC.",
-    "impact": "Maintainability smell; mixes prompt extraction helpers with method routing switch.",
+    "evidence": "packages/runner/src/dispatch/session-dispatcher.ts contains 300 lines of code. AP-019 primary source defines soft 150 / hard 250 LOC with a specific P3 exception for inseparable async pipelines. Extraction of prompt input/options normalizers is permitted without fragmenting business behavior.",
+    "impact": "Maintainability smell; prompt extraction helpers can be cleanly separated from the method switch without chopping behavior.",
     "rule": "AP-019",
-    "fix_decision": "log-only"
+    "fix_decision": "log-only",
+    "status": "maintainability-observation"
   },
   {
     "severity": "P3",
-    "title": "Numeric conversationId rejected with JsonRpcInvalidParamsError, narrowing contracts schema",
+    "title": "Numeric conversationId rejected with JsonRpcInvalidParamsError (Source-backed boundary ruling applied)",
     "file": "packages/runner/src/dispatch/session-dispatcher.ts:83",
-    "evidence": "session-dispatcher.ts strictly enforces 'typeof params.conversationId === \"string\"', rejecting numeric values like { conversationId: 1 } with code -32602. In contrast, conversationIdSchema in @durable-zero/contracts/src/wire-context.ts:3 defines z.union([z.number().int().positive(), z.string().regex(/^[1-9]\\d*$/)]).",
-    "impact": "Clients or tests passing numeric conversation IDs (native representation in @earendil-works/pi-durable) receive -32602 Invalid params rather than being coerced to string '1'.",
+    "evidence": "session-dispatcher.ts strictly enforces 'typeof params.conversationId === \"string\"', rejecting numeric values like { conversationId: 1 } with code -32602. Parent source-backed boundary ruling: normalize using existing conversationIdSchema so that Core port receives strings (e.g. String(id)), preserving wire compatibility without rewriting graph/event IDs.",
+    "impact": "Clients passing numeric conversation IDs (native representation in @earendil-works/pi-durable) will be accepted and coerced to string rather than rejected.",
     "rule": "AP-026",
-    "fix_decision": "log-only"
+    "fix_decision": "fix-now",
+    "status": "boundary-ruling-applied"
   }
 ]

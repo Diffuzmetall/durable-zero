@@ -1,0 +1,94 @@
+▶ JSON-RPC 2.0 Protocol Conformance
+  ▶ Defect 1: Inbound Notifications
+    ✔ invokes handler for valid notification and emits no response (52.58975ms)
+    ✔ invokes handler for notification and emits no response even if handler rejects (51.085791ms)
+    ✔ preserves request with numeric id 0 as request and responds (51.062709ms)
+    ✔ preserves request with empty string id as request and responds (50.543875ms)
+    ✔ does not classify an object with an id field as an ID-less notification (51.19825ms)
+  ✔ Defect 1: Inbound Notifications (257.107916ms)
+  ▶ Defect 2: Typed Method Not Found Error Mapping
+    ✔ maps JsonRpcMethodNotFoundError to -32601 error response (51.869542ms)
+    ✔ maps generic errors to -32603 internal error response (50.643833ms)
+    ✔ maps renamed ordinary Error to -32603 internal error response, not -32601 (50.91975ms)
+    ✔ maps legitimate subclass of JsonRpcMethodNotFoundError to -32601 (51.029292ms)
+    ✔ preserves -32700 for malformed JSON text (51.028958ms)
+    ✔ preserves -32600 for invalid request payload (51.929542ms)
+  ✔ Defect 2: Typed Method Not Found Error Mapping (307.97375ms)
+  ▶ Defect 3: Response Schema XOR, Void Handler & Correlation
+    ✔ response schema rejects response with neither result nor error (1.112917ms)
+    ✔ response schema rejects response with both result and error (0.565958ms)
+    ✔ response schema accepts response with valid falsy and null results (0.156333ms)
+    ✔ serializes valid null result when handler returns void / undefined (51.057458ms)
+    ✔ does not reflect unsolicited responses back as invalid requests (52.087208ms)
+    ✔ rejects pending outbound request when client returns malformed response with neither result nor error (21.797625ms)
+    ✔ rejects pending outbound request when client returns malformed response with both result and error (22.361084ms)
+    ✔ resolves outbound request with falsy results: false, 0, null, empty string (87.401042ms)
+    ✔ does not reflect unsolicited error responses back as invalid requests (50.482042ms)
+  ✔ Defect 3: Response Schema XOR, Void Handler & Correlation (287.507458ms)
+  ▶ Defect 4: Typed Invalid Params Error Mapping
+    ✔ maps JsonRpcInvalidParamsError to -32602 error response (51.018583ms)
+    ✔ maps renamed ordinary Error to -32603 internal error response, not -32602 (51.679875ms)
+    ✔ maps legitimate subclass of JsonRpcInvalidParamsError to -32602 (51.566792ms)
+  ✔ Defect 4: Typed Invalid Params Error Mapping (154.44825ms)
+✔ JSON-RPC 2.0 Protocol Conformance (1007.575333ms)
+▶ Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport
+  ▶ Unknown Method & Error Classification
+    ✔ throws nominal JsonRpcMethodNotFoundError for unmapped method (1.0485ms)
+    ✔ maps unmapped method to -32601 over protocol transport (41.8775ms)
+    ✔ maps typed invalid params to -32602 over protocol transport (41.50425ms)
+  ✔ Unknown Method & Error Classification (85.10275ms)
+  ▶ session/prompt, session/steer, session/followUp
+    ✔ session/prompt: string content forwards to coordinator and engine (0.2895ms)
+    ✔ session/prompt: images-only prompt accepted and forwarded without dummy text (0.626333ms)
+    ✔ session/prompt: mixed text and image content parts forwarded (0.093666ms)
+    ✔ session/prompt: legacy params (message + images) normalized and forwarded (0.274583ms)
+    ✔ session/prompt: forwards conversationId and deliverAs (0.182709ms)
+    ✔ session/prompt: normalizes numeric conversationId to string (e.g. 1 -> '1', 42 -> '42') (0.128833ms)
+    ✔ session/prompt: rejects invalid conversationId (0, negative, non-digit) (0.467458ms)
+    ✔ session/prompt: rejects empty prompt with JsonRpcInvalidParamsError (0.080417ms)
+    ✔ session/steer: forces deliverAs: 'steer' (0.067ms)
+    ✔ session/followUp: forces deliverAs: 'followUp' (0.050834ms)
+  ✔ session/prompt, session/steer, session/followUp (2.462291ms)
+  ▶ session/abort, session/abortTask, session/compact
+    ✔ session/abort: calls coordinator.abort for root (0.106458ms)
+    ✔ session/abort: forwards child conversationId string (0.055208ms)
+    ✔ session/abort: normalizes positive numeric conversationId to string (e.g. 12345 -> '12345') (0.059334ms)
+    ✔ session/abort: invalid conversationId (0, -1, 'abc', '0') throws JsonRpcInvalidParamsError (0.186542ms)
+    ✔ session/abortTask: forwards positive integer taskId to engine.abortTask (0.062625ms)
+    ✔ session/abortTask: missing or non-positive taskId throws JsonRpcInvalidParamsError (0.116666ms)
+    ✔ session/compact: forwards optional instructions to engine.compact (0.066458ms)
+    ✔ session/compact: non-string instructions throws JsonRpcInvalidParamsError (0.058042ms)
+  ✔ session/abort, session/abortTask, session/compact (0.786083ms)
+  ▶ subagent/setPolicy & session/setSubagentPolicy
+    ✔ subagent/setPolicy: forwards valid policy record to coordinator (0.604709ms)
+    ✔ session/setSubagentPolicy: alias functions identically (0.37475ms)
+    ✔ subagent/setPolicy: invalid policy record throws JsonRpcInvalidParamsError (0.344708ms)
+  ✔ subagent/setPolicy & session/setSubagentPolicy (1.362292ms)
+  ▶ models/list, models/set, models/setThinking
+    ✔ models/list: returns models array from engine state (0.091833ms)
+    ✔ models/set: forwards provider and modelId to engine.setModel (0.096917ms)
+    ✔ models/set: missing provider or modelId throws JsonRpcInvalidParamsError (0.082583ms)
+    ✔ models/setThinking: forwards valid level to engine.setThinkingLevel (0.052333ms)
+    ✔ models/setThinking: invalid thinking level throws JsonRpcInvalidParamsError (0.079375ms)
+  ✔ models/list, models/set, models/setThinking (0.447458ms)
+  ▶ session/getState, session/getTranscript, session/getStats
+    ✔ session/getState: returns SessionStateDTO and normalizes numeric conversationId (0.072209ms)
+    ✔ session/getTranscript: returns SessionTranscriptDTO and normalizes numeric conversationId (0.075166ms)
+    ✔ session/getStats: returns SessionStatsDTO and normalizes numeric conversationId (0.059833ms)
+  ✔ session/getState, session/getTranscript, session/getStats (0.238375ms)
+  ▶ Unsupported Capabilities Policy (Anti-Fake / Missing Seams)
+    ✔ refuses binding/register with UnsupportedCapabilityError documenting missing seam (0.108417ms)
+    ✔ refuses binding/list with UnsupportedCapabilityError documenting missing seam (0.069042ms)
+    ✔ refuses session/fork with UnsupportedCapabilityError documenting missing seam (0.0705ms)
+    ✔ refuses tools/register with UnsupportedCapabilityError documenting missing seam (0.067291ms)
+    ✔ maps unsupported capabilities to -32603 internal error over protocol without fake success (40.286292ms)
+  ✔ Unsupported Capabilities Policy (Anti-Fake / Missing Seams) (40.718417ms)
+✔ Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport (131.581875ms)
+ℹ tests 60
+ℹ suites 13
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1183.628916

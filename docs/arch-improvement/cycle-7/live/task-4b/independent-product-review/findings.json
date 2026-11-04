@@ -1,0 +1,13 @@
+[
+  {
+    "id": "FND-4B-001",
+    "severity": "P2",
+    "title": "JSON-RPC 2.0 Error Code Collapse to -32603 for Unknown Methods (-32601) and Invalid Parameters (-32602)",
+    "rule": "AP-012, AP-022, AP-026",
+    "journey": "Journey 3 (Error Recovery & Protocol Edge Cases)",
+    "file": "docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs",
+    "evidence": "Unknown methods (e.g. nonexistent/method) return error code -32603 ('Method not found: nonexistent/method') instead of JSON-RPC 2.0 specification code -32601. Parameter validation errors (missing prompt content, negative taskId, invalid thinking level, invalid deliverAs) return error code -32603 instead of JSON-RPC 2.0 specification code -32602. Verified via 5 automated JUnit failure assertions in J3.1b, J3.2b, J3.3b, J3.4b, J3.5b.",
+    "impact": "Standard JSON-RPC 2.0 client libraries and gateways rely on code -32601 to discover capability availability / route fallbacks, and code -32602 to provide client-side input validation feedback. Collapsing all domain and dispatch errors into -32603 (Internal Error) misrepresents client-side request flaws as unhandled server crashes, violating the public protocol contract.",
+    "fix_decision": "fix-now"
+  }
+]

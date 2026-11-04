@@ -1,0 +1,34 @@
+▶ Task 5A Fix Round 1: Independent Adversarial Verification
+  ▶ Verification 0: Side-Effect Free Helper Module Extraction
+    ✔ proves importing architecture-boundaries-checker.ts does not run tests or write reports (0.390208ms)
+  ✔ Verification 0: Side-Effect Free Helper Module Extraction (0.643292ms)
+  ▶ Verification 1 (FND-TASK5-01): CLI Serve Entrypoint Rejection & Binding Checks
+    ✔ CORRECTLY REJECTS hollow CLI serve branch where runner is imported but main() is never invoked (4.279834ms)
+    ✔ CORRECTLY REJECTS CLI serve branch pointing to a NONEXISTENT runner file (0.526417ms)
+    ✔ CORRECTLY REJECTS dummy string / comment matching regex without AST call expression (0.286584ms)
+    ✔ CORRECTLY ACCEPTS valid CLI serve branch with alias binding { main: runRunner } and execution (0.350125ms)
+    ✔ CORRECTLY ACCEPTS valid CLI serve branch with namespace access runner.main() (0.361833ms)
+  ✔ Verification 1 (FND-TASK5-01): CLI Serve Entrypoint Rejection & Binding Checks (5.925916ms)
+  ▶ Verification 2 (FND-TASK5-02): Unified Source + Manifest Workspace DAG Cycle Detection
+    ✔ CORRECTLY DETECTS cross-package source import cycle even when package.json manifests omit the edge (1.657208ms)
+    ✔ CORRECTLY DETECTS cross-package barrel re-export cycle with omitted manifest edge (1.646958ms)
+    ✔ CORRECTLY DETECTS relative path cross-package escape cycle (4.233667ms)
+  ✔ Verification 2 (FND-TASK5-02): Unified Source + Manifest Workspace DAG Cycle Detection (7.654416ms)
+  ▶ Verification 3 (FND-TASK5-03): Dynamic Evidence & Report Integrity
+    ✔ generates status 'FAIL' in report.json when live audit finds violations (anti-false-pass) (0.699ms)
+    ✔ generates status 'FAIL' in report.json when test receipt reports test failure (0.207292ms)
+  ✔ Verification 3 (FND-TASK5-03): Dynamic Evidence & Report Integrity (0.950708ms)
+  ▶ Verification 4 (FND-TASK5-04): AST Syntax Coverage & Extension Support
+    ✔ CORRECTLY DETECTS dynamic import using no-substitution template literal (import(`vendor`)) (0.663458ms)
+    ✔ CORRECTLY DETECTS TypeScript import = require('...') syntax (0.330375ms)
+    ✔ collectAllSourceFiles discovers all supported extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx, .jsx) and excludes node_modules/dist (1.931209ms)
+  ✔ Verification 4 (FND-TASK5-04): AST Syntax Coverage & Extension Support (2.972125ms)
+✔ Task 5A Fix Round 1: Independent Adversarial Verification (18.548375ms)
+ℹ tests 14
+ℹ suites 6
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 285.792334

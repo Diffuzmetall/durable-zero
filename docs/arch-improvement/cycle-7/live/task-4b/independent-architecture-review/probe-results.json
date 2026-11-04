@@ -1,40 +1,47 @@
-[
-  {
-    "id": "probe-1-package-export",
-    "name": "Runner public package exports createSessionDispatcher",
-    "pass": false,
-    "details": "FAIL: createSessionDispatcher is NOT exported from packages/runner/src/index.ts"
+{
+  "hashes": {
+    "sessionDispatcherSource": "b669e16663763d960c2887447b960ca64cb35af2c32dbd47a9e142507b9da33d",
+    "frozenProtocolDist": "eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d",
+    "candidateCommit": "49bcad1486a5101e20e8b88a616cc175a34fc3e9"
   },
-  {
-    "id": "probe-2-invalid-params-code",
-    "name": "Invalid params maps to -32602 over compiled protocol transport",
-    "pass": false,
-    "expectedCode": -32602,
-    "actualCode": -32603,
-    "response": {
-      "jsonrpc": "2.0",
-      "id": "req-invalid-params",
-      "error": {
-        "code": -32603,
-        "message": "Prompt content string must not be empty"
-      }
+  "results": [
+    {
+      "id": "probe-1-package-export",
+      "name": "Runner public package exports createSessionDispatcher (Adjudicated non-blocking for internal runner component)",
+      "pass": false,
+      "details": "OMISSION CONFIRMED: createSessionDispatcher is not exported from packages/runner/src/index.ts (adjudicated by parent as internal factory; composition.ts can import ./dispatch/index.ts without root export)"
     },
-    "details": "FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure"
-  },
-  {
-    "id": "probe-3-method-not-found-code",
-    "name": "Unknown method maps to -32601 over compiled protocol transport",
-    "pass": false,
-    "expectedCode": -32601,
-    "actualCode": -32603,
-    "response": {
-      "jsonrpc": "2.0",
-      "id": "req-unknown-method",
-      "error": {
-        "code": -32603,
-        "message": "Method not found: completely/unknown/method"
-      }
+    {
+      "id": "probe-2-invalid-params-code",
+      "name": "Invalid params maps to -32602 over frozen compiled protocol transport",
+      "pass": false,
+      "expectedCode": -32602,
+      "actualCode": -32603,
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "req-invalid-params",
+        "error": {
+          "code": -32603,
+          "message": "Prompt content string must not be empty"
+        }
+      },
+      "details": "FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure (tested against frozen dist sha256:eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d)"
     },
-    "details": "FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure"
-  }
-]
+    {
+      "id": "probe-3-method-not-found-code",
+      "name": "Unknown method maps to -32601 over frozen compiled protocol transport",
+      "pass": false,
+      "expectedCode": -32601,
+      "actualCode": -32603,
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "req-unknown-method",
+        "error": {
+          "code": -32603,
+          "message": "Method not found: completely/unknown/method"
+        }
+      },
+      "details": "FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure (tested against frozen dist sha256:eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d)"
+    }
+  ]
+}

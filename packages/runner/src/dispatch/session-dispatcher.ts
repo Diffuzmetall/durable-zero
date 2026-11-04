@@ -2,124 +2,20 @@ import {
 	subagentPolicyRecordSchema,
 	type SessionCoordinator,
 	type IAgentEngine,
-	type PromptInput,
-	type PromptContentPart,
-	type PromptExecutionOptions,
-} from "../../../core/src/index.ts";
+} from "@durable-zero/core";
 import {
 	JsonRpcMethodNotFoundError,
 	JsonRpcInvalidParamsError,
-} from "../../../protocol/src/index.ts";
+} from "@durable-zero/protocol";
 import type { SessionDispatcherOptions } from "./types.ts";
 import { UnsupportedCapabilityError } from "./types.ts";
+import {
+	normalizeConversationId,
+	extractPromptInput,
+	extractPromptOptions,
+} from "./normalizers.ts";
 
 export type MethodHandler = (method: string, params: Record<string, unknown>) => Promise<unknown>;
-
-function extractPromptInput(params: Record<string, unknown>): PromptInput {
-	if (params.content !== undefined) {
-		const content = params.content;
-		if (typeof content === "string") {
-			if (content.trim().length === 0) {
-				throw new JsonRpcInvalidParamsError("Prompt content string must not be empty");
-			}
-			return content;
-		}
-		if (Array.isArray(content)) {
-			if (content.length === 0) {
-				throw new JsonRpcInvalidParamsError("Prompt content array must not be empty");
-			}
-			for (const part of content) {
-				if (!part || typeof part !== "object") {
-					throw new JsonRpcInvalidParamsError("Prompt content part must be an object");
-				}
-				if (part.type === "text") {
-					if (typeof part.text !== "string" || part.text.trim().length === 0) {
-						throw new JsonRpcInvalidParamsError("Prompt text part must contain non-empty text string");
-					}
-				} else if (part.type === "image") {
-					if (typeof part.data !== "string" || typeof part.mimeType !== "string") {
-						throw new JsonRpcInvalidParamsError("Prompt image part must contain data and mimeType strings");
-					}
-				} else {
-					throw new JsonRpcInvalidParamsError(`Invalid prompt content part type: ${(part as any).type}`);
-				}
-			}
-			return content as PromptInput;
-		}
-		throw new JsonRpcInvalidParamsError("Prompt content must be a non-empty string or content parts array");
-	}
-
-	const msg = typeof params.message === "string" ? params.message : undefined;
-	const imgs = Array.isArray(params.images) ? params.images : undefined;
-	if (!msg && (!imgs || imgs.length === 0)) {
-		throw new JsonRpcInvalidParamsError("Missing required prompt content, message, or images");
-	}
-
-	if (imgs) {
-		for (const img of imgs) {
-			if (
-				!img ||
-				typeof img !== "object" ||
-				img.type !== "image" ||
-				typeof img.data !== "string" ||
-				typeof img.mimeType !== "string"
-			) {
-				throw new JsonRpcInvalidParamsError("Invalid image in prompt images list");
-			}
-		}
-	}
-
-	if (!imgs || imgs.length === 0) {
-		if (!msg || msg.trim().length === 0) {
-			throw new JsonRpcInvalidParamsError("Prompt message must not be empty");
-		}
-		return msg;
-	}
-
-	if (!msg || msg.trim().length === 0) {
-		return imgs as readonly PromptContentPart[];
-	}
-
-	return [{ type: "text", text: msg }, ...imgs] as readonly PromptContentPart[];
-}
-
-function extractPromptOptions(
-	params: Record<string, unknown>,
-	forcedDeliverAs?: "steer" | "followUp",
-): PromptExecutionOptions {
-	let conversationId: string | undefined;
-	if (typeof params.conversationId === "string") {
-		conversationId = params.conversationId;
-	} else if (params.conversationId !== undefined && params.conversationId !== null) {
-		throw new JsonRpcInvalidParamsError("conversationId must be a string");
-	} else if (params.options && typeof params.options === "object") {
-		const optConv = (params.options as any).conversationId;
-		if (typeof optConv === "string") {
-			conversationId = optConv;
-		} else if (optConv !== undefined && optConv !== null) {
-			throw new JsonRpcInvalidParamsError("conversationId must be a string");
-		}
-	}
-
-	let deliverAs = forcedDeliverAs;
-	if (!deliverAs) {
-		const rawDeliverAs =
-			params.deliverAs ?? params.streamingBehavior ?? (params.options as any)?.deliverAs;
-		if (rawDeliverAs !== undefined) {
-			if (rawDeliverAs !== "steer" && rawDeliverAs !== "followUp") {
-				throw new JsonRpcInvalidParamsError("deliverAs must be 'steer' or 'followUp'");
-			}
-			deliverAs = rawDeliverAs;
-		} else {
-			deliverAs = "followUp";
-		}
-	}
-
-	return {
-		...(conversationId !== undefined ? { conversationId } : {}),
-		...(deliverAs !== undefined ? { deliverAs } : {}),
-	};
-}
 
 export function createSessionDispatcher(options: SessionDispatcherOptions): MethodHandler {
 	const coordinator = options.coordinator;
@@ -150,13 +46,7 @@ export function createSessionDispatcher(options: SessionDispatcherOptions): Meth
 			}
 
 			case "session/abort": {
-				let conversationId: string | undefined;
-				if (params.conversationId !== undefined && params.conversationId !== null) {
-					if (typeof params.conversationId !== "string") {
-						throw new JsonRpcInvalidParamsError("conversationId must be a string");
-					}
-					conversationId = params.conversationId;
-				}
+				const conversationId = normalizeConversationId(params.conversationId);
 				await coordinator.abort(conversationId);
 				return { ok: true };
 			}
@@ -225,24 +115,12 @@ export function createSessionDispatcher(options: SessionDispatcherOptions): Meth
 			}
 
 			case "session/getState": {
-				let conversationId: string | undefined;
-				if (params.conversationId !== undefined && params.conversationId !== null) {
-					if (typeof params.conversationId !== "string") {
-						throw new JsonRpcInvalidParamsError("conversationId must be a string");
-					}
-					conversationId = params.conversationId;
-				}
+				const conversationId = normalizeConversationId(params.conversationId);
 				return await coordinator.getState(conversationId);
 			}
 
 			case "session/getTranscript": {
-				let conversationId: string | undefined;
-				if (params.conversationId !== undefined && params.conversationId !== null) {
-					if (typeof params.conversationId !== "string") {
-						throw new JsonRpcInvalidParamsError("conversationId must be a string");
-					}
-					conversationId = params.conversationId;
-				}
+				const conversationId = normalizeConversationId(params.conversationId);
 				let limit: number | undefined;
 				if (params.limit !== undefined && params.limit !== null) {
 					if (typeof params.limit !== "number" || !Number.isInteger(params.limit) || params.limit < 0) {
@@ -254,13 +132,7 @@ export function createSessionDispatcher(options: SessionDispatcherOptions): Meth
 			}
 
 			case "session/getStats": {
-				let conversationId: string | undefined;
-				if (params.conversationId !== undefined && params.conversationId !== null) {
-					if (typeof params.conversationId !== "string") {
-						throw new JsonRpcInvalidParamsError("conversationId must be a string");
-					}
-					conversationId = params.conversationId;
-				}
+				const conversationId = normalizeConversationId(params.conversationId);
 				// ARCHITECTURE NOTE (AP-026, AP-076):
 				// The returned contextUsage from coordinator.getStats() reflects the engine's current
 				// placeholder or token estimate, and does NOT become a verified real-time metric merely

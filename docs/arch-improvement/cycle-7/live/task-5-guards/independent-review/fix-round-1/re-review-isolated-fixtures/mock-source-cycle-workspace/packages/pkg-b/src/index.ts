@@ -1,0 +1,1 @@
+import { a } from "@durable-zero/pkg-a"; export const b = 2;

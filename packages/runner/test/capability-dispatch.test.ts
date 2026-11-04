@@ -16,12 +16,12 @@ import {
 	type SessionTranscriptDTO,
 	type SessionStatsDTO,
 	type SubagentPolicyRecord,
-} from "../../core/src/index.ts";
+} from "@durable-zero/core";
 import {
 	StdioJsonRpcServer,
 	JsonRpcMethodNotFoundError,
 	JsonRpcInvalidParamsError,
-} from "../../protocol/src/index.ts";
+} from "@durable-zero/protocol";
 
 class TestAgentEngine implements IAgentEngine {
 	public isStarted = false;
@@ -286,13 +286,42 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 		it("session/prompt: forwards conversationId and deliverAs", async () => {
 			await dispatcher("session/prompt", {
 				content: "child prompt",
-				conversationId: "conv_sub_99",
+				conversationId: "42",
 				deliverAs: "steer",
 			});
 
 			assert.equal(engine.submissions.length, 1);
-			assert.equal(engine.submissions[0].options?.conversationId, "conv_sub_99");
+			assert.equal(engine.submissions[0].options?.conversationId, "42");
 			assert.equal(engine.submissions[0].options?.deliverAs, "steer");
+		});
+
+		it("session/prompt: normalizes numeric conversationId to string (e.g. 1 -> '1', 42 -> '42')", async () => {
+			await dispatcher("session/prompt", {
+				content: "numeric conv prompt",
+				conversationId: 42,
+			});
+
+			assert.equal(engine.submissions.length, 1);
+			assert.equal(engine.submissions[0].options?.conversationId, "42");
+		});
+
+		it("session/prompt: rejects invalid conversationId (0, negative, non-digit)", async () => {
+			await assert.rejects(
+				async () => dispatcher("session/prompt", { content: "bad conv", conversationId: 0 }),
+				JsonRpcInvalidParamsError,
+			);
+			await assert.rejects(
+				async () => dispatcher("session/prompt", { content: "bad conv", conversationId: -5 }),
+				JsonRpcInvalidParamsError,
+			);
+			await assert.rejects(
+				async () => dispatcher("session/prompt", { content: "bad conv", conversationId: "abc" }),
+				JsonRpcInvalidParamsError,
+			);
+			await assert.rejects(
+				async () => dispatcher("session/prompt", { content: "bad conv", conversationId: "0" }),
+				JsonRpcInvalidParamsError,
+			);
 		});
 
 		it("session/prompt: rejects empty prompt with JsonRpcInvalidParamsError", async () => {
@@ -308,13 +337,13 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 		it("session/steer: forces deliverAs: 'steer'", async () => {
 			await dispatcher("session/steer", {
 				content: "steer immediately",
-				conversationId: "conv_42",
+				conversationId: "42",
 			});
 
 			assert.equal(engine.submissions.length, 1);
 			assert.equal(engine.submissions[0].input, "steer immediately");
 			assert.equal(engine.submissions[0].options?.deliverAs, "steer");
-			assert.equal(engine.submissions[0].options?.conversationId, "conv_42");
+			assert.equal(engine.submissions[0].options?.conversationId, "42");
 		});
 
 		it("session/followUp: forces deliverAs: 'followUp'", async () => {
@@ -335,14 +364,31 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 			assert.equal(coordinator.isAborted, true);
 		});
 
-		it("session/abort: forwards child conversationId", async () => {
-			await dispatcher("session/abort", { conversationId: "conv_child_7" });
-			assert.deepEqual(engine.abortedConversations, ["conv_child_7"]);
+		it("session/abort: forwards child conversationId string", async () => {
+			await dispatcher("session/abort", { conversationId: "7" });
+			assert.deepEqual(engine.abortedConversations, ["7"]);
 		});
 
-		it("session/abort: invalid conversationId type throws JsonRpcInvalidParamsError", async () => {
+		it("session/abort: normalizes positive numeric conversationId to string (e.g. 12345 -> '12345')", async () => {
+			await dispatcher("session/abort", { conversationId: 12345 });
+			assert.deepEqual(engine.abortedConversations, ["12345"]);
+		});
+
+		it("session/abort: invalid conversationId (0, -1, 'abc', '0') throws JsonRpcInvalidParamsError", async () => {
 			await assert.rejects(
-				async () => dispatcher("session/abort", { conversationId: 12345 }),
+				async () => dispatcher("session/abort", { conversationId: 0 }),
+				JsonRpcInvalidParamsError,
+			);
+			await assert.rejects(
+				async () => dispatcher("session/abort", { conversationId: -1 }),
+				JsonRpcInvalidParamsError,
+			);
+			await assert.rejects(
+				async () => dispatcher("session/abort", { conversationId: "abc" }),
+				JsonRpcInvalidParamsError,
+			);
+			await assert.rejects(
+				async () => dispatcher("session/abort", { conversationId: "0" }),
 				JsonRpcInvalidParamsError,
 			);
 		});
@@ -471,30 +517,30 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 	});
 
 	describe("session/getState, session/getTranscript, session/getStats", () => {
-		it("session/getState: returns SessionStateDTO", async () => {
+		it("session/getState: returns SessionStateDTO and normalizes numeric conversationId", async () => {
 			const state = (await dispatcher("session/getState", {
-				conversationId: "conv_root",
+				conversationId: 5,
 			})) as SessionStateDTO;
 
 			assert.equal(state.sessionId, "test-session");
-			assert.equal(state.activeConversationId, "conv_root");
-			assert.deepEqual(engine.stateQueries, ["conv_root"]);
+			assert.equal(state.activeConversationId, "5");
+			assert.deepEqual(engine.stateQueries, ["5"]);
 		});
 
-		it("session/getTranscript: returns SessionTranscriptDTO", async () => {
+		it("session/getTranscript: returns SessionTranscriptDTO and normalizes numeric conversationId", async () => {
 			const transcript = (await dispatcher("session/getTranscript", {
-				conversationId: "conv_5",
+				conversationId: 5,
 				limit: 10,
 			})) as SessionTranscriptDTO;
 
-			assert.equal(transcript.conversationId, "conv_5");
+			assert.equal(transcript.conversationId, "5");
 			assert.equal(transcript.entries.length, 1);
-			assert.deepEqual(engine.transcriptQueries, [{ conversationId: "conv_5", limit: 10 }]);
+			assert.deepEqual(engine.transcriptQueries, [{ conversationId: "5", limit: 10 }]);
 		});
 
-		it("session/getStats: returns SessionStatsDTO with explicit placeholder acknowledgment", async () => {
+		it("session/getStats: returns SessionStatsDTO and normalizes numeric conversationId", async () => {
 			const stats = (await dispatcher("session/getStats", {
-				conversationId: "1",
+				conversationId: 1,
 			})) as SessionStatsDTO;
 
 			assert.equal(stats.contextUsage.tokens, 420);

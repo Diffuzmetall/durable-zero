@@ -1,0 +1,100 @@
+{
+  "task": "Task 4B Fix Round 1",
+  "scope": "Public Resolution Identity & Conversation ID Normalization",
+  "branch": "cycle-7-runtime-adapter-ioc-migration",
+  "status": "FIX_ROUND_1_COMPLETE",
+  "verdict": "PASS",
+  "source_write_quiescence": true,
+  "owned_files": [
+    "packages/runner/src/dispatch/types.ts",
+    "packages/runner/src/dispatch/normalizers.ts",
+    "packages/runner/src/dispatch/session-dispatcher.ts",
+    "packages/runner/src/dispatch/index.ts",
+    "packages/runner/test/capability-dispatch.test.ts",
+    "packages/protocol/src/jsonrpc/errors.ts",
+    "packages/protocol/src/transport/request-dispatcher.ts",
+    "packages/protocol/test/protocol-conformance.test.ts",
+    "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/public-import-regression-red.log",
+    "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/test-output.txt",
+    "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/junit.xml",
+    "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/report.md",
+    "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/report.json"
+  ],
+  "remediated_findings": [
+    {
+      "id": "P1-PUBLIC-IMPORT-SPLIT",
+      "summary": "session-dispatcher.ts imported nominal error classes from relative protocol source, breaking instanceof checks against public package resolution in compiled runner/servers",
+      "fix": "Replaced deep relative imports with canonical public @durable-zero/protocol, @durable-zero/core, and @durable-zero/contracts imports",
+      "regression_evidence": "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/public-import-regression-red.log"
+    },
+    {
+      "id": "P2-CONVERSATION-ID-NORMALIZATION",
+      "summary": "Legacy contracts allow numeric conversation IDs while core interfaces expect strings; zero/negative/non-digit IDs must be rejected",
+      "fix": "Validated with conversationIdSchema from contracts; normalized positive integers to strings; rejected invalid IDs with -32602",
+      "regression_evidence": "packages/runner/test/capability-dispatch.test.ts"
+    },
+    {
+      "id": "P2-AP019-LINE-BUDGET",
+      "summary": "session-dispatcher.ts reached 300 LOC",
+      "fix": "Extracted packages/runner/src/dispatch/normalizers.ts (114 LOC); session-dispatcher.ts reduced to 189 LOC (within AP-019 hard 250 limit)",
+      "evidence": "packages/runner/src/dispatch/session-dispatcher.ts"
+    },
+    {
+      "id": "P2-REPORT-COUNT-RECONCILIATION",
+      "summary": "Prior report cited 61/27 tests instead of actual 57 (23 conformance + 34 capability)",
+      "fix": "Reconciled test counts from actual receipts: historical green has 57 testcases; Fix Round 1 green has 60 testcases (23 conformance + 37 capability)",
+      "evidence": "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/junit.xml"
+    }
+  ],
+  "test_results": {
+    "protocol_conformance": {
+      "total": 23,
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 1005.3
+    },
+    "capability_dispatch": {
+      "total": 37,
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 128.8
+    },
+    "combined_total": 60,
+    "combined_passed": 60,
+    "combined_failed": 0,
+    "duration_ms": 1156.7
+  },
+  "semantic_probes": {
+    "dependency_traceability": "PASS (Exact lines: coordinator.prompt lines 33/39/45; coordinator.abort line 50; engine.abortTask line 59; engine.compact line 70; coordinator.setSubagentPolicy line 80; engine.getState line 85; engine.setModel line 100; engine.setThinkingLevel line 112; coordinator.getState line 118; coordinator.getTranscript line 131; coordinator.getStats line 140)",
+    "runtime_completeness": "PASS (Prototype split eliminated; public package imports used across source and tests)",
+    "entry_point_wiring": "PASS (Handoff factory createSessionDispatcher frozen in packages/runner/src/dispatch/index.ts)",
+    "anti_gaming": "PASS (Zero dummy stubs; genuine nominal instanceof classification verified via public package resolution)"
+  },
+  "architecture_rules": {
+    "passed": [
+      "AP-010",
+      "AP-011",
+      "AP-012",
+      "AP-014",
+      "AP-016",
+      "AP-018",
+      "AP-019",
+      "AP-020",
+      "AP-021",
+      "AP-022",
+      "AP-025",
+      "AP-026",
+      "AP-028",
+      "AP-029",
+      "AP-072",
+      "AP-074",
+      "AP-076"
+    ],
+    "residual_risk": [
+      "Unsupported capabilities (binding/*, session/fork) await separate post-walking-skeleton integration scope per parent ruling",
+      "Composition root integration in composition.ts remains owned by Slice 0 / entrypoint owner"
+    ]
+  }
+}

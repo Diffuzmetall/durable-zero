@@ -1,0 +1,93 @@
+{
+  "artifact": {
+    "path": "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs",
+    "sha256": "7d8fb526e3cfcc1cefe4cf44eab67634ab38dab052a33668d3d2dd9be084db46",
+    "sourceProvenance": "49bcad1486a5101e20e8b88a616cc175a34fc3e9",
+    "reviewedAt": "2026-11-05T00:45:00Z"
+  },
+  "summary": {
+    "totalTests": 49,
+    "passed": 44,
+    "failed": 5,
+    "durationMs": 4432.75,
+    "verdict": "FAIL"
+  },
+  "journeys": {
+    "journey1_cold_process_lifecycle": {
+      "name": "Cold Fresh Process & Clean Lifecycle",
+      "verdict": "PASS",
+      "testsTotal": 5,
+      "testsPassed": 5,
+      "testsFailed": 0,
+      "details": [
+        { "id": "J1.1", "name": "Cold fresh process emits zero stdout protocol noise before first request", "status": "PASS" },
+        { "id": "J1.2", "name": "Initial state contains expected coordinator startup call without user mutations", "status": "PASS" },
+        { "id": "J1.3", "name": "Clean bounded shutdown on SIGTERM (exit code 0, no lingering processes)", "status": "PASS" },
+        { "id": "J1.4", "name": "Clean bounded shutdown on SIGINT (exit code 0, no lingering processes)", "status": "PASS" },
+        { "id": "J1.5", "name": "Clean bounded shutdown on stdin EOF (exit code 0)", "status": "PASS" }
+      ]
+    },
+    "journey2_happy_path": {
+      "name": "Happy Path Functional Outcomes & Fixture Trace Verification",
+      "verdict": "PASS",
+      "testsTotal": 22,
+      "testsPassed": 22,
+      "testsFailed": 0,
+      "details": [
+        { "id": "J2.1", "name": "session/prompt with string content accepts and records in fixture", "status": "PASS" },
+        { "id": "J2.2", "name": "session/prompt with mixed text + image content accepts and records in fixture", "status": "PASS" },
+        { "id": "J2.3", "name": "session/prompt with image-only content accepts and records in fixture", "status": "PASS" },
+        { "id": "J2.4", "name": "session/prompt with child conversationId routes to child session", "status": "PASS" },
+        { "id": "J2.5", "name": "session/prompt with deliverAs 'steer' routes correctly", "status": "PASS" },
+        { "id": "J2.6", "name": "session/steer forces deliverAs 'steer' and accepts child routing", "status": "PASS" },
+        { "id": "J2.7", "name": "session/followUp forces deliverAs 'followUp'", "status": "PASS" },
+        { "id": "J2.8", "name": "models/list returns available fixture models with contextWindow", "status": "PASS" },
+        { "id": "J2.9", "name": "models/set updates active model and records setModel on fixture", "status": "PASS" },
+        { "id": "J2.10", "name": "models/setThinking accepts all valid levels (off, minimal, low, medium, high, xhigh)", "status": "PASS" },
+        { "id": "J2.11", "name": "subagent/setPolicy in inherit mode updates coordinator policy", "status": "PASS" },
+        { "id": "J2.12", "name": "subagent/setPolicy in configured mode with model and thinking level", "status": "PASS" },
+        { "id": "J2.13", "name": "session/setSubagentPolicy alias behaves identically to subagent/setPolicy", "status": "PASS" },
+        { "id": "J2.14", "name": "session/abort for root session invokes engine abort(null)", "status": "PASS" },
+        { "id": "J2.15", "name": "session/abort with conversationId invokes engine abort('c-target')", "status": "PASS" },
+        { "id": "J2.16", "name": "session/abortTask with positive integer taskId invokes engine abortTask", "status": "PASS" },
+        { "id": "J2.17", "name": "session/compact with instructions invokes engine compact", "status": "PASS" },
+        { "id": "J2.18", "name": "session/getState returns session state DTO (root and child)", "status": "PASS" },
+        { "id": "J2.19", "name": "session/getTranscript returns transcript DTO with limit", "status": "PASS" },
+        { "id": "J2.20", "name": "session/getStats returns contextUsage DTO", "status": "PASS" },
+        { "id": "J2.21", "name": "fixture/reset clears recorded call history and resets dynamic counters", "status": "PASS" },
+        { "id": "J2.22", "name": "Pipelining multiple sequential requests preserves order and reaches fixture", "status": "PASS" }
+      ]
+    },
+    "journey3_error_recovery": {
+      "name": "Error Recovery & Protocol Edge Cases",
+      "verdict": "FAIL",
+      "testsTotal": 22,
+      "testsPassed": 17,
+      "testsFailed": 5,
+      "details": [
+        { "id": "J3.1a", "name": "Unknown method returns error with descriptive message", "status": "PASS" },
+        { "id": "J3.1b", "name": "Unknown method conforms to JSON-RPC 2.0 error code -32601", "status": "FAIL", "error": "Expected -32601, received -32603" },
+        { "id": "J3.2a", "name": "Missing required prompt content returns descriptive error", "status": "PASS" },
+        { "id": "J3.2b", "name": "Missing required prompt content conforms to JSON-RPC 2.0 error code -32602", "status": "FAIL", "error": "Expected -32602, received -32603" },
+        { "id": "J3.3a", "name": "Invalid taskId in session/abortTask returns descriptive error", "status": "PASS" },
+        { "id": "J3.3b", "name": "Invalid taskId conforms to JSON-RPC 2.0 error code -32602", "status": "FAIL", "error": "Expected -32602, received -32603" },
+        { "id": "J3.4a", "name": "Invalid thinking level in models/setThinking returns descriptive error", "status": "PASS" },
+        { "id": "J3.4b", "name": "Invalid thinking level conforms to JSON-RPC 2.0 error code -32602", "status": "FAIL", "error": "Expected -32602, received -32603" },
+        { "id": "J3.5a", "name": "Invalid deliverAs parameter returns descriptive error", "status": "PASS" },
+        { "id": "J3.5b", "name": "Invalid deliverAs conforms to JSON-RPC 2.0 error code -32602", "status": "FAIL", "error": "Expected -32602, received -32603" },
+        { "id": "J3.6", "name": "Malformed JSON returns standard JSON-RPC parse error code -32700", "status": "PASS" },
+        { "id": "J3.7", "name": "Invalid JSON-RPC request structure returns code -32600", "status": "PASS" },
+        { "id": "J3.8", "name": "Preserves integer ID 0 exactly in JSON-RPC response", "status": "PASS" },
+        { "id": "J3.9", "name": "Preserves empty string ID '' exactly in JSON-RPC response", "status": "PASS" },
+        { "id": "J3.10", "name": "Valid JSON-RPC notification executes state mutation with zero stdout response", "status": "PASS" },
+        { "id": "J3.11", "name": "Erroneous notification (unknown method) produces zero stdout response", "status": "PASS" },
+        { "id": "J3.12", "name": "Erroneous notification (invalid params) produces zero stdout response", "status": "PASS" },
+        { "id": "J3.13", "name": "Error does not break server state; subsequent valid request succeeds cleanly", "status": "PASS" },
+        { "id": "J3.14", "name": "AP-076 Unsupported capability 'binding/register' rejects with explicit missing seam error", "status": "PASS" },
+        { "id": "J3.15", "name": "AP-076 Unsupported capability 'binding/list' rejects with explicit missing seam error", "status": "PASS" },
+        { "id": "J3.16", "name": "AP-076 Unsupported capability 'session/fork' rejects with explicit missing seam error", "status": "PASS" },
+        { "id": "J3.17", "name": "AP-076 Unsupported capability 'tools/register' rejects with explicit missing seam error", "status": "PASS" }
+      ]
+    }
+  }
+}

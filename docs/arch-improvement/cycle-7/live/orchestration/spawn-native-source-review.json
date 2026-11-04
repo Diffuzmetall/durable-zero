@@ -1,0 +1,32 @@
+{
+  "id": "thr_addwwk3xem",
+  "projectId": "proj_t4zxb4pcrk",
+  "environmentId": "env_3jei5g5vps",
+  "providerId": "pi",
+  "title": "Cycle 7 · independent native Slice 0 source review",
+  "titleFallback": "MANDATORY before action: read /Users/vanya/Projects/AGENTS.md; /Users/vanya/P...",
+  "sectionId": null,
+  "status": "starting",
+  "parentThreadId": "thr_9yjb93iwmn",
+  "sourceThreadId": null,
+  "lifecycleOwnerThreadId": null,
+  "originKind": null,
+  "originPluginId": null,
+  "visibility": "visible",
+  "parentNotifications": "auto",
+  "archivedAt": null,
+  "pinnedAt": null,
+  "deletedAt": null,
+  "lastReadAt": 1793830066929,
+  "latestAttentionAt": 1793830066875,
+  "createdAt": 1793830066875,
+  "updatedAt": 1793830066949,
+  "runtime": {
+    "displayStatus": "starting"
+  },
+  "activeBackgroundAgentCount": 0,
+  "canRestoreEnvironment": false,
+  "canEditMessages": true,
+  "canSpawnChild": true,
+  "queuedMessageCount": 0
+}
