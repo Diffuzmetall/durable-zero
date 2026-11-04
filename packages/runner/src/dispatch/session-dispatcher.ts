@@ -5,11 +5,11 @@ import {
 	type PromptInput,
 	type PromptContentPart,
 	type PromptExecutionOptions,
-} from "@durable-zero/core";
+} from "../../../core/src/index.ts";
 import {
 	JsonRpcMethodNotFoundError,
 	JsonRpcInvalidParamsError,
-} from "@durable-zero/protocol";
+} from "../../../protocol/src/index.ts";
 import type { SessionDispatcherOptions } from "./types.ts";
 import { UnsupportedCapabilityError } from "./types.ts";
 

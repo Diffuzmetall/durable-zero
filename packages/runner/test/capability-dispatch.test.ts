@@ -16,12 +16,12 @@ import {
 	type SessionTranscriptDTO,
 	type SessionStatsDTO,
 	type SubagentPolicyRecord,
-} from "@durable-zero/core";
+} from "../../core/src/index.ts";
 import {
 	StdioJsonRpcServer,
 	JsonRpcMethodNotFoundError,
 	JsonRpcInvalidParamsError,
-} from "@durable-zero/protocol";
+} from "../../protocol/src/index.ts";
 
 class TestAgentEngine implements IAgentEngine {
 	public isStarted = false;
@@ -387,9 +387,10 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 
 	describe("subagent/setPolicy & session/setSubagentPolicy", () => {
 		it("subagent/setPolicy: forwards valid policy record to coordinator", async () => {
-			const policy = {
-				allowedSubagents: ["worker", "reviewer"],
-				maxSubagents: 4,
+			const policy: SubagentPolicyRecord = {
+				version: 1,
+				revision: 1,
+				policy: { mode: "inherit" },
 			};
 			const res = await dispatcher("subagent/setPolicy", { policyRecord: policy });
 			assert.deepEqual(res, { ok: true });
@@ -397,8 +398,16 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 		});
 
 		it("session/setSubagentPolicy: alias functions identically", async () => {
-			const policy = {
-				allowedSubagents: ["worker"],
+			const policy: SubagentPolicyRecord = {
+				version: 1,
+				revision: 2,
+				policy: {
+					mode: "configured",
+					configuredProfile: {
+						model: { provider: "anthropic", modelId: "claude-3-5-sonnet" },
+						thinkingLevel: "high",
+					},
+				},
 			};
 			const res = await dispatcher("session/setSubagentPolicy", { record: policy });
 			assert.deepEqual(res, { ok: true });

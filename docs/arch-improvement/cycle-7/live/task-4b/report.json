@@ -1,0 +1,87 @@
+{
+  "task": "Task 4B",
+  "scope": "Typed Capability Preservation Dispatcher",
+  "branch": "cycle-7-runtime-adapter-ioc-migration",
+  "status": "IMPLEMENTATION_COMPLETE",
+  "verdict": "PASS",
+  "source_write_quiescence": true,
+  "owned_files": [
+    "packages/runner/src/dispatch/types.ts",
+    "packages/runner/src/dispatch/session-dispatcher.ts",
+    "packages/runner/src/dispatch/index.ts",
+    "packages/runner/test/capability-dispatch.test.ts",
+    "packages/protocol/src/jsonrpc/errors.ts",
+    "packages/protocol/src/transport/request-dispatcher.ts",
+    "packages/protocol/test/protocol-conformance.test.ts",
+    "docs/arch-improvement/cycle-7/live/task-4b/junit.xml",
+    "docs/arch-improvement/cycle-7/live/task-4b/test-output.txt",
+    "docs/arch-improvement/cycle-7/live/task-4b/report.md",
+    "docs/arch-improvement/cycle-7/live/task-4b/report.json"
+  ],
+  "test_results": {
+    "protocol_conformance": {
+      "total": 27,
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 1022.5
+    },
+    "capability_dispatch": {
+      "total": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 128.5
+    },
+    "combined_total": 61,
+    "combined_passed": 61,
+    "combined_failed": 0
+  },
+  "semantic_probes": {
+    "dependency_traceability": "PASS (Exact call sites: coordinator.prompt lines 143/149/155; coordinator.abort line 167; engine.abortTask line 176; engine.compact line 187; coordinator.setSubagentPolicy line 197; engine.getState line 202; engine.setModel line 217; engine.setThinkingLevel line 229; coordinator.getState line 239; coordinator.getTranscript line 255; coordinator.getStats line 271)",
+    "runtime_completeness": "PASS (Modular factory createSessionDispatcher; zero competing dispatchers)",
+    "entry_point_wiring": "PASS (Ready for composition root integration; frozen MethodHandler signature)",
+    "anti_gaming": "PASS (Zero fake receipts; nominal error classification strictly verified via instanceof)"
+  },
+  "architecture_rules": {
+    "passed": [
+      "AP-010",
+      "AP-011",
+      "AP-012",
+      "AP-014",
+      "AP-016",
+      "AP-018",
+      "AP-020",
+      "AP-021",
+      "AP-022",
+      "AP-026",
+      "AP-028",
+      "AP-029",
+      "AP-072",
+      "AP-074",
+      "AP-076"
+    ],
+    "residual_risk": [
+      "Integration into packages/runner/src/composition.ts is deferred to entrypoint/Slice 0 owner",
+      "Unsupported capabilities (binding/*, session/fork) require parent source-backed SPI ruling"
+    ]
+  },
+  "missing_seams": [
+    {
+      "capability": "binding/register",
+      "missing_seam": "Runtime binding storage is not exposed on IAgentEngine or SessionCoordinator SPI"
+    },
+    {
+      "capability": "binding/list",
+      "missing_seam": "Runtime binding query is not exposed on IAgentEngine or SessionCoordinator SPI"
+    },
+    {
+      "capability": "session/fork",
+      "missing_seam": "Session database forking is not exposed on IAgentEngine or SessionCoordinator SPI"
+    },
+    {
+      "capability": "tools/register",
+      "missing_seam": "Dynamic tool registration is not exposed on IAgentEngine or SessionCoordinator SPI"
+    }
+  ]
+}
