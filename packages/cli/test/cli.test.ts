@@ -9,7 +9,7 @@ const CLI_PATH = path.resolve(__dirname, "../bin/durable-zero.js");
 
 test("CLI: --version prints version string", async () => {
 	const out = cp.execFileSync("node", [CLI_PATH, "--version"], { encoding: "utf8" }).trim();
-	assert.ok(out.includes("durable-zero v0.8.1"), `Unexpected output: ${out}`);
+	assert.ok(out.includes("durable-zero v0.26.31"), `Unexpected output: ${out}`);
 });
 
 test("CLI: doctor checks runtime capabilities", async () => {
