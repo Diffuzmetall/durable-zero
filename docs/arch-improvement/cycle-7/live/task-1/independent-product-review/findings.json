@@ -1,0 +1,57 @@
+{
+  "evaluatedAt": "2026-11-04T22:56:59.261Z",
+  "candidateArtifact": "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate/packages/cli/bin/durable-zero.js",
+  "candidateSha256": "813931832b4f689713b67cafb3421f4a4fe328a7daa64259acf845f1572efff6",
+  "verdict": "PASS",
+  "totalTests": 9,
+  "passedTests": 9,
+  "failedTests": 0,
+  "results": [
+    {
+      "name": "1.1 Cold startup, strict JSON-only stdout, readiness RPC handshake",
+      "status": "passed",
+      "duration": 807
+    },
+    {
+      "name": "1.2 Unique nonce prompt -> gated model provider stream -> first wire delta BEFORE completion allowed",
+      "status": "passed",
+      "duration": 438
+    },
+    {
+      "name": "1.3 Second prompt in SAME process with shared prefix to verify generation-reset and no delta replay",
+      "status": "passed",
+      "duration": 327
+    },
+    {
+      "name": "2.1 Clean SIGTERM shutdown of Process 1 with exit code 0",
+      "status": "passed",
+      "duration": 23
+    },
+    {
+      "name": "2.2 Restart same explicit session directory in new OS process; verify identical historic entries",
+      "status": "passed",
+      "duration": 567
+    },
+    {
+      "name": "2.3 Third distinct completed reply in restarted Process 2 with updated native entries",
+      "status": "passed",
+      "duration": 348
+    },
+    {
+      "name": "3.1 Malformed JSON returns -32700 Parse error without server crash",
+      "status": "passed",
+      "duration": 511
+    },
+    {
+      "name": "3.2 Unrecognized method returns -32601 Method not found",
+      "status": "passed",
+      "duration": 526
+    },
+    {
+      "name": "3.3 Pending in-flight requests rejected on child process exit",
+      "status": "passed",
+      "duration": 155
+    }
+  ],
+  "findings": []
+}

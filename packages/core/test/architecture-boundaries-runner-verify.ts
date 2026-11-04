@@ -22,6 +22,13 @@ export function resolveNearestPackageJson(
   return null;
 }
 
+export function isCallableNode(node: ts.Node): boolean {
+  if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return true;
+  if (ts.isCallExpression(node)) return true;
+  if (ts.isIdentifier(node)) return true;
+  return false;
+}
+
 export function verifyFileExportsMain(filePath: string): boolean {
   if (!fs.existsSync(filePath)) return false;
   const content = fs.readFileSync(filePath, "utf8");
@@ -34,45 +41,72 @@ export function verifyFileExportsMain(filePath: string): boolean {
     ext === ".ts" || ext === ".mts" ? ts.ScriptKind.TS : ts.ScriptKind.JS
   );
 
-  let hasMainExport = false;
+  let hasCallableMainExport = false;
+  const localFunctions = new Set<string>();
 
+  // Pass 1: gather local function declarations for re-export checking
+  function scanLocalDecls(node: ts.Node) {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      localFunctions.add(node.name.text);
+    }
+    ts.forEachChild(node, scanLocalDecls);
+  }
+  scanLocalDecls(sf);
+
+  // Pass 2: check for callable exported main
   function visit(node: ts.Node) {
+    // 1. export function main() / export async function main()
     if (ts.isFunctionDeclaration(node) && node.name?.text === "main") {
       const isExported = node.modifiers?.some(
         (m) => m.kind === ts.SyntaxKind.ExportKeyword
       );
-      if (isExported) hasMainExport = true;
-    } else if (ts.isVariableStatement(node)) {
+      if (isExported) hasCallableMainExport = true;
+    }
+    // 2. export const main = () => ... / export const main = function() ...
+    else if (ts.isVariableStatement(node)) {
       const isExported = node.modifiers?.some(
         (m) => m.kind === ts.SyntaxKind.ExportKeyword
       );
       if (isExported) {
         for (const decl of node.declarationList.declarations) {
           if (ts.isIdentifier(decl.name) && decl.name.text === "main") {
-            hasMainExport = true;
+            if (decl.initializer && isCallableNode(decl.initializer)) {
+              hasCallableMainExport = true;
+            }
           }
         }
       }
-    } else if (ts.isExportDeclaration(node) && node.exportClause) {
+    }
+    // 3. export { main, runRunner as main }
+    else if (ts.isExportDeclaration(node) && node.exportClause) {
       if (ts.isNamedExports(node.exportClause)) {
         for (const elem of node.exportClause.elements) {
           if (elem.name.text === "main") {
-            hasMainExport = true;
+            const localName = elem.propertyName
+              ? elem.propertyName.text
+              : elem.name.text;
+            if (localFunctions.has(localName) || !sf.isDeclarationFile) {
+              hasCallableMainExport = true;
+            }
           }
         }
       }
-    } else if (ts.isBinaryExpression(node)) {
+    }
+    // 4. CommonJS bundle fallback: exports.main = fn / module.exports = { main: fn }
+    else if (ts.isBinaryExpression(node)) {
       const left = node.left.getText(sf);
       if (left === "exports.main" || left === "module.exports.main") {
-        hasMainExport = true;
+        if (isCallableNode(node.right)) {
+          hasCallableMainExport = true;
+        }
       }
     }
 
-    if (!hasMainExport) {
+    if (!hasCallableMainExport) {
       ts.forEachChild(node, visit);
     }
   }
 
   visit(sf);
-  return hasMainExport;
+  return hasCallableMainExport;
 }

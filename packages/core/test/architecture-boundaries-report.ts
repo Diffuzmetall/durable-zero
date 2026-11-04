@@ -142,7 +142,7 @@ export function generateAuditReport(
       : "PASS";
 
   const reportData = {
-    task: "Task 5A: Architecture Boundary & Regression Guards (Round 2)",
+    task: "Task 5A: Architecture Boundary & Regression Guards (Round 3)",
     timestamp: new Date().toISOString(),
     status: effectiveStatus,
     sourceBaseline: "7d4b235",
@@ -170,7 +170,7 @@ export function generateAuditReport(
   const jsonPath = path.join(outputDir, "report.json");
   fs.writeFileSync(jsonPath, JSON.stringify(reportData, null, 2), "utf8");
 
-  const mdContent = `# Task 5A: Architecture Boundary & Regression Guards Report (Fix Round 2)
+  const mdContent = `# Task 5A: Architecture Boundary & Regression Guards Report (Fix Round 3)
 
 **Date:** ${reportData.timestamp}  
 **Branch:** \`cycle-7-runtime-adapter-ioc-migration\`  

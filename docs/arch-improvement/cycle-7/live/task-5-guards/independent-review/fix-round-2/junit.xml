@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A Fix Round 2: Independent Adversarial Probes &amp; Invariant Verification" time="0.156712" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Section 1: Verification of Former Round 1 Blockers (Now Properly Rejected)" time="0.050054" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="FORMER BYPASS 1 REJECTED: unrelated local main() function declaration is rejected" time="0.047419" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="FORMER BYPASS 2 REJECTED: target file with NO exported main is rejected" time="0.000805" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="FORMER BYPASS 3 REJECTED: directory merely containing 'runner' in name is rejected via package.json check" time="0.001502" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 2: Verification of Legitimate Positives" time="0.062126" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="LEGITIMATE POSITIVE 1: direct destructuring of main()" time="0.026643" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="LEGITIMATE POSITIVE 2: destructured alias { main: runRunner } and invocation" time="0.017700" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="LEGITIMATE POSITIVE 3: namespace import and runner.main() property call" time="0.017642" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 3: Probing Suspicious Paths &amp; Edge Cases from Critical Review" time="0.043895" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="PROBE 1 (CONFIRMED FLAW): export const main = 17 (non-callable constant) passes verifyFileExportsMain" time="0.000483" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="PROBE 2 (CONFIRMED FLAW): inverted condition if (command !== 'serve') is recognized as serve branch" time="0.023569" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="PROBE 3 (CONFIRMED FLAW): bare specifier '@durable-zero/runner-fake' substitutes real sibling main.js" time="0.000941" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+			<testcase name="PROBE 4 (CONFIRMED FLAW): main() call hidden inside never-invoked nested function satisfies callsMain" time="0.018715" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 4: Helper Module Purity &amp; Side-Effect Free Import" time="0.000221" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="proves importing modular checker submodules does not write reports or execute tests" time="0.000115" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 11 -->
+	<!-- suites 5 -->
+	<!-- pass 11 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 417.714958 -->
+</testsuites>

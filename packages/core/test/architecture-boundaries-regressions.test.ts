@@ -164,7 +164,7 @@ if (command === "serve") {
         false,
         "Checker must verify target file actually exports callable main"
       );
-      assert.match(result.error ?? "", /exports? no main|missing.*main export/i);
+      assert.match(result.error ?? "", /exports? no (callable )?main|missing.*main export/i);
     });
 
     it("REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3]", () => {
@@ -198,6 +198,118 @@ if (command === "serve") {
         "Checker must reject target outside real @durable-zero/runner package"
       );
       assert.match(result.error ?? "", /not in @durable-zero\/runner package|not.*runner package/i);
+    });
+
+    it("REJECTS CLI serve target where exported main is non-callable constant (e.g. main = 17) [R3 Defect 1]", () => {
+      const mockPkgDir = path.join(ISOLATED_DIR, "non-callable-pkg/dist");
+      fs.mkdirSync(mockPkgDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(ISOLATED_DIR, "non-callable-pkg/package.json"),
+        JSON.stringify({ name: "@durable-zero/runner" }),
+        "utf8"
+      );
+      const targetPath = path.join(mockPkgDir, "main.js");
+      fs.writeFileSync(targetPath, `export const main = 17;\n`, "utf8");
+
+      const relToTarget = path.relative(ISOLATED_DIR, targetPath);
+      const cliPath = path.join(ISOLATED_DIR, "non-callable-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command === "serve") {
+  const { main } = await import("${relToTarget.startsWith(".") ? relToTarget : `./${relToTarget}`}");
+  await main();
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must reject target file whose exported main is non-callable"
+      );
+      assert.match(result.error ?? "", /non-callable|callable.*main|exports no.*callable.*main/i);
+    });
+
+    it("REJECTS CLI script with inverted condition if (command !== 'serve') [R3 Defect 2]", () => {
+      const relToRealRunner = path.relative(
+        ISOLATED_DIR,
+        path.resolve(import.meta.dirname, "../../runner/dist/main.js")
+      );
+      const cliPath = path.join(ISOLATED_DIR, "inverted-cond-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command !== "serve") {
+  const { main } = await import("${relToRealRunner.startsWith(".") ? relToRealRunner : `./${relToRealRunner}`}");
+  await main();
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must reject inverted condition if (command !== 'serve')"
+      );
+    });
+
+    it("REJECTS fake package prefix '@durable-zero/runner-fake' without blind substitution [R3 Defect 3]", () => {
+      const cliPath = path.join(ISOLATED_DIR, "fake-prefix-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command === "serve") {
+  const { main } = await import("@durable-zero/runner-fake-exploit");
+  await main();
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must reject fake package prefix without substituting real runner"
+      );
+      assert.match(result.error ?? "", /not.*@durable-zero\/runner/i);
+    });
+
+    it("REJECTS CLI serve where main() is inside uncalled nested function [R3 Defect 4]", () => {
+      const relToRealRunner = path.relative(
+        ISOLATED_DIR,
+        path.resolve(import.meta.dirname, "../../runner/dist/main.js")
+      );
+      const cliPath = path.join(ISOLATED_DIR, "nested-uncalled-cli.js");
+      fs.writeFileSync(
+        cliPath,
+        `#!/usr/bin/env node
+const command = process.argv[2];
+if (command === "serve") {
+  const { main } = await import("${relToRealRunner.startsWith(".") ? relToRealRunner : `./${relToRealRunner}`}");
+  function unusedWorker() {
+    main(); // Inside uninvoked function definition!
+  }
+}
+`,
+        "utf8"
+      );
+
+      const result = auditCliServeEntrypoint(cliPath);
+      assert.equal(
+        result.isOk,
+        false,
+        "Checker must reject invocation inside uncalled nested function"
+      );
+      assert.match(result.error ?? "", /Hollow implementation|never invokes main/i);
     });
 
     it("ACCEPTS valid CLI serve entrypoint that imports runner and calls main()", () => {
