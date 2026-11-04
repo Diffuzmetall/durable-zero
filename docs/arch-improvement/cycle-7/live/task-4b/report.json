@@ -13,11 +13,19 @@
     "packages/protocol/src/jsonrpc/errors.ts",
     "packages/protocol/src/transport/request-dispatcher.ts",
     "packages/protocol/test/protocol-conformance.test.ts",
+    "docs/arch-improvement/cycle-7/live/task-4b/protocol-conformance-red.log",
+    "docs/arch-improvement/cycle-7/live/task-4b/capability-dispatch-red.log",
     "docs/arch-improvement/cycle-7/live/task-4b/junit.xml",
     "docs/arch-improvement/cycle-7/live/task-4b/test-output.txt",
     "docs/arch-improvement/cycle-7/live/task-4b/report.md",
     "docs/arch-improvement/cycle-7/live/task-4b/report.json"
   ],
+  "evidence_receipts": {
+    "protocol_red_log": "docs/arch-improvement/cycle-7/live/task-4b/protocol-conformance-red.log",
+    "dispatcher_red_log": "docs/arch-improvement/cycle-7/live/task-4b/capability-dispatch-red.log",
+    "green_test_output": "docs/arch-improvement/cycle-7/live/task-4b/test-output.txt",
+    "green_junit_xml": "docs/arch-improvement/cycle-7/live/task-4b/junit.xml"
+  },
   "test_results": {
     "protocol_conformance": {
       "total": 27,

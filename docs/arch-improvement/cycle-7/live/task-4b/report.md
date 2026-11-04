@@ -94,13 +94,17 @@ Every capability method executes concrete methods on the injected `coordinator` 
 
 ## 4. Verification Evidence & Test Receipts
 
+### Distinct RED and GREEN Receipts
+- **Protocol Conformance RED Log:** `docs/arch-improvement/cycle-7/live/task-4b/protocol-conformance-red.log` (command: `node --test packages/protocol/test/protocol-conformance.test.ts`, exit `1`, 2 failures on `-32603 !== -32602`).
+- **Capability Dispatch RED Log:** `docs/arch-improvement/cycle-7/live/task-4b/capability-dispatch-red.log` (command: `node --test packages/runner/test/capability-dispatch.test.ts`, exit `1`, 34 failures on behavioral stub rejections).
+- **Consolidated GREEN Log:** `docs/arch-improvement/cycle-7/live/task-4b/test-output.txt` (command: `node --test packages/runner/test/capability-dispatch.test.ts packages/protocol/test/protocol-conformance.test.ts`, exit `0`, 61 passed).
+- **Consolidated GREEN JUnit:** `docs/arch-improvement/cycle-7/live/task-4b/junit.xml` (exit `0`, 61 testcases, 0 failures, 0 errors).
+
 ### Test Summary
 - **Protocol Conformance Suite:** 27 tests passing (includes notification silence, method-not-found `-32601`, typed invalid-params `-32602`, response XOR, falsy results, and unsolicited message ignore).
 - **Capability Dispatch Suite:** 34 tests passing (includes pure unit, input normalization, image-only support, root/child routing, error classification, and real Full-Duplex stdio transport).
 - **Total Tests:** 61 tests passing across both suites.
 - **Duration:** 1.22s total execution time with bounded 30s per-test / 60s OS command safety.
-- **JUnit Evidence:** `docs/arch-improvement/cycle-7/live/task-4b/junit.xml`
-- **Console Log Evidence:** `docs/arch-improvement/cycle-7/live/task-4b/test-output.txt`
 
 ### Behavioral RED/GREEN Progression
 1. **Initial Protocol RED:** `JsonRpcInvalidParamsError` was not handled in `RequestDispatcher`, producing `-32603` instead of `-32602`. Fixed by adding nominal class and `instanceof` check in `request-dispatcher.ts`. All 27 protocol tests turned GREEN.
