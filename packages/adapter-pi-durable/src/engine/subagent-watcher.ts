@@ -80,6 +80,7 @@ export async function startSubagentWatcher(
 				}
 			});
 		} catch (err) {
+			attached.delete(conversationId);
 			console.error(`[SubagentWatcher] Failed to attach stream for conversation ${conversationId}:`, err);
 		}
 	};

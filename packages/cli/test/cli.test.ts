@@ -18,21 +18,52 @@ test("CLI: doctor checks runtime capabilities", async () => {
 	assert.ok(out.includes("SQLite WAL"), `Expected SQLite check, got: ${out}`);
 });
 
-test("CLI: serve --no-session starts server and outputs ready JSON", async () => {
-	const p = cp.spawn("node", [CLI_PATH, "serve", "--no-session"], {
-		stdio: ["pipe", "pipe", "pipe"],
-	});
+import os from "node:os";
+import fs from "node:fs/promises";
+
+test("CLI: serve starts JSON-RPC server and responds to requests", async () => {
+	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dz-cli-test-"));
+	const extensionFixture = path.resolve(__dirname, "../../runner/test/fixtures/scripted-provider-extension.ts");
+	const p = cp.spawn(
+		"node",
+		[
+			CLI_PATH,
+			"serve",
+			"--session",
+			tmpDir,
+			"--extension",
+			extensionFixture,
+			"--provider",
+			"scripted-e2e",
+			"--model",
+			"echo",
+		],
+		{
+			cwd: path.resolve(__dirname, "../../.."),
+			env: {
+				...process.env,
+				HOME: path.join(tmpDir, "home"),
+				XDG_CONFIG_HOME: path.join(tmpDir, "config"),
+				PI_AGENT_DIR: path.join(tmpDir, "agent"),
+			},
+			stdio: ["pipe", "pipe", "pipe"],
+		},
+	);
 
 	try {
-		const readyData = await new Promise<string>((resolve, reject) => {
-			const timer = setTimeout(() => reject(new Error("Timeout waiting for ready")), 8000);
+		const response = await new Promise<string>((resolve, reject) => {
+			let stderr = "";
+			p.stderr.on("data", (chunk) => {
+				stderr += chunk.toString("utf8");
+			});
+			const timer = setTimeout(() => reject(new Error(`Timeout waiting for server response. Stderr: ${stderr}`)), 8000);
 			let buffer = "";
 			p.stdout.on("data", (chunk) => {
 				buffer += chunk.toString("utf8");
 				const lines = buffer.split("\n");
 				for (const line of lines) {
 					const trimmed = line.trim();
-					if (trimmed.startsWith("{") && trimmed.includes('"ready"')) {
+					if (trimmed.startsWith("{") && trimmed.includes('"jsonrpc"')) {
 						clearTimeout(timer);
 						resolve(trimmed);
 						return;
@@ -40,12 +71,16 @@ test("CLI: serve --no-session starts server and outputs ready JSON", async () =>
 				}
 			});
 			p.once("error", reject);
+
+			p.stdin.write(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "session/getState", params: {} }) + "\n");
 		});
 
-		const parsed = JSON.parse(readyData);
-		assert.equal(parsed.ready, true);
-		assert.ok(parsed.pid > 0);
+		const parsed = JSON.parse(response);
+		assert.equal(parsed.jsonrpc, "2.0");
+		assert.equal(parsed.id, 1);
+		assert.ok(parsed.result);
 	} finally {
 		p.kill("SIGTERM");
+		await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
 	}
 });

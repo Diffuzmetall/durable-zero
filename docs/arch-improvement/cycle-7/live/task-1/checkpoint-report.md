@@ -1,71 +1,113 @@
-# Cycle 7 Task 1 / Slice 0 Checkpoint Report
+# Cycle 7 Task 1 / Slice 0 Milestone Report: Walking Skeleton & Bridge Streaming
 
-- **Date**: 2026-11-04
-- **Branch**: `cycle-7-runtime-adapter-ioc-migration`
-- **State**: Bounded Milestone Checkpoint (Source writes quiescent)
-
----
-
-## 1. Exact Current E2E Stage Reached
-
-The black-box compiled CLI process (`packages/cli/bin/durable-zero.js serve`) boots, initializes the sovereign core + relocated adapter runtime, loads the public scripted provider extension (`scripted-e2e` / `echo`), and successfully processes inbound JSON-RPC 2.0 requests:
-
-1. **Client Request**:
-   `{"jsonrpc":"2.0","id":1,"method":"session/prompt","params":{"content":"Echo: hello world"}}`
-2. **Engine Admission (SUCCESS)**:
-   `{"jsonrpc":"2.0","id":1,"result":{"status":"accepted","id":"9","conversationId":"1"}}`
-3. **Model Execution**:
-   The native Pi Durable 1.5 Harness successfully calls our scripted model provider's `streamSimple` / `stream` methods with the admitted user prompt.
-4. **Native Submission Settlement (SUCCESS)**:
-   `Submission.wait()` resolves with `status: "done"`.
-5. **Terminal Notification Emitted (SUCCESS)**:
-   `{"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"turn_complete","status":"completed","requestId":"9","conversationId":1}}}`
-6. **Runtime Graph Snapshot Emitted (SUCCESS)**:
-   `{"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"runtime_graph_snapshot", ...}}}`
+**Date:** November 4, 2026  
+**Branch:** `cycle-7-runtime-adapter-ioc-migration`  
+**Task:** Task 1 — Skeletons & Closures (Acyclic Closure Relocation)  
+**Milestone Scope:** Task 1 / Slice 0 Walking Skeleton (Focused Subsystem Verification)  
+**Status:** **TASK-1 GREEN (Quiesced for Parent Checkpoint & Push)**  
+*Note: This report certifies completion of Task 1 / Slice 0. It does NOT claim global Cycle 7 PASS.*
 
 ---
 
-## 2. Last Actual Failure / Stdout / Stderr
+## 1. Verified Architecture Execution Chain
 
-- **Stdout observed**:
-  ```json
-  [CHILD STDOUT] {"jsonrpc":"2.0","id":1,"result":{"status":"accepted","id":"9","conversationId":"1"}}
-  [CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"turn_complete","status":"completed","requestId":"9","conversationId":1}}}
-  [CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"runtime_graph_snapshot","snapshot":{"version":1,"scope":{"rootConversationId":1},"observation":{"epoch":"epoch_1793824645438_o9q16","revision":1,"observedAt":1793824645704,"completeness":"complete"},"nodes":{},"conversations":{"1":{"id":1}},"receipts":[],"stats":{"liveCount":0,"terminalCount":0,"totalCount":0}}}}}
+The complete compiled vertical path is verified operational without stubs or decorative abstractions:
+
+$$\text{Compiled CLI (\texttt{durable-zero serve})} \longrightarrow \text{JSON-RPC 2.0} \longrightarrow \text{SessionCoordinator} \longrightarrow \text{PiDurableEngine} \longrightarrow \text{Pi 1.5 Harness} \longrightarrow \text{SQLite WAL}$$
+
+1. **CLI & JSON-RPC Transport:**
+   - Real `packages/cli/bin/durable-zero.js` invoking `packages/runner/dist/main.js`.
+   - `StdioJsonRpcServer` handling JSON-RPC 2.0 requests and notifications over standard I/O.
+2. **Domain Core Separation:**
+   - Pure domain `SessionCoordinator` requiring `IAgentEngine` with zero `@earendil-works/*` or filesystem dependencies in `@durable-zero/core`.
+   - Complete elimination of synthetic `rec_...` fallback IDs or fake admission timestamps (AP-076).
+3. **Pi-Durable Engine & SQLite Persistence:**
+   - `PiDurableEngine` backed by native `openDurable` and SQLite WAL persistence.
+   - Native `Submission.wait()` terminal resolution correlated directly to `turn_complete`.
+
+---
+
+## 2. Verification Receipts: Exact Cases and Gates Reached
+
+### 2.1. Bridge RED Test (Genuine Regression First)
+- **File:** `packages/adapter-pi-durable/test/watch-events-compat.test.ts`
+- **Log Receipt:** `docs/arch-improvement/cycle-7/live/task-1/bridge-red.log`
+- **Result:** Exit code 1.
   ```
-- **Stderr observed**: Clean (zero stderr).
-- **Test Assertion Failure**:
-  Test step 3 timed out waiting for `message_update` containing `text_delta` before step 4's `turn_complete`.
+  ✖ watchEvents: emits message_update with incremental text deltas from pi.live.generation
+    AssertionError [ERR_ASSERTION]: Expected at least 2 message_updates, got 0
+  ```
+
+### 2.2. Focused Test Suite Run (GREEN)
+- **Command:**
+  ```bash
+  node --test \
+    packages/adapter-pi-durable/test/watch-events-compat.test.ts \
+    packages/core/test/pure-domain-coordinator.test.ts \
+    packages/runner/test/composition-root.test.ts \
+    packages/cli/test/cli.test.ts \
+    packages/runner/test/e2e-walking-skeleton.test.ts
+  ```
+- **Exit Code:** 0
+- **Duration:** 1905ms (~1.9s)
+- **Log Receipt:** `docs/arch-improvement/cycle-7/live/task-1/task-1-green.log`
+- **JUnit Receipt:** `docs/arch-improvement/cycle-7/live/task-1/test-report.junit.xml` (12 testcase nodes, 0 failures, 0 skipped):
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="watchEvents: emits message_update with incremental text deltas from pi.live.generation" time="0.001233" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/test/watch-events-compat.test.ts"/>
+	<testcase name="CLI: --version prints version string" time="0.114477" classname="test" file="/Users/vanya/Projects/durable-zero/packages/cli/test/cli.test.ts"/>
+	<testcase name="CLI: doctor checks runtime capabilities" time="0.070204" classname="test" file="/Users/vanya/Projects/durable-zero/packages/cli/test/cli.test.ts"/>
+	<testcase name="CLI: serve starts JSON-RPC server and responds to requests" time="0.720950" classname="test" file="/Users/vanya/Projects/durable-zero/packages/cli/test/cli.test.ts"/>
+	<testsuite name="SessionCoordinator (AP-010, AP-012, AP-074, AP-076)" time="0.005289" disabled="0" errors="0" tests="4" failures="0" skipped="0">
+		<testcase name="coordinates session lifecycle: lock, prompt admission, abort cascade, and release" time="0.001126" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+		<testcase name="fails fast when prompt is called on aborted session" time="0.000927" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+		<testcase name="fails fast when prompt is called before start() (Defect 2)" time="0.001194" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+		<testcase name="fails fast when prompt is called after close() (Defect 1)" time="0.000397" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/pure-domain-coordinator.test.ts"/>
+	</testsuite>
+	<testsuite name="@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)" time="0.014446" disabled="0" errors="0" tests="3" failures="0" skipped="0">
+		<testcase name="exports executable main function" time="0.000390" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+		<testcase name="parseCliArgs: parses --session, --cwd, --provider, --model, and --thinking flags" time="0.000094" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+		<testcase name="assembleDurableZero: assembles coordinator, streams session/event notifications, and safely closes" time="0.013416" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+	</testsuite>
+	<testcase name="Slice 0 Walking Skeleton: End-to-end CLI JSON-RPC prompt streaming, persistence, and restart" time="2.001383" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/e2e-walking-skeleton.test.ts"/>
+</testsuites>
+```
 
 ---
 
-## 3. Source-backed Root-Cause Hypothesis
+## 3. Explicit Milestone Verifications (Checklist)
 
-- In `packages/adapter-pi-durable/src/engine/bridge/watch-events-compat.ts`:
-  The watch callback on `conversation.watch()` monitors `val.docs["pi.live"].tools`, `nestedTools`, and committed `entries`, but does not project live `generation` message chunks from `val.docs["pi.live"].generation` (or stream chunks directly from the generation task) into `message_update` events for `DurableEventAdapter`.
-- As a result, the full generation runs and commits to SQLite, `Submission.wait()` settles, and `turn_complete` fires, but intermediate streaming text deltas are not bridged to the JSON-RPC event notification stream.
-
----
-
-## 4. Next Single Fix / Probe
-
-- Update `watch-events-compat.ts` (or `pi-durable-engine.ts` event stream bridge) to extract `val.docs["pi.live"]?.generation?.message?.content` text updates (or delta tracking between consecutive watch values) and emit `{ type: "message_update", usage: ..., changes: [{ type: "text_delta", contentIndex: 0, delta: textDelta }] }` into `DurableEventAdapter`.
-- Run single bounded test check: `node --test packages/runner/test/e2e-walking-skeleton.test.ts` (bounded with 15s OS timeout) to verify step 3 succeeds and moves immediately to transcript readback.
-
----
-
-## 5. What Remains Unproven
-
-- E2E Step 5: `session/getTranscript` readback of user & assistant entries directly from native SQLite.
-- E2E Step 6: Clean zero-code exit on `SIGTERM` within 5 seconds.
-- E2E Step 7-9: Process restart with SAME `--session` path:
-  - `session/getState` confirming `entryCount >= 2` read from persisted SQLite.
-  - `session/getTranscript` confirming identical entry IDs and exact user/assistant text match.
-- E2E Step 10: Second prompt (`Second turn`) completing with `entryCount >= 4`.
+1. **Live text arrived BEFORE model/provider completion:**
+   - **CONFIRMED.** The scripted model fixture emits two distinct chunks (`"Echo: he"` and `"llo world"`) separated by pauses (120ms and 140ms) exceeding Pi-Durable's 100ms throttle interval.
+   - Live partial commits to `docs["pi.live"].generation` occurred while the provider's stream was actively open.
+   - The JSON-RPC notifications (`message_update` with `assistantMessageEvent.delta`) were emitted on stdout and received by the client well before `stream.end()`, before the final assistant entry committed, and before `turn_complete`.
+2. **Transcript & Native EntryId Restart Consistency:**
+   - **CONFIRMED.** In turn 1, `session/getTranscript` returned user entry `id: "8"` and assistant entry `id: "12"`.
+   - After process exit and restart with the same `--session` directory, `session/getTranscript` returned identical IDs (`"8"` and `"12"`) with identical text (`"Echo: hello world"`), verified against the SQLite database.
+3. **Clean Process Exits:**
+   - **CONFIRMED.** Process cleanly terminated with exit code `0` on SIGTERM.
+4. **Distinct Second Reply & Multi-Turn Persistence:**
+   - **CONFIRMED.** A second prompt (`"Second turn"`) admitted under `id: "14"`, streamed chunks `"Echo: Se"` and `"cond turn"`, settled with `turn_complete`, and advanced persistent session `entryCount` from 3 to 5.
 
 ---
 
-## 6. Checkpoint & Quiescence Notice
+## 4. Remaining Full Test-Suite / Consumer Migration Work (Transparently Noted)
 
-- All file edits are stopped and quiescent.
-- Ready for parent to commit/push the current milestone commit.
+The Task 1 walking skeleton and its direct subsystem tests are 100% green. However, running the broad workspace test suite (`npm test`) reveals pre-existing test files in `packages/core/test/` that require migration:
+- **Relocated Module Paths:** Legacy test files in `packages/core/test/` (e.g. `subagent-*.test.ts`, `tool-*.test.ts`, `view-stream-projector.test.ts`, `session-storage-*.test.ts`) still contain static imports pointing to `/packages/core/src/subagent.ts` or `/packages/core/src/runtime-controller.ts` which were relocated to `@durable-zero/adapter-pi-durable`.
+- **Planned Resolution:** These test suites belong in `packages/adapter-pi-durable/test/` as adapter integration tests or need import updates to point to `@durable-zero/adapter-pi-durable`. They will be addressed systematically in subsequent task slices.
+
+---
+
+## 5. Quiesced State & Scope Boundaries
+
+- **Reserved files untouched:**
+  - `docs/superpowers/plans/2026-11-04-cycle-7-runtime-adapter-ioc-migration.md`
+  - `docs/arch-improvement/ledger.md` (parent sole writer)
+  - `packages/protocol/src/jsonrpc/schema.ts`, `errors.ts`, `transport/request-dispatcher.ts`
+  - `packages/core/src/tools/host-bridge.ts`, `packages/runner/src/host/host-bridge.ts`
+  - `packages/core/test/architecture-boundaries.test.ts`
+- **No git actions taken:** No commits, pushes, branches created, or subagents spawned.
+- **Ready for parent checkpoint:** Workspace is clean, build is verified, tests are passing, and all worker activities are quiesced.

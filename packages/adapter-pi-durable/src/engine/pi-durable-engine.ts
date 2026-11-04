@@ -118,6 +118,10 @@ export class PiDurableEngine implements IAgentEngine {
 		let requestId: string;
 		let conversationId: string;
 
+		if (this.watcher) {
+			void this.watcher.ensureAttached(convId);
+		}
+
 		if (convId === ROOT_CONVERSATION_ID) {
 			const receipt = await this.instance.controller.submit(nativeInput, whenBusy);
 			requestId = receipt.requestId;
@@ -155,7 +159,7 @@ export class PiDurableEngine implements IAgentEngine {
 							status,
 							requestId,
 							error: errorMsg,
-							conversationId: parseConversationId(conversationId),
+							conversationId: String(conversationId),
 						} as any);
 					})
 					.catch((err) => {
@@ -164,7 +168,7 @@ export class PiDurableEngine implements IAgentEngine {
 							status: "error",
 							requestId,
 							error: err instanceof Error ? err.message : String(err),
-							conversationId: parseConversationId(conversationId),
+							conversationId: String(conversationId),
 						} as any);
 					});
 			}).catch(() => {});

@@ -2819,8 +2819,14 @@ function findToolCallInEntries(entries, callId) {
   return {};
 }
 async function watchEvents(harness, conversationId, context) {
-  const conversation = await harness.conversation(conversationId, context);
-  if (!conversation) throw new Error(`Conversation not found: ${conversationId}`);
+  let conversation = await harness.conversation(conversationId, context);
+  if (!conversation) {
+    if (conversationId === 1 || conversationId === "1" || conversationId === void 0) {
+      conversation = await harness.root(context);
+    } else {
+      throw new Error(`Conversation not found: ${conversationId}`);
+    }
+  }
   const watch = await conversation.watch(context);
   const initial = watch.value;
   const snapshot = {
@@ -2841,10 +2847,61 @@ async function watchEvents(harness, conversationId, context) {
       const emittedToolStarts = /* @__PURE__ */ new Set();
       const emittedToolEnds = /* @__PURE__ */ new Set();
       const seenNestedTools = /* @__PURE__ */ new Map();
+      let currentGenerationId;
+      const seenTextByIndex = /* @__PURE__ */ new Map();
+      const seenThinkingByIndex = /* @__PURE__ */ new Map();
       watch.start(async (call, ctx) => {
         const val = call?.value ?? call;
         if (!val) return;
         const events = [];
+        const gen = val.docs?.["pi.live"]?.generation;
+        if (gen) {
+          const genId = `${gen.attempt ?? 0}`;
+          if (genId !== currentGenerationId) {
+            currentGenerationId = genId;
+            seenTextByIndex.clear();
+            seenThinkingByIndex.clear();
+          }
+          const genContent = gen.message?.content;
+          if (Array.isArray(genContent)) {
+            const changes = [];
+            for (let i = 0; i < genContent.length; i++) {
+              const block = genContent[i];
+              if (block?.type === "text" && typeof block.text === "string") {
+                const prev = seenTextByIndex.get(i) ?? "";
+                if (block.text.length > prev.length && block.text.startsWith(prev)) {
+                  const delta = block.text.slice(prev.length);
+                  seenTextByIndex.set(i, block.text);
+                  changes.push({ type: "text_delta", contentIndex: i, delta });
+                } else if (block.text !== prev && block.text.length > 0) {
+                  seenTextByIndex.set(i, block.text);
+                  changes.push({ type: "text_delta", contentIndex: i, delta: block.text });
+                }
+              } else if (block?.type === "thinking" && typeof block.thinking === "string") {
+                const prev = seenThinkingByIndex.get(i) ?? "";
+                if (block.thinking.length > prev.length && block.thinking.startsWith(prev)) {
+                  const delta = block.thinking.slice(prev.length);
+                  seenThinkingByIndex.set(i, block.thinking);
+                  changes.push({ type: "thinking_delta", contentIndex: i, delta });
+                } else if (block.thinking !== prev && block.thinking.length > 0) {
+                  seenThinkingByIndex.set(i, block.thinking);
+                  changes.push({ type: "thinking_delta", contentIndex: i, delta: block.thinking });
+                }
+              }
+            }
+            if (changes.length > 0) {
+              events.push({
+                type: "message_update",
+                usage: val.docs?.["pi.usage"] ?? {},
+                changes
+              });
+            }
+          }
+        } else {
+          currentGenerationId = void 0;
+          seenTextByIndex.clear();
+          seenThinkingByIndex.clear();
+        }
         const liveTools = val.docs?.["pi.live"]?.tools ?? [];
         for (const t of liveTools) {
           if (t.callId && !emittedToolStarts.has(t.callId)) {
@@ -3961,6 +4018,7 @@ async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
         }
       });
     } catch (err) {
+      attached.delete(conversationId);
       console.error(`[SubagentWatcher] Failed to attach stream for conversation ${conversationId}:`, err);
     }
   };
@@ -5113,6 +5171,9 @@ var PiDurableEngine = class {
     const convId = options?.conversationId ? parseConversationId(options.conversationId) : ROOT_CONVERSATION_ID4;
     let requestId;
     let conversationId;
+    if (this.watcher) {
+      void this.watcher.ensureAttached(convId);
+    }
     if (convId === ROOT_CONVERSATION_ID4) {
       const receipt = await this.instance.controller.submit(nativeInput, whenBusy);
       requestId = receipt.requestId;
@@ -5146,7 +5207,7 @@ var PiDurableEngine = class {
             status,
             requestId,
             error: errorMsg,
-            conversationId: parseConversationId(conversationId)
+            conversationId: String(conversationId)
           });
         }).catch((err) => {
           this.emitEvent({
@@ -5154,7 +5215,7 @@ var PiDurableEngine = class {
             status: "error",
             requestId,
             error: err instanceof Error ? err.message : String(err),
-            conversationId: parseConversationId(conversationId)
+            conversationId: String(conversationId)
           });
         });
       }).catch(() => {

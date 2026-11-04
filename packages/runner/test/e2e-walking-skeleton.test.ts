@@ -245,16 +245,23 @@ test(
 		assert.ok(typeof observedRequestId === "string" && observedRequestId.length > 0);
 
 		// 3. Receive streaming text delta
+		let accumulatedText = "";
+		let receivedDeltasCount = 0;
 		const textDeltaEvent = await client1.waitForNotification((msg) => {
 			if (msg.method !== "session/event") return false;
 			const evt = msg.params?.event ?? msg.params;
 			if (evt?.type === "message_update") {
 				const ame = evt.assistantMessageEvent;
-				return ame?.type === "text_delta" && ame?.delta?.includes("Echo: hello world");
+				if (ame?.type === "text_delta" && typeof ame?.delta === "string" && ame.delta.length > 0) {
+					accumulatedText += ame.delta;
+					receivedDeltasCount++;
+					return accumulatedText.includes("Echo: hello world");
+				}
 			}
 			return false;
 		});
 		assert.ok(textDeltaEvent);
+		assert.ok(receivedDeltasCount >= 2, `Expected at least 2 incremental deltas, got ${receivedDeltasCount}`);
 
 		// 4. Receive terminal turn_complete event with matching requestId
 		const turnCompleteEvent = await client1.waitForNotification((msg) => {

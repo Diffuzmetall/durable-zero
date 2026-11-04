@@ -24,8 +24,14 @@ export async function watchEvents(
 	conversationId: any,
 	context: any,
 ): Promise<AgentEventStream> {
-	const conversation = await harness.conversation(conversationId, context);
-	if (!conversation) throw new Error(`Conversation not found: ${conversationId}`);
+	let conversation = await harness.conversation(conversationId, context);
+	if (!conversation) {
+		if (conversationId === 1 || conversationId === "1" || conversationId === undefined) {
+			conversation = await harness.root(context);
+		} else {
+			throw new Error(`Conversation not found: ${conversationId}`);
+		}
+	}
 	const watch = await conversation.watch(context);
 	const initial = watch.value;
 	const snapshot: SnapshotEvent = {
@@ -47,11 +53,71 @@ export async function watchEvents(
 			const emittedToolStarts = new Set<string>();
 			const emittedToolEnds = new Set<string>();
 			const seenNestedTools = new Map<string, any>();
+			let currentGenerationId: string | undefined;
+			const seenTextByIndex = new Map<number, string>();
+			const seenThinkingByIndex = new Map<number, string>();
 
 			watch.start(async (call: any, ctx: any) => {
 				const val = call?.value ?? call;
 				if (!val) return;
 				const events: AgentEvent[] = [];
+
+				// Track live generation text and thinking deltas from pi.live.generation
+				const gen = val.docs?.["pi.live"]?.generation;
+				if (gen) {
+					const genId = `${gen.attempt ?? 0}`;
+					if (genId !== currentGenerationId) {
+						currentGenerationId = genId;
+						seenTextByIndex.clear();
+						seenThinkingByIndex.clear();
+					}
+
+					const genContent = gen.message?.content;
+					if (Array.isArray(genContent)) {
+						const changes: Array<{
+							type: "text_delta" | "thinking_delta";
+							contentIndex: number;
+							delta: string;
+						}> = [];
+
+						for (let i = 0; i < genContent.length; i++) {
+							const block = genContent[i];
+							if (block?.type === "text" && typeof block.text === "string") {
+								const prev = seenTextByIndex.get(i) ?? "";
+								if (block.text.length > prev.length && block.text.startsWith(prev)) {
+									const delta = block.text.slice(prev.length);
+									seenTextByIndex.set(i, block.text);
+									changes.push({ type: "text_delta", contentIndex: i, delta });
+								} else if (block.text !== prev && block.text.length > 0) {
+									seenTextByIndex.set(i, block.text);
+									changes.push({ type: "text_delta", contentIndex: i, delta: block.text });
+								}
+							} else if (block?.type === "thinking" && typeof block.thinking === "string") {
+								const prev = seenThinkingByIndex.get(i) ?? "";
+								if (block.thinking.length > prev.length && block.thinking.startsWith(prev)) {
+									const delta = block.thinking.slice(prev.length);
+									seenThinkingByIndex.set(i, block.thinking);
+									changes.push({ type: "thinking_delta", contentIndex: i, delta });
+								} else if (block.thinking !== prev && block.thinking.length > 0) {
+									seenThinkingByIndex.set(i, block.thinking);
+									changes.push({ type: "thinking_delta", contentIndex: i, delta: block.thinking });
+								}
+							}
+						}
+
+						if (changes.length > 0) {
+							events.push({
+								type: "message_update",
+								usage: val.docs?.["pi.usage"] ?? {},
+								changes,
+							} as any);
+						}
+					}
+				} else {
+					currentGenerationId = undefined;
+					seenTextByIndex.clear();
+					seenThinkingByIndex.clear();
+				}
 
 				// Track direct live tools from pi.live
 				const liveTools = val.docs?.["pi.live"]?.tools ?? [];
