@@ -32,10 +32,10 @@ const CLI_BIN_FILE = path.resolve(
 );
 const REPORT_DIR = path.resolve(
   REPO_ROOT,
-  "docs/arch-improvement/cycle-7/live/task-5-guards/fix-round-3"
+  "docs/arch-improvement/cycle-7/live/task-5-guards/fix-round-4"
 );
 
-describe("Task 5A: Architecture Boundaries & Regression Guards (Fix Round 3)", () => {
+describe("Task 5A: Architecture Boundaries & Regression Guards (Fix Round 4)", () => {
   describe("Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)", () => {
     it("fails on forbidden vendor import (@earendil-works/pi-durable)", () => {
       const fixture = path.join(

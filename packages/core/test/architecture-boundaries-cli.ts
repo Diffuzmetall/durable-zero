@@ -7,6 +7,42 @@ import {
   verifyFileExportsMain,
 } from "./architecture-boundaries-runner-verify.ts";
 
+export function resolveRunnerPackageExport(
+  scriptDir: string,
+  targetImport: string
+): { resolvedPath?: string; error?: string } {
+  const runnerPkgDir = path.resolve(scriptDir, "../../runner");
+  const pkgJsonPath = path.join(runnerPkgDir, "package.json");
+
+  if (!fs.existsSync(pkgJsonPath)) {
+    return { error: `Runner package.json not found at ${pkgJsonPath}` };
+  }
+
+  const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
+  if (pkgJson.name !== "@durable-zero/runner") {
+    return { error: `Expected package name @durable-zero/runner, got ${pkgJson.name}` };
+  }
+
+  if (targetImport === "@durable-zero/runner") {
+    const mainRel = pkgJson.exports?.["."]?.import ?? pkgJson.main ?? "./dist/main.js";
+    return { resolvedPath: path.resolve(runnerPkgDir, mainRel) };
+  }
+  if (targetImport.startsWith("@durable-zero/runner/")) {
+    const subpath = targetImport.replace("@durable-zero/runner/", "./");
+    const declaredExport = pkgJson.exports?.[subpath];
+    if (declaredExport) {
+      const exportTarget = typeof declaredExport === "string"
+        ? declaredExport
+        : declaredExport.import ?? declaredExport.default;
+      return { resolvedPath: path.resolve(runnerPkgDir, exportTarget) };
+    }
+    const directFile = path.resolve(runnerPkgDir, subpath);
+    if (fs.existsSync(directFile)) return { resolvedPath: directFile };
+    return { error: `Runner package does not export subpath "${subpath}"` };
+  }
+  return { error: `Unsupported package specifier: ${targetImport}` };
+}
+
 export function auditCliServeEntrypoint(
   cliScriptPath: string
 ): CliServeAuditResult {
@@ -34,7 +70,6 @@ export function auditCliServeEntrypoint(
   function inspectServeBranch(branchStmt: ts.Statement) {
     serveBranchFound = true;
 
-    // Pass 1: gather imports and locally declared variable/function names
     function scanBranchDecls(node: ts.Node) {
       if (ts.isFunctionDeclaration(node) && node.name) {
         locallyDeclaredNames.add(node.name.text);
@@ -86,9 +121,8 @@ export function auditCliServeEntrypoint(
       ts.forEachChild(node, scanBranchDecls);
     }
 
-    // Pass 2: check for invocation in executable scope (skipping nested function bodies)
     function scanInvocations(node: ts.Node) {
-      // Invariant: do NOT descend into uncalled nested function declarations!
+      // Invariant: do NOT descend into uncalled nested function bodies!
       if (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
         return;
       }
@@ -177,16 +211,14 @@ export function auditCliServeEntrypoint(
 
   if (targetImport.startsWith(".")) {
     resolvedPath = path.resolve(scriptDir, targetImport);
-  } else if (targetImport === "@durable-zero/runner") {
-    const runnerDist = path.resolve(scriptDir, "../../runner/dist/main.js");
-    resolvedPath = fs.existsSync(runnerDist) ? runnerDist : path.resolve(scriptDir, "../../runner");
-  } else if (targetImport.startsWith("@durable-zero/runner/")) {
-    const subpath = targetImport.replace("@durable-zero/runner/", "");
-    resolvedPath = path.resolve(scriptDir, "../../runner", subpath);
-  } else if (targetImport.startsWith("@durable-zero/")) {
-    return { isOk: false, targetImport, callsMain: false, error: `CLI "serve" imports "${targetImport}" which is not @durable-zero/runner package.` };
+  } else if (targetImport === "@durable-zero/runner" || targetImport.startsWith("@durable-zero/runner/")) {
+    const pkgRes = resolveRunnerPackageExport(scriptDir, targetImport);
+    if (pkgRes.error || !pkgRes.resolvedPath) {
+      return { isOk: false, targetImport, callsMain: false, error: pkgRes.error ?? `Failed to resolve ${targetImport}` };
+    }
+    resolvedPath = pkgRes.resolvedPath;
   } else {
-    return { isOk: false, targetImport, callsMain: false, error: `CLI "serve" imports "${targetImport}" which does not resolve to @durable-zero/runner.` };
+    return { isOk: false, targetImport, callsMain: false, error: `CLI "serve" imports "${targetImport}" which is not @durable-zero/runner package.` };
   }
 
   if (!fs.existsSync(resolvedPath)) {

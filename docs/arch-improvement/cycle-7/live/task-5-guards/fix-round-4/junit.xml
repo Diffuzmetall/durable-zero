@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A: Architecture Boundaries &amp; Regression Guards (Fix Round 4)" time="4.804612" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)" time="1.706901" disabled="0" errors="0" tests="17" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="fails on forbidden vendor import (@earendil-works/pi-durable)" time="0.004622" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden adapter import (@durable-zero/adapter-pi-durable)" time="0.000573" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden runner import (@durable-zero/runner)" time="0.000545" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net)" time="0.000934" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden type-only vendor import (import type { ... })" time="0.000815" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden TypeScript import-type syntax (import('mod').Type)" time="0.000388" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden literal dynamic import (await import('adapter'))" time="0.000422" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden template literal dynamic import (import(`vendor`)) [FND-TASK5-04]" time="0.000411" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden TypeScript import = require syntax [FND-TASK5-04]" time="0.000378" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden re-export barrel (export * from 'vendor')" time="0.000365" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on relative path escaping core root (../../../adapter)" time="0.000317" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on package.json declaring vendor dependencies in Core" time="0.000177" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on legacy CLI serve entrypoint pointing to deleted core runner" time="0.001071" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on hollow CLI serve entrypoint that never calls main() [FND-TASK5-01]" time="1.688763" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on CLI serve pointing to nonexistent runner file on disk [FND-TASK5-01]" time="0.002550" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on CLI script matching dynamic import only in string literal [FND-TASK5-01]" time="0.001236" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on source-level cross-package import cycle with omitted manifest edges [FND-TASK5-02]" time="0.002573" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)" time="1.271031" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="passes cleanly on pure domain service with contracts and zod" time="0.001916" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on pure TypeScript port definitions" time="0.000384" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on conformant Core package.json" time="0.000320" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on real CLI serve entrypoint fixture pointing to runner and calling main()" time="1.267803" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="scans all supported source file extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx)" time="0.000265" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on acyclic multi-tier workspace" time="0.000160" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 3: Live Project Source Snapshot Execution" time="0.954174" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="scans live packages/core/src/ and checks AST boundaries" time="0.003276" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live packages/core/package.json contains only contracts and zod" time="0.000091" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live workspace package DAG is strictly acyclic via full AST source and manifest scan" time="0.035955" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner and calls main()" time="0.914558" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies legacy deleted files do not exist in packages/core/src/" time="0.000154" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 4: Durable Evidence &amp; Report Integrity [FND-TASK5-03]" time="0.871959" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="dynamically generates evidence report from computed audit facts (no hardcoded PASS)" time="0.870496" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="PROVES PIPELINE INTEGRITY: simulated forbidden Core mutation produces FAIL in report and non-zero violations (anti-false-pass)" time="0.001383" classname="test" file="/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 30 -->
+	<!-- suites 5 -->
+	<!-- pass 30 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 5215.371708 -->
+</testsuites>
