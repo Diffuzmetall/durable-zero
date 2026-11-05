@@ -1,0 +1,42 @@
+{
+  "recordedAt": "2026-11-05T04:32:16.824574+03:00",
+  "scope": "Root R8 selection/dependency seam ONLY",
+  "verdict": "PASS bounded source/component",
+  "candidate": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "staticReference": "653ec4e722f0b98fbffccf3077ff93b215b5acfb",
+  "sourceProof": [
+    {
+      "path": "packages/runner/src/composition.ts",
+      "sourceMatchesReference": true,
+      "liveMatchesCandidate": true,
+      "sha256": "2e97adca68cdda1e1fcf293b6d679fae86867ab51d4d0ce817c22747de36425e"
+    },
+    {
+      "path": "packages/runner/package.json",
+      "sourceMatchesReference": true,
+      "liveMatchesCandidate": true,
+      "sha256": "0f4cbc3a3f464622301b9317ae403a9c428ba8db0994e99e1512a2c342228146"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sourceMatchesReference": true,
+      "liveMatchesCandidate": true,
+      "sha256": "056037ab32eae8d7e43f4b444d0e1258c53dff6076242975d4ff11467b4f5eee"
+    }
+  ],
+  "independentMeasuredReceipts": {
+    "seamCases": 6,
+    "seamFailures": 0,
+    "extraProbes": 4,
+    "extraProbeFailures": 0,
+    "negativeControlExit": 1
+  },
+  "qualifications": [
+    "Runtime probes use live shared source/mixed sibling dependencies; staticRootbytes matchcandidate",
+    "Custom factories are actually invoked during realstartup; subsequent ownedfileeffects are directenvironmentcalls, not nativeHarness-tool proof",
+    "Default methodinspection is on SDKclass, not sufficientend-to-end evidence; compiledR3native-read gate stillpending",
+    "Teardown usescatch inreviewerprobes: no fault-injected teardownfailureacceptance inferred",
+    "No fullSourceA semantic/globalbuild/rootregression/compiledproduct acceptance inferred"
+  ],
+  "openRootP0P1P2": 0
+}
