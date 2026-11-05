@@ -165,22 +165,23 @@ Refer to `contract-matrix.json` for full machine-readable details. The primary f
    - *Current Zero:* Expects `{ jsonrpc: "2.0", id: 1, method: "session/prompt", params: { content: "...", options: { deliverAs: "followUp" } } }`.
    - *Resolution:* Provider formats standard JSON-RPC 2.0 prompt request.
 3. **Event Streaming & Block Deltas:**
-   - *Current Provider:* Expects raw event JSON objects (`{ type: "message_delta", ... }`).
-   - *Current Zero:* Emits `{ jsonrpc: "2.0", method: "session/event", params: { event: { type: "message_delta", ... } } }`.
+   - *Current Provider:* Expects raw event JSON objects (`{ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex, delta } }`, `{ type: "message_end", message }`).
+   - *Current Zero:* Emits `{ jsonrpc: "2.0", method: "session/event", params: { event: RunnerEvent } }` where `RunnerEvent` adheres to `packages/contracts/src/runner-event.ts` (`message_update` carrying `assistantMessageEvent`, `message_end` carrying `assistantMessageSchema`, `tool_execution_*`, `turn_start`, `turn_end`).
    - *Resolution:* Provider `RunnerRpcChannel` unwraps `params.event` and forwards it to `DeltaTranslator`.
 4. **Host Tools Continuation (Reverse RPC):**
    - *Current Provider:* Listens for event `{ type: "host_tool_call", callId, toolName, arguments }` and responds with `{ type: "host_tool_result", callId, result, isError }`.
    - *Current Zero:* Has `HostBridge` (`packages/runner/src/host/host-bridge.ts:33-85`), which issues JSON-RPC requests `{ method: "host/toolCall", params: { toolName, arguments } }` and awaits host responses.
-   - *Resolution:* Mount and wire `HostBridge` in `composition.ts`; update provider to handle inbound JSON-RPC requests.
+   - *Resolution:* Instantiate owned `HostBridge` in `composition.ts:144+` using `server.request.bind(server)` and inject into dynamic tools extension (no module-level global `activeToolForwarder` state); update provider to handle inbound JSON-RPC requests.
 5. **Session Control & Dispatcher Mounting:**
-   - Methods `models/set`, `models/setThinking`, `session/steer`, `session/compact`, and `session/abortTask` are implemented in `session-dispatcher.ts` but omitted in `composition.ts`.
-   - *Resolution:* Replace the inline handler in `composition.ts:147-177` with `createSessionDispatcher({ coordinator, engine })`.
+   - Methods `models/set`, `models/setThinking`, `session/steer`, `session/compact`, and `session/abortTask` are implemented in `session-dispatcher.ts` but omitted in `composition.ts:147-177`.
+   - *Unsupported Seams:* Note that mounting `createSessionDispatcher` does NOT implement `binding/register`, `binding/list`, `session/fork`, or `tools/register` (which explicitly throw `UnsupportedCapabilityError`). Provider must handle binding and fork via dedicated ports/adapter utilities rather than assuming dispatcher RPC support.
+   - *Resolution:* Mount `createSessionDispatcher({ coordinator, engine })` in `composition.ts:144-178` to activate implemented control methods.
 6. **Subagent Policy Synchronization:**
    - `composition.ts:166-168` passes `params` directly to `coordinator.setSubagentPolicy(params)`. Downstream `subagent-policy-state.ts:30` runs `subagentPolicyRecordSchema.parse(record)`.
    - *Resolution:* `createSessionDispatcher` unwraps `params.policyRecord ?? params.record ?? params`, ensuring backwards-compatible parameter normalization.
 7. **Thread Forking:**
-   - Provider imports `forkSessionDatabase` from `"durable-zero/core"`. In the new architecture, it lives in `"durable-zero/adapter-pi-durable"`.
-   - *Resolution:* Re-export from canonical public seam and update import path.
+   - Provider imports `forkSessionDatabase` from `"durable-zero/core"`. In the new architecture, it is already exported from `"durable-zero/adapter-pi-durable"` (`packages/adapter-pi-durable/src/index.ts:5`).
+   - *Resolution:* Update provider import path to `"durable-zero/adapter-pi-durable"`. `@durable-zero/contracts` remains pure schemas/types and must NOT export concrete database logic.
 
 ---
 
@@ -214,21 +215,26 @@ The user intent envisions Zero as a modular, headless/backendless toolkit where 
 See `migration-slices.md` for full implementation details:
 
 - **Slice 0: Source Seams & Asset Discovery Repair** (P1)
-  - Re-export `forkSessionDatabase`, `HostBridge`, and `forwardHostToolCall` in durable-zero.
-  - Update `copy-runner-assets.mjs` and `runner-lookup.ts` in provider to point to `packages/runner/dist/main.js`.
-- **Slice 1: Protocol Alignment & Dispatcher Mounting in durable-zero** (P1)
-  - Mount `createSessionDispatcher` in `packages/runner/src/composition.ts:144-178`.
-  - Wire bidirectional `HostBridge` with `StdioJsonRpcServer.request()`.
-  - Provide readiness probe support or explicit `session/ready` notification.
+  - Verify `durable-zero/scripts/build.mjs` outputs `packages/runner/dist/main.js` and `packages/runner/dist/index.js`.
+  - Pure contracts invariant: do NOT export concrete database code from pure contracts. `forkSessionDatabase` is ALREADY exported from `@durable-zero/adapter-pi-durable`.
+  - Update `bb-plugin-provider-pi-durable/src/host/thread-fork.ts` import from `"durable-zero/core"` to `"durable-zero/adapter-pi-durable"`.
+  - Update `copy-runner-assets.mjs` and `runner-lookup.ts` in provider to discover `packages/runner/dist/main.js`.
+- **Slice 1: Runner Composition Root & Dispatcher Mounting in durable-zero** (P1)
+  - Mount `createSessionDispatcher` in `packages/runner/src/composition.ts:144-178` (activates `session/steer`, `session/compact`, `session/abortTask`, `models/set`, `models/setThinking`, and parameter unwrapping for `subagent/setPolicy`).
+  - Account for intentionally unsupported seams: `binding/register`, `binding/list`, `session/fork`, and `tools/register` throw `UnsupportedCapabilityError`.
+  - Instantiate and wire owned `HostBridge` (`packages/runner/src/host/host-bridge.ts:33-85`) in `assembleDurableZero` using `server.request.bind(server)`. Pass to dynamic tools extension (no module-level global state).
+  - Use standard `session/getState` JSON-RPC request for bounded readiness probing (optional agreed notification).
 - **Slice 2: Provider Transport Migration to JSON-RPC 2.0** (P1)
   - Refactor `RunnerRpcChannel` and `RunnerProcess` to send and receive JSON-RPC 2.0.
+  - Probe readiness via `session/getState` in `PiThreadSession.start()`.
   - Update `PiThreadSession` method calls (`prompt`, `steer`, `compact`, `setModel`, `setThinkingLevel`, `getStats`).
-  - Unwrap `session/event` notifications in `DeltaTranslator`.
+  - Unwrap `session/event` notifications in `DeltaTranslator`, consuming real event schemas (`message_update` with `assistantMessageEvent.text_delta`, `message_end`).
+  - Handle inbound `host/toolCall` and `host/interaction` requests over stdio.
 - **Slice 3: Boundary Purity & Storage Decoupling** (P2)
   - Replace `control.jsonl` writes in `server.ts` with `session/abortTask` RPC.
   - Triage dead dependencies in provider `package.json` (`chord`, `pi-codemode`, `proper-lockfile`, `quickjs-wasi`) and update integrity test assertions.
 - **Slice 4: Hermetic Acceptance & E2E Validation** (P0 Verification)
-  - Execute end-to-end walking skeleton test using synthetic model fixture: boot -> prompt -> streaming -> reverse tool call -> abort -> clean exit.
+  - Execute end-to-end walking skeleton test using synthetic model fixture: boot -> prompt -> streaming (`message_update` text_delta) -> reverse tool call (`host/toolCall`) -> abort (`session/abortTask`) -> clean exit.
 
 ---
 
@@ -245,29 +251,26 @@ To prevent flakiness and enforce strict architectural isolation:
 
 ---
 
-## 11. Architecture Verification Summary
+## 11. Architecture Verification & Evaluation
 
-```markdown
-Architecture verification
-- Passed: AP-010 (Modular Ports & Adapters architecture preserved)
-- Passed: AP-012 (Fail-fast typed errors across JSON-RPC boundaries)
-- Passed: AP-013 (Data integrity: ACID SQLite storage & WAL checkpointing verified)
-- Passed: AP-014 (SOLID / Clean Code: dependency injection in SessionCoordinator verified)
-- Passed: AP-016 (Security boundary: QuickJS sandbox isolation verified in adapter-codemode)
-- Passed: AP-019 (File line budget compliance: all provider host files < 200 LOC)
-- Passed: AP-020 (Clean Architecture & Composition Root validated)
-- Passed: AP-021 (Thin entry points: CLI main.ts delegates strictly to composition)
-- Passed: AP-023 (Async discipline: no floating unhandled promises in coordinator)
-- Passed: AP-028 (Deterministic testing: hermetic fixtures without live network)
-- Passed: AP-032 (Command/Query Separation verified in SessionCoordinator)
-- Passed: AP-059 (Readiness & Health check gaps identified and specified)
-- Passed: AP-074 (Injected dependency traceability probe verified)
-- Passed: AP-075 (Split-brain & bypassed composition root defects caught and triaged)
-- Passed: AP-076 (Anti-gaming reality check: real native submission ID and coordinator start verified)
+*Scope Discipline:* This is an architecture and integration research evaluation, NOT an implementation sign-off. Inspected source facts, proposed design choices, and unexecuted live execution gates are strictly distinguished below.
 
-Residual risk:
-- Residual Risk 1: The refactored durable-zero has not yet been packaged as a published npm release or merged into main. Linking against local git/subpath exports requires lockfile synchronization in the provider.
-- Residual Risk 2: HostBridge reverse RPC requires bidirectional request/response correlation over the same stdio stream. While StdioJsonRpcServer supports this in protocol tests, an integrated runner-level test with actual BB dynamic tools must be executed in Slice 2.
+### Inspected Source Facts (Verified Invariants in Current Source):
+- **AP-010 / AP-020 (Modular Architecture & Clean Composition Root):** `SessionCoordinator` (`packages/core/src/session/coordinator.ts:25-35`) injects `IAgentEngine` cleanly via constructor.
+- **AP-012 (Fail-Fast & Explicit Error Contracts):** Protocol layer enforces typed JSON-RPC errors (`JsonRpcMethodNotFoundError`, `JsonRpcInvalidParamsError`, `SessionError`).
+- **AP-013 (Data Integrity):** SQLite ACID transaction management and WAL checkpointing are retained in `@durable-zero/adapter-pi-durable`.
+- **AP-019 (Modularity & Line Budgets):** All examined source files in `src/` remain modular (< 200 lines).
+- **AP-074 / AP-076 (Dependency Traceability & Anti-Gaming):** `SessionCoordinator.start()` and `PiDurableEngine.submit()` are genuine, active execution paths returning native submission receipts; no fake admission IDs or hollow stubs exist.
+
+### Evaluated Design Choices for Proposed Plan:
+- **No Concrete DB Leaks into Pure Contracts (AP-010, AP-026):** `forkSessionDatabase` remains in `adapter-pi-durable`; `@durable-zero/contracts` contains only pure schemas and interfaces.
+- **No Global Module State for Reverse RPC (AP-074, AP-076):** Rejects restoring global `activeToolForwarder` / `setHostToolForwarder`. Mandates an owned `HostBridge` instance injected through the composition root.
+- **Realistic Dispatcher Seam Scope (AP-075):** Acknowledges that mounting `createSessionDispatcher` leaves `binding/register`, `binding/list`, `session/fork`, and `tools/register` as typed `UnsupportedCapabilityError`, and plans explicit handling accordingly.
+- **No Invented Readiness SLAs (AP-059):** Relies on standard public `session/getState` JSON-RPC probing rather than inventing mandatory frames or unverified 500ms bounds.
+
+### Unexecuted Verification Gates (Pending Implementation):
+- Live JSON-RPC 2.0 communication between provider host and runner process.
+- Bidirectional stdio reverse-tool continuation roundtrip (`host/toolCall`).
+- End-to-end streaming delta translation against refactored runner events.
 
 VERDICT: INTEGRATION NOT READY (BLOCKED ON SLICES 0–2 IMPLEMENTATION)
-```
