@@ -8,6 +8,8 @@ Current Status: **The started Native/component/test-closure stage is accepted in
 
 ## 1. Quick Links
 
+- **Motion Presentation Research / Corrected Technical Audience (proposal, not implementation):** [research handoff](handoffs/motion-presentation-research.md)
+
 - **Current Stage Acceptance:** [stage-closure-acceptance.json](stage-closure-acceptance.json)
 - **Cold Final Root Verification:** [final-rerun-summary.json](live/task-1/final-verification/final-rerun-summary.json) · [374-case JUnit](live/task-1/final-verification/root-test-513d.junit.xml)
 - **Compiled Native R3 Artifact:** [README](live/task-1/native-fix-round-3/README.md) · [build manifest](live/task-1/native-fix-round-3/parent-build-manifest.json)
