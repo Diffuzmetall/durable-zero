@@ -26,7 +26,7 @@ async function main() {
 	}
 
 	if (argv.includes("--version") || argv.includes("-v")) {
-		console.log("durable-zero v0.26.31");
+		console.log("durable-zero v0.27.0-alpha.1");
 		process.exit(0);
 	}
 
