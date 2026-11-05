@@ -1,0 +1,155 @@
+$ tsc -p tsconfig.src.json --pretty false
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(20,3): error TS2412: Type 'string | number | undefined' is not assignable to type 'string | number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string | number'.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(26,3): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(38,4): error TS2412: Type 'undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(41,4): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(59,32): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(59,67): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(157,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(163,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(178,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(36,3): error TS2412: Type '((p?: string | undefined, m?: string | undefined) => number | undefined) | undefined' is not assignable to type '(provider?: string | undefined, modelId?: string | undefined) => number | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type '(provider?: string | undefined, modelId?: string | undefined) => number | undefined'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(42,3): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(96,5): error TS2412: Type 'undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(98,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(99,5): error TS2412: Type 'undefined' is not assignable to type '{ [x: string]: unknown; role: "assistant"; content: ({ type: "text"; text: string; } | { type: "thinking"; thinking: string; } | { type: "toolCall"; id: string; name: string; arguments: Record<string, unknown>; })[]; stopReason?: "length" | ... 4 more ... | undefined; errorMessage?: string | undefined; usage?: { ......' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(113,32): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(113,67): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(152,74): error TS2352: Conversion of type 'Message' to type 'RawAssistantEntryMessage' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'AssistantMessage' is not comparable to type 'RawAssistantEntryMessage'.
+    Types of property 'usage' are incompatible.
+      Type 'Usage' is not comparable to type '{ [x: string]: unknown; input?: number | undefined; output?: number | undefined; cacheRead?: number | undefined; cacheWrite?: number | undefined; totalTokens?: number | undefined; cost?: { [x: string]: unknown; ... 4 more ...; total?: number | undefined; } | undefined; }'.
+        Index signature for type 'string' is missing in type 'Usage'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(183,6): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/tool-result-extractor.ts(45,35): error TS2379: Argument of type '{ toolName: string; rawOutput: unknown; isError: boolean; diagnostics: readonly ToolDiagnostic[] | undefined; retainedOutput: string | undefined; }' is not assignable to parameter of type '{ toolName: string; rawOutput: unknown; isError: boolean; diagnostics?: readonly ToolDiagnostic[]; retainedOutput?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'diagnostics' are incompatible.
+    Type 'readonly ToolDiagnostic[] | undefined' is not assignable to type 'readonly ToolDiagnostic[]'.
+      Type 'undefined' is not assignable to type 'readonly ToolDiagnostic[]'.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(144,48): error TS2379: Argument of type '{ extensions: Extension[]; runtime: ExtensionRuntime; cwd: string; modelRuntime: ModelRuntime; executeToolFn: NestedToolExecutor; ... 9 more ...; onSubmitUserMessage: (c: string, d: "steer" | ... 1 more ... | undefined) => void | ... 1 more ... | undefined; }' is not assignable to parameter of type 'SetupExtensionRunnerOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onNotice' are incompatible.
+    Type '((level: "error" | "warning" | "info", message: string) => void) | undefined' is not assignable to type '(level: "error" | "warning" | "info", message: string) => void'.
+      Type 'undefined' is not assignable to type '(level: "error" | "warning" | "info", message: string) => void'.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(187,6): error TS2345: Argument of type '{ messageType: "user"; prompt: string; images: undefined; }' is not assignable to parameter of type 'BeforeAgentStartTrigger'.
+  Type '{ messageType: "user"; prompt: string; images: undefined; }' is not assignable to type 'Pick<BeforeAgentStartUserEvent, "prompt" | "images" | "messageType">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'images' are incompatible.
+      Type 'undefined' is not assignable to type 'ImageContent[]'.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(205,2): error TS2375: Type '{ extensionRunner: ExtensionRunner | undefined; cleanup: () => Promise<void>; setActiveTools: (tools: string[]) => void; getActiveTools: () => string[]; }' is not assignable to type 'MountedExtensionBridge' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'extensionRunner' are incompatible.
+    Type 'ExtensionRunner | undefined' is not assignable to type 'ExtensionRunner'.
+      Type 'undefined' is not assignable to type 'ExtensionRunner'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(90,8): error TS2375: Type '{ registry: Registry<ToolRegistration>; settingsManager: SettingsManager; cwd: string; storageDir: string; getSubagentPolicy: () => SubagentPolicyRecord; prompt: PromptOptions | undefined; dynamicNamespaces: DynamicCodemodeNamespaces | undefined; }' is not assignable to type 'BuiltinExtensionContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'prompt' are incompatible.
+    Type 'PromptOptions | undefined' is not assignable to type 'PromptOptions'.
+      Type 'undefined' is not assignable to type 'PromptOptions'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(148,36): error TS2379: Argument of type '{ cliProvider: string | undefined; cliModel: string; modelRuntime: ModelRuntime; }' is not assignable to parameter of type '{ cliProvider?: string; cliModel?: string; cliThinking?: ThinkingLevel; inlineApiKey?: boolean; modelRuntime: ModelRuntime; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'cliProvider' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(176,23): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(176,55): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/src/engine/runtime-bindings.ts(75,3): error TS2412: Type 'undefined' is not assignable to type 'RuntimeReadBinding<TaskGraph>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-bindings.ts(75,27): error TS2412: Type 'undefined' is not assignable to type '() => void' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-bindings.ts(77,33): error TS2379: Argument of type '{ tasks: undefined; }' is not assignable to parameter of type 'Partial<DurableView>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'tasks' are incompatible.
+    Type 'undefined' is not assignable to type 'TaskGraph'.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(79,8): error TS2345: Argument of type '{ messageType: "user"; prompt: string; images: any[] | undefined; }' is not assignable to parameter of type 'BeforeAgentStartTrigger'.
+  Type '{ messageType: "user"; prompt: string; images: any[] | undefined; }' is not assignable to type 'Pick<BeforeAgentStartUserEvent, "prompt" | "images" | "messageType">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'images' are incompatible.
+      Type 'any[] | undefined' is not assignable to type 'ImageContent[]'.
+        Type 'undefined' is not assignable to type 'ImageContent[]'.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(125,90): error TS2345: Argument of type '{ type: "session_before_compact"; preparation: { firstKeptEntryId: string; messagesToSummarize: Message[]; turnPrefixMessages: never[]; isSplitTurn: false; tokensBefore: number; fileOps: { ...; }; settings: any; }; ... 4 more ...; signal: AbortSignal; }' is not assignable to parameter of type 'RunnerEmitEvent'.
+  Type '{ type: "session_before_compact"; preparation: { firstKeptEntryId: string; messagesToSummarize: Message[]; turnPrefixMessages: never[]; isSplitTurn: false; tokensBefore: number; fileOps: { ...; }; settings: any; }; ... 4 more ...; signal: AbortSignal; }' is not assignable to type 'SessionBeforeCompactEvent' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'customInstructions' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(54,2): error TS2375: Type '{ model: { provider: string; modelId: string; }; thinkingLevel: string | undefined; modelLabel: string; }' is not assignable to type 'ExtractedTaskMeta' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'thinkingLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(98,2): error TS2375: Type '{ id: number; kind: string; conversationId: number; owner: number | undefined; background: boolean; abortRequested: boolean; state: RuntimeTaskState; blocked: BlockedReason | undefined; ... 7 more ...; tokens: TaskTokensUsage | undefined; }' is not assignable to type 'RuntimeTaskNode' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'owner' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(129,32): error TS2379: Argument of type '{ preview: string | undefined; toolName: string | undefined; targetHint: string | undefined; entryId: number | undefined; startedAt: number | undefined; tokens: TaskTokensUsage | undefined; }' is not assignable to parameter of type 'TerminalOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'preview' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(62,4): error TS2375: Type '{ message: string; code: string | undefined; }' is not assignable to type '{ message: string; code?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'code' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(104,9): error TS2375: Type '{ taskId: number; conversationId: number; owner: number | undefined; kind: string; outcome: TaskOutcomeName; isToolError: boolean | undefined; error: { message: string; code?: string; } | undefined; ... 6 more ...; tokens: TaskTokensUsage | undefined; }' is not assignable to type 'RuntimeTaskReceipt' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'owner' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(150,4): error TS2375: Type '{ tokens: TaskTokensUsage; taskId?: number; conversationId?: number; owner?: number; kind?: string; outcome?: TaskOutcomeName; isToolError?: boolean; error?: { readonly message: string; readonly code?: string; }; ... 5 more ...; startedAt?: number; }' is not assignable to type 'RuntimeTaskReceipt' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Property 'taskId' is optional in type '{ tokens: TaskTokensUsage; taskId?: number; conversationId?: number; owner?: number; kind?: string; outcome?: TaskOutcomeName; isToolError?: boolean; error?: { ...; }; ... 5 more ...; startedAt?: number; }' but required in type 'RuntimeTaskReceipt'.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(50,3): error TS2412: Type 'HarnessGraphSource | undefined' is not assignable to type 'HarnessGraphSource' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'HarnessGraphSource'.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(105,4): error TS2412: Type 'undefined' is not assignable to type 'Timeout' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(120,4): error TS2412: Type 'undefined' is not assignable to type 'Timeout' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(126,35): error TS2412: Type 'undefined' is not assignable to type 'Timeout' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(130,3): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(93,29): error TS2379: Argument of type '{ cwd: string; agentDir: string; settingsManager: SettingsManager; extensionFactories: ExtensionFactory[]; additionalSkillPaths: string[] | undefined; additionalExtensionPaths: string[] | undefined; noExtensions: boolean; }' is not assignable to parameter of type 'DefaultResourceLoaderOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'additionalExtensionPaths' are incompatible.
+    Type 'string[] | undefined' is not assignable to type 'string[]'.
+      Type 'undefined' is not assignable to type 'string[]'.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(151,3): error TS2345: Argument of type '() => IExecutionEnvironment' is not assignable to parameter of type '() => ExecutionEnv | undefined'.
+  Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(186,48): error TS2322: Type '({ cwd, conversationId }: EnvTarget) => IExecutionEnvironment' is not assignable to type '(target: EnvTarget, context: Context) => ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
+  Type 'IExecutionEnvironment' is not assignable to type 'ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
+    Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(204,2): error TS2375: Type '{ modelRuntime: ModelRuntime; settingsManager: SettingsManager; harness: Harness; subagentPolicyHolder: SubagentPolicyHolder; ... 12 more ...; getActiveTools: (() => string[]) | undefined; }' is not assignable to type 'LoadedHarnessEnvironment' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'initialModelRef' are incompatible.
+    Type 'ModelRef | undefined' is not assignable to type 'ModelRef'.
+      Type 'undefined' is not assignable to type 'ModelRef'.
+packages/adapter-pi-durable/src/engine/runtime.ts(53,27): error TS2379: Argument of type '{ model: ModelRef; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | undefined; }' is not assignable to parameter of type 'AgentChange' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'thinkingLevel' are incompatible.
+    Type '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | undefined' is not assignable to type '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | null'.
+      Type 'undefined' is not assignable to type '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | null'.
+packages/adapter-pi-durable/src/engine/runtime.ts(128,46): error TS2379: Argument of type '{ bindings: RuntimeBindings; opened: Harness; modelRuntime: ModelRuntime; getState: () => DurableView; notice: (level: "error" | "warning" | "info", message: string) => void; ... 6 more ...; getActiveTools: (() => string[]) | undefined; }' is not assignable to parameter of type 'ControllerContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'extensionRunner' are incompatible.
+    Type 'ExtensionRunner | undefined' is not assignable to type 'ExtensionRunner'.
+      Type 'undefined' is not assignable to type 'ExtensionRunner'.
+packages/adapter-pi-durable/src/engine/session-commands.ts(156,25): error TS2379: Argument of type '{ sourceDir: string; targetDir: string; checkpointId: string | number | undefined; }' is not assignable to parameter of type 'ForkSessionDatabaseOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'checkpointId' are incompatible.
+    Type 'string | number | undefined' is not assignable to type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+packages/adapter-pi-durable/src/engine/shared/extension-runner.ts(151,41): error TS2379: Argument of type '{ getRegisteredTools: () => any; getCallableTools: (() => Array<{ name: string; description: string; parameters: unknown; }>) | undefined; settingsManager: SettingsManager | undefined; onActiveToolsChanged: ((tools: string[]) => void) | undefined; onToolsChanged: (() => void) | undefined; sessionManager: SessionMana...' is not assignable to parameter of type 'CreateExtensionActionsOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'getCallableTools' are incompatible.
+    Type '(() => { name: string; description: string; parameters: unknown; }[]) | undefined' is not assignable to type '() => { name: string; description: string; parameters: unknown; }[]'.
+      Type 'undefined' is not assignable to type '() => { name: string; description: string; parameters: unknown; }[]'.
+packages/adapter-pi-durable/src/engine/shared/extension-ui-context.ts(18,50): error TS2379: Argument of type '{ title: string; message: string | undefined; }' is not assignable to parameter of type '{ title?: string; message?: string; data?: unknown; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'message' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/subagent-policy-ack.ts(39,36): error TS2379: Argument of type '{ initialRecord: SubagentPolicyRecord | undefined; persist: (record: SubagentPolicyRecord) => Promise<void>; }' is not assignable to parameter of type 'CreateSubagentPolicyHolderOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'initialRecord' are incompatible.
+    Type 'SubagentPolicyRecord | undefined' is not assignable to type 'SubagentPolicyRecord'.
+      Type 'undefined' is not assignable to type 'SubagentPolicyRecord'.
+packages/adapter-pi-durable/src/engine/subagent.ts(75,8): error TS2379: Argument of type '{ model: NormalizedModelRef | undefined; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; }' is not assignable to parameter of type 'ResolveSubagentParentContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'model' are incompatible.
+    Type 'NormalizedModelRef | undefined' is not assignable to type 'SubagentModelReference'.
+      Type 'undefined' is not assignable to type 'SubagentModelReference'.
+packages/adapter-pi-durable/src/engine/task-labels.ts(86,26): error TS2379: Argument of type '{ toolName: string | undefined; targetHint: string | undefined; preview: string; }' is not assignable to parameter of type 'TaskCallDetails' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'toolName' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/task-tokens.ts(16,2): error TS2375: Type '{ total: number; input: number | undefined; output: number | undefined; reasoning: number | undefined; cacheRead: number | undefined; }' is not assignable to type 'TaskTokensUsage' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'input' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/tool-adapter.ts(82,9): error TS2322: Type '(args: unknown, api: ToolExecutionApi<JsonValue>, runtimeContext: Context) => Promise<{ output: { type: "text"; text: string; }[]; isError: true; } | { structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }>' is not assignable to type '(args: unknown, api: ToolExecutionApi<JsonValue>, context: Context) => Promise<ToolExecutionResult<JsonValue>>'.
+  Type 'Promise<{ output: { type: "text"; text: string; }[]; isError: true; } | { structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }>' is not assignable to type 'Promise<ToolExecutionResult<JsonValue>>'.
+    Type '{ output: { type: "text"; text: string; }[]; isError: true; } | { structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }' is not assignable to type 'ToolExecutionResult<JsonValue>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Type '{ structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }' is not assignable to type 'ToolExecutionResult<JsonValue>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Types of property 'isError' are incompatible.
+          Type 'boolean | undefined' is not assignable to type 'boolean'.
+            Type 'undefined' is not assignable to type 'boolean'.
+[ELIFECYCLE] Command failed with exit code 2.

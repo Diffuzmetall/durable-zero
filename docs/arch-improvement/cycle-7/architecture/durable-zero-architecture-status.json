@@ -1,7 +1,7 @@
 {
   "capturedAt": "2026-11-05T01:24:06.884289+03:00",
   "head": "ea21bf5a645d148c0767716b099d387bb0bce822",
-  "overall": "BLOCKED closing strict typecheck and root regression",
+  "overall": "NOT ACCEPTED — current type remediation WIP; fresh integrated gates pending",
   "nativeCandidate": "fc0909602e7969df080259a2e2d4a7114be450b8",
   "dispatcherFixCandidate": "ea21bf5a645d148c0767716b099d387bb0bce822",
   "tasks": [
@@ -223,5 +223,20 @@
   ],
   "reviewUpdateAt": "2026-11-05T03:00:19.380313+03:00",
   "nativeMinimumProductVerdict": "PASS fresh compiled R2 76ec1265",
-  "nativeSourceVerdict": "PASS scoped ad99873e"
+  "nativeSourceVerdict": "PASS scoped ad99873e",
+  "currentCandidate": {
+    "sha": "ecf7c69868c34b6fb0bc5a30b083f4de8a1ce075",
+    "packageVersion": "0.26.31",
+    "delivery": "GitHub branch WIP only; no npm release or BB install",
+    "nativeGateProvenance": "Existing native source/product PASS remains pinned to ad99873e and runner76ec1265; later type remediation not independently accepted"
+  },
+  "closingTypecheckProgress": {
+    "checkpointBeforeRun": "ecf7c69868c34b6fb0bc5a30b083f4de8a1ce075",
+    "scope": "Official whole-production typecheck; live working tree (A resumed), not a frozen acceptance",
+    "exit": 2,
+    "errorsByPackage": {
+      "adapter-pi-durable": 56
+    },
+    "errors": 56
+  }
 }
