@@ -1,0 +1,24 @@
+[
+  {
+    "file": "iii-home.jpg",
+    "source": "https://iii.dev",
+    "capturedAt": "2026-11-05T11:20:43.497000+00:00",
+    "kind": "public-page-screenshot",
+    "notAPrototype": true,
+    "qualification": "Second capture after content hydration; initial blank entrance frame not used as reference"
+  },
+  {
+    "file": "effect-home.jpg",
+    "source": "https://effect.website",
+    "capturedAt": "2026-11-05T11:19:00.979000+00:00",
+    "kind": "public-page-screenshot",
+    "notAPrototype": true
+  },
+  {
+    "file": "mastra-studio.jpg",
+    "source": "https://mastra.ai/docs/studio/overview",
+    "capturedAt": "2026-11-05T11:19:06.381000+00:00",
+    "kind": "public-page-screenshot",
+    "notAPrototype": true
+  }
+]

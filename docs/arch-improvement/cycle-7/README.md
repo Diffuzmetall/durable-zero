@@ -8,7 +8,7 @@ Current Status: **The started Native/component/test-closure stage is accepted in
 
 ## 1. Quick Links
 
-- **Motion Presentation Research / Corrected Technical Audience (proposal, not implementation):** [research handoff](handoffs/motion-presentation-research.md)
+- **Harness Assembly / Workbench (direction selected, design pending):** [product references and workbench brief](handoffs/harness-assembly-workbench-brief.md) · [Motion research and technical audience](handoffs/motion-presentation-research.md) · [public screenshot provenance](evidence/presentation-references/sources.json)
 
 - **Current Stage Acceptance:** [stage-closure-acceptance.json](stage-closure-acceptance.json)
 - **Cold Final Root Verification:** [final-rerun-summary.json](live/task-1/final-verification/final-rerun-summary.json) · [374-case JUnit](live/task-1/final-verification/root-test-513d.junit.xml)

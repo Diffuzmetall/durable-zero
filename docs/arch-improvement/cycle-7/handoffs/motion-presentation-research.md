@@ -1,13 +1,13 @@
 # Motion presentation — corrected audience and research handoff
 
-Status: RESEARCH / PROPOSED DIRECTIONS, not approved design or implemented presentation.
+Status: Harness Assembly direction selected by user; detailed design and implementation remain unapproved. Follow-up: harness-assembly-workbench-brief.md.
 Date: 2026-11-05. Origin: user instructions in BB thread `thr_9yjb93iwmn`.
 
 ## Audience correction
 
 The audience writes plugins and adapters and integrates durable-zero as a harness in other environments. Do not replace engineering content with introductory analogies. The previous general-introduction concept was the assistant's proposal, not an approved design. The DIP guide supplies a technology reference, NOT a required presentation format.
 
-## Recommended direction, still a proposal
+## Selected direction; detailed design still pending
 
 **Harness Assembly:** an authored engineering illustration of the runtime, with a spatial exploded view of logical layers. It is an engineering model, not a claim that the software is physical hardware. Opening a port exposes actual interfaces, initialization, ownership, cleanup and errors. Selecting an adapter changes composition before startup; do not imply arbitrary live hot-plug.
 
@@ -15,7 +15,7 @@ Two complementary directions were considered:
 - **Runtime Observatory:** a temporal microscope of admission, streaming, tool execution, settlement and persisted entries. Scrubbing is inspection of a fixture/replay, not reversal of real database writes or tool side effects.
 - **Contract Studio:** synchronized code / port / payload views of the same integration. It is useful during implementation, but on its own risks becoming API reference with decorative transitions.
 
-A strong candidate is Assembly as the central object, Observatory as the execution inspection mode, and Contract Studio as details of a selected seam. This combination is not yet user-approved.
+The user selected Harness Assembly and added workbench / work desk references. Observatory as an inspection mode and Contract Studio as seam details remain design proposals, not an approved complete specification.
 
 ## Motion techniques verified against official documentation
 
