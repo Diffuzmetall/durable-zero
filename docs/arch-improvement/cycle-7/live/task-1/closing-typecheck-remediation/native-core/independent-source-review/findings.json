@@ -1,0 +1,47 @@
+{
+  "milestone": "e855a045ba291fa5d3a505a2c2294f6be8feb5a8",
+  "review_type": "independent-source-closing-re-review-precheck",
+  "verdict": "FAIL (PRECHECK - Pending R8 Env ABI Resolution)",
+  "non_env_architecture_status": "PASS (with receipt qualification)",
+  "qualifications": {
+    "provenance": "The 12 file SHA-256 hashes represent frozen candidate e855a045ba291fa5d3a505a2c2294f6be8feb5a8. Probes execute against relative workspace paths matching that frozen state before active R8 working-tree modifications.",
+    "execution_env_surface": "Core IExecutionEnvironment declares 6 methods: readFile, writeFile, exec, statFile?, listFiles?, cleanup. Pi SDK ExecutionEnv requires 21+ methods.",
+    "store_probe_scope": "Probe 2 verifies pre-persistence validation rejection (functions, NaN, Infinity) without DB allocation. Real SQLite roundtrip persistence is attributed to author's packages/adapter-pi-durable/test/store-roundtrip.test.ts.",
+    "streaming_probe_scope": "Probe 4 verifies single-turn suffix catchup at index 0; Probe 5 verifies parent thinking(0)/text(1) reconstruction. Multi-turn zero-duplicate guarantees across turns are preserved from historical Round 2 receipts (packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts and fix-round-2/probe-round-2.test.ts)."
+  },
+  "blockers_adjudication": {
+    "FND-T1-01": "CLOSED (PASS)",
+    "FND-T1-02": "CLOSED (PASS)",
+    "FND-T1-03": "CLOSED (PASS)",
+    "FND-T1-04": "CLOSED (PASS)",
+    "FND-T1-05": "CLOSED (PASS)",
+    "FND-T1-06": "CLOSED (PASS)",
+    "FND-T1-07": "CLOSED (PASS)",
+    "FND-T1-08": "CLOSED (PASS)",
+    "FND-T1-09": "LOG-ONLY (P3)",
+    "FND-T1-10": "CLOSED (PASS)",
+    "FND-T1-11": "CLOSED (PASS)"
+  },
+  "open_findings": [
+    {
+      "id": "FND-T1-12",
+      "severity": "P2",
+      "title": "Execution Environment ABI Seam Mismatch (IExecutionEnvironment vs SDK ExecutionEnv)",
+      "file": "packages/adapter-pi-durable/src/engine/runtime-loader.ts:151:3, 186:48",
+      "evidence": "Running `pnpm run typecheck` (`tsc -p tsconfig.src.json --pretty false`) produces exit code 2 with 2 errors in runtime-loader.ts: Core IExecutionEnvironment (declaring readFile, writeFile, exec, statFile?, listFiles?, cleanup) lacks 17+ properties required by SDK ExecutionEnv (absolutePath, joinPath, readTextFile, openTextLineReader, etc.).",
+      "impact": "Workspace typecheck fails; boundary adapter between domain execution environment and native Pi SDK harness is required.",
+      "rule": "AP-026, AP-029",
+      "fix_decision": "fix-now (In progress under canonical R8 Section 4)"
+    },
+    {
+      "id": "FND-T1-09",
+      "severity": "P3",
+      "title": "Residual Split-Brain Between Runner Inline Handler and SessionDispatcher Module",
+      "file": "packages/runner/src/composition.ts:122-153",
+      "evidence": "assembleDurableZero implements an inline handler for 6 basic methods, while Task 4B developed createSessionDispatcher. Full integration is scheduled for runner composition step.",
+      "impact": "Low; known task boundary. Does not block Slice 0 walking skeleton execution.",
+      "rule": "AP-011, AP-020",
+      "fix_decision": "log-only"
+    }
+  ]
+}

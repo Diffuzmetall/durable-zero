@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="CLOSING PROBE 1: True #private encapsulation in PiDurableEngine" time="0.000826" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-closing-precheck.test.ts"/>
+	<testcase name="CLOSING PROBE 2: Store JSON validation and non-JSON rejection" time="0.000765" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-closing-precheck.test.ts"/>
+	<testcase name="CLOSING PROBE 3: LocalNodeExecutionEnv fails fast on empty command / argv" time="0.000233" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-closing-precheck.test.ts"/>
+	<testcase name="CLOSING PROBE 4: Child adapter suffix catchup emits missing suffix with exact correlation" time="0.000237" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-closing-precheck.test.ts"/>
+	<testcase name="CLOSING PROBE 5: Parent DurableEventAdapter message_end reconstructs content without stale properties" time="0.000231" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-closing-precheck.test.ts"/>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 556.73125 -->
+</testsuites>

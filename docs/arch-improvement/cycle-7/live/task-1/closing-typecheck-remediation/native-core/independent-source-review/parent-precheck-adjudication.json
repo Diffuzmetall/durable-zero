@@ -1,0 +1,11 @@
+{
+  "scope": "Frozen e855 non-Env source precheck ONLY",
+  "nonEnvVerdict": "No new confirmed P0-P2 in independently reviewed non-Env delta",
+  "overallVerdict": "FAIL/PENDING known FND-T1-12 until R8 and final integrated checks",
+  "verifiedFrozenHashClaims": 12,
+  "sampledHashClaims": 12,
+  "genuineProbeCases": 5,
+  "genuineProbeFailures": 0,
+  "provenanceQualification": "Static inventory matches frozene855; runtimeprobes imported live shared source, not isolated executable artifact. Some current R8 source already differs. Source assertions must not transfer olde855 evidence automatically.",
+  "probeScope": "Constructor privacy; invalidJSON rejection; emptyexec; ONE childindex0 suffixcatchup; parentthinking0/text1 reconstruction. No fresh fullmultiturn/WALinternal proof claimed by parent."
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "path": "packages/core/src/session/coordinator.ts",
+    "claimed": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "frozenSha256": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "liveSha256": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
+    "claimed": "3af701614e4fc62b19a7ac7ec4388513ac8e58916f0e811f2e560d4e53d568a2",
+    "frozenSha256": "3af701614e4fc62b19a7ac7ec4388513ac8e58916f0e811f2e560d4e53d568a2",
+    "liveSha256": "1670e0abeb722fa9f93fff501b68ea5ed61f292614cdd75b8563596624a34db2",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": false,
+    "liveMatchesFrozen": false
+  },
+  {
+    "path": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts",
+    "claimed": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "frozenSha256": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "liveSha256": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts",
+    "claimed": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "frozenSha256": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "liveSha256": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/adapter-pi-durable/src/engine/bridge/assistant-message-builder.ts",
+    "claimed": "e2f631be65eda07bdf8a6b15e587dce264e1008b8387f60d63dd628866fbffb0",
+    "frozenSha256": "e2f631be65eda07bdf8a6b15e587dce264e1008b8387f60d63dd628866fbffb0",
+    "liveSha256": "e2f631be65eda07bdf8a6b15e587dce264e1008b8387f60d63dd628866fbffb0",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/adapter-pi-durable/src/engine/bridge/turn-summary.ts",
+    "claimed": "76bb80205d4f00d5e4f2979755061ce2792d1df36ffabf2fa248fb2b44a66d89",
+    "frozenSha256": "76bb80205d4f00d5e4f2979755061ce2792d1df36ffabf2fa248fb2b44a66d89",
+    "liveSha256": "76bb80205d4f00d5e4f2979755061ce2792d1df36ffabf2fa248fb2b44a66d89",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/adapter-pi-durable/src/store.ts",
+    "claimed": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "frozenSha256": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "liveSha256": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/execution/src/adapters/local-node-env.ts",
+    "claimed": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "frozenSha256": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "liveSha256": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/runner/src/composition.ts",
+    "claimed": "2def6426690c37183adb393e7e46ad6cb280cabaa17729f1e1143ae519499e08",
+    "frozenSha256": "2def6426690c37183adb393e7e46ad6cb280cabaa17729f1e1143ae519499e08",
+    "liveSha256": "2e97adca68cdda1e1fcf293b6d679fae86867ab51d4d0ce817c22747de36425e",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": false,
+    "liveMatchesFrozen": false
+  },
+  {
+    "path": "packages/runner/src/main.ts",
+    "claimed": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "frozenSha256": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "liveSha256": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/cli/bin/durable-zero.js",
+    "claimed": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "frozenSha256": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "liveSha256": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  },
+  {
+    "path": "packages/runner/test/e2e-walking-skeleton.test.ts",
+    "claimed": "8107f245ed6588aaae3e25215ec39ea50f62440010b44ec1063f3b9433b42013",
+    "frozenSha256": "8107f245ed6588aaae3e25215ec39ea50f62440010b44ec1063f3b9433b42013",
+    "liveSha256": "8107f245ed6588aaae3e25215ec39ea50f62440010b44ec1063f3b9433b42013",
+    "claimMatchesFrozen": true,
+    "claimMatchesLive": true,
+    "liveMatchesFrozen": true
+  }
+]
