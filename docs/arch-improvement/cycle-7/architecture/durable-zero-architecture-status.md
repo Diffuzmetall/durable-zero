@@ -38,11 +38,11 @@ Source/component review и независимый compiled black-box PASS; на�
 
 Осталось: Полный clean build/typecheck/regression и whole-Cycle acceptance остаются отдельно; старый неиспользуемый build-script P3 учтён для cleanup.
 
-## 5 / 6 · Полная чистота и S9 — Closing gates FAIL
+## 5 / 6 · Полная чистота и S9 — Typecheck PASS; final gates pending
 
-Общий live root regression360/360PASS, безskip. Официальная source-only типизация:exit2, ровно2ошибки единственного Core6/native25 EnvABI. Последняя новая чистая сборка/compiledNative ещё не приняты.
+Parent fresh official tsc exit0 on08c6;7e12 changesonlytest/docs. Historical360/0rootregression belongs pre-R8source; frozenfinalfullsuite/build/nativeCLI notyetaccepted.
 
-Осталось: Закрыть техническое R8 EnvABI с честными ограничениями Coreадаптера; повторитьsource/build/type/root regression и свежую compiledNative приёмку. ПолныйCycle7 отдельно.
+Осталось: FixedR8 independent18probe replay; isolatedcoldbuild/dependencylock/typecheck/fullrootsuite; actualnewCLIhash and 5nativepublicjourneys includingrealread.
 
 ## Evidence
 
