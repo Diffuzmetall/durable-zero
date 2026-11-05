@@ -10,7 +10,7 @@ import type { SubagentPolicyRecord } from "../policy/types.ts";
 import { SessionError } from "../errors.ts";
 
 export type { PromptAdmissionReceipt, PromptInput } from "@durable-zero/contracts";
-export type { PromptExecutionOptions as PromptOptions } from "./engine.ts";
+export type { PromptExecutionOptions } from "./engine.ts";
 
 export interface SessionCoordinatorOptions {
 	engine: IAgentEngine;

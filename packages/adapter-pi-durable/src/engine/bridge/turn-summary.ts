@@ -101,5 +101,13 @@ export function resolveTurnSummary(
 		finalMsg.errorMessage = errorMessage;
 	}
 
-	return { finalMsg, cw, cumulativeUsage, isAborted, isError, errorMessage, lastCheckpointId };
+	return {
+		finalMsg,
+		isAborted,
+		isError,
+		...(cw !== undefined ? { cw } : {}),
+		...(cumulativeUsage !== undefined ? { cumulativeUsage } : {}),
+		...(errorMessage ? { errorMessage } : {}),
+		...(lastCheckpointId !== undefined ? { lastCheckpointId } : {}),
+	};
 }

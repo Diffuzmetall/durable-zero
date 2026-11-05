@@ -62,7 +62,7 @@ export class LocalNodeExecutionEnv implements IExecutionEnvironment {
       const child =
         typeof argvOrCommand === "string"
           ? exec(argvOrCommand, { cwd: execCwd, env: execEnv, timeout, signal: options?.signal })
-          : execFile(argvOrCommand[0], argvOrCommand.slice(1), {
+          : execFile(argvOrCommand[0] ?? "", argvOrCommand.slice(1), {
               cwd: execCwd,
               env: execEnv,
               timeout,

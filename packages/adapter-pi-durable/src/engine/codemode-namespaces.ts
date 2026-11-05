@@ -18,11 +18,13 @@ export class DynamicCodemodeNamespaces {
 			const idx = this.list.findIndex((n) => n.prefix === ns.prefix);
 			if (idx !== -1) {
 				const existing = this.list[idx]!;
+				const desc = ns.description ?? existing.description;
+				const inst = ns.instructions ?? existing.instructions;
 				this.list[idx] = {
 					name: ns.name || existing.name,
 					prefix: ns.prefix,
-					description: ns.description ?? existing.description,
-					instructions: ns.instructions ?? existing.instructions,
+					...(desc !== undefined ? { description: desc } : {}),
+					...(inst !== undefined ? { instructions: inst } : {}),
 				};
 			}
 			return;

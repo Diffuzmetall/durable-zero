@@ -20,13 +20,13 @@ export type SubagentModelProfile = {
 };
 
 export type SubagentPolicy =
-	| { mode: "inherit"; configuredProfile?: SubagentModelProfile }
+	| { mode: "inherit"; configuredProfile?: SubagentModelProfile | undefined }
 	| { mode: "configured"; configuredProfile: SubagentModelProfile };
 
 export type SubagentPolicyRecord = {
 	version: 1;
 	revision: number;
-	updatedAt?: string;
+	updatedAt?: string | undefined;
 	policy: SubagentPolicy;
 };
 

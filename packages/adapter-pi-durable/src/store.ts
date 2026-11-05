@@ -3,6 +3,7 @@ import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import {
 	createSession,
 	defineDocFamily,
+	type JsonObject,
 	type Session,
 } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
@@ -15,7 +16,8 @@ export interface PiDurableSessionStoreOptions {
 	cwd?: string;
 }
 
-const genericDocFamily = defineDocFamily<Record<string, unknown>, string>({
+const genericDocFamily = defineDocFamily<JsonObject, null>({
+	family: true,
 	checkpointWhen: () => false,
 	kind: "dz.document",
 	version: 1,
@@ -64,14 +66,14 @@ export class PiDurableSessionStore implements ISessionStore {
 	async saveDocument(collection: string, docId: string, data: unknown): Promise<void> {
 		const session = await this.getSession();
 		await session.commit(async (tx) => {
-			const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`);
+			const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`, null);
 			for (const key of Object.keys(doc)) {
-				delete doc[key];
+				delete (doc as Record<string, unknown>)[key];
 			}
 			if (data && typeof data === "object" && !Array.isArray(data)) {
 				Object.assign(doc, structuredClone(data));
 			} else {
-				doc._value = structuredClone(data);
+				doc._value = structuredClone(data) as any;
 			}
 		}, BACKGROUND_CONTEXT);
 	}
@@ -87,7 +89,11 @@ export class PiDurableSessionStore implements ISessionStore {
 	}
 
 	async forkSession(checkpointId: string | number, newSessionDir: string): Promise<void> {
-		forkSessionDatabase({ sourceDir: this.sessionDir, targetDir: newSessionDir, checkpointId });
+		await forkSessionDatabase({
+			sourceDir: this.sessionDir,
+			targetDir: newSessionDir,
+			...(checkpointId !== undefined ? { checkpointId } : {}),
+		});
 	}
 
 	watchTasks(onUpdate: (tasks: TaskRecord[]) => void): { close(): void } {

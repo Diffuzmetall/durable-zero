@@ -1,11 +1,9 @@
 import { ROOT_CONVERSATION_ID, type Cursor } from "@earendil-works/pi-durable";
 import type { TextContent, ImageContent } from "@earendil-works/pi-ai";
+import type { PromptAdmissionReceipt, PromptInput, RunnerEvent } from "@durable-zero/contracts";
 import type {
 	IAgentEngine,
-	PromptAdmissionReceipt,
-	PromptInput,
 	PromptExecutionOptions,
-	RunnerEvent,
 	SessionStateDTO,
 	SessionTranscriptDTO,
 	TranscriptEntryDTO,
@@ -62,11 +60,13 @@ export class PiDurableEngine implements IAgentEngine {
 		this.instance = await openDurable({
 			cwd: this.options.cwd ?? process.cwd(),
 			sessionDir: this.sessionDir,
-			session: this.options.session,
-			continueSession: this.options.continueSession,
-			cli: this.options.cli,
-			dependencies: this.options.dependencies,
-			executionEnvFactory: this.options.dependencies?.executionEnvFactory,
+			...(this.options.session !== undefined ? { session: this.options.session } : {}),
+			...(this.options.continueSession !== undefined ? { continueSession: this.options.continueSession } : {}),
+			...(this.options.cli !== undefined ? { cli: this.options.cli } : {}),
+			...(this.options.dependencies !== undefined ? { dependencies: this.options.dependencies } : {}),
+			...(this.options.dependencies?.executionEnvFactory !== undefined
+				? { executionEnvFactory: this.options.dependencies.executionEnvFactory }
+				: {}),
 		});
 
 		this.watcher = await startSubagentWatcher(
@@ -77,7 +77,11 @@ export class PiDurableEngine implements IAgentEngine {
 
 		this.graphSource = new RuntimeGraphSource(
 			this.instance.view,
-			{ rootConversationId: ROOT_CONVERSATION_ID },
+			{
+				sessionId: this.options.session ?? "default",
+				rootConversationId: String(ROOT_CONVERSATION_ID),
+				buildId: "durable-zero",
+			},
 			{ harness: this.instance.harness as any },
 		);
 		this.graphSource.subscribe((snapshot) => {
@@ -138,8 +142,9 @@ export class PiDurableEngine implements IAgentEngine {
 
 		// Correlate native Submission.wait() settlement to emit turn_complete (R3)
 		const numId = Number(requestId);
-		if (!isNaN(numId)) {
-			void this.instance.harness.submission(numId, runtimeContext).then((submission) => {
+		if (!Number.isNaN(numId)) {
+			const subId = numId as import("@earendil-works/pi-durable").SubmissionId;
+			void this.instance.harness.submission(subId, runtimeContext).then((submission) => {
 				if (!submission) return;
 				void submission
 					.wait(runtimeContext)
@@ -162,7 +167,7 @@ export class PiDurableEngine implements IAgentEngine {
 							conversationId: String(conversationId),
 						} as any);
 					})
-					.catch((err) => {
+					.catch((err: unknown) => {
 						this.emitEvent({
 							type: "turn_complete",
 							status: "error",
@@ -242,10 +247,10 @@ export class PiDurableEngine implements IAgentEngine {
 			sessionId: viewSnapshot.session.id,
 			cwd: viewSnapshot.session.cwd,
 			activeConversationId: String(conv.id),
-			activeModel: agentState.model
-				? { provider: agentState.model.provider, modelId: agentState.model.modelId }
-				: undefined,
-			thinkingLevel: agentState.thinkingLevel,
+			...(agentState.model
+				? { activeModel: { provider: agentState.model.provider, modelId: agentState.model.modelId } }
+				: {}),
+			...(agentState.thinkingLevel !== undefined ? { thinkingLevel: String(agentState.thinkingLevel) } : {}),
 			models: viewSnapshot.models.map((m) => ({
 				provider: m.provider,
 				modelId: m.modelId,
@@ -301,8 +306,8 @@ export class PiDurableEngine implements IAgentEngine {
 				id: String(item.id),
 				conversationId: String(conv.id),
 				kind: item.kind,
-				role,
-				text,
+				...(role !== undefined ? { role } : {}),
+				...(text !== undefined ? { text } : {}),
 			});
 		}
 

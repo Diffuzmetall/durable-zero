@@ -3,9 +3,15 @@ import { ROOT_CONVERSATION_ID } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
 import type { OpenDurableResult } from "./runtime-types.ts";
-import type { CliArgs } from "./cli-args.ts";
 import type { CommandResponder, RunnerCommandPayload } from "@durable-zero/contracts";
 import { parseConversationId } from "./conversation-id.ts";
+
+export interface SessionStateCliOptions {
+	readonly cwd?: string;
+	readonly session?: string;
+	readonly provider?: string;
+	readonly model?: string;
+}
 
 interface SessionAgentDoc {
 	model?: { provider?: string; id?: string; modelId?: string };
@@ -16,7 +22,7 @@ export async function handleSessionStateCommand(
 	cmd: RunnerCommandPayload,
 	durable: OpenDurableResult,
 	modelRuntime: ModelRuntime,
-	args: CliArgs,
+	args: SessionStateCliOptions,
 	respond: CommandResponder,
 ): Promise<boolean> {
 	if (cmd.type === "get_state") {
