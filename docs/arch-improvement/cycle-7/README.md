@@ -2,11 +2,16 @@
 
 Branch: `cycle-7-runtime-adapter-ioc-migration`  
 Source Baseline: `7d4b235` and docs checkpoints `6891b73`, `cafd5f9`, `07609af`.  
-Current Status: **Native walking skeleton has a genuine author GREEN; independent acceptance remains pending.** Candidate `fc090960` proves the compiled CLI/Harness/SQLite/restart path in focused tests. The foundational dependency cycle is fixed in subsequent WIP; legacy test migration is underway. Dispatcher fix `ea21bf5` needs fresh compiled re-review; guard re-review is FAIL after three additional false-green counterexamples. Protocol 4A and HostBridge 2A retain their bounded passes. **Global Cycle 7 S9 is NOT accepted.** The architecture page is an evidence-pinned snapshot, not a live dashboard.
+Current Status: **The started Native/component/test-closure stage is accepted in bounded scope.** Production source `7e12fa5` (equivalent to `08c6fd1`), test-only candidate `513d372`: clean build and official strict typecheck pass; cold isolated full root regression is **374/374 PASS, 0 skipped**. Independent Native source replay is **18/18**, Root seam review **6+4**, and fresh compiled R3 product journeys **8/8**, including real builtin `read`. Dispatcher and guards retain their separate component passes. **Full Cycle 7 S9/capability parity is NOT accepted.** Package version remains `0.26.31`, Pi SDK `1.5.0`; nothing was merged, published to npm, or installed into BB. The architecture page is an evidence-pinned snapshot, not a live dashboard.
 
 ---
 
 ## 1. Quick Links
+
+- **Current Stage Acceptance:** [stage-closure-acceptance.json](stage-closure-acceptance.json)
+- **Cold Final Root Verification:** [final-rerun-summary.json](live/task-1/final-verification/final-rerun-summary.json) · [374-case JUnit](live/task-1/final-verification/root-test-513d.junit.xml)
+- **Compiled Native R3 Artifact:** [README](live/task-1/native-fix-round-3/README.md) · [build manifest](live/task-1/native-fix-round-3/parent-build-manifest.json)
+- **Native Product Acceptance:** [8-case measured gate](live/task-1/independent-product-review/fix-round-3/parent-product-acceptance.json)
 
 - **Interactive Architecture & Status:** [architecture/durable-zero-architecture-status.html](architecture/durable-zero-architecture-status.html)
 - **Architecture Diagrams (SVG):** [AS IS SVG](architecture/durable-zero-architecture-asis.svg) · [TO BE SVG](architecture/durable-zero-architecture-tobe.svg)
@@ -135,10 +140,15 @@ docs/arch-improvement/cycle-7/
    - Conformance: 36 component test cases pass; kind overrides and boundary probes verified.
    - Boundary: Scope is strictly component-level `IHostBridge` adapter. Full integration into composition, Harness, model tool call loop, and client result continuation remains pending.
 
-3. **Task 1 / Slice 0 Walking Skeleton (WIP):**
-   - Author progress documented in [cycle7-task-1-report.md](reviews/cycle7-task-1-report.md).
-   - Test Status: **UNACCEPTED / TIMEOUT.** Verified physical receipt [evidence/cycle7-task-1-red.log](evidence/cycle7-task-1-red.log) proves the end-to-end test timed out at 60s.
-   - Open Defects: Production fallback in `SessionCoordinator` (returns synthetic `rec_...` when no engine is provided), decorative DI in `composition.ts` (resources not wired to consumer), placeholder metrics in `getStats` (`tokens: null`), and prompt blocking after `abort`.
+3. **Task 1 / Slice 0 Native and Test Closure (accepted bounded stage):**
+   - Current authority: [stage acceptance](stage-closure-acceptance.json), [independent source acceptance](live/task-1/closing-typecheck-remediation/native-core/independent-source-review/parent-source-acceptance.json), and [compiled product acceptance](live/task-1/independent-product-review/fix-round-3/parent-product-acceptance.json).
+   - Final cold root: **374/374 PASS**, strict source typecheck exit `0`, clean build exit `0`. Real Harness/SQLite persistence, gated block streaming, same-process successive prompts, abort/reuse, shutdown and native builtin file read were independently exercised.
+   - R3 runner SHA256: `fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136`; package `0.26.31`, SDK `1.5.0`. Earlier timeout/false-green/failing candidates remain historical evidence, not current verdicts.
+   - Boundary: native builtin I/O is not native HostBridge reverse-RPC continuation. Full capability parity, no-session probe, final metrics semantics and deferred admin/dispatcher integration are not thereby accepted.
+
+4. **Dispatcher 4B and Guards 5A (component passes only):**
+   - Dispatcher source `ea21bf5`, independent compiled fixture product **46/46**, genuine source/regression receipts retained under `live/task-4b/`. Production still has its limited inline handler; mounting the full dispatcher is deferred.
+   - Guards source `475745b`: supported structural forms and real frozen adversarial replay accepted. Earlier FAIL/reported-PASS history is retained under `live/task-5-guards/`; no universal-proof claim is made.
 
 ---
 

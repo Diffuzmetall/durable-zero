@@ -1,16 +1,16 @@
 {
   "capturedAt": "2026-11-05T01:24:06.884289+03:00",
   "head": "ea21bf5a645d148c0767716b099d387bb0bce822",
-  "overall": "NOT ACCEPTED — typecheck green; fixed R8 semantic replay and fresh independent compiled gates pending",
+  "overall": "CURRENT STAGE ACCEPTED; full Cycle7 NOT ACCEPTED",
   "nativeCandidate": "fc0909602e7969df080259a2e2d4a7114be450b8",
   "dispatcherFixCandidate": "ea21bf5a645d148c0767716b099d387bb0bce822",
   "tasks": [
     {
       "name": "1 · Native Slice 0",
       "tone": "good",
-      "status": "Native минимум: оба независимых гейта PASS",
-      "proof": "Source R2 ad99873e и свежий compiled product R2 (runner76ec1265) приняты в минимальном Native scope. Проверены barrier-stream, reasoning/text indices, полные ответы, restart/EntryId, EOF и abort/reuse.",
-      "remaining": "Atomic consumer migration, clean build/typecheck и общий regression ещё нужны для всего Task1/Cycle; полный capability/host/probe scope этим не принят."
+      "status": "Current Native/test closure accepted",
+      "proof": "SourceR8 independent18/18; Root6+4; freshcompiledR3 actual8/8 inclbuiltinread; coldarchivefullroot374/374/0skip; officialtype0.",
+      "remaining": "FullCycle7 capabilityparity/integration stillseparate; no currenttest/ABI closureblocker."
     },
     {
       "name": "2A / полный Task 2",
@@ -49,20 +49,20 @@
     },
     {
       "name": "5 / 6 · Полная чистота и S9",
-      "tone": "warn",
-      "status": "Typecheck PASS; final gates pending",
-      "proof": "Parent fresh official tsc exit0 on08c6;7e12 changesonlytest/docs. Historical360/0rootregression belongs pre-R8source; frozenfinalfullsuite/build/nativeCLI notyetaccepted.",
-      "remaining": "FixedR8 independent18probe replay; isolatedcoldbuild/dependencylock/typecheck/fullrootsuite; actualnewCLIhash and 5nativepublicjourneys includingrealread."
+      "tone": "good",
+      "status": "Current stage PASS",
+      "proof": "Cleanbuild, strictsource-onlytypecheck andcoldroot374/374 accepted. PhysicalR3runnerfb8b86fbunchanged andproduct8/8.",
+      "remaining": "No release/install/merge; deferredfullCycle7 integrationremainsoutsideclosedstage."
     }
   ],
   "remaining": [
     {
       "title": "Закрыть приёмку всего Task1 после миграции",
-      "detail": "Compilerblockerclosed(exit0), but fourR8semanticgroups onOLD2cc confirmedbyindependent18probes:17FAIL/1PASS. Fixed08c6/7e12 nowawaitsSAMEprobe replay, notoldfailureascurrent."
+      "detail": "StartedNative/testclosure accepted in stage-closure-acceptance.json. FullCycle7notaccepted: unmountedfullDispatcher/adminseams, fullnativeHostBridge/probe/capabilityparity remainexplicitlydeferred."
     },
     {
       "title": "Довести тестовую миграцию",
-      "detail": "RootB sixreal factory-effect tests saved7e12. Productioncode/pkg/lock/buildinputs exactly08c6; builder instructedfreeze7e12 forfreshfullsuite/artifact. No inherited360PASSascurrent."
+      "detail": "FivecoldrootfailuresresolvedONLYtestsetup/APIawait. Frozen513d coldroot374/374/0skip, productionclosurebyteidentical7e12. No knownfailurewaiver."
     },
     {
       "title": "Собрать принятые компоненты в production-путь",
@@ -222,39 +222,30 @@
     "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
   ],
   "reviewUpdateAt": "2026-11-05T03:00:19.380313+03:00",
-  "nativeMinimumProductVerdict": "PASS fresh compiled R2 76ec1265",
-  "nativeSourceVerdict": "PASS scoped ad99873e",
+  "nativeMinimumProductVerdict": "PASS freshcompiledR3 runnerfb8b86fb, independent8/8 includingrealnativebuiltinread",
+  "nativeSourceVerdict": "PASS bounded Native/R8 source08c6, production-equivalent7e12; independent18/18",
   "currentCandidate": {
-    "sha": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
-    "productionEquivalentTo": "08c6fd172bc90061a3e265745f183c1725c1d010",
+    "sourceCommit": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+    "testCommit": "513d37264c364cdcb733d3da7677911627d8c964",
     "packageVersion": "0.26.31",
     "runtimeSdkVersion": "1.5.0",
-    "delivery": "GitHub working branch WIP; no npm release/BB install/merge",
-    "nativeGateProvenance": "HistoricalNativead998/R2 runner76ec1265 results not transferred. Current fixedR8 source/freshbuild/type/regression/compiled product gates pending."
+    "runnerSha256": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136",
+    "delivery": "GitHub workingbranch only; no npm publish/BB install/merge/release"
   },
   "closingTypecheckProgress": {
-    "scope": "Official production typecheck on fixed source08c6 (production byte-identical7e12)",
+    "scope": "Officialallproduction source ontestcandidate513d (production7e12)",
     "exit": 0,
     "errors": 0,
-    "receipt": "live/task-1/closing-typecheck-remediation/native-core/final-candidate-parent/typecheck.log"
+    "receipt": "../live/task-1/final-verification/typecheck-513d.log"
   },
   "currentRootRegression": {
-    "source": "Genuine migrator root run on live mixed checkout including uncommitted Native A #instance fix; not isolated/frozen compiled acceptance",
-    "tests": 360,
-    "failed": 0,
+    "sourceCommit": "513d37264c364cdcb733d3da7677911627d8c964",
+    "scope": "Cold isolated gitarchive fullroot",
+    "tests": 374,
+    "passed": 374,
+    "failures": 0,
     "skipped": 0,
-    "receipt": "root-regression-green-360.junit.xml",
-    "preservedPreviousCommitReceipt": {
-      "sourceCommit": "b84a585",
-      "tests": 360,
-      "failures": 0,
-      "sha256": "368a14e0088f5189cd8f00185dd8a8b83ef13d24988d6b870edfc37907d4b9b9"
-    },
-    "testCorrectionsChecked": [
-      "Real codemode source-entry factory, delegated register spy, teardown in finally",
-      "Engine dynamic import after HOME/XDG/PI_AGENT_DIR isolation and explicit owned cwd",
-      "Exact environment restoration deleting previously absent keys"
-    ],
-    "gate": "PASS measured live root regression only; Native source/build/typecheck/fresh compiled gates separate"
-  }
+    "receipt": "../live/task-1/final-verification/root-test-513d.junit.xml"
+  },
+  "stageVerdict": "PASS bounded started-slices closure"
 }

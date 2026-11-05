@@ -2,11 +2,11 @@
 
 Срез 2026-11-05T01:24:06.884289+03:00; ea21bf5a645d148c0767716b099d387bb0bce822 + WIP. Global S9: NOT ACCEPTED.
 
-## 1 · Native Slice 0 — Native минимум: оба независимых гейта PASS
+## 1 · Native Slice 0 — Current Native/test closure accepted
 
-Source R2 ad99873e и свежий compiled product R2 (runner76ec1265) приняты в минимальном Native scope. Проверены barrier-stream, reasoning/text indices, полные ответы, restart/EntryId, EOF и abort/reuse.
+SourceR8 independent18/18; Root6+4; freshcompiledR3 actual8/8 inclbuiltinread; coldarchivefullroot374/374/0skip; officialtype0.
 
-Осталось: Atomic consumer migration, clean build/typecheck и общий regression ещё нужны для всего Task1/Cycle; полный capability/host/probe scope этим не принят.
+Осталось: FullCycle7 capabilityparity/integration stillseparate; no currenttest/ABI closureblocker.
 
 ## 2A / полный Task 2 — Компонент HostBridge принят
 
@@ -38,11 +38,11 @@ Source/component review и независимый compiled black-box PASS; на�
 
 Осталось: Полный clean build/typecheck/regression и whole-Cycle acceptance остаются отдельно; старый неиспользуемый build-script P3 учтён для cleanup.
 
-## 5 / 6 · Полная чистота и S9 — Typecheck PASS; final gates pending
+## 5 / 6 · Полная чистота и S9 — Current stage PASS
 
-Parent fresh official tsc exit0 on08c6;7e12 changesonlytest/docs. Historical360/0rootregression belongs pre-R8source; frozenfinalfullsuite/build/nativeCLI notyetaccepted.
+Cleanbuild, strictsource-onlytypecheck andcoldroot374/374 accepted. PhysicalR3runnerfb8b86fbunchanged andproduct8/8.
 
-Осталось: FixedR8 independent18probe replay; isolatedcoldbuild/dependencylock/typecheck/fullrootsuite; actualnewCLIhash and 5nativepublicjourneys includingrealread.
+Осталось: No release/install/merge; deferredfullCycle7 integrationremainsoutsideclosedstage.
 
 ## Evidence
 

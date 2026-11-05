@@ -27,10 +27,11 @@
     "publish/install/release",
     "reimplementworkersliceonparent"
   ],
-  "status": "Operator confirmedquota restored; originalB/migrator contexts retried forEXACT5testonlyrepairs; no modelswitch",
+  "status": "RESOLVED: operatorconfirmedquota reset; originalworkerscompleted5testtail; independentcoldroot374/374 verified",
   "resumedThreads": [
     "thr_4yhrgipwed",
     "thr_t38ban9s79"
   ],
-  "resumeRecordedAt": "2026-11-05T11:00:39.805655+03:00"
+  "resumeRecordedAt": "2026-11-05T11:00:39.805655+03:00",
+  "finalTestCommit": "513d37264c364cdcb733d3da7677911627d8c964"
 }

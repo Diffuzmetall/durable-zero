@@ -1,4 +1,5 @@
 6512a4df4ec79d37e5d8a047d5c3928c1bd095799cc10a3a0493b8a1c6d7802a  ./build-candidate.sh
+44f40e3c92e64dd571636d4471c3e22cdccb556276673b648e5cdb302feda7e1  ./build-manifest.json
 cc27350e51fed3f0a2f99f31c345fb906a22b4418085e0dcb01caa3d30b16e1e  ./build.log
 c9f582ae1875d3e22577a8a05ab9460787b6b536373f0aa183a8d71fcfd87a69  ./fixtures/scripted-provider-extension.mjs
 9ed02f41ab01493ce2946d513dfc09e377bd774bf52bcbe8288197a8ae24700e  ./fixtures/scripted-provider-extension.ts
@@ -7,6 +8,7 @@ d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9  ./packages/cor
 fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136  ./packages/runner/dist/main.js
 86135305eeaded80bb3ae34f89fb8ce30fe4e24189c8dc287fbe0a169f5af31c  ./packages/runner/dist/main.js.map
 d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9  ./packages/runner/dist/quickjs.wasm
+a19b468b86c65ab76c536b45b54dcd2e8449931a014548737abf020c462f148a  ./parent-build-manifest.json
 2da4cdea126995870ca6258d17d30faf1c9f311a79bb62f635e1b54c3a62958b  ./verify-results.junit.xml
 e3081208f3ec2bcf7779b30ba76c9a92ffbb22b00b0db6ba7bc940e00373242a  ./verify-smoke.mjs
 61c8f425977e00d94b686ebb889f1240dc4ebef0bb0198163711ad5f2998b9fe  ./verify.log

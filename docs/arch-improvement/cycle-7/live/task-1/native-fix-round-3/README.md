@@ -1,21 +1,20 @@
-# Native CLI + Runner WIP Artifact (Fix-Round-3; not a published release)
+# Native Candidate Compiled CLI + Runner Artifact (Fix-Round-3 WIP Checkpoint)
 
-**Milestone Commit:** `7e12fa592a7de537ade6424f1b1a8a9aa4e6b648` (production code identical to `08c6fd172bc90061a3e265745f183c1725c1d010`)
-**Verified review flag:** the independent R3 product gate uses `--session`; other aliases below are not thereby independently certified.
-**Acceptance boundary:** clean build/typecheck and compiled native product journeys passed; the isolated full root suite still has 5 failing tests (369/374). This is not whole Task 1 / Cycle 7 acceptance.  
-**Package Version:** `0.26.31` *(distinct from Pi SDK `1.5.0`)*  
+**Milestone Commit:** `7e12fa592a7de537ade6424f1b1a8a9aa4e6b648`  
+*(Production sources byte-identical to `08c6fd172bc90061a3e265745f183c1725c1d010` and `513d37264c364cdcb733d3da7677911627d8c964`)*  
+**durable-zero Package Version:** `0.26.31` *(distinct from Pi SDK `1.5.0`)*  
 **Package Directory:** `docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/`  
-**Purpose:** Fresh frozen compiled project CLI + runner for independent black-box review. Pinned external public SDK dependencies are required; this is not a standalone distribution or an npm release. See `parent-build-manifest.json` for measured file hashes and source/dependency provenance.
+**Purpose:** WIP compiled project artifact requiring pinned external public SDK dependencies (Pi SDK 1.5.0) for independent black-box product review. This is not an npm package release or standalone bundled distribution.
 
 ---
 
 ## 1. Quick Start: Exact Run Command
 
-To launch the daemon in JSON-RPC stdio server mode with the included scripted two-chunk provider extension:
+To launch the daemon in JSON-RPC stdio server mode (stdio only; socket daemon is not part of this review boundary) with the included scripted two-chunk provider extension:
 
 ```bash
 node docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/packages/cli/bin/durable-zero.js serve \
-  --session-dir /path/to/isolated/session \
+  --session /path/to/isolated/session \
   --cwd /path/to/isolated/cwd \
   --extension docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/fixtures/scripted-provider-extension.mjs \
   --provider scripted-e2e \
@@ -23,7 +22,7 @@ node docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/packages/cli/b
   --no-global-extensions
 ```
 
-### Environment Isolation Required for Fixture Reviews:
+### Environment Isolation Recommended for Reviewers:
 ```bash
 HOME=/path/to/tmp/home \
 XDG_CONFIG_HOME=/path/to/tmp/config \
@@ -37,9 +36,9 @@ node docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/packages/cli/b
 
 | Flag | Argument | Description |
 |---|---|---|
-| `serve` | *(verb)* | Starts the stdio JSON-RPC 2.0 server. No multi-client socket capability is claimed. |
-| `--session-dir` | `<dir>` | Absolute path to session directory containing SQLite WAL database. |
-| `--session` | `<id\|relpath>` | Relative session subpath within `--cwd` (default: `.durable/sessions/default`). |
+| `serve` | *(verb)* | Starts the stdio JSON-RPC 2.0 server (stdio only; socket daemon is not part of this review boundary). |
+| `--session` | `<id\|path>` | **Primary verified review flag**: relative or absolute session path to SQLite WAL database. |
+| `--session-dir` | `<dir>` | Argument alias for `--session` in the CLI parser. |
 | `--cwd` | `<dir>` | Working directory for the agent session. |
 | `--extension` | `<file>` | Path to an external extension file (`.mjs` or `.ts`) registering custom providers/models. |
 | `--provider` | `<id>` | Default provider ID to select (e.g. `scripted-e2e`). |
@@ -170,16 +169,23 @@ For black-box testing without real model calls or network access, two fixtures a
 
 This oracle enables independent verification of:
 - **Two distinct `text_delta` notifications** arrived on client stdout before final assistant message and before `turn_complete`.
-- **Persistence across actual process restart:** after terminating the process and restarting with the same `--session-dir`, `session/getTranscript` restores entries with matching IDs (`userEntry.id`, `assistantEntry.id`).
+- **Persistence across actual process restart:** after terminating the process and restarting with the same `--session`, `session/getTranscript` restores entries with matching IDs (`userEntry.id`, `assistantEntry.id`).
 - **Sequential multi-turn continuation:** sending a second prompt increments `entryCount` correctly.
 
 ---
 
-## 5. Provenance & Checksums
+## 5. Verification Qualification
+
+- The included `verify-smoke.mjs` is an internal bootstrap smoke check verifying that the CLI launches, registers the extension, answers `session/getState`, cleans up cleanly on EOF / SIGTERM, and rejects unsupported commands with code 1.
+- It does **NOT** constitute independent product acceptance; full user journeys are verified independently by the product reviewer.
+
+---
+
+## 6. Provenance & Checksums
 
 ### Project and Dependency Metadata
 - **durable-zero Package Version:** `0.26.31`
-- **Milestone Commit:** `7e12fa592a7de537ade6424f1b1a8a9aa4e6b648`
+- **Milestone Commit:** `7e12fa592a7de537ade6424f1b1a8a9aa4e6b648` (prod equivalent `08c6fd17...`, cold test rerun `513d3726...`)
 - **External Pi SDK Pinned Version:** `1.5.0`
 - **Node.js Target:** `node22` / `v26.0.0`
 - **Dependencies (Lockfile Provenance):**

@@ -1,0 +1,54 @@
+{
+  "task": "Test-Only Model Provider Fixture Isolation",
+  "worker": "thr_4yhrgipwed",
+  "branch": "cycle-7-runtime-adapter-ioc-migration",
+  "status": "REMEDIATION_COMPLETE",
+  "verdict": "PASS",
+  "scope": "TEST_ONLY",
+  "source_write_quiescence": true,
+  "production_code_modified": false,
+  "owned_files_modified": [
+    "packages/adapter-pi-ai/test/model-provider.test.ts",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/model-provider-fixture/red-baseline.junit.xml",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/model-provider-fixture/red-baseline.log",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/model-provider-fixture/green.junit.xml",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/model-provider-fixture/green.log",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/model-provider-fixture/report.md",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/model-provider-fixture/report.json"
+  ],
+  "invariants_enforced": [
+    {
+      "name": "Deterministic Local Catalog",
+      "detail": "Native ModelRuntime seeded with official SDK fauxProvider with 2 test models; zero dependencies on user credentials or internet access"
+    },
+    {
+      "name": "Hermetic Filesystem Sandbox",
+      "detail": "Per-test isolation of HOME, XDG_CONFIG_HOME, XDG_DATA_HOME, and PI_AGENT_DIR with automatic cleanup"
+    },
+    {
+      "name": "Assertion Fidelity",
+      "detail": "100% of original model resolution, prefix/omission, fail-fast, and fallback semantics preserved without fake success mocks"
+    },
+    {
+      "name": "Zero Production Drift",
+      "detail": "Zero edits to packages/adapter-pi-ai/src/ or any production bundle; compiled artifact hashes remain intact"
+    }
+  ],
+  "test_execution": {
+    "red_baseline": {
+      "command": "env -i PATH=... node --test --test-timeout=5000 packages/adapter-pi-ai/test/model-provider.test.ts",
+      "exit_code": 1,
+      "tests_total": 6,
+      "tests_passed": 2,
+      "tests_failed": 4
+    },
+    "green_verification": {
+      "command": "env -i PATH=... node --test --test-timeout=5000 packages/adapter-pi-ai/test/model-provider.test.ts",
+      "exit_code": 0,
+      "tests_total": 6,
+      "tests_passed": 6,
+      "tests_failed": 0,
+      "duration_ms": 514
+    }
+  }
+}

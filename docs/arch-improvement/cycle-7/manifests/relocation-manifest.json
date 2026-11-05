@@ -1,13 +1,13 @@
 {
   "title": "Cycle 7 current packaged-artifact integrity (not product acceptance)",
-  "created_at": "2026-11-05T04:30:44.660100+03:00",
-  "packaged_deliverables_count": 128,
+  "created_at": "2026-11-05T11:35:51.793083+03:00",
+  "packaged_deliverables_count": 129,
   "packaged_deliverables": [
     {
       "path": "README.md",
       "category": "root",
-      "sha256": "6d42128dd0eab88a1c9fa0a56b410d6d1e0077c60d912f58ce2aa788011ac215",
-      "bytes": 11190,
+      "sha256": "9c5115c560ca53db824ae78a95ba98217834683fa2ed6f9b212fb0bae7b920e4",
+      "bytes": 12964,
       "source_provenance": "workspace"
     },
     {
@@ -48,22 +48,22 @@
     {
       "path": "architecture/durable-zero-architecture-status.html",
       "category": "architecture",
-      "sha256": "d3baeb61c7fa9de9ec01cacff32912e342a5ab70db87a2d16ea00990423f51c5",
-      "bytes": 25292,
+      "sha256": "96c9e3905584a3cc41ce5803acc73b88a4ff4d224e661588293e0e6f36dc9027",
+      "bytes": 25112,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.html"
     },
     {
       "path": "architecture/durable-zero-architecture-status.json",
       "category": "architecture",
-      "sha256": "439da1376f949c3631e041589f81d26189f8027cf35b744a0c5aa731b2a2f50f",
-      "bytes": 14280,
+      "sha256": "29f2fdd1ab94b959a4c743bc8b0a53a3388ce7f914c0fb5943fad0036a73a2dc",
+      "bytes": 13235,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.json"
     },
     {
       "path": "architecture/durable-zero-architecture-status.md",
       "category": "architecture",
-      "sha256": "fd04ec76681e703a701a5de7bf212f65a9e7eece77b0ffc02edc47494aabdc3c",
-      "bytes": 4636,
+      "sha256": "eb52bb06eda1ab18194b9d334c691e9f5cd5c90d8a9eff437732ec3b2b2b910a",
+      "bytes": 4237,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/durable-zero-architecture-status.md"
     },
     {
@@ -76,8 +76,8 @@
     {
       "path": "architecture/render-architecture-status.py",
       "category": "architecture",
-      "sha256": "5dda70f3cc426905aae2bcb444ac98641f14d1a0541ee2e4a8ed274ea3cfbee9",
-      "bytes": 11791,
+      "sha256": "60de6e7d36061aded56af26d456b22e3f80a855cd423289b4e0813a1afe76032",
+      "bytes": 11851,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/render-architecture-status.py"
     },
     {
@@ -818,7 +818,7 @@
     {
       "path": "manifests/final-validation-report.md",
       "category": "manifests",
-      "sha256": "94848c0eb4092747c113d3dfc6c57b793c793279c19f2bf47f9258652010fc2c",
+      "sha256": "78a83147e2fe35cb0d67b19e9925a4c0acd1887162b2c221344e1f857dcf4b98",
       "bytes": 975,
       "source_provenance": "workspace"
     },
@@ -898,6 +898,13 @@
       "sha256": "71b5ff835363377c0acc52f225148880a9022ebd4790167d83af686eb3d576b6",
       "bytes": 5067,
       "source_provenance": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-product-rereview-r1.md"
+    },
+    {
+      "path": "stage-closure-acceptance.json",
+      "category": "root",
+      "sha256": "48812ed30f560624a8d49c2d409aed2ca782f8dea9096f26ebba1f0533e0a95f",
+      "bytes": 2483,
+      "source_provenance": "workspace"
     }
   ],
   "excluded_from_hash_ownership": [
