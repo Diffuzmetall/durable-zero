@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="DurableZero-FixRound2-ProductReview" tests="11" failures="0" errors="0" time="5.422">
+  <testsuite name="NativeFixRound2-BlackBox" tests="11" failures="0" errors="0" time="5.422">
+    <testcase name="1.1 Cold startup, strict JSON-only stdout, readiness RPC handshake" classname="NativeFixRound2" time="0.890">
+    </testcase>
+    <testcase name="1.2 Multi-block reasoning+text streaming -&gt; first wire delta BEFORE completion allowed" classname="NativeFixRound2" time="0.390">
+    </testcase>
+    <testcase name="1.3 Second prompt in SAME process with shared prefix to verify generation-reset" classname="NativeFixRound2" time="0.387">
+    </testcase>
+    <testcase name="2.1 Clean SIGTERM shutdown of Process 1 with exit code 0" classname="NativeFixRound2" time="0.014">
+    </testcase>
+    <testcase name="2.2 Restart same explicit session in new OS process; verify identical historic entries" classname="NativeFixRound2" time="0.592">
+    </testcase>
+    <testcase name="2.3 Third distinct completed reply in restarted Process 2 with updated native entries" classname="NativeFixRound2" time="0.393">
+    </testcase>
+    <testcase name="3.1 Malformed JSON returns -32700 Parse error without server crash" classname="NativeFixRound2" time="0.532">
+    </testcase>
+    <testcase name="3.2 Unrecognized method returns -32601 Method not found" classname="NativeFixRound2" time="0.544">
+    </testcase>
+    <testcase name="3.3 Consumer harness pending requests rejected on child process exit" classname="NativeFixRound2" time="0.154">
+    </testcase>
+    <testcase name="4.1 Ready-server stdin EOF closes and exits cleanly with bounded exit code 0 (lifetime fix verification)" classname="NativeFixRound2" time="0.497">
+    </testcase>
+    <testcase name="4.2 Root abort-active-turn (session/abort) halts in-flight turn and allows subsequent prompt in same session" classname="NativeFixRound2" time="1.029">
+    </testcase>
+  </testsuite>
+</testsuites>

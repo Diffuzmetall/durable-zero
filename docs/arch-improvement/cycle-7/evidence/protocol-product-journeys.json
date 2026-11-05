@@ -1,0 +1,179 @@
+{
+  "evaluatedAt": "2026-11-04T18:25:41.587Z",
+  "candidateSha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
+  "verdict": "FAIL",
+  "journeys": [
+    {
+      "name": "Happy Path",
+      "status": "PASS",
+      "steps": [
+        {
+          "name": "Request with numeric ID 0",
+          "req": {
+            "jsonrpc": "2.0",
+            "id": 0,
+            "method": "echo",
+            "params": {
+              "case": "id-zero"
+            }
+          },
+          "resp": {
+            "jsonrpc": "2.0",
+            "id": 0,
+            "result": {
+              "case": "id-zero"
+            }
+          },
+          "valid": true
+        },
+        {
+          "name": "Request with empty string ID",
+          "req": {
+            "jsonrpc": "2.0",
+            "id": "",
+            "method": "echo",
+            "params": {
+              "case": "id-empty-string"
+            }
+          },
+          "resp": {
+            "jsonrpc": "2.0",
+            "id": "",
+            "result": {
+              "case": "id-empty-string"
+            }
+          },
+          "valid": true
+        },
+        {
+          "name": "Notification execution & silence",
+          "initialCounter": 0,
+          "notificationSent": {
+            "jsonrpc": "2.0",
+            "method": "notify_increment",
+            "params": {
+              "amount": 33
+            }
+          },
+          "silenceObserved": true,
+          "counterAfter": 33,
+          "valid": true
+        },
+        {
+          "name": "Reverse request bidirectional echo & usable result",
+          "outgoingWireId": "req_1793816741127_1",
+          "wireEchoResult": {
+            "kernelVersion": "6.1.0"
+          },
+          "valid": true
+        },
+        {
+          "name": "Falsy and void results",
+          "results": {
+            "zero": 0,
+            "falseVal": false,
+            "emptyStr": "",
+            "nullVal": null,
+            "voidVal": null
+          },
+          "valid": true
+        }
+      ]
+    },
+    {
+      "name": "Cold Start",
+      "status": "PASS",
+      "steps": [
+        {
+          "name": "Fresh process zero-state initial query",
+          "state": {
+            "counter": 0,
+            "logsCount": 0
+          },
+          "valid": true
+        },
+        {
+          "name": "Clean shutdown with in-flight reverse request",
+          "exitCode": 0,
+          "valid": true
+        }
+      ]
+    },
+    {
+      "name": "Adversarial & Error Recovery",
+      "status": "FAIL",
+      "steps": [
+        {
+          "name": "Unregistered method returns -32601",
+          "code": -32601,
+          "message": "Method not found: unregistered_method",
+          "valid": true
+        },
+        {
+          "name": "Explicit JsonRpcMethodNotFoundError returns -32601",
+          "code": -32601,
+          "message": "Method not found: custom_missing",
+          "valid": true
+        },
+        {
+          "name": "Generic handler error returns -32603",
+          "code": -32603,
+          "message": "SQL transaction failed",
+          "valid": true
+        },
+        {
+          "name": "Generic error with matching name property must remain -32603",
+          "code": -32601,
+          "message": "backend fault",
+          "expectedCode": -32603,
+          "actualCode": -32601,
+          "valid": false
+        },
+        {
+          "name": "Missing method returns -32600 Invalid Request",
+          "code": -32600,
+          "message": "Invalid Request",
+          "valid": true
+        },
+        {
+          "name": "Malformed JSON returns -32700 Parse error",
+          "id": null,
+          "code": -32700,
+          "valid": true
+        },
+        {
+          "name": "Throwing notifications silent and non-fatal",
+          "silenceObserved": true,
+          "subsequentRequestResult": {
+            "check": "ok"
+          },
+          "valid": true
+        },
+        {
+          "name": "jsonRpcResponseSchema XOR enforcement",
+          "bothRejected": true,
+          "neitherRejected": true,
+          "valid": true
+        },
+        {
+          "name": "Reverse request malformed response prompt rejection",
+          "elapsedMs": 1,
+          "errorMsg": "Malformed JSON-RPC response from client: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Response cannot contain both 'result' and 'error'\",\n    \"path\": []\n  }\n]",
+          "valid": true
+        },
+        {
+          "name": "Reverse request timeout rejection and cleanup",
+          "elapsedMs": 151,
+          "errorMsg": "Request test_timeout (id: req_1793816741357_2) timed out after 150ms",
+          "valid": true
+        },
+        {
+          "name": "Late & unsolicited response no reflection",
+          "noReflection": true,
+          "serverAlive": true,
+          "valid": true
+        }
+      ]
+    }
+  ]
+}

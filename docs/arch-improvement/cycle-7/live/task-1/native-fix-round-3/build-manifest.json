@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "durable-zero-native-fix-round-3-manifest",
+  "packageVersion": "0.26.31",
+  "externalSdkVersion": "1.5.0",
+  "gitCommit": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "productionEquivalentCommit": "08c6fd172bc90061a3e265745f183c1725c1d010",
+  "testOnlyRerunCommit": "513d37264c364cdcb733d3da7677911627d8c964",
+  "productionClosureByteIdentical": true,
+  "lockfile": {
+    "file": "pnpm-lock.yaml",
+    "version": "9.0",
+    "offlineFrozen": true
+  },
+  "runtime": {
+    "node": "v26.0.0",
+    "pnpm": "11.5.0",
+    "typescript": "5.9.3",
+    "esbuild": "0.28.2"
+  },
+  "publishedArtifactHashes": {
+    "packages/cli/bin/durable-zero.js": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "packages/runner/dist/main.js": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136",
+    "packages/runner/dist/quickjs.wasm": "d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9",
+    "packages/core/dist/quickjs.wasm": "d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9"
+  },
+  "verificationExits": {
+    "cleanBuild": {
+      "command": "node scripts/build.mjs",
+      "exitCode": 0,
+      "durationMs": 1700
+    },
+    "typecheck": {
+      "command": "pnpm run typecheck",
+      "actualExecuted": "tsc -p tsconfig.src.json --pretty false",
+      "exitCode": 0,
+      "errorsCount": 0
+    },
+    "smokeSuite": {
+      "command": "node verify-smoke.mjs",
+      "exitCode": 0,
+      "checksTotal": 3,
+      "checksPassed": 3,
+      "durationMs": 1659,
+      "qualification": "Internal bootstrap smoke check verifying stdio JSON-RPC handshake (session/getState), stdin EOF, SIGTERM, and doctor/run fail-fast. Does NOT constitute independent product acceptance."
+    },
+    "rootTestColdRerun": {
+      "commit": "513d37264c364cdcb733d3da7677911627d8c964",
+      "command": "node --test --test-timeout 30000 packages/*/test/*.test.ts",
+      "childExitCode": 0,
+      "outerExitCode": 0,
+      "durationMs": 10728,
+      "suitesTotal": 54,
+      "testsTotal": 374,
+      "testsPassed": 374,
+      "testsFailed": 0,
+      "testsSkipped": 0
+    }
+  }
+}

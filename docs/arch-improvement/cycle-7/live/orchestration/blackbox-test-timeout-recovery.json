@@ -1,0 +1,71 @@
+{
+  "at": "2026-11-05T00:50:38.215836+03:00",
+  "root": 66969,
+  "signals": [
+    {
+      "pid": 67330,
+      "signal": "SIGTERM",
+      "reason": "owned leftover fixture driver"
+    },
+    {
+      "pid": 67253,
+      "signal": "SIGTERM",
+      "reason": "owned leftover fixture driver"
+    },
+    {
+      "pid": 67272,
+      "signal": "SIGTERM",
+      "reason": "owned leftover fixture driver"
+    },
+    {
+      "pid": 67291,
+      "signal": "SIGTERM",
+      "reason": "owned leftover fixture driver"
+    },
+    {
+      "pid": 67311,
+      "signal": "SIGTERM",
+      "reason": "owned leftover fixture driver"
+    }
+  ],
+  "scope": "Only verified owned black-box test subprocesses; never provider/agent",
+  "tree": {
+    "67330": {
+      "ppid": 66972,
+      "pgid": 66968,
+      "command": "node /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs"
+    },
+    "67253": {
+      "ppid": 66972,
+      "pgid": 66968,
+      "command": "node /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs"
+    },
+    "67272": {
+      "ppid": 66972,
+      "pgid": 66968,
+      "command": "node /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs"
+    },
+    "66969": {
+      "ppid": 66968,
+      "pgid": 66968,
+      "command": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/junit.xml /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"
+    },
+    "67291": {
+      "ppid": 66972,
+      "pgid": 66968,
+      "command": "node /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs"
+    },
+    "66972": {
+      "ppid": 66969,
+      "pgid": 66968,
+      "command": "/opt/homebrew/Cellar/node/26.0.0/bin/node --test-concurrency=0 --heap-prof-interval=524288 --test-timeout=0 --test-coverage-lines=0 --stack-trace-limit=10 --report-signal=SIGUSR2 --max-http-header-size=16384 --heapsnapshot-near-heap-limit=0 --tls-cipher-list=TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA --watch-kill-signal=SIGTERM --inspect-publish-uid=stderr,http --test-isolation=process --cpu-prof-interval=1000 --test-coverage-functions=0 --inspect-port=127.0.0.1:9229 --use-largepages=off --test-coverage-branches=0 --network-family-autoselection-attempt-timeout=500 --secure-heap-min=2 --v8-pool-size=4 --secure-heap=0 --node-snapshot --trace-event-file-pattern=node_trace.${rotation}.log /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"
+    },
+    "67311": {
+      "ppid": 66972,
+      "pgid": 66968,
+      "command": "node /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/compiled-candidate/component-driver.mjs"
+    }
+  },
+  "rootExitedAfterFixtureCleanup": true,
+  "survivors": []
+}

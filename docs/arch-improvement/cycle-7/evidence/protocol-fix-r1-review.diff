@@ -1,0 +1,125 @@
+# Protocol Task4A fix round 1 scoped package
+BASE ad122ffc9a7bf63c73a516d19fb07afcabeb7781
+HEAD f3fff38a84154a36f017514c234421aef5215ced
+f3fff38 fix(protocol): classify missing methods by typed error identity only
+
+ .../protocol/src/transport/request-dispatcher.ts   |  5 +-
+ .../protocol/test/protocol-conformance.test.ts     | 62 ++++++++++++++++++++++
+ 2 files changed, 64 insertions(+), 3 deletions(-)
+
+diff --git a/packages/protocol/src/transport/request-dispatcher.ts b/packages/protocol/src/transport/request-dispatcher.ts
+index 57be901..397a233 100644
+--- a/packages/protocol/src/transport/request-dispatcher.ts
++++ b/packages/protocol/src/transport/request-dispatcher.ts
+@@ -79,22 +79,21 @@ export class RequestDispatcher {
+       const reqId = "id" in raw && (typeof raw.id === "string" || typeof raw.id === "number") ? raw.id : null;
+       this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
+       return;
+     }
+ 
+     const { id, method, params } = validated.data;
+     try {
+       const result = await this.handler(method, params ?? {});
+       this.send({ jsonrpc: "2.0", id, result: result === undefined ? null : result });
+     } catch (err) {
+-      const isNotFound = err instanceof JsonRpcMethodNotFoundError ||
+-        (err instanceof Error && err.name === "JsonRpcMethodNotFoundError");
++      const isNotFound = err instanceof JsonRpcMethodNotFoundError;
+       this.send({
+         jsonrpc: "2.0",
+         id,
+         error: isNotFound
+-          ? { code: -32601, message: (err as Error).message }
++          ? { code: -32601, message: err.message }
+           : { code: -32603, message: err instanceof Error ? err.message : String(err) },
+       });
+     }
+   }
+ }
+diff --git a/packages/protocol/test/protocol-conformance.test.ts b/packages/protocol/test/protocol-conformance.test.ts
+index 6f02f29..4744a2e 100644
+--- a/packages/protocol/test/protocol-conformance.test.ts
++++ b/packages/protocol/test/protocol-conformance.test.ts
+@@ -213,20 +213,82 @@ describe("JSON-RPC 2.0 Protocol Conformance", () => {
+       const lines = harness.getLines();
+       assert.equal(lines.length, 1);
+       const parsed = JSON.parse(lines[0]);
+       assert.equal(parsed.jsonrpc, "2.0");
+       assert.equal(parsed.id, "req_err");
+       assert.equal(parsed.error?.code, -32603);
+       assert.equal(parsed.error?.message, "generic error");
+       harness.server.stop();
+     });
+ 
++    it("maps renamed ordinary Error to -32603 internal error response, not -32601", async () => {
++      const harness = createHarness(async () => {
++        const err = new Error("backend fault");
++        err.name = "JsonRpcMethodNotFoundError";
++        throw err;
++      });
++
++      harness.input.push(
++        JSON.stringify({
++          jsonrpc: "2.0",
++          id: "req_renamed",
++          method: "faulty/method",
++        }) + "\n",
++      );
++
++      await new Promise((r) => setTimeout(r, 50));
++
++      const lines = harness.getLines();
++      assert.equal(lines.length, 1);
++      const parsed = JSON.parse(lines[0]);
++      assert.equal(parsed.jsonrpc, "2.0");
++      assert.equal(parsed.id, "req_renamed");
++      assert.equal(
++        parsed.error?.code,
++        -32603,
++        "Renamed ordinary Error must not be reclassified as -32601",
++      );
++      assert.equal(parsed.error?.message, "backend fault");
++      harness.server.stop();
++    });
++
++    it("maps legitimate subclass of JsonRpcMethodNotFoundError to -32601", async () => {
++      class CustomMethodNotFoundError extends JsonRpcMethodNotFoundError {}
++
++      const harness = createHarness(async (method) => {
++        throw new CustomMethodNotFoundError(method);
++      });
++
++      harness.input.push(
++        JSON.stringify({
++          jsonrpc: "2.0",
++          id: "req_subclass",
++          method: "subclass/method",
++        }) + "\n",
++      );
++
++      await new Promise((r) => setTimeout(r, 50));
++
++      const lines = harness.getLines();
++      assert.equal(lines.length, 1);
++      const parsed = JSON.parse(lines[0]);
++      assert.equal(parsed.jsonrpc, "2.0");
++      assert.equal(parsed.id, "req_subclass");
++      assert.equal(
++        parsed.error?.code,
++        -32601,
++        "Subclass of JsonRpcMethodNotFoundError must map to -32601",
++      );
++      assert.equal(parsed.error?.message, "Method not found: subclass/method");
++      harness.server.stop();
++    });
++
+     it("preserves -32700 for malformed JSON text", async () => {
+       const harness = createHarness(async () => "ok");
+ 
+       harness.input.push("{\"jsonrpc\": \"2.0\", id: unquoted}\n");
+ 
+       await new Promise((r) => setTimeout(r, 50));
+ 
+       const lines = harness.getLines();
+       assert.equal(lines.length, 1);
+       const parsed = JSON.parse(lines[0]);

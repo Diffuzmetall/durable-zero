@@ -1,0 +1,153 @@
+▶ Task 5A Remediation: Regression Tests on Independent Review Findings
+  ▶ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement
+    ✖ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (4.291792ms)
+    ✖ REJECTS CLI serve target pointing to nonexistent runner file on disk (0.523834ms)
+    ✖ REJECTS CLI script that matches import only in string literal or comment (0.352ms)
+  ✖ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement (5.468208ms)
+  ▶ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage
+    ✖ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.629459ms)
+    ✖ DETECTS TypeScript import = require(...) syntax (0.341792ms)
+    ✖ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.677042ms)
+  ✖ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage (1.726458ms)
+✖ Task 5A Remediation: Regression Tests on Independent Review Findings (7.552666ms)
+ℹ tests 6
+ℹ suites 3
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 280.895542
+
+✖ failing tests:
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:22:5
+✖ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (4.291792ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject hollow serve branch where main() is not invoked
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:37:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at node:internal/test_runner/test:1617:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:48:5
+✖ REJECTS CLI serve target pointing to nonexistent runner file on disk (0.523834ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject nonexistent runner target on disk
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:63:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:74:5
+✖ REJECTS CLI script that matches import only in string literal or comment (0.352ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject fake import inside string literal
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:89:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:98:5
+✖ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.629459ms)
+  AssertionError [ERR_ASSERTION]: Must extract dependency from no-substitution template literal
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:110:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at node:internal/test_runner/test:1617:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:123:5
+✖ DETECTS TypeScript import = require(...) syntax (0.341792ms)
+  AssertionError [ERR_ASSERTION]: Must extract dependency from import = require(...) syntax
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:134:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:147:5
+✖ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.677042ms)
+  AssertionError [ERR_ASSERTION]: Expected all 7 files with supported extensions to be scanned, got: 1
+  
+  1 !== 7
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:159:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 7,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

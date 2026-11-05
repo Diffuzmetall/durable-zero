@@ -1,0 +1,9 @@
+{
+  "checkpointBeforeRun": "ecf7c69868c34b6fb0bc5a30b083f4de8a1ce075",
+  "scope": "Official whole-production typecheck; live working tree (A resumed), not a frozen acceptance",
+  "exit": 2,
+  "errorsByPackage": {
+    "adapter-pi-durable": 56
+  },
+  "errors": 56
+}

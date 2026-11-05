@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="PiAiModelProvider implements IModelProvider with explicit dependency injection" time="0.037315" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts"/>
+	<testcase name="PiAiModelProvider lists available models from native ModelRuntime" time="0.017441" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts" failure="Native runtime must provide registered models">
+		<failure type="testCodeFailure" message="Native runtime must provide registered models">
+[Error [ERR_TEST_FAILURE]: Native runtime must provide registered models] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Native runtime must provide registered models
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts:22:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="PiAiModelProvider resolves valid model by id and normalizes model reference" time="0.019708" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts" failure="Runtime must have available models">
+		<failure type="testCodeFailure" message="Runtime must have available models">
+[Error [ERR_TEST_FAILURE]: Runtime must have available models] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Runtime must have available models
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts:31:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="PiAiModelProvider resolves model when provider is omitted or prefixed in model string" time="0.014031" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts" failure="Cannot read properties of undefined (reading 'provider')">
+		<failure type="testCodeFailure" message="Cannot read properties of undefined (reading 'provider')">
+[Error [ERR_TEST_FAILURE]: Cannot read properties of undefined (reading 'provider')] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: Cannot read properties of undefined (reading 'provider')
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts:54:30)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="PiAiModelProvider fails fast when model cannot be resolved" time="0.019495" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts"/>
+	<testcase name="PiAiModelProvider resolves fallback model when ref is undefined" time="0.026322" classname="test" file="/Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts" failure="Default model must be returned when ref is undefined">
+		<failure type="testCodeFailure" message="Default model must be returned when ref is undefined">
+[Error [ERR_TEST_FAILURE]: Default model must be returned when ref is undefined] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Default model must be returned when ref is undefined
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/adapter-pi-ai/test/model-provider.test.ts:86:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 2 -->
+	<!-- fail 4 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 582.744375 -->
+</testsuites>
+

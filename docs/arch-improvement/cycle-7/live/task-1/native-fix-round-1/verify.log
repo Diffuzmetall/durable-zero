@@ -1,0 +1,11 @@
+[2026-11-04T23:11:40.377Z] Starting Native Candidate Fix-Round-1 Smoke Verification...
+CLI Bin: /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/packages/cli/bin/durable-zero.js
+Extension: /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/fixtures/scripted-provider-extension.mjs
+[2026-11-04T23:11:40.379Z] Test 1: Bootstrap readiness and clean stdin EOF termination
+[2026-11-04T23:11:41.144Z] Test 1 PASSED (765ms)
+[2026-11-04T23:11:41.144Z] Test 2: Bootstrap readiness and clean SIGTERM termination
+[2026-11-04T23:11:41.689Z] Test 2 PASSED (545ms)
+[2026-11-04T23:11:41.689Z] Test 3: Explicit unsupported doctor and run command fail-fast
+[2026-11-04T23:11:41.805Z] Test 3 PASSED (116ms)
+[2026-11-04T23:11:41.805Z] ALL 3 SMOKE TESTS PASSED in 1428ms
+Exit code: 0

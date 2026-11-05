@@ -1,0 +1,46 @@
+[
+  {
+    "id": "thr_tcbhyv8p4r",
+    "status": "active",
+    "lastConcreteAction": {
+      "at": "2026-11-04T23:42:48.501000+03:00",
+      "type": "fileRead",
+      "path": "/Users/vanya/Projects/durable-zero/packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts",
+      "command": null
+    },
+    "pendingCommands": []
+  },
+  {
+    "id": "thr_4yhrgipwed",
+    "status": "active",
+    "lastConcreteAction": {
+      "at": "2026-11-04T23:43:12.817000+03:00",
+      "type": "commandExecution",
+      "path": null,
+      "command": "cd /Users/vanya/Projects/durable-zero && git status packages/protocol/"
+    },
+    "pendingCommands": []
+  },
+  {
+    "id": "thr_tpdann8gpi",
+    "status": "active",
+    "lastConcreteAction": {
+      "at": "2026-11-04T23:44:15.788000+03:00",
+      "type": "commandExecution",
+      "path": null,
+      "command": "python3 -c \"\nimport hashlib, os\nfrom pathlib import Path\n\nsrc_base = Path('/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn')\ndst_base = Path('/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/evidence')\n\nfor pkg in ['protocol-package', 'protocol-package-fix-r1']:\n    print(f'=== {pkg} ===')\n    for root, dirs, files in os.walk(dst_base / pkg):\n        for f in sorted(files):\n            dp = Path(root) / f\n            sp = src_base / pkg / dp.relative_to(dst_base / pkg)\n            dh = hashlib.sha256(dp.read_bytes()).hexdigest()\n            sh = hashlib.sha256(sp.read_bytes()).hexdigest()\n            match = (dh == sh)\n            print(f'  {dp.relative_to(dst_base / pkg)}: {dh[:12]} match={match}')\n            if not match:\n                raise ValueError(f'Mismatch for {dp}')\n\""
+    },
+    "pendingCommands": []
+  },
+  {
+    "id": "thr_tpkhmzqjar",
+    "status": "active",
+    "lastConcreteAction": {
+      "at": "2026-11-04T23:44:25.676000+03:00",
+      "type": "commandExecution",
+      "path": null,
+      "command": "cd /Users/vanya/Projects/durable-zero && git show 07609af56742247003414564463cc99ebd0ac89f:packages/core/test/architecture-boundaries.test.ts | sed -n '121,250p'"
+    },
+    "pendingCommands": []
+  }
+]

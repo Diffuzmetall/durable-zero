@@ -1,0 +1,31 @@
+{
+  "$comment": "Diagnostic config for Lease A closing typecheck remediation (Core, Adapter, Execution).",
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "types": [],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "../../../../../../../packages/*/src/**/*.ts"
+  ],
+  "exclude": [
+    "../../../../../../../packages/*/test/**",
+    "../../../../../../../packages/*/fixtures/**",
+    "../../../../../../../packages/*/dist/**",
+    "../../../../../../../docs/**"
+  ]
+}

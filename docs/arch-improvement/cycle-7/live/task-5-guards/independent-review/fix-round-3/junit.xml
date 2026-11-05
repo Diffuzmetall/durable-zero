@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A Fix Round 3: Independent Adversarial Probes &amp; Invariant Verification" time="0.134220" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Section 1: Verification of the Four Former Structural Bypasses (All Now Correctly Rejected)" time="0.046128" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="BYPASS 1 NOW REJECTED: non-callable export (export const main = 17) is rejected" time="0.005505" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="BYPASS 2 NOW REJECTED: inverted condition if (command !== 'serve') is rejected" time="0.000500" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="BYPASS 3 NOW REJECTED: fake package prefix '@durable-zero/runner-fake-package' is rejected" time="0.000360" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="BYPASS 4 NOW REJECTED: main() invocation inside uninvoked local function declaration is rejected" time="0.039417" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 2: Verification of Legitimate Positives" time="0.086462" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="LEGITIMATE POSITIVE 1: direct destructuring of main()" time="0.026676" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="LEGITIMATE POSITIVE 2: destructured alias { main: runRunner } and execution" time="0.018683" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="LEGITIMATE POSITIVE 3: namespace import and runner.main() property call" time="0.019045" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="LEGITIMATE POSITIVE 4: real production CLI entrypoint in packages/cli/bin/durable-zero.js passes" time="0.021852" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 3: Subpath Exact Resolution &amp; Callable Semantics" time="0.001154" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="REJECTS nonexistent subpath import @durable-zero/runner/does-not-exist.js" time="0.000490" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+			<testcase name="DOCUMENTED BEHAVIORAL BOUNDARY: isCallableNode rejects literal primitives (17, 'text', false) while accepting CallExpressions and identifiers for esbuild bundle compatibility" time="0.000585" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 4: Helper Module Purity &amp; Modularity Verification" time="0.000090" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="proves importing modular checker submodules is 100% side-effect free" time="0.000057" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 11 -->
+	<!-- suites 5 -->
+	<!-- pass 11 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 379.553625 -->
+</testsuites>

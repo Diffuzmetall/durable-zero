@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A Fix Round 4: Independent Adversarial Probes &amp; Invariant Verification" time="17.044454" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Section 1: Callable Target Verification (TypeChecker Signatures &amp; Anti-False-Green)" time="3.124862" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="REJECTS primitive-returning CallExpression (export const main = Number('17'))" time="0.800217" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS primitive identifier assignment (const n = 17; export const main = n)" time="0.803887" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS primitive named re-export (const n = 17; export { n as main })" time="0.386277" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS primitive boolean/string constants (export const main = false)" time="0.411851" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS module with unrelated function export but NO main (no false-rescue by siblings)" time="0.384179" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="FAILS CLOSED on syntax error / unparseable code" time="0.337708" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 2: Genuine Callable Target Positives" time="2.999106" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="ACCEPTS standard export function main()" time="0.285792" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS export async function main()" time="0.235275" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS export const main = () => {}" time="0.225933" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS genuine function re-export (function run() {} export { run as main })" time="0.234920" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS production compiled bundle in packages/runner/dist/main.js" time="2.016754" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 3: CLI Serve Invariant &amp; Package Export Resolution" time="10.891270" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="ACCEPTS real production CLI entrypoint in packages/cli/bin/durable-zero.js" time="2.644815" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS direct destructuring { main } and main() invocation" time="1.459642" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS destructured alias { main: runRunner } and runRunner() invocation" time="2.458837" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="ACCEPTS namespace import runner and runner.main() property invocation" time="1.652779" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS inverted condition if (command !== 'serve')" time="0.000984" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS invocation inside never-invoked nested function declaration" time="2.641848" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS unexported runner package subpath import" time="0.016639" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="REJECTS fake package prefix @durable-zero/runner-fake-package" time="0.009023" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 4: Real Reporter Failure Negative Control" time="0.028402" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="strictly writes status FAIL and lists violations when live audit finds defects" time="0.027831" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+			<testcase name="strictly writes status FAIL when testReceipt indicates failure" time="0.000435" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+		</testsuite>
+		<testsuite name="Section 5: Helper Purity &amp; AP-019 Module Boundaries" time="0.000157" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="proves importing modular checker submodules is completely side-effect free" time="0.000103" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 22 -->
+	<!-- suites 6 -->
+	<!-- pass 22 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 17636.58825 -->
+</testsuites>

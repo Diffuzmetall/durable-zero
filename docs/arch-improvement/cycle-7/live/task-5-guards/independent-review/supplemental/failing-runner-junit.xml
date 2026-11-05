@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A: Architecture Boundaries &amp; Regression Guards" time="0.037081" disabled="0" errors="0" tests="4" failures="1" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)" time="0.009252" disabled="0" errors="0" tests="12" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="fails on forbidden vendor import (@earendil-works/pi-durable)" time="0.004040" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden adapter import (@durable-zero/adapter-pi-durable)" time="0.000741" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden runner import (@durable-zero/runner)" time="0.000511" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net)" time="0.000814" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden type-only vendor import (import type { ... })" time="0.000334" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden TypeScript import-type syntax (import('mod').Type)" time="0.000325" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden literal dynamic import (await import('adapter'))" time="0.000358" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on forbidden re-export barrel (export * from 'vendor')" time="0.000275" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on relative path escaping core root (../../../adapter)" time="0.000294" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on package.json declaring vendor dependencies in Core" time="0.000215" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on legacy CLI serve entrypoint pointing to deleted core runner" time="0.000800" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="fails on cyclic workspace dependencies (A -> B -> C -> A)" time="0.000085" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)" time="0.003443" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="passes cleanly on pure domain service with contracts and zod" time="0.002430" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on pure TypeScript port definitions" time="0.000363" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on conformant Core package.json" time="0.000193" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on real CLI serve entrypoint fixture pointing to runner" time="0.000273" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="passes cleanly on acyclic multi-tier workspace" time="0.000112" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 3: Live Project Source Snapshot Execution" time="0.017158" disabled="0" errors="0" tests="5" failures="1" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="scans live packages/core/src/ and checks AST boundaries" time="0.012938" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts" failure="Live packages/core/src has 1 boundary violations: [&#10;  {&#10;    &amp;quot;file&amp;quot;: &amp;quot;/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts&amp;quot;,&#10;    &amp;quot;line&amp;quot;: 2,&#10;    &amp;quot;character&amp;quot;: 1,&#10;    &amp;quot;specifier&amp;quot;: &amp;quot;@earendil-works/pi-durable&amp;quot;,&#10;    &amp;quot;kind&amp;quot;: &amp;quot;static-import&amp;quot;,&#10;    &amp;quot;rule&amp;quot;: &amp;quot;AP-010&amp;quot;,&#10;    &amp;quot;severity&amp;quot;: &amp;quot;P0&amp;quot;,&#10;    &amp;quot;message&amp;quot;: &amp;quot;Forbidden vendor dependency in Core: \&amp;quot;@earendil-works/pi-durable\&amp;quot;. All vendor packages must live strictly in adapters.&amp;quot;&#10;  }&#10;]&#10;+ actual - expected&#10;&#10;+ [&#10;+   {&#10;+     character: 1,&#10;+     file: '/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts',&#10;+     kind: 'static-import',&#10;+     line: 2,&#10;+     message: 'Forbidden vendor dependency in Core: &amp;quot;@earendil-works/pi-durable&amp;quot;. All vendor packages must live strictly in adapters.',&#10;+     rule: 'AP-010',&#10;+     severity: 'P0',&#10;+     specifier: '@earendil-works/pi-durable'&#10;+   }&#10;+ ]&#10;- []&#10;">
+				<failure type="testCodeFailure" message="Live packages/core/src has 1 boundary violations: [&#10;  {&#10;    &amp;quot;file&amp;quot;: &amp;quot;/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts&amp;quot;,&#10;    &amp;quot;line&amp;quot;: 2,&#10;    &amp;quot;character&amp;quot;: 1,&#10;    &amp;quot;specifier&amp;quot;: &amp;quot;@earendil-works/pi-durable&amp;quot;,&#10;    &amp;quot;kind&amp;quot;: &amp;quot;static-import&amp;quot;,&#10;    &amp;quot;rule&amp;quot;: &amp;quot;AP-010&amp;quot;,&#10;    &amp;quot;severity&amp;quot;: &amp;quot;P0&amp;quot;,&#10;    &amp;quot;message&amp;quot;: &amp;quot;Forbidden vendor dependency in Core: \&amp;quot;@earendil-works/pi-durable\&amp;quot;. All vendor packages must live strictly in adapters.&amp;quot;&#10;  }&#10;]&#10;+ actual - expected&#10;&#10;+ [&#10;+   {&#10;+     character: 1,&#10;+     file: '/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts',&#10;+     kind: 'static-import',&#10;+     line: 2,&#10;+     message: 'Forbidden vendor dependency in Core: &amp;quot;@earendil-works/pi-durable&amp;quot;. All vendor packages must live strictly in adapters.',&#10;+     rule: 'AP-010',&#10;+     severity: 'P0',&#10;+     specifier: '@earendil-works/pi-durable'&#10;+   }&#10;+ ]&#10;- []">
+Error [ERR_TEST_FAILURE]: Live packages/core/src has 1 boundary violations: [
+  {
+    "file": "/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts",
+    "line": 2,
+    "character": 1,
+    "specifier": "@earendil-works/pi-durable",
+    "kind": "static-import",
+    "rule": "AP-010",
+    "severity": "P0",
+    "message": "Forbidden vendor dependency in Core: \"@earendil-works/pi-durable\". All vendor packages must live strictly in adapters."
+  }
+]
++ actual - expected
+
++ [
++   {
++     character: 1,
++     file: '/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts',
++     kind: 'static-import',
++     line: 2,
++     message: 'Forbidden vendor dependency in Core: "@earendil-works/pi-durable". All vendor packages must live strictly in adapters.',
++     rule: 'AP-010',
++     severity: 'P0',
++     specifier: '@earendil-works/pi-durable'
++   }
++ ]
+- []
+
+    at new Promise (&lt;anonymous>)
+    at Array.map (&lt;anonymous>) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Live packages/core/src has 1 boundary violations: [
+    {
+      "file": "/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts",
+      "line": 2,
+      "character": 1,
+      "specifier": "@earendil-works/pi-durable",
+      "kind": "static-import",
+      "rule": "AP-010",
+      "severity": "P0",
+      "message": "Forbidden vendor dependency in Core: \"@earendil-works/pi-durable\". All vendor packages must live strictly in adapters."
+    }
+  ]
+  + actual - expected
+  
+  + [
+  +   {
+  +     character: 1,
+  +     file: '/private/tmp/durable-zero-candidate-archive-probe/packages/core/src/version.ts',
+  +     kind: 'static-import',
+  +     line: 2,
+  +     message: 'Forbidden vendor dependency in Core: "@earendil-works/pi-durable". All vendor packages must live strictly in adapters.',
+  +     rule: 'AP-010',
+  +     severity: 'P0',
+  +     specifier: '@earendil-works/pi-durable'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.&lt;anonymous> (file:///private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts:778:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at node:internal/test_runner/test:1617:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (&lt;anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (&lt;anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [Object] ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="verifies live packages/core/package.json contains only contracts and zod" time="0.000074" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live workspace package DAG is strictly acyclic" time="0.003112" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner" time="0.000876" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+			<testcase name="verifies legacy deleted files do not exist in packages/core/src/" time="0.000072" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+		<testsuite name="Suite 4: Durable Evidence &amp; Report Generation" time="0.006859" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="generates structured evidence report with file SHA hashes" time="0.006821" classname="test" file="/private/tmp/durable-zero-candidate-archive-probe/packages/core/test/architecture-boundaries.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 23 -->
+	<!-- suites 5 -->
+	<!-- pass 22 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 321.309417 -->
+</testsuites>

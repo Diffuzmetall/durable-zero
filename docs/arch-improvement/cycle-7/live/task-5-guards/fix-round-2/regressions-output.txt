@@ -1,0 +1,31 @@
+▶ Task 5A Remediation: Regression Tests on Independent Review Findings
+  ▶ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement
+    ✔ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (52.064833ms)
+    ✔ REJECTS CLI serve target pointing to nonexistent runner file on disk (0.562542ms)
+    ✔ REJECTS CLI script that matches import only in string literal or comment (0.404667ms)
+    ✔ REJECTS CLI serve where runner is imported as unusedModule and unrelated local main() is called [R2 Bypass 1] (28.34675ms)
+    ✔ REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2] (0.868042ms)
+    ✔ REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3] (1.423958ms)
+    ✔ ACCEPTS valid CLI serve entrypoint that imports runner and calls main() (17.913292ms)
+  ✔ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement (102.079709ms)
+  ▶ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports
+    ✔ DETECTS cross-package source import cycle even when package.json dependencies omit edges (3.026584ms)
+    ✔ DETECTS cross-package barrel re-export cycle when package.json dependencies omit edges (0.7355ms)
+  ✔ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports (3.882417ms)
+  ▶ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting
+    ✔ GENERATES failing report and non-zero violation count when violations exist (no false PASS) (0.806ms)
+  ✔ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting (0.843166ms)
+  ▶ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage
+    ✔ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.465833ms)
+    ✔ DETECTS TypeScript import = require(...) syntax (0.340708ms)
+    ✔ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.89875ms)
+  ✔ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage (1.760833ms)
+✔ Task 5A Remediation: Regression Tests on Independent Review Findings (108.985ms)
+ℹ tests 13
+ℹ suites 5
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 382.671416

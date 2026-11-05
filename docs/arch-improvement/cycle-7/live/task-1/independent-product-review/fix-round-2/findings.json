@@ -1,0 +1,68 @@
+{
+  "evaluatedAt": "2026-11-04T23:39:49.259Z",
+  "candidateArtifact": "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-fix-round-2/packages/cli/bin/durable-zero.js",
+  "candidateSha256": "76ec126543cc131986cdc12246f8fdd0a35a596d62c6a7a235ff9c0857f1b05c",
+  "fixRound": "fix-round-2",
+  "verdict": "PASS",
+  "totalTests": 11,
+  "passedTests": 11,
+  "failedTests": 0,
+  "results": [
+    {
+      "name": "1.1 Cold startup, strict JSON-only stdout, readiness RPC handshake",
+      "status": "passed",
+      "duration": 890
+    },
+    {
+      "name": "1.2 Multi-block reasoning+text streaming -> first wire delta BEFORE completion allowed",
+      "status": "passed",
+      "duration": 390
+    },
+    {
+      "name": "1.3 Second prompt in SAME process with shared prefix to verify generation-reset",
+      "status": "passed",
+      "duration": 387
+    },
+    {
+      "name": "2.1 Clean SIGTERM shutdown of Process 1 with exit code 0",
+      "status": "passed",
+      "duration": 14
+    },
+    {
+      "name": "2.2 Restart same explicit session in new OS process; verify identical historic entries",
+      "status": "passed",
+      "duration": 592
+    },
+    {
+      "name": "2.3 Third distinct completed reply in restarted Process 2 with updated native entries",
+      "status": "passed",
+      "duration": 393
+    },
+    {
+      "name": "3.1 Malformed JSON returns -32700 Parse error without server crash",
+      "status": "passed",
+      "duration": 532
+    },
+    {
+      "name": "3.2 Unrecognized method returns -32601 Method not found",
+      "status": "passed",
+      "duration": 544
+    },
+    {
+      "name": "3.3 Consumer harness pending requests rejected on child process exit",
+      "status": "passed",
+      "duration": 154
+    },
+    {
+      "name": "4.1 Ready-server stdin EOF closes and exits cleanly with bounded exit code 0 (lifetime fix verification)",
+      "status": "passed",
+      "duration": 497
+    },
+    {
+      "name": "4.2 Root abort-active-turn (session/abort) halts in-flight turn and allows subsequent prompt in same session",
+      "status": "passed",
+      "duration": 1029
+    }
+  ],
+  "findings": []
+}

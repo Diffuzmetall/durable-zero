@@ -1,0 +1,8 @@
+[FND-T1-02 RED Test Output]
+Command: node --test packages/adapter-pi-durable/test/durable-event-adapter-indices.test.ts
+Exit code: 1
+
+▶ FND-T1-02: ContentIndex preservation in DurableEventAdapter
+  ✖ preserves real contentIndex for thinking and multi-block text deltas (no hardcoded 0 collapse)
+    AssertionError [ERR_ASSERTION]: Expected contentIndex 1, got 0
+    0 !== 1

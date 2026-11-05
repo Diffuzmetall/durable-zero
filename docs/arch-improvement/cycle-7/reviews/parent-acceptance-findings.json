@@ -1,0 +1,27 @@
+[
+  {
+    "severity": "medium",
+    "title": "[P2] Обычная ошибка маскируется под Method not found",
+    "file": "/Users/vanya/Projects/durable-zero/packages/protocol/src/transport/request-dispatcher.ts",
+    "line": 88,
+    "detail": "В опубликованном для проверки пакете кандидат ad122ff возвращает −32601 для обычного Error с переименованным name; контракт требует −32603. Подтверждено отдельным black-box probe, несмотря на первоначальный PASS арх-ревью.",
+    "fix": "Убрать name-only fallback, добавить настоящий RED/GREEN regression и повторить узкую независимую проверку. Verified fixed candidate f3fff38 by independent architecture + compiled-product re-reviews PASS; bounded Task 4A only.",
+    "status": "fixed"
+  },
+  {
+    "severity": "medium",
+    "title": "[P2] Payload подменяет явно заданный тип взаимодействия",
+    "file": "/Users/vanya/Projects/durable-zero/packages/runner/src/host/host-bridge.ts",
+    "detail": "В кандидате 8e42698 вызов requestInteraction('confirm', payload с kind:'notify') отправляет kind:'notify': spread перезаписывает аргумент. Подтверждено наблюдением реального вызова компонента.",
+    "fix": "Аргумент kind имеет приоритет; выбирать только объявленные поля payload либо отклонять конфликтующее поле. Исправление возвращено исходному автору. Verified efc9eab and component architecture PASS; public/Harness integration remains pending.",
+    "status": "fixed"
+  },
+  {
+    "severity": "medium",
+    "title": "[P2] HostBridge: RED пока доказывает только отсутствие модулей",
+    "file": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/cycle7-hostbridge-report.md",
+    "detail": "Оба исходных RED в отчёте — ERR_MODULE_NOT_FOUND. Это не требуемый поведенческий oracle; зелёные тесты не подтверждают первоначальный behavioral RED.",
+    "fix": "Предоставить существующие реальные behavioral RED-артефакты либо честно выполнить ограниченный RED→GREEN redo, сохранив исходную историю и checkpoint. Не выдавать импортную ошибку за проверку поведения. Verified efc9eab and component architecture PASS; public/Harness integration remains pending.",
+    "status": "fixed"
+  }
+]

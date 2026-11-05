@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "audit": "Cycle 7 Task 1 Final Mechanical Build, Typecheck, and Test Verification",
+  "milestoneCommit": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "productionCodeMatchWith08c6": true,
+  "timestamp": "2026-11-05T01:35:00Z",
+  "environment": {
+    "node": "v26.0.0",
+    "pnpm": "11.5.0",
+    "typescript": "5.9.3",
+    "esbuild": "0.28.2"
+  },
+  "cleanBuild": {
+    "command": "node scripts/build.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "durationMs": 1700,
+    "staleOutputsCleaned": true,
+    "packagesBuilt": [
+      "contracts",
+      "protocol",
+      "core",
+      "execution",
+      "adapter-pi-durable",
+      "adapter-pi-ai",
+      "adapter-codemode",
+      "extension-pi-resource",
+      "runner"
+    ],
+    "executableRunnerBuilt": "packages/runner/dist/main.js",
+    "runnerMainSha256": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136",
+    "cliSha256": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190"
+  },
+  "officialTypecheck": {
+    "command": "pnpm run typecheck",
+    "actualExecuted": "tsc -p tsconfig.src.json --pretty false",
+    "status": "PASS",
+    "exitCode": 0,
+    "errorsCount": 0,
+    "note": "Resolves all 113 prior production strict diagnostics via consolidated ABI semantic corrections from commit 08c6fd172bc90061a3e265745f183c1725c1d010."
+  },
+  "rootTestSuite": {
+    "command": "node --test --test-timeout 30000 packages/*/test/*.test.ts",
+    "status": "COMPLETED_WITH_KNOWN_FAILURES",
+    "exitCode": 1,
+    "durationMs": 16231,
+    "hardTimeoutReached": false,
+    "totalSuites": 54,
+    "totalTests": 374,
+    "passedTests": 369,
+    "failedTests": 5,
+    "failureDetails": [
+      {
+        "file": "packages/adapter-pi-ai/test/model-provider.test.ts",
+        "line": 16,
+        "name": "PiAiModelProvider lists available models from native ModelRuntime",
+        "error": "AssertionError: Native runtime must provide registered models"
+      },
+      {
+        "file": "packages/adapter-pi-ai/test/model-provider.test.ts",
+        "line": 27,
+        "name": "PiAiModelProvider resolves valid model by id and normalizes model reference",
+        "error": "AssertionError: Runtime must have available models"
+      },
+      {
+        "file": "packages/adapter-pi-ai/test/model-provider.test.ts",
+        "line": 47,
+        "name": "PiAiModelProvider resolves model when provider is omitted or prefixed in model string",
+        "error": "TypeError: Cannot read properties of undefined (reading 'provider')"
+      },
+      {
+        "file": "packages/adapter-pi-ai/test/model-provider.test.ts",
+        "line": 80,
+        "name": "PiAiModelProvider resolves fallback model when ref is undefined",
+        "error": "AssertionError: Default model must be returned when ref is undefined"
+      },
+      {
+        "file": "packages/adapter-pi-durable/test/execution-env-strategy.test.ts",
+        "line": 8,
+        "name": "delegates environment instantiation to injected ExecutionEnvFactory without depending on concrete adapters",
+        "error": "AssertionError: Expected values to be strictly equal: undefined === 'mock-env'"
+      }
+    ]
+  },
+  "candidatePackage": {
+    "directory": "docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/",
+    "entrypoint": "packages/cli/bin/durable-zero.js",
+    "runnerMain": "packages/runner/dist/main.js",
+    "smokeStatus": "PASS (3/3 smoke checks passed in 1659ms, exit code 0)"
+  }
+}

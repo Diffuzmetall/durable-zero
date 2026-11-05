@@ -1,0 +1,21 @@
+# Closing typecheck remediation B — original dispatcher author
+
+Original author thr_4yhrgipwed; retain same Pi/model policy. Closing already-required verification, NOT new feature/wiring/admin/host/probe scope. Read canonical AGENTS, arch-improvement-fix/arch-rules/TDD/verification, actual installed SDK/Zod declarations. Primary frozenad998 audit live/task-1/closing-build-typecheck/{diagnostic-tsconfig.json,tsc-diagnostic.log,findings.json}. Clean build0 but strict production tsc113 errors; B owns approx29 across Runner18/contracts6/pi-ai4/protocol1, derive actual receipts.
+
+## Exclusive lease B transferred by parent
+- packages/runner/src/** (including cli-args/composition/main/dispatch/host), packages/contracts/src/**, packages/adapter-pi-ai/src/**, packages/protocol/src/**.
+- Root package.json, necessary pnpm-lock changes and official typecheck configuration only (root tsconfig/tsconfig.src.json). Do not alter shared build script or shared dist uncoordinated.
+- Own existing capability-dispatch/protocol tests; targeted new tests for YOUR type/config/parser fixes. A transferred test-migration actor still owns legacy consumer migrations, NOT you. Core/native/execution source and focused native tests owned by original native author A. No guards/ledger/plugin changes.
+- Evidence NEW live/task-1/closing-typecheck-remediation/runner-foundation/.
+
+## Close real contracts, don't silence compiler
+- Establish OFFICIAL package script typecheck + source-only config across ALL packages/*/src/**/*.ts. Preserve root strictness/exactOptionalPropertyTypes/noUncheckedIndexedAccess/verbatimModuleSyntax etc. noEmit + allowImportingTsExtensions required for existing Node ESM .ts; actual Node types as appropriate. Exclude tests/docs/intentional negative fixtures from this PRODUCTION gate explicitly, not a subset of bad source modules. Do not disguise root783 artifact/fixture failures as production113 or claim temporary diagnostic config is the declared gate. No relaxation/any/suppression/fake .d.ts.
+- Optional object fields: omit absent SDK/DTO keys; internal explicit undefined slots may be honestly typed as such when semantics require. Guard argv reads and missing CLI values using actual supported parser behavior, not non-null assertions everywhere.
+- Pure CliArgs currently defined in native engine/session-commands.ts, imported missing from Core by pi-ai. Inspect actual fields and canonical contracts; coordinate a pure shared config DTO at foundational contract owner with A (no restoring Core vendor exports, no reverse adapter->runner dependency, no duplicated contradictory types). Announce source-backed agreed type/export early to parent/A so writers don't collide.
+- PromptContentPart/RunnerEvent must come from true public contracts, not nonexistent Core aliases. Core duplicate PromptOptions handled by A, so no Core edits.
+- Zod/runtime-graph projections must preserve optional-field meaning and schemas; don't blanket widen public DTOs solely to eliminate errors. Protocol nominal error identity must stay public/shared; generic spoof errors remain internal.
+- One current root-test failure in capability-dispatch root abort was reported by migrator. Read actual JUnit/failure and fix within your owned test/source scope without weakening root-call semantics; no green 'fake success'. Report whether actual migration/strict Core ctor change or mock-assertion issue.
+
+Native A owns core/native/execution and richer native ExecutionEnv mismatch; don't invent replacement factory or modify these modules. Source-only strict gate may still show A diagnostics while your package set becomes clean; report real per-package residuals, don't wait for all to claim meaningful checkpoint.
+
+No new production dispatcher integration, feature APIs, actual external LLM/network/auth/original DB, installs with secrets. Use installed/cached dependencies and supported pnpm offline if necessary for type declarations. Bound commands60s/test30s, native exception explicit and owned teardown. Genuine typed RED->GREEN plus runtime regression under changed parser/options, no handcrafted timestamps/test counts. First useful saved checkpoint<=10min then HOLD for parent backup. No commits/spawns/shared-ledger/provider changes. Existing scoped component/native PASS artifacts remain immutable; changed current source needs re-verification.

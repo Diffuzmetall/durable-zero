@@ -1,12 +1,9 @@
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { join, resolve } from "node:path";
+import type { ForkSessionDatabaseOptions } from "@durable-zero/contracts";
 
-export interface ForkSessionDatabaseOptions {
-	sourceDir: string;
-	targetDir: string;
-	checkpointId?: string | number;
-}
+export type { ForkSessionDatabaseOptions };
 
 export function forkSessionDatabase(options: ForkSessionDatabaseOptions): void {
 	let sourceDir = resolve(options.sourceDir);

@@ -1,0 +1,1 @@
+import { alpha } from "@durable-zero/pkg-alpha"; export const beta = 2;

@@ -1,0 +1,22 @@
+[
+  {
+    "severity": "P3",
+    "title": "Initial author test suite in 0deedfd bypassed native branch via MockAgentEngine; superseded by hermetic real startup suite",
+    "file": "packages/runner/test/native-env-seam.test.ts:46",
+    "evidence": "In the initial commit 0deedfd, native-env-seam.test.ts instantiated MockAgentEngine for tests 2 and 3, bypassing composition.ts lines 71-125 and leaving customCoreCalled/customNativeCalled unasserted. The working tree revision rectified this by removing MockAgentEngine from tests 2-4 and asserting customCoreCalled === true and customNativeCalled === true under hermetic sandbox. Verified by independent-seam-rerun.log.",
+    "impact": "Historical test gap resolved in live working tree; real native startup and file effects are now verified.",
+    "rule": "AP-076",
+    "fix_decision": "log-only",
+    "status": "rectified-in-working-tree"
+  },
+  {
+    "severity": "P3",
+    "title": "Full product I/O acceptance of native built-in tools is deferred to compiled R3 journeys",
+    "file": "packages/runner/src/composition.ts:106",
+    "evidence": "Composition root default wiring injects NodeExecutionEnv providing all 24 required native SDK methods. Component tests prove method existence and standalone file effects, but complete end-to-end tool execution (e.g. compiled R3 native builtin read/write) is evaluated by the black-box product circuit.",
+    "impact": "Component approval of seam selection does not substitute for black-box product acceptance.",
+    "rule": "AP-028, AP-075",
+    "fix_decision": "log-only",
+    "status": "documented-boundary"
+  }
+]

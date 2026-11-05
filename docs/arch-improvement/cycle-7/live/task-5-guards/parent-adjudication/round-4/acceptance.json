@@ -1,0 +1,15 @@
+{
+  "candidate": "475745bb6c439cd4746b55335783ba22bb4b355f",
+  "scope": "Task5A architecture guard infrastructure, supported structural forms/known probes",
+  "verdict": "PASS",
+  "independentCases": 22,
+  "independentFailed": 0,
+  "parentReplay": "4/4, exit0",
+  "sourceIdentity": "physical helper and CLI auditor match frozen475745bb byte-for-byte",
+  "openBlockingKnownFindings": [],
+  "residual": [
+    "P3 unused legacy core build script",
+    "Not formal proof of arbitrary JS execution",
+    "Whole Cycle clean-build/typecheck/full tests and Native/source gates remain separate"
+  ]
+}

@@ -1,6 +1,7 @@
 import { CodemodeSandbox } from "@earendil-works/pi-codemode";
 import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
-import type { BuiltinExtension, BuiltinExtensionContext, ISandboxExtension } from "@durable-zero/core";
+import type { ISandboxExtension } from "@durable-zero/core";
+import type { BuiltinExtension, BuiltinExtensionContext } from "@durable-zero/adapter-pi-durable";
 
 export class CodemodeExtension implements BuiltinExtension, ISandboxExtension {
 	readonly id = "codemode";

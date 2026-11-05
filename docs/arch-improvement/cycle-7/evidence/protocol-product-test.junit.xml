@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Journey 1: Happy Path (Functional Outcome Invariant)" time="0.147572" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="Request with wire ID 0 preserves numeric 0 and returns expected result" time="0.066823" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Request with empty string wire ID '' preserves string and returns expected result" time="0.000422" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Notification execution &amp; silence: notification changes state with ZERO response bytes" time="0.061901" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Outgoing reverse request: bidirectional wire ID echo and usable resolved result" time="0.001071" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Falsy values and void->null success mapping" time="0.000912" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+	</testsuite>
+	<testsuite name="Journey 2: Cold Start &amp; Clean Lifecycle" time="0.179457" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="Fresh consumer process initializes with zero state and handles requests immediately" time="0.083214" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Clean shutdown aborts hanging in-flight requests and exits with code 0" time="0.095953" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+	</testsuite>
+	<testsuite name="Journey 3: Adversarial / Error Recovery &amp; Classification" time="0.365868" disabled="0" errors="0" tests="11" failures="1" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="Explicit typed missing-method error is classified as -32601" time="0.070466" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Generic handler failure is classified as -32603 (distinct from -32601)" time="0.000281" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Generic error with name reassigned to JsonRpcMethodNotFoundError remains -32603 (not misclassified as -32601)" time="0.000911" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs" failure="Expected -32603 Internal Error for generic Error, but got -32601&#10;&#10;-32601 !== -32603&#10;">
+			<failure type="testCodeFailure" message="Expected -32603 Internal Error for generic Error, but got -32601&#10;&#10;-32601 !== -32603">
+Error [ERR_TEST_FAILURE]: Expected -32603 Internal Error for generic Error, but got -32601
+
+-32601 !== -32603
+
+    at async TestContext.&lt;anonymous> (file:///Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs:288:3) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected -32603 Internal Error for generic Error, but got -32601
+  
+  -32601 !== -32603
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs:296:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.&lt;anonymous> (file:///Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs:288:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32601,
+    expected: -32603,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="Invalid Request returns -32600" time="0.000669" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Malformed JSON returns -32700 with null id" time="0.000269" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Throwing notification remains response-silent without crashing or blocking subsequent requests" time="0.061768" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="jsonRpcResponseSchema XOR enforcement: rejects both/neither result/error" time="0.000425" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Reverse request: error response from client rejects reverse_call promptly" time="0.001233" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Reverse request: malformed client response rejects promptly without waiting for timeout" time="0.000558" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Reverse request: timeout cleans up pending timer and rejects" time="0.151683" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+		<testcase name="Late response and unsolicited response do not reflect or crash server" time="0.061755" classname="test" file="/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package/test-suite.mjs"/>
+	</testsuite>
+	<!-- tests 21 -->
+	<!-- suites 0 -->
+	<!-- pass 19 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 778.747333 -->
+</testsuites>

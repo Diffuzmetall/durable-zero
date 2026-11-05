@@ -90,6 +90,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.src.json --pretty false",
     "test": "node --test --test-timeout 30000 packages/*/test/*.test.ts",
     "lint": "pnpm -r run lint"
   },

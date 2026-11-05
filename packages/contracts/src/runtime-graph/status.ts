@@ -24,7 +24,7 @@ export function projectTaskState(input: {
 				isFinal: false,
 				isCompleting: true,
 				abortRequested: Boolean(abortRequested),
-				blockedReason: blocked,
+				...(blocked !== undefined ? { blockedReason: blocked } : {}),
 			};
 		case "running":
 			return {
@@ -32,7 +32,7 @@ export function projectTaskState(input: {
 				label: label ?? "Running",
 				isFinal: false,
 				abortRequested: Boolean(abortRequested),
-				blockedReason: blocked,
+				...(blocked !== undefined ? { blockedReason: blocked } : {}),
 			};
 		case "waiting":
 			return {
@@ -41,7 +41,7 @@ export function projectTaskState(input: {
 				isFinal: false,
 				waitingOn: state.on,
 				abortRequested: Boolean(abortRequested),
-				blockedReason: blocked,
+				...(blocked !== undefined ? { blockedReason: blocked } : {}),
 			};
 		case "sleeping":
 			return {
@@ -50,7 +50,7 @@ export function projectTaskState(input: {
 				isFinal: false,
 				sleepUntil: state.until,
 				abortRequested: Boolean(abortRequested),
-				blockedReason: blocked,
+				...(blocked !== undefined ? { blockedReason: blocked } : {}),
 			};
 		case "pending":
 			return {
@@ -58,7 +58,7 @@ export function projectTaskState(input: {
 				label: label ?? "Queued",
 				isFinal: false,
 				abortRequested: Boolean(abortRequested),
-				blockedReason: blocked,
+				...(blocked !== undefined ? { blockedReason: blocked } : {}),
 			};
 		default: {
 			const _exhaustive: never = state;
@@ -98,8 +98,8 @@ export function projectTaskReceipt(receipt: RuntimeTaskReceipt): ProjectedReceip
 		isFinal: true,
 		hasToolError,
 		label,
-		preview: receipt.preview,
 		endedAt: receipt.endedAt,
-		durationMs: receipt.durationMs,
+		...(receipt.preview !== undefined ? { preview: receipt.preview } : {}),
+		...(receipt.durationMs !== undefined ? { durationMs: receipt.durationMs } : {}),
 	};
 }

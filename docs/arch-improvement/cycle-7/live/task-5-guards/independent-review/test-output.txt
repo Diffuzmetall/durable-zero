@@ -1,0 +1,27 @@
+▶ Adversarial Architecture Review Probes (Task 5A)
+  ▶ Probe 1: auditCliServeEntrypoint Blindspots
+    ✔ FLAW PROVEN: passes a serve branch that imports runner but NEVER calls main() (hollow entrypoint) (3.91925ms)
+    ✔ FLAW PROVEN: passes a serve target pointing to a NONEXISTENT runner file (0.483083ms)
+    ✔ FLAW PROVEN: matches dynamic import from string literals in comments or dummy variables via naive regex (0.278917ms)
+  ✔ Probe 1: auditCliServeEntrypoint Blindspots (4.969792ms)
+  ▶ Probe 2: Workspace DAG Cycle Detection via Source Imports / Re-exports
+    ✔ FLAW PROVEN: cross-package source import cycle evades workspace DAG check when package.json dependencies omit edge (2.235125ms)
+    ✔ FLAW PROVEN: cross-package barrel re-export cycle evades workspace DAG check (0.548084ms)
+  ✔ Probe 2: Workspace DAG Cycle Detection via Source Imports / Re-exports (2.859041ms)
+  ▶ Probe 3: Suite 4 Unconditional PASS Report Integrity
+    ✔ FLAW PROVEN: Suite 4 writes status 'PASS' and 0 violations unconditionally even when Core has boundary violations (0.219083ms)
+  ✔ Probe 3: Suite 4 Unconditional PASS Report Integrity (0.278542ms)
+  ▶ Probe 4: AST Syntax Blindspots
+    ✔ FLAW PROVEN: ignores dynamic import with no-substitution template literal (import(`vendor`)) (0.747834ms)
+    ✔ FLAW PROVEN: ignores TypeScript import = require('...') syntax (0.358ms)
+    ✔ FLAW PROVEN: collectAllSourceFiles ignores .mts, .cts, .js and .tsx extensions (0.381042ms)
+  ✔ Probe 4: AST Syntax Blindspots (1.561083ms)
+✔ Adversarial Architecture Review Probes (Task 5A) (10.068167ms)
+ℹ tests 9
+ℹ suites 5
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 267.393041

@@ -1,0 +1,32 @@
+[
+  {
+    "severity": "P3",
+    "title": "Author report attribution discrepancy regarding core 0 typecheck errors",
+    "file": "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/report.md:23",
+    "evidence": "report.md attributes core dropping to 0 errors to Lease B's CliArgs export. However, core's 6 prior errors were remediated in parallel by Author A batch-1. Lease B's contracts export properly unblocked adapter-pi-ai's model-setup.ts, but core's zero-error status reflects A's concurrent fix, not solely B.",
+    "impact": "Documentation attribution inaccuracy; does not impair code correctness or typecheck validity.",
+    "rule": "AP-076",
+    "fix_decision": "log-only",
+    "status": "documented-observation"
+  },
+  {
+    "severity": "P3",
+    "title": "Live shared checkout diagnostic count fluctuation reflects concurrent Author A activity",
+    "file": "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/tsc-production-diagnostic.log",
+    "evidence": "Author log recorded 73 residual errors, parent-check recorded 59, and independent re-review recorded 56 residual errors, all located strictly in adapter-pi-durable (Author A scope). Residual errors in Lease B scope (runner, contracts, adapter-pi-ai, protocol) remain consistently 0.",
+    "impact": "Global typecheck remains non-zero (exit code 2) until Author A finishes native remediation; Lease B component scope itself is verified clean at 0 errors.",
+    "rule": "AP-029",
+    "fix_decision": "log-only",
+    "status": "documented-observation"
+  },
+  {
+    "severity": "P3",
+    "title": "Probe 4 verifies dispatcher delegation against lightweight mock, not real Core lifecycle",
+    "file": "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/remediation-b-probes.test.mjs:73",
+    "evidence": "Probe 4 in remediation-b-probes.test.mjs verifies createSessionDispatcher delegation logic against a lightweight mock (confirming session/abort invokes coordinator.abort and returns { ok: true }). It does not test real SessionCoordinator lifecycle or event emitter in isolation. Authoritative evidence for real Core SessionCoordinator event/abort integration is the genuine 90-subset capability test (packages/runner/test/capability-dispatch.test.ts:358).",
+    "impact": "Receipt qualification; genuine 5-case probe suite remains intact and passing.",
+    "rule": "AP-028, AP-076",
+    "fix_decision": "log-only",
+    "status": "documented-observation"
+  }
+]

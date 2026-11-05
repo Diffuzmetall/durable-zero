@@ -1,0 +1,28 @@
+{
+  "time": "2026-11-04T23:17:07.184317+03:00",
+  "paths": [
+    "docs/arch-improvement/cycle-7/live/orchestration/pi-launch-blocker.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/retry-artifacts-r2.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/retry-artifacts.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/retry-dispatch-r2.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/retry-dispatch.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/retry-guards-r2.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/retry-guards.json",
+    "docs/arch-improvement/cycle-7/live/orchestration/worker-startup-verification.json",
+    "packages/adapter-pi-durable/dist/index.js",
+    "packages/adapter-pi-durable/dist/index.js.map",
+    "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
+    "packages/core/dist/index.js",
+    "packages/core/dist/index.js.map",
+    "packages/core/src/session/coordinator.ts",
+    "packages/core/test/mocks/mock-agent-engine.ts",
+    "packages/core/test/pure-domain-coordinator.test.ts",
+    "packages/runner/dist/index.js",
+    "packages/runner/dist/index.js.map",
+    "packages/runner/dist/main.js",
+    "packages/runner/dist/main.js.map",
+    "packages/runner/src/composition.ts",
+    "packages/runner/test/e2e-walking-skeleton.test.ts"
+  ],
+  "meaning": "Immediate WIP preservation; no consistency or acceptance claim"
+}

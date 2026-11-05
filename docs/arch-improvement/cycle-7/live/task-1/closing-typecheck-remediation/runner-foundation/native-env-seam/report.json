@@ -1,0 +1,48 @@
+{
+  "task": "Native Execution Environment Seam Selection (Parent R8 Amendment)",
+  "worker": "thr_4yhrgipwed",
+  "branch": "cycle-7-runtime-adapter-ioc-migration",
+  "status": "IMPLEMENTATION_COMPLETE",
+  "verdict": "PASS",
+  "source_write_quiescence": true,
+  "owned_files_modified": [
+    "packages/runner/src/composition.ts",
+    "packages/runner/package.json",
+    "packages/runner/test/native-env-seam.test.ts",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/test-output.txt",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/junit.xml",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/report.md",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/report.json"
+  ],
+  "invariants_implemented": [
+    {
+      "rule": "AP-012 / AP-074",
+      "invariant": "Both executionEnvFactory and nativeExecutionEnvFactory configured simultaneously throws genuine config error"
+    },
+    {
+      "rule": "AP-010 / AP-072",
+      "invariant": "When custom executionEnvFactory is provided, only executionEnvFactory is passed without injecting conflicting native default"
+    },
+    {
+      "rule": "Parent R8",
+      "invariant": "When executionEnvFactory is omitted, nativeExecutionEnvFactory defaults to new NodeExecutionEnv({ cwd: target.cwd ?? cwd }) from @earendil-works/pi-durable/env/node"
+    },
+    {
+      "rule": "AP-076",
+      "invariant": "Actual production native Root startup invokes custom factories without bypass; NodeExecutionEnv provides 24 required native SDK methods and verified real file effects with Context and Result envelope"
+    }
+  ],
+  "test_execution": {
+    "command": "node --test --test-timeout 5000 packages/runner/test/native-env-seam.test.ts",
+    "exit_code": 0,
+    "tests_total": 6,
+    "tests_passed": 6,
+    "tests_failed": 0,
+    "duration_ms": 607,
+    "historical_runs": {
+      "run_1_tests": 4,
+      "run_2_tests": 5,
+      "final_run_tests": 6
+    }
+  }
+}

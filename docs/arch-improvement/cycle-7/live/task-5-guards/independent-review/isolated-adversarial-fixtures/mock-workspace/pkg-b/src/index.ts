@@ -1,0 +1,1 @@
+import { a } from "@mock/pkg-a"; export const b = 2;

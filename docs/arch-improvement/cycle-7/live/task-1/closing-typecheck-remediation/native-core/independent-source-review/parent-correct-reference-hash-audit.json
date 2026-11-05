@@ -1,0 +1,202 @@
+[
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/core/src/session/coordinator.ts",
+    "claim": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "actual": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
+    "claim": "3af701614e4fc62b19a7ac7ec4388513ac8e58916f0e811f2e560d4e53d568a2",
+    "actual": "3af701614e4fc62b19a7ac7ec4388513ac8e58916f0e811f2e560d4e53d568a2",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts",
+    "claim": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "actual": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts",
+    "claim": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "actual": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/adapter-pi-durable/src/engine/bridge/assistant-message-builder.ts",
+    "claim": "e2f631be65eda07bdf8a6b15e587dce264e1008b8387f60d63dd628866fbffb0",
+    "actual": "e2f631be65eda07bdf8a6b15e587dce264e1008b8387f60d63dd628866fbffb0",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/adapter-pi-durable/src/engine/bridge/turn-summary.ts",
+    "claim": "76bb80205d4f00d5e4f2979755061ce2792d1df36ffabf2fa248fb2b44a66d89",
+    "actual": "76bb80205d4f00d5e4f2979755061ce2792d1df36ffabf2fa248fb2b44a66d89",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/adapter-pi-durable/src/store.ts",
+    "claim": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "actual": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/execution/src/adapters/local-node-env.ts",
+    "claim": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "actual": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/runner/src/composition.ts",
+    "claim": "2def6426690c37183adb393e7e46ad6cb280cabaa17729f1e1143ae519499e08",
+    "actual": "2def6426690c37183adb393e7e46ad6cb280cabaa17729f1e1143ae519499e08",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/runner/src/main.ts",
+    "claim": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "actual": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/cli/bin/durable-zero.js",
+    "claim": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "actual": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "matches": true
+  },
+  {
+    "report": "review.md",
+    "reference": "e855a04",
+    "path": "packages/runner/test/e2e-walking-skeleton.test.ts",
+    "claim": "8107f245ed6588aaae3e25215ec39ea50f62440010b44ec1063f3b9433b42013",
+    "actual": "8107f245ed6588aaae3e25215ec39ea50f62440010b44ec1063f3b9433b42013",
+    "matches": true
+  },
+  {
+    "report": "r8-review.md",
+    "reference": "2cc724f",
+    "path": "packages/adapter-pi-durable/src/engine/core-execution-env-adapter.ts",
+    "claim": "7202a5832d91d46c2d9488cf3626469d842e96f7cf529db9f2ac34a8f81d2570",
+    "actual": "7202a5832d91d46c2d9488cf3626469d842e96f7cf529db9f2ac34a8f81d2570",
+    "matches": true
+  },
+  {
+    "report": "r8-review.md",
+    "reference": "2cc724f",
+    "path": "packages/adapter-pi-durable/src/engine/harness-setup.ts",
+    "claim": "68d14c293883d683b15f762dc4714a2375c012c139a196edb0e5642e43918e30",
+    "actual": "68d14c293883d683b15f762dc4714a2375c012c139a196edb0e5642e43918e30",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/adapter-pi-durable/src/engine/core-execution-env-adapter.ts",
+    "claim": "f71cc85a58dede705b4b75f612d7ab950d13485aed2074638cf7d8bb045d0f08",
+    "actual": "f71cc85a58dede705b4b75f612d7ab950d13485aed2074638cf7d8bb045d0f08",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/adapter-pi-durable/src/engine/harness-setup.ts",
+    "claim": "cd7262079effbb328dbff007faeead1d003169531b577dacf71959c89db7b790",
+    "actual": "cd7262079effbb328dbff007faeead1d003169531b577dacf71959c89db7b790",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/core/src/session/coordinator.ts",
+    "claim": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "actual": "9adf0055a4282773c364bde2290916ff1959ee70495541b72c8c9fbe71718212",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
+    "claim": "1670e0abeb722fa9f93fff501b68ea5ed61f292614cdd75b8563596624a34db2",
+    "actual": "1670e0abeb722fa9f93fff501b68ea5ed61f292614cdd75b8563596624a34db2",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts",
+    "claim": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "actual": "67af467df532f7ca82320cb8002b5f6c5c35b88550f27a3d81ec621d09573526",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts",
+    "claim": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "actual": "417ca171a8ab0fa1645e6df74728b5d8dbeda9820ee050c051c48be9204824cb",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/adapter-pi-durable/src/store.ts",
+    "claim": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "actual": "96325c865c5d7f08b52c7ab3130e3e3e68af4fb928082efbe4f9d4452db3d0f6",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/execution/src/adapters/local-node-env.ts",
+    "claim": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "actual": "dfa5453d6da8267c7c0de6a38d2e824e39824ed30d7c8dbb01469e3cceadb118",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/runner/src/composition.ts",
+    "claim": "2e97adca68cdda1e1fcf293b6d679fae86867ab51d4d0ce817c22747de36425e",
+    "actual": "2e97adca68cdda1e1fcf293b6d679fae86867ab51d4d0ce817c22747de36425e",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/runner/src/main.ts",
+    "claim": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "actual": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1",
+    "matches": true
+  },
+  {
+    "report": "final-r8-review.md",
+    "reference": "7e12fa5",
+    "path": "packages/cli/bin/durable-zero.js",
+    "claim": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "actual": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "matches": true
+  }
+]

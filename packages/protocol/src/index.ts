@@ -1,3 +1,4 @@
+export * from "./jsonrpc/errors.ts";
 export * from "./jsonrpc/schema.ts";
 export * from "./jsonrpc/types.ts";
 export * from "./transport/interface.ts";

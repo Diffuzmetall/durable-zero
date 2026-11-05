@@ -66,21 +66,7 @@ await build({
 });
 console.log("- Built packages/runner/dist/main.js");
 
-// Build standalone legacy runner binary
-await build({
-	entryPoints: [resolve(root, "packages/core/src/runner-server.ts")],
-	bundle: true,
-	platform: "node",
-	target: "node22",
-	format: "esm",
-	outfile: resolve(root, "packages/core/dist/runner.js"),
-	external: externals,
-	banner: {
-		js: `import { createRequire as __createRequire } from "node:module";\nconst require = __createRequire(import.meta.url);`,
-	},
-	sourcemap: true,
-});
-console.log("- Built packages/core/dist/runner.js");
+// QuickJS WASM asset copy
 
 try {
 	const wasmSource = resolve(root, "node_modules/.pnpm/quickjs-wasi@3.6.2/node_modules/quickjs-wasi/quickjs.wasm");

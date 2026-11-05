@@ -1,0 +1,21 @@
+=== Declared Clean Build Audit: ad99873e396f7440a6896dabaf516b6393c08a37 ===
+Timestamp: 2026-11-04T23:47:39Z
+Node version: v26.0.0
+pnpm version: 11.5.0
+Command: node scripts/build.mjs
+---
+Building durable-zero packages...
+- Built packages/contracts/dist/index.js
+- Built packages/protocol/dist/index.js
+- Built packages/core/dist/index.js
+- Built packages/execution/dist/index.js
+- Built packages/adapter-pi-durable/dist/index.js
+- Built packages/adapter-pi-ai/dist/index.js
+- Built packages/adapter-codemode/dist/index.js
+- Built packages/extension-pi-resource/dist/index.js
+- Built packages/runner/dist/index.js
+- Built packages/runner/dist/main.js
+- Copied quickjs.wasm to packages/core/dist/ and packages/runner/dist/
+durable-zero build complete!
+---
+Exit code: 0

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="NativeCandidateFixRound1Smoke" tests="3" failures="0" skipped="0" errors="0" time="1.428">
+		<testcase name="Bootstrap readiness and clean stdin EOF termination" time="0.765" classname="NativeCandidateFixRound1Smoke" file="docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/verify-smoke.mjs"/>
+		<testcase name="Bootstrap readiness and clean SIGTERM termination" time="0.545" classname="NativeCandidateFixRound1Smoke" file="docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/verify-smoke.mjs"/>
+		<testcase name="Explicit unsupported doctor and run command fail-fast" time="0.116" classname="NativeCandidateFixRound1Smoke" file="docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/verify-smoke.mjs"/>
+	</testsuite>
+</testsuites>

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "audit": "Cycle 7 Task 1 Closing Clean Build & Separate Typecheck Audit",
+  "milestoneCommit": "ad99873e396f7440a6896dabaf516b6393c08a37",
+  "timestamp": "2026-11-04T23:50:00Z",
+  "environment": {
+    "node": "v26.0.0",
+    "pnpm": "11.5.0",
+    "typescript": "5.9.3",
+    "esbuild": "0.28.2"
+  },
+  "declaredCleanBuild": {
+    "command": "node scripts/build.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "staleOutputsCleaned": true,
+    "packagesBuilt": [
+      "contracts",
+      "protocol",
+      "core",
+      "execution",
+      "adapter-pi-durable",
+      "adapter-pi-ai",
+      "adapter-codemode",
+      "extension-pi-resource",
+      "runner"
+    ],
+    "executableRunnerBuilt": "packages/runner/dist/main.js",
+    "wasmAssetsCopied": [
+      "packages/core/dist/quickjs.wasm",
+      "packages/runner/dist/quickjs.wasm"
+    ]
+  },
+  "declaredConfigurationGap": {
+    "packageJsonMissingScript": "typecheck",
+    "packageJsonDeclaredScripts": {
+      "build": "node scripts/build.mjs",
+      "test": "node --test --test-timeout 30000 packages/*/test/*.test.ts",
+      "lint": "pnpm -r run lint"
+    },
+    "rootTsconfigLimitations": {
+      "hasInclude": false,
+      "hasExclude": false,
+      "allowImportingTsExtensions": false,
+      "missingTypesNode": true,
+      "unfilteredScopeIngestion": "Ingests docs/, fixtures/, intentional negative review counterexamples, and test files."
+    }
+  },
+  "rootTscOutcome": {
+    "command": "tsc --noEmit --pretty false",
+    "status": "FAIL",
+    "exitCode": 2,
+    "totalErrors": 783,
+    "breakdownByScope": {
+      "docsAndArchReview": 63,
+      "testsAndFixtures": 410,
+      "productionSource": 344
+    },
+    "rootTs5097ErrorsDueToMissingAllowImportingTsExtensions": 330
+  },
+  "diagnosticProductionTscOutcome": {
+    "config": "diagnostic-tsconfig.json",
+    "command": "tsc -p diagnostic-tsconfig.json --pretty false",
+    "options": {
+      "strict": true,
+      "noUncheckedIndexedAccess": true,
+      "exactOptionalPropertyTypes": true,
+      "verbatimModuleSyntax": true,
+      "isolatedModules": true,
+      "allowImportingTsExtensions": true,
+      "noEmit": true
+    },
+    "scope": "packages/*/src/**/*.ts ONLY",
+    "status": "FAIL",
+    "exitCode": 2,
+    "totalErrors": 113,
+    "breakdownByPackage": {
+      "adapter-pi-durable": 77,
+      "runner": 18,
+      "contracts": 6,
+      "core": 6,
+      "adapter-pi-ai": 4,
+      "execution": 1,
+      "protocol": 1,
+      "adapter-codemode": 0,
+      "cli": 0,
+      "extension-pi-resource": 0
+    },
+    "breakdownByErrorCode": {
+      "TS2412": 28,
+      "TS2375": 25,
+      "TS2379": 22,
+      "TS2322": 7,
+      "TS2307": 6,
+      "TS2345": 5,
+      "TS2532": 5,
+      "TS2339": 4,
+      "TS2305": 3,
+      "TS2769": 3,
+      "TS1360": 2,
+      "TS2308": 1,
+      "TS2344": 1,
+      "TS18048": 1
+    },
+    "classification": {
+      "exactOptionalPropertyTypesViolations": 75,
+      "noUncheckedIndexedAccessViolations": 5,
+      "missingExportsOrRelocatedTypes": 18,
+      "pathResolutionTypos": 6,
+      "interfaceShapeOrTypeMismatch": 9
+    }
+  }
+}

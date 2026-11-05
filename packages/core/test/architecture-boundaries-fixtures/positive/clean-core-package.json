@@ -1,0 +1,8 @@
+{
+  "name": "@durable-zero/core",
+  "version": "0.26.31",
+  "dependencies": {
+    "@durable-zero/contracts": "workspace:*",
+    "zod": "^4.6.7"
+  }
+}

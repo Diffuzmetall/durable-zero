@@ -1,38 +1,43 @@
-import type { ModelThinkingLevel } from "@earendil-works/pi-ai";
-
 export type SubagentPolicyMode = "inherit" | "configured";
 
-export type SubagentThinkingLevel = ModelThinkingLevel;
+export type SubagentThinkingLevel =
+	| "off"
+	| "minimal"
+	| "low"
+	| "medium"
+	| "high"
+	| "xhigh"
+	| "max";
 
 export type SubagentModelReference = {
-  provider: string;
-  modelId: string;
+	provider: string;
+	modelId: string;
 };
 
 export type SubagentModelProfile = {
-  model: SubagentModelReference;
-  thinkingLevel: SubagentThinkingLevel;
+	model: SubagentModelReference;
+	thinkingLevel: SubagentThinkingLevel;
 };
 
 export type SubagentPolicy =
-  | { mode: "inherit"; configuredProfile?: SubagentModelProfile }
-  | { mode: "configured"; configuredProfile: SubagentModelProfile };
+	| { mode: "inherit"; configuredProfile?: SubagentModelProfile | undefined }
+	| { mode: "configured"; configuredProfile: SubagentModelProfile };
 
 export type SubagentPolicyRecord = {
-  version: 1;
-  revision: number;
-  updatedAt?: string;
-  policy: SubagentPolicy;
+	version: 1;
+	revision: number;
+	updatedAt?: string | undefined;
+	policy: SubagentPolicy;
 };
 
 export interface SubagentPolicyHolder {
-  getRecord(): SubagentPolicyRecord;
-  setRecord(record: SubagentPolicyRecord): Promise<void>;
+	getRecord(): SubagentPolicyRecord;
+	setRecord(record: SubagentPolicyRecord): Promise<void>;
 }
 
 export type ResolvedChildConfiguration = {
-  model: SubagentModelReference;
-  thinkingLevel: SubagentThinkingLevel;
-  source: "parent_inherited" | "user_configured";
-  policyRevision: number;
+	model: SubagentModelReference;
+	thinkingLevel: SubagentThinkingLevel;
+	source: "parent_inherited" | "user_configured";
+	policyRevision: number;
 };

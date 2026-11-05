@@ -1,0 +1,121 @@
+▶ Task 5A Remediation: Regression Tests on Independent Review Findings
+  ▶ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement
+    ✔ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (51.4315ms)
+    ✔ REJECTS CLI serve target pointing to nonexistent runner file on disk (0.857625ms)
+    ✔ REJECTS CLI script that matches import only in string literal or comment (0.486166ms)
+    ✔ REJECTS CLI serve where runner is imported as unusedModule and unrelated local main() is called [R2 Bypass 1] (30.698125ms)
+    ✔ REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2] (2.368584ms)
+    ✔ REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3] (1.063792ms)
+    ✖ REJECTS CLI serve target where exported main is non-callable constant (e.g. main = 17) [R3 Defect 1] (1.889959ms)
+    ✖ REJECTS CLI script with inverted condition if (command !== 'serve') [R3 Defect 2] (23.946042ms)
+    ✖ REJECTS fake package prefix '@durable-zero/runner-fake' without blind substitution [R3 Defect 3] (1.618916ms)
+    ✖ REJECTS CLI serve where main() is inside uncalled nested function [R3 Defect 4] (22.662292ms)
+    ✔ ACCEPTS valid CLI serve entrypoint that imports runner and calls main() (29.025583ms)
+  ✖ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement (166.838334ms)
+  ▶ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports
+    ✔ DETECTS cross-package source import cycle even when package.json dependencies omit edges (2.223792ms)
+    ✔ DETECTS cross-package barrel re-export cycle when package.json dependencies omit edges (0.921042ms)
+  ✔ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports (3.2195ms)
+  ▶ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting
+    ✔ GENERATES failing report and non-zero violation count when violations exist (no false PASS) (1.066416ms)
+  ✔ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting (1.117083ms)
+  ▶ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage
+    ✔ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.70075ms)
+    ✔ DETECTS TypeScript import = require(...) syntax (0.441917ms)
+    ✔ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (1.205708ms)
+  ✔ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage (2.418708ms)
+✖ Task 5A Remediation: Regression Tests on Independent Review Findings (174.140083ms)
+ℹ tests 17
+ℹ suites 5
+ℹ pass 13
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 442.663125
+
+✖ failing tests:
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:203:5
+✖ REJECTS CLI serve target where exported main is non-callable constant (e.g. main = 17) [R3 Defect 1] (1.889959ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject target file whose exported main is non-callable
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:229:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:237:5
+✖ REJECTS CLI script with inverted condition if (command !== 'serve') [R3 Defect 2] (23.946042ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject inverted condition if (command !== 'serve')
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:256:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:263:5
+✖ REJECTS fake package prefix '@durable-zero/runner-fake' without blind substitution [R3 Defect 3] (1.618916ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /not.*@durable-zero\/runner/i. Input:
+  
+  'CLI "serve" target runner file does not exist on disk: /Users/vanya/Projects/durable-zero/packages/core/test/runner'
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:283:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'CLI "serve" target runner file does not exist on disk: /Users/vanya/Projects/durable-zero/packages/core/test/runner',
+    expected: /not.*@durable-zero\/runner/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at packages/core/test/architecture-boundaries-regressions.test.ts:286:5
+✖ REJECTS CLI serve where main() is inside uncalled nested function [R3 Defect 4] (22.662292ms)
+  AssertionError [ERR_ASSERTION]: Checker must reject invocation inside uncalled nested function
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-regressions.test.ts:307:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

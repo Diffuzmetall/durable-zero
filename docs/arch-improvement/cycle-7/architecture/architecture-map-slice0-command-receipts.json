@@ -1,0 +1,38 @@
+[
+  {
+    "seq": 210,
+    "time": "2026-11-04T20:11:05.463000",
+    "command": "cd /Users/vanya/Projects/durable-zero && pnpm test",
+    "exit": 0
+  },
+  {
+    "seq": 345,
+    "time": "2026-11-04T20:32:02.257000",
+    "command": "cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts",
+    "exit": 1
+  },
+  {
+    "seq": 799,
+    "time": "2026-11-04T21:43:13.092000",
+    "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs",
+    "exit": 1
+  },
+  {
+    "seq": 871,
+    "time": "2026-11-04T22:07:15.786000",
+    "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs",
+    "exit": 1
+  },
+  {
+    "seq": 935,
+    "time": "2026-11-04T22:11:31.808000",
+    "command": "cd /Users/vanya/Projects/durable-zero && node scripts/build.mjs",
+    "exit": 0
+  },
+  {
+    "seq": 939,
+    "time": "2026-11-04T22:13:42.298000",
+    "command": "cd /Users/vanya/Projects/durable-zero && node --test --test-timeout 60000 packages/runner/test/e2e-walking-skeleton.test.ts",
+    "exit": 1
+  }
+]

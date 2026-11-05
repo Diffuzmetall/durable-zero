@@ -1,0 +1,31 @@
+{
+  "$comment": "TEMP diagnostic config for Cycle 7 Task 1 mechanical typecheck audit. Preserves exact root compiler strictness but scopes to all production modules (packages/*/src/**/*.ts) and enables allowImportingTsExtensions and noEmit. Not an official repository config.",
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "types": [],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "packages/*/src/**/*.ts"
+  ],
+  "exclude": [
+    "**/test/**",
+    "**/fixtures/**",
+    "**/dist/**",
+    "docs/**"
+  ]
+}

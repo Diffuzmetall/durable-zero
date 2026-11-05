@@ -1,8 +1,10 @@
 import { basename, join, resolve } from "node:path";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import type { JsonValue } from "@earendil-works/chord";
 import {
 	createSession,
 	defineDocFamily,
+	type JsonObject,
 	type Session,
 } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
@@ -15,7 +17,30 @@ export interface PiDurableSessionStoreOptions {
 	cwd?: string;
 }
 
-const genericDocFamily = defineDocFamily<Record<string, unknown>, string>({
+function toJsonValue(val: unknown, depth = 0): JsonValue {
+	if (depth > 128) throw new TypeError("JSON structure depth limit exceeded");
+	if (val === null || typeof val === "string" || typeof val === "boolean") return val;
+	if (typeof val === "number") {
+		if (!Number.isFinite(val)) throw new TypeError(`Non-finite number cannot be serialized to JsonValue: ${val}`);
+		return val;
+	}
+	if (Array.isArray(val)) {
+		return val.map((item) => toJsonValue(item, depth + 1));
+	}
+	if (typeof val === "object") {
+		const result: JsonObject = {};
+		for (const [k, v] of Object.entries(val)) {
+			if (v !== undefined) {
+				result[k] = toJsonValue(v, depth + 1);
+			}
+		}
+		return result;
+	}
+	throw new TypeError(`Unsupported data type cannot be serialized to JsonValue: ${typeof val}`);
+}
+
+const genericDocFamily = defineDocFamily<JsonObject, null>({
+	family: true,
 	checkpointWhen: () => false,
 	kind: "dz.document",
 	version: 1,
@@ -62,16 +87,17 @@ export class PiDurableSessionStore implements ISessionStore {
 	}
 
 	async saveDocument(collection: string, docId: string, data: unknown): Promise<void> {
+		const jsonVal = toJsonValue(data);
 		const session = await this.getSession();
 		await session.commit(async (tx) => {
-			const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`);
+			const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`, null);
 			for (const key of Object.keys(doc)) {
-				delete doc[key];
+				delete (doc as Record<string, unknown>)[key];
 			}
-			if (data && typeof data === "object" && !Array.isArray(data)) {
-				Object.assign(doc, structuredClone(data));
+			if (jsonVal !== null && typeof jsonVal === "object" && !Array.isArray(jsonVal)) {
+				Object.assign(doc, jsonVal);
 			} else {
-				doc._value = structuredClone(data);
+				doc._value = jsonVal;
 			}
 		}, BACKGROUND_CONTEXT);
 	}
@@ -87,7 +113,11 @@ export class PiDurableSessionStore implements ISessionStore {
 	}
 
 	async forkSession(checkpointId: string | number, newSessionDir: string): Promise<void> {
-		forkSessionDatabase({ sourceDir: this.sessionDir, targetDir: newSessionDir, checkpointId });
+		await forkSessionDatabase({
+			sourceDir: this.sessionDir,
+			targetDir: newSessionDir,
+			...(checkpointId !== undefined ? { checkpointId } : {}),
+		});
 	}
 
 	watchTasks(onUpdate: (tasks: TaskRecord[]) => void): { close(): void } {

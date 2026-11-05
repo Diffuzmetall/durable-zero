@@ -1,0 +1,12 @@
+[
+  {
+    "severity": "P3",
+    "title": "Author milestone report contains handwritten provenance timestamps instead of raw event timestamps",
+    "file": "docs/arch-improvement/cycle-7/live/task-4b/fix-round-1/report.md:73-77",
+    "evidence": "report.md claims RED captured 00:15:30 and GREEN captured 00:23:45, both of which precede the parent rejection commit 942ef09 (00:43:09) and the worker fix dispatch event (~00:44). File mtime and parent event receipts confirm execution actually occurred between 00:46 and 00:54. The underlying 60/60 JUnit XML and test outputs are authentic and independently reproduced, but the prose timestamps are reconstructed rather than raw.",
+    "impact": "Documentation provenance inaccuracy; does not impair runtime behavior or test validity.",
+    "rule": "AP-028, AP-076",
+    "fix_decision": "log-only",
+    "status": "documented-observation"
+  }
+]

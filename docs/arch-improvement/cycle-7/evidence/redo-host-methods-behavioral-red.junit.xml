@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Host Protocol Methods &amp; Schemas (Task 2A / S7)" time="0.003423" disabled="0" errors="0" tests="4" failures="4" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="jsonValueSchema" time="0.001472" disabled="0" errors="0" tests="4" failures="2" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="accepts valid JSON primitives" time="0.000455" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts"/>
+			<testcase name="rejects non-finite numbers" time="0.000563" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+
+    at async Promise.all (index 0)
+    at async Promise.all (index 0) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:25:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="accepts valid JSON arrays and nested structures" time="0.000062" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts"/>
+			<testcase name="rejects non-JSON values and objects containing them" time="0.000087" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:38:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+		</testsuite>
+		<testsuite name="hostToolCallParamsSchema" time="0.000834" disabled="0" errors="0" tests="3" failures="2" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="validates valid toolName and JSON arguments" time="0.000590" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts"/>
+			<testcase name="rejects invalid toolName (missing or empty)" time="0.000093" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+
+    at async Promise.all (index 0) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:74:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="rejects arguments with non-JSON values" time="0.000071" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:84:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+		</testsuite>
+		<testsuite name="hostToolResultSchema" time="0.000394" disabled="0" errors="0" tests="3" failures="1" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="accepts valid tool result with content and optional isError" time="0.000189" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts"/>
+			<testcase name="accepts multiple text blocks or empty content array" time="0.000048" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts"/>
+			<testcase name="rejects malformed payloads" time="0.000084" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:140:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+		</testsuite>
+		<testsuite name="hostInteractionParamsSchema" time="0.000326" disabled="0" errors="0" tests="3" failures="2" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="accepts valid kind and optional title, message, data" time="0.000129" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts"/>
+			<testcase name="rejects missing or empty kind" time="0.000079" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+
+    at async Promise.all (index 0) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:189:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="rejects non-JSON values in data payload" time="0.000067" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts" failure="Expected values to be strictly equal:&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/host-methods.test.ts:196:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+		</testsuite>
+	</testsuite>
+	<!-- tests 13 -->
+	<!-- suites 5 -->
+	<!-- pass 6 -->
+	<!-- fail 7 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 169.239709 -->
+</testsuites>

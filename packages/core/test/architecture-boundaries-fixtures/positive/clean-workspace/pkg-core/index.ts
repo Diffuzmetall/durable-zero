@@ -1,0 +1,1 @@
+import type { Receipt } from "@fixture/contracts"; export interface CoreSPI { getReceipt(): Receipt; }

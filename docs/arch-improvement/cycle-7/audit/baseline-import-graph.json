@@ -1,0 +1,3051 @@
+{
+  "scope": "Source import graph for independent plan consistency review; not an implementation acceptance test",
+  "files": [
+    "packages/adapter-codemode/src/codemode.ts",
+    "packages/adapter-codemode/src/index.ts",
+    "packages/adapter-pi-ai/src/index.ts",
+    "packages/adapter-pi-ai/src/model-provider.ts",
+    "packages/adapter-pi-ai/src/model-setup.ts",
+    "packages/adapter-pi-durable/src/index.ts",
+    "packages/adapter-pi-durable/src/session-fork.ts",
+    "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+    "packages/adapter-pi-durable/src/session-storage.ts",
+    "packages/adapter-pi-durable/src/store.ts",
+    "packages/contracts/src/diagnostics.ts",
+    "packages/contracts/src/index.ts",
+    "packages/contracts/src/runner-channel.ts",
+    "packages/contracts/src/runner-command.ts",
+    "packages/contracts/src/runner-event.ts",
+    "packages/contracts/src/runner-response.ts",
+    "packages/contracts/src/runtime-graph/schema.ts",
+    "packages/contracts/src/runtime-graph/scope.ts",
+    "packages/contracts/src/runtime-graph/status.ts",
+    "packages/contracts/src/runtime-graph/types.ts",
+    "packages/contracts/src/wire-context.ts",
+    "packages/contracts/src/wire-lifecycle.ts",
+    "packages/contracts/src/wire-message.ts",
+    "packages/contracts/src/wire-tool.ts",
+    "packages/core/src/binding-commands.ts",
+    "packages/core/src/binding-docs.ts",
+    "packages/core/src/bridge/assistant-message-builder.ts",
+    "packages/core/src/bridge/child-run-outcome.ts",
+    "packages/core/src/bridge/contracts.ts",
+    "packages/core/src/bridge/durable-child-event-adapter.ts",
+    "packages/core/src/bridge/durable-contracts.ts",
+    "packages/core/src/bridge/durable-event-adapter.ts",
+    "packages/core/src/bridge/native-tool-result.ts",
+    "packages/core/src/bridge/tool-args-resolver.ts",
+    "packages/core/src/bridge/tool-progress-state.ts",
+    "packages/core/src/bridge/tool-result-extractor.ts",
+    "packages/core/src/bridge/tool-result-presentation.ts",
+    "packages/core/src/bridge/turn-summary.ts",
+    "packages/core/src/bridge/view-stream-projector.ts",
+    "packages/core/src/bridge/watch-events-compat.ts",
+    "packages/core/src/builtin-extensions/coding-tools.ts",
+    "packages/core/src/builtin-extensions/index.ts",
+    "packages/core/src/builtin-extensions/registry.ts",
+    "packages/core/src/builtin-extensions/subagents.ts",
+    "packages/core/src/builtin-extensions/types.ts",
+    "packages/core/src/cli-args.ts",
+    "packages/core/src/codemode-namespaces.ts",
+    "packages/core/src/compaction-hooks.ts",
+    "packages/core/src/control-channel.ts",
+    "packages/core/src/conversation-id.ts",
+    "packages/core/src/engine.ts",
+    "packages/core/src/errors.ts",
+    "packages/core/src/extension-actions.ts",
+    "packages/core/src/extension-bridge.ts",
+    "packages/core/src/extension-mount.ts",
+    "packages/core/src/harness-setup.ts",
+    "packages/core/src/host-rpc.ts",
+    "packages/core/src/index.ts",
+    "packages/core/src/jsonl.ts",
+    "packages/core/src/models/provider.ts",
+    "packages/core/src/policy/errors.ts",
+    "packages/core/src/policy/resolver.ts",
+    "packages/core/src/policy/schema.ts",
+    "packages/core/src/policy/store.ts",
+    "packages/core/src/policy/types.ts",
+    "packages/core/src/prompt.ts",
+    "packages/core/src/runner-server.ts",
+    "packages/core/src/runtime-bindings.ts",
+    "packages/core/src/runtime-cleanup.ts",
+    "packages/core/src/runtime-controller.ts",
+    "packages/core/src/runtime-graph-conversations.ts",
+    "packages/core/src/runtime-graph-mapper.ts",
+    "packages/core/src/runtime-graph-receipts.ts",
+    "packages/core/src/runtime-graph-scope.ts",
+    "packages/core/src/runtime-graph-source.ts",
+    "packages/core/src/runtime-graph-state.ts",
+    "packages/core/src/runtime-hydration.ts",
+    "packages/core/src/runtime-loader.ts",
+    "packages/core/src/runtime-types.ts",
+    "packages/core/src/runtime.ts",
+    "packages/core/src/schema-port.ts",
+    "packages/core/src/session/coordinator.ts",
+    "packages/core/src/session/store.ts",
+    "packages/core/src/session-commands.ts",
+    "packages/core/src/session-daemon.ts",
+    "packages/core/src/session-state-commands.ts",
+    "packages/core/src/shared/agent-dir.ts",
+    "packages/core/src/shared/child-title.ts",
+    "packages/core/src/shared/errors.ts",
+    "packages/core/src/shared/extension-runner.ts",
+    "packages/core/src/shared/extension-ui-context.ts",
+    "packages/core/src/shared/model-ref.ts",
+    "packages/core/src/shared/subagent-envelope.ts",
+    "packages/core/src/shared/version.ts",
+    "packages/core/src/stdout-guard.ts",
+    "packages/core/src/subagent-courier.ts",
+    "packages/core/src/subagent-delivery-types.ts",
+    "packages/core/src/subagent-delivery.ts",
+    "packages/core/src/subagent-docs.ts",
+    "packages/core/src/subagent-policy-ack.ts",
+    "packages/core/src/subagent-policy-state.ts",
+    "packages/core/src/subagent-role.ts",
+    "packages/core/src/subagent-watcher.ts",
+    "packages/core/src/subagent.ts",
+    "packages/core/src/task-labels.ts",
+    "packages/core/src/task-tokens.ts",
+    "packages/core/src/tool-adapter.ts",
+    "packages/core/src/tools/execution-env.ts",
+    "packages/core/src/tools/sandbox.ts",
+    "packages/core/src/version.ts",
+    "packages/core/src/watcher-compat.ts",
+    "packages/execution/src/adapters/local-node-env.ts",
+    "packages/execution/src/adapters/mock-env.ts",
+    "packages/execution/src/index.ts",
+    "packages/extension-pi-resource/src/index.ts",
+    "packages/extension-pi-resource/src/pi-resource-ext.ts",
+    "packages/protocol/src/index.ts",
+    "packages/protocol/src/jsonrpc/schema.ts",
+    "packages/protocol/src/jsonrpc/types.ts",
+    "packages/protocol/src/transport/interface.ts",
+    "packages/protocol/src/transport/request-dispatcher.ts",
+    "packages/protocol/src/transport/stdio-server.ts",
+    "packages/runner/src/cli-args.ts",
+    "packages/runner/src/composition.ts",
+    "packages/runner/src/index.ts",
+    "packages/runner/src/main.ts"
+  ],
+  "edges": [
+    {
+      "from": "packages/adapter-codemode/src/codemode.ts",
+      "specifier": "@earendil-works/pi-codemode",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-codemode/src/codemode.ts",
+      "specifier": "@earendil-works/pi-durable/codemode",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/adapter-codemode/src/codemode.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/adapter-codemode/src/index.ts",
+      "specifier": "./codemode.ts",
+      "to": "packages/adapter-codemode/src/codemode.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/index.ts",
+      "specifier": "./model-provider.ts",
+      "to": "packages/adapter-pi-ai/src/model-provider.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/index.ts",
+      "specifier": "./model-setup.ts",
+      "to": "packages/adapter-pi-ai/src/model-setup.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/model-provider.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/model-provider.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 6
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/model-setup.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 7
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/model-setup.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 8
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/model-setup.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/adapter-pi-ai/src/model-setup.ts",
+      "specifier": "./model-provider.ts",
+      "to": "packages/adapter-pi-ai/src/model-provider.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/index.ts",
+      "specifier": "./store.ts",
+      "to": "packages/adapter-pi-durable/src/store.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/index.ts",
+      "specifier": "./session-storage.ts",
+      "to": "packages/adapter-pi-durable/src/session-storage.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/index.ts",
+      "specifier": "./session-fork.ts",
+      "to": "packages/adapter-pi-durable/src/session-fork.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/index.ts",
+      "specifier": "./session-lock-eviction.ts",
+      "to": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-fork.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-fork.ts",
+      "specifier": "node:sqlite",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-fork.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "specifier": "node:child_process",
+      "to": null,
+      "line": 4
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "specifier": "node:fs/promises",
+      "to": null,
+      "line": 5
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 6
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "specifier": "proper-lockfile",
+      "to": null,
+      "line": 8
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "specifier": "../../core/src/shared/errors.ts",
+      "to": "packages/core/src/shared/errors.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-storage.ts",
+      "specifier": "node:crypto",
+      "to": null,
+      "line": 4
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-storage.ts",
+      "specifier": "node:fs/promises",
+      "to": null,
+      "line": 5
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-storage.ts",
+      "specifier": "node:os",
+      "to": null,
+      "line": 6
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-storage.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 7
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/session-storage.ts",
+      "specifier": "./session-lock-eviction.ts",
+      "to": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "@earendil-works/chord/context",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 7
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "@earendil-works/pi-durable/storage/sqlite/node",
+      "to": null,
+      "line": 8
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "./session-lock-eviction.ts",
+      "to": "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/adapter-pi-durable/src/store.ts",
+      "specifier": "./session-fork.ts",
+      "to": "packages/adapter-pi-durable/src/session-fork.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/contracts/src/diagnostics.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./diagnostics.ts",
+      "to": "packages/contracts/src/diagnostics.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runner-channel.ts",
+      "to": "packages/contracts/src/runner-channel.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runner-command.ts",
+      "to": "packages/contracts/src/runner-command.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runner-event.ts",
+      "to": "packages/contracts/src/runner-event.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runner-response.ts",
+      "to": "packages/contracts/src/runner-response.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./wire-context.ts",
+      "to": "packages/contracts/src/wire-context.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./wire-lifecycle.ts",
+      "to": "packages/contracts/src/wire-lifecycle.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./wire-message.ts",
+      "to": "packages/contracts/src/wire-message.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./wire-tool.ts",
+      "to": "packages/contracts/src/wire-tool.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runtime-graph/types.ts",
+      "to": "packages/contracts/src/runtime-graph/types.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runtime-graph/schema.ts",
+      "to": "packages/contracts/src/runtime-graph/schema.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runtime-graph/scope.ts",
+      "to": "packages/contracts/src/runtime-graph/scope.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "./runtime-graph/status.ts",
+      "to": "packages/contracts/src/runtime-graph/status.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/contracts/src/index.ts",
+      "specifier": "../../adapter-pi-durable/src/session-fork.ts",
+      "to": "packages/adapter-pi-durable/src/session-fork.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/contracts/src/runner-channel.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/runner-command.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/runner-command.ts",
+      "specifier": "./wire-context.ts",
+      "to": "packages/contracts/src/wire-context.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/contracts/src/runner-event.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/runner-event.ts",
+      "specifier": "./wire-message.ts",
+      "to": "packages/contracts/src/wire-message.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/contracts/src/runner-event.ts",
+      "specifier": "./wire-tool.ts",
+      "to": "packages/contracts/src/wire-tool.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/contracts/src/runner-event.ts",
+      "specifier": "./wire-lifecycle.ts",
+      "to": "packages/contracts/src/wire-lifecycle.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/contracts/src/runner-response.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/runtime-graph/schema.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/runtime-graph/scope.ts",
+      "specifier": "./types.ts",
+      "to": "packages/contracts/src/runtime-graph/types.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/contracts/src/runtime-graph/status.ts",
+      "specifier": "./types.ts",
+      "to": "packages/contracts/src/runtime-graph/types.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/contracts/src/wire-context.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/wire-lifecycle.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/wire-lifecycle.ts",
+      "specifier": "./wire-context.ts",
+      "to": "packages/contracts/src/wire-context.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/contracts/src/wire-lifecycle.ts",
+      "specifier": "./wire-message.ts",
+      "to": "packages/contracts/src/wire-message.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/contracts/src/wire-lifecycle.ts",
+      "specifier": "./runtime-graph/schema.ts",
+      "to": "packages/contracts/src/runtime-graph/schema.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/contracts/src/wire-message.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/wire-message.ts",
+      "specifier": "./wire-context.ts",
+      "to": "packages/contracts/src/wire-context.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/contracts/src/wire-tool.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/contracts/src/wire-tool.ts",
+      "specifier": "./wire-context.ts",
+      "to": "packages/contracts/src/wire-context.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/binding-commands.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/binding-commands.ts",
+      "specifier": "./binding-docs.ts",
+      "to": "packages/core/src/binding-docs.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/binding-commands.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/binding-commands.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/binding-commands.ts",
+      "specifier": "./errors.ts",
+      "to": "packages/core/src/errors.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/binding-docs.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/assistant-message-builder.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/assistant-message-builder.ts",
+      "specifier": "../runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/bridge/assistant-message-builder.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/bridge/contracts.ts",
+      "specifier": "../../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/bridge/contracts.ts",
+      "specifier": "../../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/bridge/contracts.ts",
+      "specifier": "../../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/bridge/contracts.ts",
+      "specifier": "../../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/bridge/contracts.ts",
+      "specifier": "../../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/bridge/contracts.ts",
+      "specifier": "./durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "specifier": "./durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "specifier": "../runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "specifier": "./tool-result-extractor.ts",
+      "to": "packages/core/src/bridge/tool-result-extractor.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "specifier": "./child-run-outcome.ts",
+      "to": "packages/core/src/bridge/child-run-outcome.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/bridge/durable-contracts.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/bridge/durable-contracts.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 40
+    },
+    {
+      "from": "packages/core/src/bridge/durable-contracts.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 41
+    },
+    {
+      "from": "packages/core/src/bridge/durable-contracts.ts",
+      "specifier": "./watch-events-compat.ts",
+      "to": "packages/core/src/bridge/watch-events-compat.ts",
+      "line": 129
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "./durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "../runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "./turn-summary.ts",
+      "to": "packages/core/src/bridge/turn-summary.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "./tool-result-extractor.ts",
+      "to": "packages/core/src/bridge/tool-result-extractor.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "./durable-child-event-adapter.ts",
+      "to": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/bridge/durable-event-adapter.ts",
+      "specifier": "./tool-args-resolver.ts",
+      "to": "packages/core/src/bridge/tool-args-resolver.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/bridge/native-tool-result.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/bridge/native-tool-result.ts",
+      "specifier": "./durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/bridge/tool-args-resolver.ts",
+      "specifier": "../runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/tool-args-resolver.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/bridge/tool-args-resolver.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/bridge/tool-result-extractor.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/bridge/tool-result-extractor.ts",
+      "specifier": "./native-tool-result.ts",
+      "to": "packages/core/src/bridge/native-tool-result.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/bridge/tool-result-extractor.ts",
+      "specifier": "./tool-result-presentation.ts",
+      "to": "packages/core/src/bridge/tool-result-presentation.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/bridge/tool-result-extractor.ts",
+      "specifier": "./tool-progress-state.ts",
+      "to": "packages/core/src/bridge/tool-progress-state.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/bridge/tool-result-presentation.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/bridge/tool-result-presentation.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/bridge/turn-summary.ts",
+      "specifier": "../runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/turn-summary.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/bridge/turn-summary.ts",
+      "specifier": "./assistant-message-builder.ts",
+      "to": "packages/core/src/bridge/assistant-message-builder.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/bridge/view-stream-projector.ts",
+      "specifier": "./contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/watch-events-compat.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/bridge/watch-events-compat.ts",
+      "specifier": "./durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/coding-tools.ts",
+      "specifier": "@earendil-works/pi-durable/tools",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/coding-tools.ts",
+      "specifier": "@earendil-works/pi-durable/images/node",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/coding-tools.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/index.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/index.ts",
+      "specifier": "./registry.ts",
+      "to": "packages/core/src/builtin-extensions/registry.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/index.ts",
+      "specifier": "./coding-tools.ts",
+      "to": "packages/core/src/builtin-extensions/coding-tools.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/index.ts",
+      "specifier": "@durable-zero/adapter-codemode",
+      "to": "packages/adapter-codemode/src/index.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/index.ts",
+      "specifier": "./subagents.ts",
+      "to": "packages/core/src/builtin-extensions/subagents.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/registry.ts",
+      "specifier": "../shared/errors.ts",
+      "to": "packages/core/src/shared/errors.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/registry.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/subagents.ts",
+      "specifier": "../subagent.ts",
+      "to": "packages/core/src/subagent.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/subagents.ts",
+      "specifier": "../subagent-delivery.ts",
+      "to": "packages/core/src/subagent-delivery.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/subagents.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/types.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/types.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/types.ts",
+      "specifier": "../policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/types.ts",
+      "specifier": "../prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/builtin-extensions/types.ts",
+      "specifier": "../codemode-namespaces.ts",
+      "to": "packages/core/src/codemode-namespaces.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/cli-args.ts",
+      "specifier": "./harness-setup.ts",
+      "to": "packages/core/src/harness-setup.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/codemode-namespaces.ts",
+      "specifier": "@earendil-works/pi-durable/codemode",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/control-channel.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/control-channel.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/control-channel.ts",
+      "specifier": "@earendil-works/chord/context",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/control-channel.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/conversation-id.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/conversation-id.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/conversation-id.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/engine.ts",
+      "specifier": "./runtime.ts",
+      "to": "packages/core/src/runtime.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/engine.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/engine.ts",
+      "specifier": "./tools/execution-env.ts",
+      "to": "packages/core/src/tools/execution-env.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/engine.ts",
+      "specifier": "./bridge/durable-event-adapter.ts",
+      "to": "packages/core/src/bridge/durable-event-adapter.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/engine.ts",
+      "specifier": "./subagent-watcher.ts",
+      "to": "packages/core/src/subagent-watcher.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/engine.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/errors.ts",
+      "specifier": "./shared/errors.ts",
+      "to": "packages/core/src/shared/errors.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/extension-actions.ts",
+      "specifier": "./shared/extension-runner.ts",
+      "to": "packages/core/src/shared/extension-runner.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/extension-bridge.ts",
+      "specifier": "./shared/extension-runner.ts",
+      "to": "packages/core/src/shared/extension-runner.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/extension-bridge.ts",
+      "specifier": "./tool-adapter.ts",
+      "to": "packages/core/src/tool-adapter.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "./tool-adapter.ts",
+      "to": "packages/core/src/tool-adapter.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "./extension-bridge.ts",
+      "to": "packages/core/src/extension-bridge.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "@durable-zero/adapter-pi-durable",
+      "to": "packages/adapter-pi-durable/src/index.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "./prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "./codemode-namespaces.ts",
+      "to": "packages/core/src/codemode-namespaces.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "@earendil-works/pi-durable/env",
+      "to": null,
+      "line": 20
+    },
+    {
+      "from": "packages/core/src/extension-mount.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 128
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "@earendil-works/chord",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "@earendil-works/pi-durable/tool-search",
+      "to": null,
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./tools/execution-env.ts",
+      "to": "packages/core/src/tools/execution-env.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 18
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 19
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./codemode-namespaces.ts",
+      "to": "packages/core/src/codemode-namespaces.ts",
+      "line": 20
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./builtin-extensions/registry.ts",
+      "to": "packages/core/src/builtin-extensions/registry.ts",
+      "line": 21
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./builtin-extensions/coding-tools.ts",
+      "to": "packages/core/src/builtin-extensions/coding-tools.ts",
+      "line": 22
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "@durable-zero/adapter-codemode",
+      "to": "packages/adapter-codemode/src/index.ts",
+      "line": 23
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./builtin-extensions/subagents.ts",
+      "to": "packages/core/src/builtin-extensions/subagents.ts",
+      "line": 24
+    },
+    {
+      "from": "packages/core/src/harness-setup.ts",
+      "specifier": "./builtin-extensions/types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 25
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./engine.ts",
+      "to": "packages/core/src/engine.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./session-daemon.ts",
+      "to": "packages/core/src/session-daemon.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./tool-adapter.ts",
+      "to": "packages/core/src/tool-adapter.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./extension-mount.ts",
+      "to": "packages/core/src/extension-mount.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./codemode-namespaces.ts",
+      "to": "packages/core/src/codemode-namespaces.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./runtime.ts",
+      "to": "packages/core/src/runtime.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./subagent.ts",
+      "to": "packages/core/src/subagent.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./subagent-delivery.ts",
+      "to": "packages/core/src/subagent-delivery.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./schema-port.ts",
+      "to": "packages/core/src/schema-port.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./watcher-compat.ts",
+      "to": "packages/core/src/watcher-compat.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./bridge/view-stream-projector.ts",
+      "to": "packages/core/src/bridge/view-stream-projector.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./bridge/durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./version.ts",
+      "to": "packages/core/src/version.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./conversation-id.ts",
+      "to": "packages/core/src/conversation-id.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./cli-args.ts",
+      "to": "packages/core/src/cli-args.ts",
+      "line": 16
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./task-labels.ts",
+      "to": "packages/core/src/task-labels.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./task-tokens.ts",
+      "to": "packages/core/src/task-tokens.ts",
+      "line": 18
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./runtime-graph-mapper.ts",
+      "to": "packages/core/src/runtime-graph-mapper.ts",
+      "line": 19
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./session-commands.ts",
+      "to": "packages/core/src/session-commands.ts",
+      "line": 20
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./bridge/durable-child-event-adapter.ts",
+      "to": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "line": 21
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./stdout-guard.ts",
+      "to": "packages/core/src/stdout-guard.ts",
+      "line": 22
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "@durable-zero/adapter-pi-durable",
+      "to": "packages/adapter-pi-durable/src/index.ts",
+      "line": 23
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 24
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./host-rpc.ts",
+      "to": "packages/core/src/host-rpc.ts",
+      "line": 25
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./builtin-extensions/index.ts",
+      "to": "packages/core/src/builtin-extensions/index.ts",
+      "line": 26
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./tools/execution-env.ts",
+      "to": "packages/core/src/tools/execution-env.ts",
+      "line": 27
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./tools/sandbox.ts",
+      "to": "packages/core/src/tools/sandbox.ts",
+      "line": 28
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./session/store.ts",
+      "to": "packages/core/src/session/store.ts",
+      "line": 29
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./session/coordinator.ts",
+      "to": "packages/core/src/session/coordinator.ts",
+      "line": 30
+    },
+    {
+      "from": "packages/core/src/index.ts",
+      "specifier": "./models/provider.ts",
+      "to": "packages/core/src/models/provider.ts",
+      "line": 31
+    },
+    {
+      "from": "packages/core/src/jsonl.ts",
+      "specifier": "node:stream",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/jsonl.ts",
+      "specifier": "node:string_decoder",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/policy/resolver.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/policy/resolver.ts",
+      "specifier": "@earendil-works/pi-ai/models",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/policy/resolver.ts",
+      "specifier": "../shared/model-ref.ts",
+      "to": "packages/core/src/shared/model-ref.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/policy/resolver.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/policy/resolver.ts",
+      "specifier": "./errors.ts",
+      "to": "packages/core/src/policy/errors.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/policy/schema.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/policy/schema.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/policy/store.ts",
+      "specifier": "./schema.ts",
+      "to": "packages/core/src/policy/schema.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/policy/store.ts",
+      "specifier": "./types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/policy/store.ts",
+      "specifier": "./errors.ts",
+      "to": "packages/core/src/policy/errors.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/policy/types.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/prompt.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/prompt.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/prompt.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./engine.ts",
+      "to": "packages/core/src/engine.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "@durable-zero/adapter-pi-ai",
+      "to": "packages/adapter-pi-ai/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./jsonl.ts",
+      "to": "packages/core/src/jsonl.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./runtime.ts",
+      "to": "packages/core/src/runtime.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "@durable-zero/execution",
+      "to": "packages/execution/src/index.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./bridge/durable-event-adapter.ts",
+      "to": "packages/core/src/bridge/durable-event-adapter.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./bridge/contracts.ts",
+      "to": "packages/core/src/bridge/contracts.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./cli-args.ts",
+      "to": "packages/core/src/cli-args.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./session-commands.ts",
+      "to": "packages/core/src/session-commands.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "@durable-zero/contracts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./version.ts",
+      "to": "packages/core/src/version.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./host-rpc.ts",
+      "to": "packages/core/src/host-rpc.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./subagent-watcher.ts",
+      "to": "packages/core/src/subagent-watcher.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./runtime-graph-source.ts",
+      "to": "packages/core/src/runtime-graph-source.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 16
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./stdout-guard.ts",
+      "to": "packages/core/src/stdout-guard.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/runner-server.ts",
+      "specifier": "./control-channel.ts",
+      "to": "packages/core/src/control-channel.ts",
+      "line": 18
+    },
+    {
+      "from": "packages/core/src/runtime-bindings.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-bindings.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "./compaction-hooks.ts",
+      "to": "packages/core/src/compaction-hooks.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "./subagent-docs.ts",
+      "to": "packages/core/src/subagent-docs.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "./runtime-hydration.ts",
+      "to": "packages/core/src/runtime-hydration.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 18
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 25
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "./prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 26
+    },
+    {
+      "from": "packages/core/src/runtime-controller.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 84
+    },
+    {
+      "from": "packages/core/src/runtime-graph-conversations.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./runtime-graph-conversations.ts",
+      "to": "packages/core/src/runtime-graph-conversations.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./task-labels.ts",
+      "to": "packages/core/src/task-labels.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./task-labels.ts",
+      "to": "packages/core/src/task-labels.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./runtime-graph-receipts.ts",
+      "to": "packages/core/src/runtime-graph-receipts.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./task-tokens.ts",
+      "to": "packages/core/src/task-tokens.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./runtime-graph-state.ts",
+      "to": "packages/core/src/runtime-graph-state.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runtime-graph-mapper.ts",
+      "specifier": "./runtime-graph-state.ts",
+      "to": "packages/core/src/runtime-graph-state.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/runtime-graph-receipts.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-graph-receipts.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-graph-receipts.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runtime-graph-receipts.ts",
+      "specifier": "./task-tokens.ts",
+      "to": "packages/core/src/task-tokens.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/runtime-graph-scope.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "./runtime-graph-receipts.ts",
+      "to": "packages/core/src/runtime-graph-receipts.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "./runtime-graph-conversations.ts",
+      "to": "packages/core/src/runtime-graph-conversations.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "./task-labels.ts",
+      "to": "packages/core/src/task-labels.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/runtime-graph-source.ts",
+      "specifier": "./runtime-graph-mapper.ts",
+      "to": "packages/core/src/runtime-graph-mapper.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runtime-graph-state.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-graph-state.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-graph-state.ts",
+      "specifier": "./runtime-graph-receipts.ts",
+      "to": "packages/core/src/runtime-graph-receipts.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runtime-hydration.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-hydration.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./harness-setup.ts",
+      "to": "packages/core/src/harness-setup.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./extension-bridge.ts",
+      "to": "packages/core/src/extension-bridge.ts",
+      "line": 16
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./extension-mount.ts",
+      "to": "packages/core/src/extension-mount.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@durable-zero/adapter-pi-durable",
+      "to": "packages/adapter-pi-durable/src/index.ts",
+      "line": 18
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 19
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@earendil-works/pi-durable/storage/sqlite/node",
+      "to": null,
+      "line": 20
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 21
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 22
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./codemode-namespaces.ts",
+      "to": "packages/core/src/codemode-namespaces.ts",
+      "line": 23
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 24
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./subagent-policy-ack.ts",
+      "to": "packages/core/src/subagent-policy-ack.ts",
+      "line": 25
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 39
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./extension-mount.ts",
+      "to": "packages/core/src/extension-mount.ts",
+      "line": 40
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 132
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 136
+    },
+    {
+      "from": "packages/core/src/runtime-loader.ts",
+      "specifier": "./extension-mount.ts",
+      "to": "packages/core/src/extension-mount.ts",
+      "line": 138
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/chord",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/chord/context",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 16
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "./prompt.ts",
+      "to": "packages/core/src/prompt.ts",
+      "line": 18
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 75
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 75
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "./builtin-extensions/types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 100
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "./builtin-extensions/types.ts",
+      "to": "packages/core/src/builtin-extensions/types.ts",
+      "line": 101
+    },
+    {
+      "from": "packages/core/src/runtime-types.ts",
+      "specifier": "./tools/execution-env.ts",
+      "to": "packages/core/src/tools/execution-env.ts",
+      "line": 103
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "@earendil-works/chord",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./harness-setup.ts",
+      "to": "packages/core/src/harness-setup.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./tools/execution-env.ts",
+      "to": "packages/core/src/tools/execution-env.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "@durable-zero/adapter-pi-durable",
+      "to": "packages/adapter-pi-durable/src/index.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-controller.ts",
+      "to": "packages/core/src/runtime-controller.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-bindings.ts",
+      "to": "packages/core/src/runtime-bindings.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-cleanup.ts",
+      "to": "packages/core/src/runtime-cleanup.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-loader.ts",
+      "to": "packages/core/src/runtime-loader.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-hydration.ts",
+      "to": "packages/core/src/runtime-hydration.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/runtime.ts",
+      "specifier": "./runtime-hydration.ts",
+      "to": "packages/core/src/runtime-hydration.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/schema-port.ts",
+      "specifier": "@sinclair/typebox/value",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/schema-port.ts",
+      "specifier": "@sinclair/typebox",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/session/coordinator.ts",
+      "specifier": "./store.ts",
+      "to": "packages/core/src/session/store.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/session/coordinator.ts",
+      "specifier": "../models/provider.ts",
+      "to": "packages/core/src/models/provider.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/session/coordinator.ts",
+      "specifier": "../tools/execution-env.ts",
+      "to": "packages/core/src/tools/execution-env.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@earendil-works/chord/context",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "./cli-args.ts",
+      "to": "packages/core/src/cli-args.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "./binding-commands.ts",
+      "to": "packages/core/src/binding-commands.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "./session-state-commands.ts",
+      "to": "packages/core/src/session-state-commands.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "./policy/schema.ts",
+      "to": "packages/core/src/policy/schema.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@durable-zero/contracts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "./conversation-id.ts",
+      "to": "packages/core/src/conversation-id.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@durable-zero/adapter-pi-durable",
+      "to": "packages/adapter-pi-durable/src/index.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/session-commands.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/session-daemon.ts",
+      "specifier": "node:net",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/session-daemon.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/session-daemon.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "@earendil-works/chord/context",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "@earendil-works/pi-ai/utils/estimate",
+      "to": null,
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "./cli-args.ts",
+      "to": "packages/core/src/cli-args.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "./conversation-id.ts",
+      "to": "packages/core/src/conversation-id.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/session-state-commands.ts",
+      "specifier": "@earendil-works/pi-ai",
+      "to": null,
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/shared/agent-dir.ts",
+      "specifier": "node:os",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/shared/agent-dir.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/shared/extension-runner.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/shared/extension-runner.ts",
+      "specifier": "./extension-ui-context.ts",
+      "to": "packages/core/src/shared/extension-ui-context.ts",
+      "line": 31
+    },
+    {
+      "from": "packages/core/src/shared/extension-ui-context.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/shared/extension-ui-context.ts",
+      "specifier": "../host-rpc.ts",
+      "to": "packages/core/src/host-rpc.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/shared/subagent-envelope.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/shared/version.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/shared/version.ts",
+      "specifier": "node:module",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/shared/version.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/shared/version.ts",
+      "specifier": "node:url",
+      "to": null,
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/stdout-guard.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 20
+    },
+    {
+      "from": "packages/core/src/stdout-guard.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 21
+    },
+    {
+      "from": "packages/core/src/stdout-guard.ts",
+      "specifier": "node:url",
+      "to": null,
+      "line": 22
+    },
+    {
+      "from": "packages/core/src/stdout-guard.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 23
+    },
+    {
+      "from": "packages/core/src/subagent-courier.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/subagent-courier.ts",
+      "specifier": "./subagent-docs.ts",
+      "to": "packages/core/src/subagent-docs.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/subagent-courier.ts",
+      "specifier": "./subagent-delivery-types.ts",
+      "to": "packages/core/src/subagent-delivery-types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/subagent-courier.ts",
+      "specifier": "./watcher-compat.ts",
+      "to": "packages/core/src/watcher-compat.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/subagent-delivery-types.ts",
+      "specifier": "@earendil-works/chord",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/subagent-delivery-types.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "./subagent-docs.ts",
+      "to": "packages/core/src/subagent-docs.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "./subagent-delivery-types.ts",
+      "to": "packages/core/src/subagent-delivery-types.ts",
+      "line": 8
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "./subagent-courier.ts",
+      "to": "packages/core/src/subagent-courier.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "./subagent-delivery-types.ts",
+      "to": "packages/core/src/subagent-delivery-types.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "./subagent-docs.ts",
+      "to": "packages/core/src/subagent-docs.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/subagent-delivery.ts",
+      "specifier": "./subagent-courier.ts",
+      "to": "packages/core/src/subagent-courier.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/subagent-docs.ts",
+      "specifier": "@earendil-works/chord",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/subagent-docs.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/subagent-docs.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/subagent-policy-ack.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/subagent-policy-ack.ts",
+      "specifier": "./policy/schema.ts",
+      "to": "packages/core/src/policy/schema.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/subagent-policy-ack.ts",
+      "specifier": "./policy/errors.ts",
+      "to": "packages/core/src/policy/errors.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/subagent-policy-ack.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/core/src/subagent-policy-ack.ts",
+      "specifier": "./subagent-policy-state.ts",
+      "to": "packages/core/src/subagent-policy-state.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/subagent-policy-ack.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/core/src/subagent-policy-state.ts",
+      "specifier": "./policy/schema.ts",
+      "to": "packages/core/src/policy/schema.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/subagent-policy-state.ts",
+      "specifier": "./policy/errors.ts",
+      "to": "packages/core/src/policy/errors.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/subagent-policy-state.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 5
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./bridge/durable-contracts.ts",
+      "to": "packages/core/src/bridge/durable-contracts.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "@earendil-works/chord/context",
+      "to": null,
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./bridge/durable-event-adapter.ts",
+      "to": "packages/core/src/bridge/durable-event-adapter.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./bridge/durable-child-event-adapter.ts",
+      "to": "packages/core/src/bridge/durable-child-event-adapter.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./bridge/native-tool-result.ts",
+      "to": "packages/core/src/bridge/native-tool-result.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./binding-docs.ts",
+      "to": "packages/core/src/binding-docs.ts",
+      "line": 16
+    },
+    {
+      "from": "packages/core/src/subagent-watcher.ts",
+      "specifier": "./subagent-docs.ts",
+      "to": "packages/core/src/subagent-docs.ts",
+      "line": 17
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "@earendil-works/chord",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "@sinclair/typebox",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 9
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "./subagent-docs.ts",
+      "to": "packages/core/src/subagent-docs.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "./subagent-delivery.ts",
+      "to": "packages/core/src/subagent-delivery.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "./subagent-role.ts",
+      "to": "packages/core/src/subagent-role.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "./policy/resolver.ts",
+      "to": "packages/core/src/policy/resolver.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "./policy/types.ts",
+      "to": "packages/core/src/policy/types.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/subagent.ts",
+      "specifier": "./shared/model-ref.ts",
+      "to": "packages/core/src/shared/model-ref.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/core/src/task-labels.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/task-labels.ts",
+      "specifier": "./bridge/tool-args-resolver.ts",
+      "to": "packages/core/src/bridge/tool-args-resolver.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/task-labels.ts",
+      "specifier": "./runtime-types.ts",
+      "to": "packages/core/src/runtime-types.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/core/src/task-tokens.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/core/src/task-tokens.ts",
+      "specifier": "../../contracts/src/index.ts",
+      "to": "packages/contracts/src/index.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/core/src/tool-adapter.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 7
+    },
+    {
+      "from": "packages/core/src/tool-adapter.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 13
+    },
+    {
+      "from": "packages/core/src/tool-adapter.ts",
+      "specifier": "./schema-port.ts",
+      "to": "packages/core/src/schema-port.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/core/src/tool-adapter.ts",
+      "specifier": "@sinclair/typebox",
+      "to": null,
+      "line": 78
+    },
+    {
+      "from": "packages/core/src/tool-adapter.ts",
+      "specifier": "@sinclair/typebox",
+      "to": null,
+      "line": 79
+    },
+    {
+      "from": "packages/core/src/version.ts",
+      "specifier": "./shared/version.ts",
+      "to": "packages/core/src/shared/version.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/execution/src/adapters/local-node-env.ts",
+      "specifier": "node:fs",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/execution/src/adapters/local-node-env.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/execution/src/adapters/local-node-env.ts",
+      "specifier": "node:child_process",
+      "to": null,
+      "line": 3
+    },
+    {
+      "from": "packages/execution/src/adapters/local-node-env.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 9
+    },
+    {
+      "from": "packages/execution/src/adapters/mock-env.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/execution/src/index.ts",
+      "specifier": "./adapters/local-node-env.ts",
+      "to": "packages/execution/src/adapters/local-node-env.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/execution/src/index.ts",
+      "specifier": "./adapters/mock-env.ts",
+      "to": "packages/execution/src/adapters/mock-env.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/extension-pi-resource/src/index.ts",
+      "specifier": "./pi-resource-ext.ts",
+      "to": "packages/extension-pi-resource/src/pi-resource-ext.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/extension-pi-resource/src/pi-resource-ext.ts",
+      "specifier": "@earendil-works/pi-durable",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/extension-pi-resource/src/pi-resource-ext.ts",
+      "specifier": "@earendil-works/pi-coding-agent",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/protocol/src/index.ts",
+      "specifier": "./jsonrpc/schema.ts",
+      "to": "packages/protocol/src/jsonrpc/schema.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/protocol/src/index.ts",
+      "specifier": "./jsonrpc/types.ts",
+      "to": "packages/protocol/src/jsonrpc/types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/protocol/src/index.ts",
+      "specifier": "./transport/interface.ts",
+      "to": "packages/protocol/src/transport/interface.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/protocol/src/index.ts",
+      "specifier": "./transport/request-dispatcher.ts",
+      "to": "packages/protocol/src/transport/request-dispatcher.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/protocol/src/index.ts",
+      "specifier": "./transport/stdio-server.ts",
+      "to": "packages/protocol/src/transport/stdio-server.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/protocol/src/jsonrpc/schema.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/protocol/src/jsonrpc/types.ts",
+      "specifier": "zod",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/protocol/src/jsonrpc/types.ts",
+      "specifier": "./schema.ts",
+      "to": "packages/protocol/src/jsonrpc/schema.ts",
+      "line": 6
+    },
+    {
+      "from": "packages/protocol/src/transport/interface.ts",
+      "specifier": "../jsonrpc/types.ts",
+      "to": "packages/protocol/src/jsonrpc/types.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/protocol/src/transport/request-dispatcher.ts",
+      "specifier": "../jsonrpc/schema.ts",
+      "to": "packages/protocol/src/jsonrpc/schema.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/protocol/src/transport/request-dispatcher.ts",
+      "specifier": "../jsonrpc/types.ts",
+      "to": "packages/protocol/src/jsonrpc/types.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/protocol/src/transport/stdio-server.ts",
+      "specifier": "node:stream",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/protocol/src/transport/stdio-server.ts",
+      "specifier": "node:string_decoder",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/protocol/src/transport/stdio-server.ts",
+      "specifier": "./interface.ts",
+      "to": "packages/protocol/src/transport/interface.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/protocol/src/transport/stdio-server.ts",
+      "specifier": "../jsonrpc/types.ts",
+      "to": "packages/protocol/src/jsonrpc/types.ts",
+      "line": 4
+    },
+    {
+      "from": "packages/protocol/src/transport/stdio-server.ts",
+      "specifier": "./request-dispatcher.ts",
+      "to": "packages/protocol/src/transport/request-dispatcher.ts",
+      "line": 5
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "node:path",
+      "to": null,
+      "line": 1
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "node:stream",
+      "to": null,
+      "line": 2
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/protocol",
+      "to": "packages/protocol/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/core",
+      "to": "packages/core/src/index.ts",
+      "line": 10
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/execution",
+      "to": "packages/execution/src/index.ts",
+      "line": 11
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/adapter-pi-durable",
+      "to": "packages/adapter-pi-durable/src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/adapter-pi-ai",
+      "to": "packages/adapter-pi-ai/src/index.ts",
+      "line": 13
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/adapter-codemode",
+      "to": "packages/adapter-codemode/src/index.ts",
+      "line": 14
+    },
+    {
+      "from": "packages/runner/src/composition.ts",
+      "specifier": "@durable-zero/extension-pi-resource",
+      "to": "packages/extension-pi-resource/src/index.ts",
+      "line": 15
+    },
+    {
+      "from": "packages/runner/src/index.ts",
+      "specifier": "./cli-args.ts",
+      "to": "packages/runner/src/cli-args.ts",
+      "line": 1
+    },
+    {
+      "from": "packages/runner/src/index.ts",
+      "specifier": "./composition.ts",
+      "to": "packages/runner/src/composition.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/runner/src/index.ts",
+      "specifier": "./main.ts",
+      "to": "packages/runner/src/main.ts",
+      "line": 3
+    },
+    {
+      "from": "packages/runner/src/main.ts",
+      "specifier": "./cli-args.ts",
+      "to": "packages/runner/src/cli-args.ts",
+      "line": 2
+    },
+    {
+      "from": "packages/runner/src/main.ts",
+      "specifier": "./composition.ts",
+      "to": "packages/runner/src/composition.ts",
+      "line": 3
+    }
+  ],
+  "runnerReachable": [
+    "packages/adapter-codemode/src/codemode.ts",
+    "packages/adapter-codemode/src/index.ts",
+    "packages/adapter-pi-ai/src/index.ts",
+    "packages/adapter-pi-ai/src/model-provider.ts",
+    "packages/adapter-pi-ai/src/model-setup.ts",
+    "packages/adapter-pi-durable/src/index.ts",
+    "packages/adapter-pi-durable/src/session-fork.ts",
+    "packages/adapter-pi-durable/src/session-lock-eviction.ts",
+    "packages/adapter-pi-durable/src/session-storage.ts",
+    "packages/adapter-pi-durable/src/store.ts",
+    "packages/contracts/src/diagnostics.ts",
+    "packages/contracts/src/index.ts",
+    "packages/contracts/src/runner-channel.ts",
+    "packages/contracts/src/runner-command.ts",
+    "packages/contracts/src/runner-event.ts",
+    "packages/contracts/src/runner-response.ts",
+    "packages/contracts/src/runtime-graph/schema.ts",
+    "packages/contracts/src/runtime-graph/scope.ts",
+    "packages/contracts/src/runtime-graph/status.ts",
+    "packages/contracts/src/runtime-graph/types.ts",
+    "packages/contracts/src/wire-context.ts",
+    "packages/contracts/src/wire-lifecycle.ts",
+    "packages/contracts/src/wire-message.ts",
+    "packages/contracts/src/wire-tool.ts",
+    "packages/core/src/binding-commands.ts",
+    "packages/core/src/binding-docs.ts",
+    "packages/core/src/bridge/assistant-message-builder.ts",
+    "packages/core/src/bridge/child-run-outcome.ts",
+    "packages/core/src/bridge/contracts.ts",
+    "packages/core/src/bridge/durable-child-event-adapter.ts",
+    "packages/core/src/bridge/durable-contracts.ts",
+    "packages/core/src/bridge/durable-event-adapter.ts",
+    "packages/core/src/bridge/native-tool-result.ts",
+    "packages/core/src/bridge/tool-args-resolver.ts",
+    "packages/core/src/bridge/tool-progress-state.ts",
+    "packages/core/src/bridge/tool-result-extractor.ts",
+    "packages/core/src/bridge/tool-result-presentation.ts",
+    "packages/core/src/bridge/turn-summary.ts",
+    "packages/core/src/bridge/view-stream-projector.ts",
+    "packages/core/src/bridge/watch-events-compat.ts",
+    "packages/core/src/builtin-extensions/coding-tools.ts",
+    "packages/core/src/builtin-extensions/index.ts",
+    "packages/core/src/builtin-extensions/registry.ts",
+    "packages/core/src/builtin-extensions/subagents.ts",
+    "packages/core/src/builtin-extensions/types.ts",
+    "packages/core/src/cli-args.ts",
+    "packages/core/src/codemode-namespaces.ts",
+    "packages/core/src/compaction-hooks.ts",
+    "packages/core/src/control-channel.ts",
+    "packages/core/src/conversation-id.ts",
+    "packages/core/src/engine.ts",
+    "packages/core/src/errors.ts",
+    "packages/core/src/extension-bridge.ts",
+    "packages/core/src/extension-mount.ts",
+    "packages/core/src/harness-setup.ts",
+    "packages/core/src/host-rpc.ts",
+    "packages/core/src/index.ts",
+    "packages/core/src/jsonl.ts",
+    "packages/core/src/models/provider.ts",
+    "packages/core/src/policy/errors.ts",
+    "packages/core/src/policy/resolver.ts",
+    "packages/core/src/policy/schema.ts",
+    "packages/core/src/policy/types.ts",
+    "packages/core/src/prompt.ts",
+    "packages/core/src/runner-server.ts",
+    "packages/core/src/runtime-bindings.ts",
+    "packages/core/src/runtime-cleanup.ts",
+    "packages/core/src/runtime-controller.ts",
+    "packages/core/src/runtime-graph-conversations.ts",
+    "packages/core/src/runtime-graph-mapper.ts",
+    "packages/core/src/runtime-graph-receipts.ts",
+    "packages/core/src/runtime-graph-source.ts",
+    "packages/core/src/runtime-graph-state.ts",
+    "packages/core/src/runtime-hydration.ts",
+    "packages/core/src/runtime-loader.ts",
+    "packages/core/src/runtime-types.ts",
+    "packages/core/src/runtime.ts",
+    "packages/core/src/schema-port.ts",
+    "packages/core/src/session-commands.ts",
+    "packages/core/src/session-daemon.ts",
+    "packages/core/src/session-state-commands.ts",
+    "packages/core/src/session/coordinator.ts",
+    "packages/core/src/session/store.ts",
+    "packages/core/src/shared/errors.ts",
+    "packages/core/src/shared/extension-runner.ts",
+    "packages/core/src/shared/extension-ui-context.ts",
+    "packages/core/src/shared/model-ref.ts",
+    "packages/core/src/shared/version.ts",
+    "packages/core/src/stdout-guard.ts",
+    "packages/core/src/subagent-courier.ts",
+    "packages/core/src/subagent-delivery-types.ts",
+    "packages/core/src/subagent-delivery.ts",
+    "packages/core/src/subagent-docs.ts",
+    "packages/core/src/subagent-policy-ack.ts",
+    "packages/core/src/subagent-policy-state.ts",
+    "packages/core/src/subagent-role.ts",
+    "packages/core/src/subagent-watcher.ts",
+    "packages/core/src/subagent.ts",
+    "packages/core/src/task-labels.ts",
+    "packages/core/src/task-tokens.ts",
+    "packages/core/src/tool-adapter.ts",
+    "packages/core/src/tools/execution-env.ts",
+    "packages/core/src/tools/sandbox.ts",
+    "packages/core/src/version.ts",
+    "packages/core/src/watcher-compat.ts",
+    "packages/execution/src/adapters/local-node-env.ts",
+    "packages/execution/src/adapters/mock-env.ts",
+    "packages/execution/src/index.ts"
+  ]
+}

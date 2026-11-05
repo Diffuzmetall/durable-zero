@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="J1.1: Cold fresh process emits zero stdout protocol noise before first request" time="0.055654" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J1.2: Initial state contains expected coordinator startup call without user mutations" time="0.109274" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J1.3: Clean bounded shutdown on SIGTERM (exit code 0, no lingering processes)" time="0.053916" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected exit code 0 on SIGTERM, got null&#10;&#10;null !== 0&#10;">
+		<failure type="testCodeFailure" message="Expected exit code 0 on SIGTERM, got null&#10;&#10;null !== 0">
+[Error [ERR_TEST_FAILURE]: Expected exit code 0 on SIGTERM, got null
+
+null !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected exit code 0 on SIGTERM, got null
+  
+  null !== 0
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:128:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J1.4: Clean bounded shutdown on SIGINT (exit code 0, no lingering processes)" time="0.052202" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected exit code 0 on SIGINT, got null&#10;&#10;null !== 0&#10;">
+		<failure type="testCodeFailure" message="Expected exit code 0 on SIGINT, got null&#10;&#10;null !== 0">
+[Error [ERR_TEST_FAILURE]: Expected exit code 0 on SIGINT, got null
+
+null !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected exit code 0 on SIGINT, got null
+  
+  null !== 0
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:136:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J1.5: Clean bounded shutdown on stdin EOF (exit code 0)" time="0.077488" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.1: session/prompt with string content accepts and records in fixture" time="0.078600" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.2: session/prompt with mixed text + image content accepts and records in fixture" time="0.078014" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.3: session/prompt with image-only content accepts and records in fixture" time="0.078647" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.4: session/prompt with child conversationId routes to child session" time="0.078516" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.5: session/prompt with deliverAs 'steer' routes correctly" time="0.077053" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.6: session/steer forces deliverAs 'steer' and accepts child routing" time="0.078388" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.7: session/followUp forces deliverAs 'followUp'" time="0.078247" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.8: models/list returns available fixture models with contextWindow" time="0.077424" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.9: models/set updates active model and records setModel on fixture" time="0.078423" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.10: models/setThinking accepts all valid levels (off, minimal, low, medium, high, xhigh)" time="0.077180" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.11: subagent/setPolicy in inherit mode updates coordinator policy" time="0.077856" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.12: subagent/setPolicy in configured mode with model and thinking level" time="0.078501" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.13: session/setSubagentPolicy alias behaves identically to subagent/setPolicy" time="0.077365" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.14: session/abort for root session invokes engine abort(null)" time="0.080101" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.15: session/abort with conversationId invokes engine abort('c-target')" time="0.078888" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.16: session/abortTask with positive integer taskId invokes engine abortTask" time="0.080396" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.17: session/compact with instructions invokes engine compact" time="0.078294" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.18: session/getState returns session state DTO (root and child)" time="0.079473" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.19: session/getTranscript returns transcript DTO with limit" time="0.078652" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.20: session/getStats returns contextUsage DTO" time="0.078108" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.21: fixture/reset clears recorded call history and resets dynamic counters" time="0.079687" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J2.22: Pipelining multiple sequential requests preserves order and reaches fixture" time="0.080872" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.1a: Unknown method returns error with descriptive message" time="0.081899" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.1b: Unknown method conforms to JSON-RPC 2.0 error code -32601" time="0.075889" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected JSON-RPC -32601 (Method not found), but received -32603&#10;&#10;-32603 !== -32601&#10;">
+		<failure type="testCodeFailure" message="Expected JSON-RPC -32601 (Method not found), but received -32603&#10;&#10;-32603 !== -32601">
+[Error [ERR_TEST_FAILURE]: Expected JSON-RPC -32601 (Method not found), but received -32603
+
+-32603 !== -32601
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected JSON-RPC -32601 (Method not found), but received -32603
+  
+  -32603 !== -32601
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:490:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32603,
+    expected: -32601,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J3.2a: Missing required prompt content returns descriptive error" time="0.079510" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.2b: Missing required prompt content conforms to JSON-RPC 2.0 error code -32602" time="0.080395" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602&#10;">
+		<failure type="testCodeFailure" message="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602">
+[Error [ERR_TEST_FAILURE]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+
+-32603 !== -32602
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+  
+  -32603 !== -32602
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:507:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32603,
+    expected: -32602,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J3.3a: Invalid taskId in session/abortTask returns descriptive error" time="0.077423" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.3b: Invalid taskId conforms to JSON-RPC 2.0 error code -32602" time="0.076317" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602&#10;">
+		<failure type="testCodeFailure" message="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602">
+[Error [ERR_TEST_FAILURE]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+
+-32603 !== -32602
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+  
+  -32603 !== -32602
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:524:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32603,
+    expected: -32602,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J3.4a: Invalid thinking level in models/setThinking returns descriptive error" time="0.086153" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.4b: Invalid thinking level conforms to JSON-RPC 2.0 error code -32602" time="0.081058" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602&#10;">
+		<failure type="testCodeFailure" message="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602">
+[Error [ERR_TEST_FAILURE]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+
+-32603 !== -32602
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+  
+  -32603 !== -32602
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:541:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32603,
+    expected: -32602,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J3.5a: Invalid deliverAs parameter returns descriptive error" time="0.090669" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.5b: Invalid deliverAs conforms to JSON-RPC 2.0 error code -32602" time="0.083260" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs" failure="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602&#10;">
+		<failure type="testCodeFailure" message="Expected JSON-RPC -32602 (Invalid params), but received -32603&#10;&#10;-32603 !== -32602">
+[Error [ERR_TEST_FAILURE]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+
+-32603 !== -32602
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected JSON-RPC -32602 (Invalid params), but received -32603
+  
+  -32603 !== -32602
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs:558:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32603,
+    expected: -32602,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="J3.6: Malformed JSON returns standard JSON-RPC parse error code -32700" time="0.081820" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.7: Invalid JSON-RPC request structure returns code -32600" time="0.079951" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.8: Preserves integer ID 0 exactly in JSON-RPC response" time="0.087564" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.9: Preserves empty string ID '' exactly in JSON-RPC response" time="0.082111" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.10: Valid JSON-RPC notification executes state mutation with zero stdout response" time="0.116016" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.11: Erroneous notification (unknown method) produces zero stdout response" time="0.115690" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.12: Erroneous notification (invalid params) produces zero stdout response" time="0.114830" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.13: Error does not break server state; subsequent valid request succeeds cleanly" time="0.079745" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.14: AP-076 Unsupported capability 'binding/register' rejects with explicit missing seam error" time="0.082096" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.15: AP-076 Unsupported capability 'binding/list' rejects with explicit missing seam error" time="0.079180" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.16: AP-076 Unsupported capability 'session/fork' rejects with explicit missing seam error" time="0.081313" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<testcase name="J3.17: AP-076 Unsupported capability 'tools/register' rejects with explicit missing seam error" time="0.080435" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-4b/independent-product-review/consumer-blackbox.test.mjs"/>
+	<!-- tests 49 -->
+	<!-- suites 0 -->
+	<!-- pass 42 -->
+	<!-- fail 7 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 483343.025417 -->
+</testsuites>

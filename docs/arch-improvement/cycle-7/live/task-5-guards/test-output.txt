@@ -1,0 +1,41 @@
+▶ Task 5A: Architecture Boundaries & Regression Guards
+  ▶ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)
+    ✔ fails on forbidden vendor import (@earendil-works/pi-durable) (4.309417ms)
+    ✔ fails on forbidden adapter import (@durable-zero/adapter-pi-durable) (1.226666ms)
+    ✔ fails on forbidden runner import (@durable-zero/runner) (1.412375ms)
+    ✔ fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net) (2.063459ms)
+    ✔ fails on forbidden type-only vendor import (import type { ... }) (2.216167ms)
+    ✔ fails on forbidden TypeScript import-type syntax (import('mod').Type) (0.404792ms)
+    ✔ fails on forbidden literal dynamic import (await import('adapter')) (1.409583ms)
+    ✔ fails on forbidden re-export barrel (export * from 'vendor') (1.328625ms)
+    ✔ fails on relative path escaping core root (../../../adapter) (0.474125ms)
+    ✔ fails on package.json declaring vendor dependencies in Core (1.366042ms)
+    ✔ fails on legacy CLI serve entrypoint pointing to deleted core runner (1.899667ms)
+    ✔ fails on cyclic workspace dependencies (A -> B -> C -> A) (0.095666ms)
+  ✔ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects) (18.706167ms)
+  ▶ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)
+    ✔ passes cleanly on pure domain service with contracts and zod (3.77025ms)
+    ✔ passes cleanly on pure TypeScript port definitions (0.646875ms)
+    ✔ passes cleanly on conformant Core package.json (1.075541ms)
+    ✔ passes cleanly on real CLI serve entrypoint fixture pointing to runner (0.609417ms)
+    ✔ passes cleanly on acyclic multi-tier workspace (0.136917ms)
+  ✔ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass) (6.320792ms)
+  ▶ Suite 3: Live Project Source Snapshot Execution
+    ✔ scans live packages/core/src/ and checks AST boundaries (34.306958ms)
+    ✔ verifies live packages/core/package.json contains only contracts and zod (0.074667ms)
+    ✔ verifies live workspace package DAG is strictly acyclic (8.147292ms)
+    ✔ verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner (0.720083ms)
+    ✔ verifies legacy deleted files do not exist in packages/core/src/ (0.070917ms)
+  ✔ Suite 3: Live Project Source Snapshot Execution (43.389959ms)
+  ▶ Suite 4: Durable Evidence & Report Generation
+    ✔ generates structured evidence report with file SHA hashes (90.85025ms)
+  ✔ Suite 4: Durable Evidence & Report Generation (90.892417ms)
+✔ Task 5A: Architecture Boundaries & Regression Guards (159.694125ms)
+ℹ tests 23
+ℹ suites 5
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 439.550625

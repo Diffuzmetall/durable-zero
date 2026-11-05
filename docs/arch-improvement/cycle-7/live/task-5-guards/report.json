@@ -1,0 +1,405 @@
+{
+  "task": "Task 5A: Architecture Boundary & Regression Guards",
+  "timestamp": "2026-11-04T20:34:00.899Z",
+  "status": "PASS",
+  "sourceBaseline": "7d4b235",
+  "summary": {
+    "coreSourceFilesScanned": 16,
+    "coreBoundaryViolations": 0,
+    "corePackageJsonValid": true,
+    "workspaceAcyclic": true,
+    "cliServeDelegationValid": true,
+    "fixturesTested": {
+      "negativeFixturesCount": 11,
+      "positiveFixturesCount": 5
+    }
+  },
+  "cliServeAudit": {
+    "filePath": "packages/cli/bin/durable-zero.js",
+    "sha256": "29607108a366547a95852f4313c969e46c8c8cf482d5eacef27763536f44f301",
+    "targetImport": "../../runner/dist/main.js",
+    "status": "PASS"
+  },
+  "lingeringLegacyFiles": [
+    "packages/core/scripts/build-runner.mjs",
+    "packages/core/dist/runner.js"
+  ],
+  "corePackageJson": {
+    "path": "packages/core/package.json",
+    "sha256": "6cdcdf59a4c6f94e7d8e9549d468d85ed46c2d60f054636d51dbcee70f607044"
+  },
+  "workspaceGraph": {
+    "@durable-zero/adapter-codemode": [
+      "@durable-zero/adapter-pi-durable",
+      "@durable-zero/core"
+    ],
+    "@durable-zero/adapter-pi-ai": [
+      "@durable-zero/core"
+    ],
+    "@durable-zero/adapter-pi-durable": [
+      "@durable-zero/contracts",
+      "@durable-zero/core"
+    ],
+    "durable-zero": [
+      "@durable-zero/contracts",
+      "@durable-zero/core"
+    ],
+    "@durable-zero/contracts": [],
+    "@durable-zero/core": [
+      "@durable-zero/contracts"
+    ],
+    "@durable-zero/execution": [
+      "@durable-zero/core"
+    ],
+    "@durable-zero/extension-pi-resource": [
+      "@durable-zero/adapter-pi-durable",
+      "@durable-zero/core"
+    ],
+    "@durable-zero/protocol": [],
+    "@durable-zero/runner": [
+      "@durable-zero/contracts",
+      "@durable-zero/protocol",
+      "@durable-zero/core",
+      "@durable-zero/execution",
+      "@durable-zero/adapter-pi-durable",
+      "@durable-zero/adapter-pi-ai",
+      "@durable-zero/adapter-codemode",
+      "@durable-zero/extension-pi-resource"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/core/src/errors.ts",
+      "sha256": "a53a90954b69b16ab037c345015d2b0bcd237770eb8cb0ce059932ffa3dc4390",
+      "lines": 92,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/index.ts",
+      "sha256": "330a8f885a331118e6d73b325bd55cbee6c9f3deb210238c5fb6672bba46c65e",
+      "lines": 15,
+      "dependencies": [
+        {
+          "specifier": "./errors.ts",
+          "kind": "export-reexport",
+          "line": 1,
+          "character": 1,
+          "rawText": "export * from \"./errors.ts\";"
+        },
+        {
+          "specifier": "./version.ts",
+          "kind": "export-reexport",
+          "line": 2,
+          "character": 1,
+          "rawText": "export * from \"./version.ts\";"
+        },
+        {
+          "specifier": "./prompt.ts",
+          "kind": "export-reexport",
+          "line": 3,
+          "character": 1,
+          "rawText": "export * from \"./prompt.ts\";"
+        },
+        {
+          "specifier": "./models/provider.ts",
+          "kind": "export-reexport",
+          "line": 4,
+          "character": 1,
+          "rawText": "export * from \"./models/provider.ts\";"
+        },
+        {
+          "specifier": "./policy/errors.ts",
+          "kind": "export-reexport",
+          "line": 5,
+          "character": 1,
+          "rawText": "export * from \"./policy/errors.ts\";"
+        },
+        {
+          "specifier": "./policy/resolver.ts",
+          "kind": "export-reexport",
+          "line": 6,
+          "character": 1,
+          "rawText": "export * from \"./policy/resolver.ts\";"
+        },
+        {
+          "specifier": "./policy/schema.ts",
+          "kind": "export-reexport",
+          "line": 7,
+          "character": 1,
+          "rawText": "export * from \"./policy/schema.ts\";"
+        },
+        {
+          "specifier": "./policy/store.ts",
+          "kind": "export-reexport",
+          "line": 8,
+          "character": 1,
+          "rawText": "export * from \"./policy/store.ts\";"
+        },
+        {
+          "specifier": "./policy/types.ts",
+          "kind": "export-reexport",
+          "line": 9,
+          "character": 1,
+          "rawText": "export * from \"./policy/types.ts\";"
+        },
+        {
+          "specifier": "./session/coordinator.ts",
+          "kind": "export-reexport",
+          "line": 10,
+          "character": 1,
+          "rawText": "export * from \"./session/coordinator.ts\";"
+        },
+        {
+          "specifier": "./session/engine.ts",
+          "kind": "export-reexport",
+          "line": 11,
+          "character": 1,
+          "rawText": "export * from \"./session/engine.ts\";"
+        },
+        {
+          "specifier": "./session/store.ts",
+          "kind": "export-reexport",
+          "line": 12,
+          "character": 1,
+          "rawText": "export * from \"./session/store.ts\";"
+        },
+        {
+          "specifier": "./tools/execution-env.ts",
+          "kind": "export-reexport",
+          "line": 13,
+          "character": 1,
+          "rawText": "export * from \"./tools/execution-env.ts\";"
+        },
+        {
+          "specifier": "./tools/sandbox.ts",
+          "kind": "export-reexport",
+          "line": 14,
+          "character": 1,
+          "rawText": "export * from \"./tools/sandbox.ts\";"
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/models/provider.ts",
+      "sha256": "462aaff1b7561cb3702eb42d814ed87763fece260b4d9c1fe6db11db5c342e7f",
+      "lines": 46,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/policy/errors.ts",
+      "sha256": "ba8f99b12a7cfb86f0138de61be7ff1e08f82fe6d839d24ddb3eb4e0c8f61a8e",
+      "lines": 43,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/policy/resolver.ts",
+      "sha256": "737f4402ef601101ff7150e067ef2600f1454005a7a807b5a4fc7cb337a5c0d5",
+      "lines": 120,
+      "dependencies": [
+        {
+          "specifier": "../models/provider.ts",
+          "kind": "static-import",
+          "line": 1,
+          "character": 1,
+          "rawText": "import { normalizeModelReference } from \"../models/provider.ts\";"
+        },
+        {
+          "specifier": "./types.ts",
+          "kind": "type-import",
+          "line": 2,
+          "character": 1,
+          "rawText": "import type {\n\tResolvedChildConfiguration,\n\tSubagentModelReference,\n\tSubagentPolicyRecord,\n\tSubagentThinkingLevel,\n} from \"./types.ts\";"
+        },
+        {
+          "specifier": "./errors.ts",
+          "kind": "static-import",
+          "line": 8,
+          "character": 1,
+          "rawText": "import {\n\tSubagentModelUnavailableError,\n\tSubagentPolicyInvalidError,\n} from \"./errors.ts\";"
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/policy/schema.ts",
+      "sha256": "0cb5303ed7c11ae2bc67288d55a4d57df54895710350da61edd745f5691832e4",
+      "lines": 78,
+      "dependencies": [
+        {
+          "specifier": "zod",
+          "kind": "static-import",
+          "line": 1,
+          "character": 1,
+          "rawText": "import { z } from \"zod\";"
+        },
+        {
+          "specifier": "./types.ts",
+          "kind": "type-import",
+          "line": 2,
+          "character": 1,
+          "rawText": "import type {\n  SubagentModelProfile,\n  SubagentModelReference,\n  SubagentPolicy,\n  SubagentPolicyRecord,\n  SubagentThinkingLevel,\n} from \"./types.ts\";"
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/policy/store.ts",
+      "sha256": "cc1457bde8e055c4c02224d1570e694ef631bc1cdb5d91979ec9bfee10ee4f44",
+      "lines": 113,
+      "dependencies": [
+        {
+          "specifier": "./schema.ts",
+          "kind": "static-import",
+          "line": 1,
+          "character": 1,
+          "rawText": "import {\n  SUBAGENT_POLICY_KV_KEY,\n  subagentPolicyRecordSchema,\n  subagentPolicySchema,\n} from \"./schema.ts\";"
+        },
+        {
+          "specifier": "./types.ts",
+          "kind": "type-import",
+          "line": 6,
+          "character": 1,
+          "rawText": "import type { SubagentPolicy, SubagentPolicyRecord } from \"./types.ts\";"
+        },
+        {
+          "specifier": "./errors.ts",
+          "kind": "static-import",
+          "line": 7,
+          "character": 1,
+          "rawText": "import {\n  SubagentPolicyLoadError,\n  SubagentRevisionConflictError,\n} from \"./errors.ts\";"
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/policy/types.ts",
+      "sha256": "dd8ed7b8f94585a2d14df9d9065a456b5b449eb8401f41c273676c166c878db5",
+      "lines": 44,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/prompt.ts",
+      "sha256": "fad19e0e2d81c4f8b0ff9c6a725e46733fed51d15a285f62ad6f903ecfbda009",
+      "lines": 34,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/session/coordinator.ts",
+      "sha256": "a21a2620af6f21af64736a3c595e0af2280af6101448ba2a5d286a05e9c244f2",
+      "lines": 158,
+      "dependencies": [
+        {
+          "specifier": "@durable-zero/contracts",
+          "kind": "type-import",
+          "line": 1,
+          "character": 1,
+          "rawText": "import type { PromptAdmissionReceipt, PromptInput, RunnerEvent } from \"@durable-zero/contracts\";"
+        },
+        {
+          "specifier": "./engine.ts",
+          "kind": "type-import",
+          "line": 2,
+          "character": 1,
+          "rawText": "import type {\n\tIAgentEngine,\n\tPromptExecutionOptions,\n\tSessionStateDTO,\n\tSessionTranscriptDTO,\n\tSessionStatsDTO,\n} from \"./engine.ts\";"
+        },
+        {
+          "specifier": "./store.ts",
+          "kind": "type-import",
+          "line": 9,
+          "character": 1,
+          "rawText": "import type { ISessionStore } from \"./store.ts\";"
+        },
+        {
+          "specifier": "../models/provider.ts",
+          "kind": "type-import",
+          "line": 10,
+          "character": 1,
+          "rawText": "import type { IModelProvider } from \"../models/provider.ts\";"
+        },
+        {
+          "specifier": "../tools/execution-env.ts",
+          "kind": "type-import",
+          "line": 11,
+          "character": 1,
+          "rawText": "import type { IExecutionEnvironment } from \"../tools/execution-env.ts\";"
+        },
+        {
+          "specifier": "../policy/types.ts",
+          "kind": "type-import",
+          "line": 12,
+          "character": 1,
+          "rawText": "import type { SubagentPolicyRecord } from \"../policy/types.ts\";"
+        },
+        {
+          "specifier": "../errors.ts",
+          "kind": "static-import",
+          "line": 13,
+          "character": 1,
+          "rawText": "import { SessionError } from \"../errors.ts\";"
+        },
+        {
+          "specifier": "@durable-zero/contracts",
+          "kind": "export-reexport",
+          "line": 15,
+          "character": 1,
+          "rawText": "export type { PromptAdmissionReceipt, PromptInput } from \"@durable-zero/contracts\";"
+        },
+        {
+          "specifier": "./engine.ts",
+          "kind": "export-reexport",
+          "line": 16,
+          "character": 1,
+          "rawText": "export type { PromptExecutionOptions as PromptOptions } from \"./engine.ts\";"
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/engine.ts",
+      "sha256": "471e6e15374acea93945a1e307b447dc0237c9f5113c1d04b664edad38359544",
+      "lines": 61,
+      "dependencies": [
+        {
+          "specifier": "@durable-zero/contracts",
+          "kind": "type-import",
+          "line": 1,
+          "character": 1,
+          "rawText": "import type { PromptAdmissionReceipt, PromptInput, RunnerEvent } from \"@durable-zero/contracts\";"
+        },
+        {
+          "specifier": "../policy/types.ts",
+          "kind": "type-import",
+          "line": 2,
+          "character": 1,
+          "rawText": "import type { SubagentPolicyRecord } from \"../policy/types.ts\";"
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/store.ts",
+      "sha256": "38012acc2333467de4c6a069aba58f53fa724dc0ef4d74991c5a1050c42c3782",
+      "lines": 19,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/tools/execution-env.ts",
+      "sha256": "bde5edf3acc054a6df55c9477f76f1d29950e93a536cf96b2a6d7164c8dfc227",
+      "lines": 39,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/tools/host-bridge.ts",
+      "sha256": "503a8b510359eb9eef5ce2aa8dd700bd6f83ffc82cd8ac39854537f205f74b0b",
+      "lines": 34,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/tools/sandbox.ts",
+      "sha256": "d739e53ed622d6e7a2bebf69ff96afdfdf74e9f620da8156ffd4c57ecb850ddb",
+      "lines": 12,
+      "dependencies": []
+    },
+    {
+      "path": "packages/core/src/version.ts",
+      "sha256": "bff733bc8ce03944ab5c56b3b82898a93c1882cacfdb79470d6197545bf377bd",
+      "lines": 2,
+      "dependencies": []
+    }
+  ]
+}

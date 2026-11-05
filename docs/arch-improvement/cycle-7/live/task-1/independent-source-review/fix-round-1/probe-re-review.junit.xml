@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="PROBE 1 (REMEDIATED FND-T1-01): Root abort and child abort allow subsequent prompts" time="0.001755" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts"/>
+	<testcase name="PROBE 2 (REMEDIATED FND-T1-02): Real contentIndex and partial block mapping preserved" time="0.000580" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts"/>
+	<testcase name="PROBE 3 (REMEDIATED FND-T1-03 &amp; FND-T1-08): SessionCoordinator constructor &amp; single lock" time="0.000408" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts"/>
+	<testcase name="PROBE 4 (REMEDIATED FND-T1-05): Custom injected engine does not eagerly create native defaults" time="0.000971" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts"/>
+	<testcase name="PROBE 5 (PROVEN DEFECT in DurableChildEventAdapter): Unsynchronized currentText causes duplicate full delta on turn 2" time="0.000301" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts"/>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1155.444542 -->
+</testsuites>

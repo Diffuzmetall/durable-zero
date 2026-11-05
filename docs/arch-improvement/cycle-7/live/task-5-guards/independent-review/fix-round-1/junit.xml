@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 5A Fix Round 1: Independent Adversarial Verification" time="0.018548" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Verification 0: Side-Effect Free Helper Module Extraction" time="0.000643" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="proves importing architecture-boundaries-checker.ts does not run tests or write reports" time="0.000390" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+		</testsuite>
+		<testsuite name="Verification 1 (FND-TASK5-01): CLI Serve Entrypoint Rejection &amp; Binding Checks" time="0.005926" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="CORRECTLY REJECTS hollow CLI serve branch where runner is imported but main() is never invoked" time="0.004280" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY REJECTS CLI serve branch pointing to a NONEXISTENT runner file" time="0.000526" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY REJECTS dummy string / comment matching regex without AST call expression" time="0.000287" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY ACCEPTS valid CLI serve branch with alias binding { main: runRunner } and execution" time="0.000350" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY ACCEPTS valid CLI serve branch with namespace access runner.main()" time="0.000362" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+		</testsuite>
+		<testsuite name="Verification 2 (FND-TASK5-02): Unified Source + Manifest Workspace DAG Cycle Detection" time="0.007654" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="CORRECTLY DETECTS cross-package source import cycle even when package.json manifests omit the edge" time="0.001657" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY DETECTS cross-package barrel re-export cycle with omitted manifest edge" time="0.001647" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY DETECTS relative path cross-package escape cycle" time="0.004234" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+		</testsuite>
+		<testsuite name="Verification 3 (FND-TASK5-03): Dynamic Evidence &amp; Report Integrity" time="0.000951" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="generates status 'FAIL' in report.json when live audit finds violations (anti-false-pass)" time="0.000699" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="generates status 'FAIL' in report.json when test receipt reports test failure" time="0.000207" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+		</testsuite>
+		<testsuite name="Verification 4 (FND-TASK5-04): AST Syntax Coverage &amp; Extension Support" time="0.002972" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="CORRECTLY DETECTS dynamic import using no-substitution template literal (import(`vendor`))" time="0.000663" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="CORRECTLY DETECTS TypeScript import = require('...') syntax" time="0.000330" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+			<testcase name="collectAllSourceFiles discovers all supported extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx, .jsx) and excludes node_modules/dist" time="0.001931" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 14 -->
+	<!-- suites 6 -->
+	<!-- pass 14 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 285.792334 -->
+</testsuites>

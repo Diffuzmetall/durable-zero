@@ -1,0 +1,48 @@
+▶ Task 5A: Architecture Boundaries & Regression Guards (Fix Round 1)
+  ▶ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)
+    ✔ fails on forbidden vendor import (@earendil-works/pi-durable) (5.060708ms)
+    ✔ fails on forbidden adapter import (@durable-zero/adapter-pi-durable) (0.7245ms)
+    ✔ fails on forbidden runner import (@durable-zero/runner) (0.562417ms)
+    ✔ fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net) (0.993541ms)
+    ✔ fails on forbidden type-only vendor import (import type { ... }) (0.374583ms)
+    ✔ fails on forbidden TypeScript import-type syntax (import('mod').Type) (0.331416ms)
+    ✔ fails on forbidden literal dynamic import (await import('adapter')) (0.471208ms)
+    ✔ fails on forbidden template literal dynamic import (import(`vendor`)) [FND-TASK5-04] (0.811625ms)
+    ✔ fails on forbidden TypeScript import = require syntax [FND-TASK5-04] (0.450333ms)
+    ✔ fails on forbidden re-export barrel (export * from 'vendor') (0.296916ms)
+    ✔ fails on relative path escaping core root (../../../adapter) (0.29825ms)
+    ✔ fails on package.json declaring vendor dependencies in Core (0.202459ms)
+    ✔ fails on legacy CLI serve entrypoint pointing to deleted core runner (0.946125ms)
+    ✔ fails on hollow CLI serve entrypoint that never calls main() [FND-TASK5-01] (43.565125ms)
+    ✔ fails on CLI serve pointing to nonexistent runner file on disk [FND-TASK5-01] (0.522417ms)
+    ✔ fails on CLI script matching dynamic import only in string literal [FND-TASK5-01] (0.316583ms)
+    ✔ fails on source-level cross-package import cycle with omitted manifest edges [FND-TASK5-02] (1.283084ms)
+  ✔ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects) (57.889542ms)
+  ▶ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)
+    ✔ passes cleanly on pure domain service with contracts and zod (0.950625ms)
+    ✔ passes cleanly on pure TypeScript port definitions (0.341042ms)
+    ✔ passes cleanly on conformant Core package.json (0.116458ms)
+    ✔ passes cleanly on real CLI serve entrypoint fixture pointing to runner and calling main() (28.066458ms)
+    ✔ scans all supported source file extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.206ms)
+    ✔ passes cleanly on acyclic multi-tier workspace (0.144375ms)
+  ✔ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass) (29.932667ms)
+  ▶ Suite 3: Live Project Source Snapshot Execution
+    ✔ scans live packages/core/src/ and checks AST boundaries (6.984542ms)
+    ✔ verifies live packages/core/package.json contains only contracts and zod (0.094458ms)
+    ✔ verifies live workspace package DAG is strictly acyclic via full AST source and manifest scan (68.3045ms)
+    ✔ verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner and calls main() (15.643166ms)
+    ✔ verifies legacy deleted files do not exist in packages/core/src/ (0.134917ms)
+  ✔ Suite 3: Live Project Source Snapshot Execution (91.27125ms)
+  ▶ Suite 4: Durable Evidence & Report Integrity [FND-TASK5-03]
+    ✔ dynamically generates evidence report from computed audit facts (no hardcoded PASS) (54.729583ms)
+    ✔ PROVES PIPELINE INTEGRITY: simulated forbidden Core mutation produces FAIL in report and non-zero violations (anti-false-pass) (1.0435ms)
+  ✔ Suite 4: Durable Evidence & Report Integrity [FND-TASK5-03] (55.842834ms)
+✔ Task 5A: Architecture Boundaries & Regression Guards (Fix Round 1) (235.406333ms)
+ℹ tests 30
+ℹ suites 5
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 520.145708

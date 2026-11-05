@@ -15,7 +15,15 @@ function parseCliArgs(argv) {
     else if (arg === "--thinking" && i + 1 < argv.length) args.thinking = argv[++i];
     else if (arg === "--no-session") args.noSession = true;
     else if (arg === "--continue") args.continueSession = true;
-    else if (arg.startsWith("-")) {
+    else if (arg === "--no-global-extensions") args.noGlobalExtensions = true;
+    else if (arg === "--extension" && i + 1 < argv.length) {
+      const ext = argv[++i];
+      args.extension = ext;
+      args.extensions = args.extensions ? [...args.extensions, ext] : [ext];
+    } else if (arg === "--skills" && i + 1 < argv.length) {
+      const s = argv[++i];
+      args.skills = args.skills ? [...args.skills, s] : [s];
+    } else if (arg.startsWith("-")) {
       if (i + 1 < argv.length && !argv[i + 1].startsWith("-")) i++;
     } else if (!args.cwd) {
       args.cwd = arg;
@@ -25,13 +33,33 @@ function parseCliArgs(argv) {
 }
 
 // packages/runner/src/composition.ts
-import { resolve as resolve7 } from "node:path";
+import { resolve as resolve4 } from "node:path";
 
 // packages/protocol/dist/index.js
 import { z } from "zod";
 import "zod";
 import "node:stream";
 import { StringDecoder } from "node:string_decoder";
+var JsonRpcMethodNotFoundError = class extends Error {
+  code = -32601;
+  method;
+  constructor(method) {
+    super(method ? `Method not found: ${method}` : "Method not found");
+    this.name = "JsonRpcMethodNotFoundError";
+    this.method = method;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+};
+var JsonRpcInvalidParamsError = class extends Error {
+  code = -32602;
+  data;
+  constructor(message = "Invalid params", data) {
+    super(message);
+    this.name = "JsonRpcInvalidParamsError";
+    this.data = data;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+};
 var jsonRpcRequestSchema = z.object({
   jsonrpc: z.literal("2.0"),
   id: z.union([z.string(), z.number()]),
@@ -47,6 +75,20 @@ var jsonRpcResponseSchema = z.object({
     message: z.string(),
     data: z.unknown().optional()
   }).optional()
+}).superRefine((val, ctx) => {
+  const hasResult = Object.prototype.hasOwnProperty.call(val, "result") && val.result !== void 0;
+  const hasError = Object.prototype.hasOwnProperty.call(val, "error") && val.error !== void 0;
+  if (hasResult && hasError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Response cannot contain both 'result' and 'error'"
+    });
+  } else if (!hasResult && !hasError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Response must contain either 'result' or 'error'"
+    });
+  }
 });
 var jsonRpcNotificationSchema = z.object({
   jsonrpc: z.literal("2.0"),
@@ -63,49 +105,79 @@ var RequestDispatcher = class {
     this.pendingOutbound = pendingOutbound;
   }
   async processLine(line) {
+    let raw;
     try {
       const parsed = JSON.parse(line);
-      if (typeof parsed === "object" && parsed !== null && "id" in parsed && ("result" in parsed || "error" in parsed) && !("method" in parsed)) {
-        const responseVal = jsonRpcResponseSchema.safeParse(parsed);
-        if (responseVal.success) {
-          const { id: id2, result, error } = responseVal.data;
-          if (id2 !== null && this.pendingOutbound.has(id2)) {
-            const pending = this.pendingOutbound.get(id2);
-            clearTimeout(pending.timer);
-            this.pendingOutbound.delete(id2);
-            if (error) pending.reject(new Error(error.message));
-            else pending.resolve(result);
-            return;
-          }
-        } else if (parsed.id !== null && this.pendingOutbound.has(parsed.id)) {
-          const pending = this.pendingOutbound.get(parsed.id);
-          clearTimeout(pending.timer);
-          this.pendingOutbound.delete(parsed.id);
-          pending.reject(
-            new Error(`Malformed JSON-RPC response from client: ${responseVal.error.message}`)
-          );
-          return;
-        }
-      }
-      const validated = jsonRpcRequestSchema.safeParse(parsed);
-      if (!validated.success) {
-        const reqId = parsed && typeof parsed === "object" && "id" in parsed && (typeof parsed.id === "string" || typeof parsed.id === "number") ? parsed.id : null;
-        this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        this.send({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid Request" } });
         return;
       }
-      const { id, method, params } = validated.data;
-      try {
-        const result = await this.handler(method, params ?? {});
-        this.send({ jsonrpc: "2.0", id, result });
-      } catch (err) {
+      raw = parsed;
+    } catch {
+      this.send({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
+      return;
+    }
+    if (!("method" in raw)) {
+      const id2 = "id" in raw && (typeof raw.id === "string" || typeof raw.id === "number") ? raw.id : null;
+      if (id2 !== null && this.pendingOutbound.has(id2)) {
+        const pending = this.pendingOutbound.get(id2);
+        clearTimeout(pending.timer);
+        this.pendingOutbound.delete(id2);
+        const resVal = jsonRpcResponseSchema.safeParse(raw);
+        if (resVal.success) {
+          if (resVal.data.error) pending.reject(new Error(resVal.data.error.message));
+          else pending.resolve(resVal.data.result);
+        } else {
+          pending.reject(new Error(`Malformed JSON-RPC response from client: ${resVal.error.message}`));
+        }
+        return;
+      }
+      if ("result" in raw || "error" in raw) return;
+    }
+    if (!("id" in raw)) {
+      const notifVal = jsonRpcNotificationSchema.safeParse(raw);
+      if (notifVal.success) {
+        try {
+          await this.handler(notifVal.data.method, notifVal.data.params ?? {});
+        } catch {
+        }
+        return;
+      }
+    }
+    const validated = jsonRpcRequestSchema.safeParse(raw);
+    if (!validated.success) {
+      const reqId = "id" in raw && (typeof raw.id === "string" || typeof raw.id === "number") ? raw.id : null;
+      this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
+      return;
+    }
+    const { id, method, params } = validated.data;
+    try {
+      const result = await this.handler(method, params ?? {});
+      this.send({ jsonrpc: "2.0", id, result: result === void 0 ? null : result });
+    } catch (err) {
+      if (err instanceof JsonRpcMethodNotFoundError) {
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32601, message: err.message }
+        });
+      } else if (err instanceof JsonRpcInvalidParamsError) {
+        this.send({
+          jsonrpc: "2.0",
+          id,
+          error: {
+            code: -32602,
+            message: err.message,
+            ...err.data !== void 0 ? { data: err.data } : {}
+          }
+        });
+      } else {
         this.send({
           jsonrpc: "2.0",
           id,
           error: { code: -32603, message: err instanceof Error ? err.message : String(err) }
         });
       }
-    } catch {
-      this.send({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
     }
   }
 };
@@ -151,12 +223,12 @@ var StdioJsonRpcServer = class {
   }
   request(method, params, timeoutMs = 12e4) {
     const id = `req_${Date.now()}_${++this.nextRequestId}`;
-    return new Promise((resolve8, reject) => {
+    return new Promise((resolve5, reject) => {
       const timer = setTimeout(() => {
         this.pendingOutbound.delete(id);
         reject(new Error(`Request ${method} (id: ${id}) timed out after ${timeoutMs}ms`));
       }, timeoutMs);
-      this.pendingOutbound.set(id, { resolve: resolve8, reject, timer });
+      this.pendingOutbound.set(id, { resolve: resolve5, reject, timer });
       this.send({ jsonrpc: "2.0", id, method, params });
     });
   }
@@ -172,6 +244,297 @@ var StdioJsonRpcServer = class {
 };
 
 // packages/core/dist/index.js
+import { z as z2 } from "zod";
+var DurableHarnessError = class extends Error {
+  code;
+  constructor(message, code, cause) {
+    super(message, { cause });
+    this.name = new.target.name;
+    this.code = code;
+  }
+};
+var SessionError = class extends DurableHarnessError {
+  constructor(code, message, cause) {
+    super(message, code, cause);
+    this.name = "SessionError";
+  }
+};
+var subagentThinkingLevelSchema = z2.enum([
+  "off",
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max"
+]);
+var subagentModelReferenceSchema = z2.object({
+  provider: z2.string().min(1),
+  modelId: z2.string().min(1)
+}).strict();
+var subagentModelProfileSchema = z2.object({
+  model: subagentModelReferenceSchema,
+  thinkingLevel: subagentThinkingLevelSchema
+}).strict();
+var subagentPolicySchema = z2.discriminatedUnion("mode", [
+  z2.object({
+    mode: z2.literal("inherit"),
+    configuredProfile: subagentModelProfileSchema.optional()
+  }).strict(),
+  z2.object({
+    mode: z2.literal("configured"),
+    configuredProfile: subagentModelProfileSchema
+  }).strict()
+]);
+var subagentPolicyRecordSchema = z2.object({
+  version: z2.literal(1),
+  revision: z2.number().int().nonnegative(),
+  updatedAt: z2.string().optional(),
+  policy: subagentPolicySchema
+}).strict();
+var subagentPolicySetInputSchema = z2.object({
+  policy: subagentPolicySchema,
+  expectedRevision: z2.number().int().nonnegative()
+}).strict();
+var subagentPolicyGetOutputSchema = z2.object({
+  record: subagentPolicyRecordSchema
+}).strict();
+var subagentPolicySetOutputSchema = z2.object({
+  record: subagentPolicyRecordSchema
+}).strict();
+var SessionCoordinator = class {
+  engine;
+  sessionDir;
+  isStarted = false;
+  isClosed = false;
+  listeners = /* @__PURE__ */ new Set();
+  constructor(options) {
+    if (!options.engine) {
+      throw new Error("IAgentEngine is required by SessionCoordinator (AP-010, AP-076)");
+    }
+    if (!options.sessionDir || typeof options.sessionDir !== "string" || options.sessionDir.trim().length === 0) {
+      throw new Error("sessionDir must be a non-empty string (AP-010, AP-074)");
+    }
+    this.engine = options.engine;
+    this.sessionDir = options.sessionDir;
+  }
+  async start() {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    await this.engine.start(this.sessionDir);
+    this.isStarted = true;
+  }
+  async prompt(input, options) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError(
+        "SESSION_NOT_STARTED",
+        "Session is not started. Call start() before submitting prompts"
+      );
+    }
+    if (typeof input === "string") {
+      if (input.trim().length === 0) {
+        throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+      }
+    } else if (Array.isArray(input)) {
+      if (input.length === 0) {
+        throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+      }
+      const hasValidPart = input.some((p) => {
+        if (!p || typeof p !== "object") return false;
+        if (p.type === "text" && typeof p.text === "string" && p.text.trim().length > 0) return true;
+        if (p.type === "image" && typeof p.data === "string" && typeof p.mimeType === "string") return true;
+        return false;
+      });
+      if (!hasValidPart) {
+        throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+      }
+    } else {
+      throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+    }
+    return await this.engine.submit(input, options);
+  }
+  emitEvent(event) {
+    for (const listener of this.listeners) {
+      listener(event);
+    }
+  }
+  events(callback) {
+    const unsubEngine = this.engine.events(callback);
+    this.listeners.add(callback);
+    return () => {
+      unsubEngine();
+      this.listeners.delete(callback);
+    };
+  }
+  async abort(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError(
+        "SESSION_NOT_STARTED",
+        "Session is not started. Call start() before aborting"
+      );
+    }
+    await this.engine.abort(conversationId);
+    this.emitEvent({
+      type: "session/aborted",
+      ...conversationId !== void 0 ? { conversationId } : {}
+    });
+  }
+  async getState(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
+    return await this.engine.getState(conversationId);
+  }
+  async getTranscript(conversationId, limit) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
+    return await this.engine.getTranscript(conversationId, limit);
+  }
+  async getStats(conversationId) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
+    return await this.engine.getStats(conversationId);
+  }
+  async setSubagentPolicy(params) {
+    if (this.isClosed) {
+      throw new SessionError("SESSION_CLOSED", "Session is closed");
+    }
+    if (!this.isStarted) {
+      throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+    }
+    await this.engine.setSubagentPolicy(params);
+    return { ok: true };
+  }
+  async close() {
+    if (this.isClosed) return;
+    this.isClosed = true;
+    this.isStarted = false;
+    this.listeners.clear();
+    await this.engine.close();
+  }
+};
+
+// packages/execution/dist/index.js
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { exec, execFile } from "node:child_process";
+var LocalNodeExecutionEnv = class {
+  id;
+  cwd;
+  constructor(options) {
+    this.id = options?.id ?? "local-node";
+    this.cwd = options?.cwd ?? process.cwd();
+  }
+  resolvePath(filePath) {
+    return path.isAbsolute(filePath) ? filePath : path.resolve(this.cwd, filePath);
+  }
+  async readFile(filePath) {
+    return await fs.readFile(this.resolvePath(filePath), "utf8");
+  }
+  async writeFile(filePath, content) {
+    const fullPath = this.resolvePath(filePath);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, content, "utf8");
+  }
+  async exec(argvOrCommand, options, context) {
+    return new Promise((resolve22) => {
+      const execCwd = options?.cwd ?? this.cwd;
+      const execEnv = { ...process.env, ...options?.env };
+      const timeout = options?.timeoutMs ?? 3e4;
+      let stdout = "";
+      let stderr = "";
+      const handleOutput = (chunk, isErr = false) => {
+        const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
+        if (isErr) stderr += text;
+        else stdout += text;
+        if (options?.onOutput) {
+          const buf = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+          options.onOutput(buf, context, { skipped: false });
+        }
+      };
+      const child = typeof argvOrCommand === "string" ? exec(argvOrCommand, { cwd: execCwd, env: execEnv, timeout, signal: options?.signal }) : execFile(argvOrCommand[0], argvOrCommand.slice(1), {
+        cwd: execCwd,
+        env: execEnv,
+        timeout,
+        signal: options?.signal
+      });
+      child.stdout?.on("data", (chunk) => handleOutput(chunk, false));
+      child.stderr?.on("data", (chunk) => handleOutput(chunk, true));
+      child.on("error", (err) => {
+        resolve22({
+          ok: false,
+          value: { exitCode: 1 },
+          stdout,
+          stderr: stderr || err.message,
+          exitCode: 1
+        });
+      });
+      child.on("close", (code) => {
+        const exitCode = code ?? 0;
+        resolve22({
+          ok: exitCode === 0,
+          value: { exitCode },
+          stdout,
+          stderr,
+          exitCode
+        });
+      });
+    });
+  }
+  async statFile(filePath) {
+    const stat = await fs.stat(this.resolvePath(filePath));
+    return {
+      isFile: stat.isFile(),
+      isDirectory: stat.isDirectory(),
+      sizeBytes: stat.size,
+      mtimeMs: stat.mtimeMs
+    };
+  }
+  async listFiles(dirPath) {
+    return await fs.readdir(this.resolvePath(dirPath));
+  }
+  async cleanup(_context) {
+  }
+};
+
+// packages/adapter-pi-durable/dist/index.js
+import { basename, join as join3, resolve as resolve2 } from "node:path";
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import {
+  createSession,
+  defineDocFamily
+} from "@earendil-works/pi-durable";
+import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
+import { execFileSync } from "node:child_process";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import lockfile from "proper-lockfile";
+import { z as z3 } from "zod";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { join as join2, resolve as resolve3 } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readdir, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename as basename2, join as join4, resolve as resolve32 } from "node:path";
 import { resolveModelScopeWithDiagnostics } from "@earendil-works/pi-coding-agent";
 import {
   createRegistry
@@ -180,7 +543,7 @@ import { createToolSearchExtension } from "@earendil-works/pi-durable/tool-searc
 import {
   resolveCliModel
 } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync as existsSync2, readFileSync } from "node:fs";
 import { defineExtension, section } from "@earendil-works/pi-durable";
 import {
   createBashToolDefinition,
@@ -191,8 +554,6 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { createCodingTools, CodingTools } from "@earendil-works/pi-durable/tools";
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
-import { CodemodeSandbox } from "@earendil-works/pi-codemode";
-import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 import { Type } from "@sinclair/typebox";
 import {
   configure,
@@ -208,25 +569,6 @@ import {
   defineTask as defineTask2
 } from "@earendil-works/pi-durable";
 import { defineTask } from "@earendil-works/pi-durable";
-import { getSupportedThinkingLevels } from "@earendil-works/pi-ai/models";
-import { basename, join as join3, resolve as resolve2 } from "node:path";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import {
-  createSession,
-  defineDocFamily
-} from "@earendil-works/pi-durable";
-import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
-import { execFileSync } from "node:child_process";
-import { readFile, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import lockfile from "proper-lockfile";
-import { existsSync as existsSync2, mkdirSync, readdirSync, rmSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import { join as join2, resolve } from "node:path";
-import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, realpath } from "node:fs/promises";
-import { homedir } from "node:os";
-import { basename as basename2, join as join4, resolve as resolve3 } from "node:path";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT2 } from "@earendil-works/chord/context";
 import {
   ROOT_CONVERSATION_ID
@@ -256,7 +598,8 @@ import "@earendil-works/pi-coding-agent";
 import { Harness } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage as openNodeSqliteStorage2 } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { defineDoc as defineDoc2 } from "@earendil-works/pi-durable";
-import { z as z2 } from "zod";
+import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
+import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID2 } from "@earendil-works/pi-durable";
 import "@earendil-works/pi-durable";
 import { NestedCallDoc } from "@earendil-works/pi-durable";
 import {
@@ -265,40 +608,352 @@ import {
   truncateTail
 } from "@earendil-works/pi-coding-agent";
 import {
-  ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID2
+  ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID3
 } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT3 } from "@earendil-works/chord/context";
 import { defineDoc as defineDoc3 } from "@earendil-works/pi-durable";
-import net from "node:net";
-import fs from "node:fs";
-import path from "node:path";
-import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, join as join5 } from "node:path";
-import { fileURLToPath } from "node:url";
-import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID3 } from "@earendil-works/pi-durable";
 import { z as z22 } from "zod";
-import { z as z3 } from "zod";
-import { z as z5 } from "zod";
+import { z as z222 } from "zod";
 import { z as z4 } from "zod";
-import { z as z10 } from "zod";
-import { z as z6 } from "zod";
-import { z as z7 } from "zod";
+import { z as z32 } from "zod";
 import { z as z9 } from "zod";
+import { z as z5 } from "zod";
+import { z as z6 } from "zod";
 import { z as z8 } from "zod";
-import { z as z11 } from "zod";
-import { existsSync as existsSync4, mkdirSync as mkdirSync2, readdirSync as readdirSync2, rmSync as rmSync2 } from "node:fs";
-import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
-import { join as join6, resolve as resolve4 } from "node:path";
-import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID5 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT5 } from "@earendil-works/chord/context";
-import { ROOT_CONVERSATION_ID as ROOT_CONVERSATION_ID4 } from "@earendil-works/pi-durable";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT4 } from "@earendil-works/chord/context";
-import { estimateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
+import { z as z7 } from "zod";
+import { z as z10 } from "zod";
 import { getPackageDir } from "@earendil-works/pi-coding-agent";
-import { join as join7 } from "node:path";
+import { join as join5 } from "node:path";
 import { pathToFileURL } from "node:url";
-import { existsSync as existsSync5, readFileSync as readFileSync3 } from "node:fs";
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
+import net from "node:net";
+import fs2 from "node:fs";
+import path2 from "node:path";
+var DurableHarnessError2 = class extends Error {
+  code;
+  constructor(message, code, cause) {
+    super(message, { cause });
+    this.name = new.target.name;
+    this.code = code;
+  }
+};
+var DurableStorageError = class extends DurableHarnessError2 {
+  constructor(message, cause, code = "STORAGE_ERROR") {
+    super(message, code, cause);
+  }
+};
+var SessionError2 = class extends DurableHarnessError2 {
+  constructor(code, message, cause) {
+    super(message, code, cause);
+    this.name = "SessionError";
+  }
+};
+function normalizeModelReference(raw, defaultProvider) {
+  if (!raw || typeof raw !== "object") return void 0;
+  const r = raw;
+  const provider = typeof r.provider === "string" && r.provider.trim() ? r.provider.trim() : defaultProvider?.trim();
+  const rawId = typeof r.modelId === "string" && r.modelId.trim() ? r.modelId.trim() : typeof r.id === "string" && r.id.trim() ? r.id.trim() : void 0;
+  if (!provider || !rawId) return void 0;
+  const prefix = `${provider}/`;
+  const cleanModelId = rawId.startsWith(prefix) ? rawId.slice(prefix.length) : rawId;
+  return { provider, modelId: cleanModelId };
+}
+var SubagentPolicyError = class extends Error {
+  cause;
+  constructor(message, options) {
+    super(message);
+    this.name = this.constructor.name;
+    this.cause = options?.cause;
+  }
+};
+var SubagentPolicyInvalidError = class extends SubagentPolicyError {
+  code = "SUBAGENT_POLICY_INVALID";
+  constructor(message, options) {
+    super(message, options);
+  }
+};
+var SubagentModelUnavailableError = class extends SubagentPolicyError {
+  code = "SUBAGENT_MODEL_UNAVAILABLE";
+  constructor(message, options) {
+    super(message, options);
+  }
+};
+var SubagentPolicyLoadError = class extends SubagentPolicyError {
+  code = "SUBAGENT_POLICY_LOAD_ERROR";
+  constructor(message, options) {
+    super(message, options);
+  }
+};
+var SubagentRevisionConflictError = class extends SubagentPolicyError {
+  code = "REVISION_CONFLICT";
+  constructor(message, options) {
+    super(message, options);
+  }
+};
+var EXTENDED_THINKING_LEVELS = [
+  "off",
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max"
+];
+function getSupportedThinkingLevels(model) {
+  if (!model.reasoning) {
+    return ["off"];
+  }
+  return EXTENDED_THINKING_LEVELS.filter((level) => {
+    const mapped = model.thinkingLevelMap?.[level];
+    if (mapped === null) return false;
+    if (level === "xhigh" || level === "max") return mapped !== void 0;
+    return true;
+  });
+}
+function mapBbReasoningToNativeThinking(level) {
+  if (level === "none" || level === void 0) {
+    return "off";
+  }
+  return level;
+}
+function resolveSubagentModelConfiguration(record, parentContext, availableModels) {
+  if (record.policy.mode === "inherit") {
+    const parentModel = normalizeModelReference(parentContext.model);
+    if (!parentModel) {
+      throw new SubagentPolicyInvalidError(
+        "Parent model is required for inherit mode"
+      );
+    }
+    return {
+      model: {
+        provider: parentModel.provider,
+        modelId: parentModel.modelId
+      },
+      thinkingLevel: mapBbReasoningToNativeThinking(parentContext.thinkingLevel),
+      source: "parent_inherited",
+      policyRevision: record.revision
+    };
+  }
+  const targetProfile = record.policy.configuredProfile;
+  const targetModel = normalizeModelReference(targetProfile?.model);
+  const foundModel = targetModel ? availableModels.find((m) => {
+    const availableNorm = normalizeModelReference(m, m.provider);
+    return availableNorm && availableNorm.provider === targetModel.provider && availableNorm.modelId === targetModel.modelId;
+  }) : void 0;
+  if (!foundModel || !targetModel) {
+    throw new SubagentModelUnavailableError(
+      `Configured subagent model "${targetProfile?.model?.provider}/${targetProfile?.model?.modelId}" is unavailable or unauthenticated. Update the subagent model in Settings \u2192 Installed plugins \u2192 Pi Durable \u2192 Subagents.`
+    );
+  }
+  const supportedLevels = getSupportedThinkingLevels(foundModel);
+  if (!supportedLevels.includes(targetProfile.thinkingLevel)) {
+    throw new SubagentPolicyInvalidError(
+      `Thinking level "${targetProfile.thinkingLevel}" is not supported by model "${targetModel.provider}/${targetModel.modelId}". Supported levels: ${supportedLevels.join(", ")}.`
+    );
+  }
+  return {
+    model: {
+      provider: targetModel.provider,
+      modelId: targetModel.modelId
+    },
+    thinkingLevel: targetProfile.thinkingLevel,
+    source: "user_configured",
+    policyRevision: record.revision
+  };
+}
+var subagentThinkingLevelSchema2 = z3.enum([
+  "off",
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max"
+]);
+var subagentModelReferenceSchema2 = z3.object({
+  provider: z3.string().min(1),
+  modelId: z3.string().min(1)
+}).strict();
+var subagentModelProfileSchema2 = z3.object({
+  model: subagentModelReferenceSchema2,
+  thinkingLevel: subagentThinkingLevelSchema2
+}).strict();
+var subagentPolicySchema2 = z3.discriminatedUnion("mode", [
+  z3.object({
+    mode: z3.literal("inherit"),
+    configuredProfile: subagentModelProfileSchema2.optional()
+  }).strict(),
+  z3.object({
+    mode: z3.literal("configured"),
+    configuredProfile: subagentModelProfileSchema2
+  }).strict()
+]);
+var subagentPolicyRecordSchema2 = z3.object({
+  version: z3.literal(1),
+  revision: z3.number().int().nonnegative(),
+  updatedAt: z3.string().optional(),
+  policy: subagentPolicySchema2
+}).strict();
+var subagentPolicySetInputSchema2 = z3.object({
+  policy: subagentPolicySchema2,
+  expectedRevision: z3.number().int().nonnegative()
+}).strict();
+var subagentPolicyGetOutputSchema2 = z3.object({
+  record: subagentPolicyRecordSchema2
+}).strict();
+var subagentPolicySetOutputSchema2 = z3.object({
+  record: subagentPolicyRecordSchema2
+}).strict();
+function isProcessAlive(pid) {
+  if (!pid || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === "EPERM";
+  }
+}
+function isVerifiedRunnerProcess(owner) {
+  if (!isProcessAlive(owner.pid)) return false;
+  try {
+    const output = execFileSync("ps", ["-p", String(owner.pid), "-o", "command="], {
+      encoding: "utf8",
+      timeout: 1e3,
+      stdio: ["ignore", "pipe", "ignore"]
+    }).trim();
+    return output.includes("node") || output.includes("runner") || output.includes("durable") || output.includes("bb");
+  } catch {
+    return false;
+  }
+}
+function logUnexpectedErr(err, allowedCode, context) {
+  if (err?.code !== allowedCode) {
+    console.warn(`[SessionStorage] ${context}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+async function writeOwnerFile(directory, owner) {
+  await writeFile(join(directory, "session.owner.json"), JSON.stringify(owner, null, 2), "utf8");
+}
+async function readOwnerFile(directory) {
+  try {
+    const content = await readFile(join(directory, "session.owner.json"), "utf8");
+    return JSON.parse(content);
+  } catch (err) {
+    logUnexpectedErr(err, "ENOENT", `Corrupted or unreadable session.owner.json in ${directory}`);
+    return null;
+  }
+}
+async function removeOwnerFile(directory) {
+  await rm(join(directory, "session.owner.json"), { force: true }).catch(
+    (err) => logUnexpectedErr(err, "ENOENT", `Failed to remove owner file in ${directory}`)
+  );
+}
+async function forceUnlock(directory) {
+  await lockfile.unlock(directory, { realpath: false }).catch(
+    (err) => logUnexpectedErr(err, "ENOENT", `unlock warning for ${directory}`)
+  );
+  await rm(`${directory}.lock`, { recursive: true, force: true }).catch(
+    (err) => logUnexpectedErr(err, "ENOENT", `lockfile cleanup warning for ${directory}`)
+  );
+}
+async function acquireSessionLock(directory, cwd, id) {
+  const lockOpts = { realpath: false, retries: { retries: 2, minTimeout: 100, maxTimeout: 200 } };
+  let rawRelease;
+  try {
+    rawRelease = await lockfile.lock(directory, lockOpts);
+  } catch (initialErr) {
+    let owner = await readOwnerFile(directory);
+    if (!owner) {
+      await new Promise((r) => setTimeout(r, 100));
+      owner = await readOwnerFile(directory);
+    }
+    if (!owner) throw new Error(`Session is already open in another process: ${directory}`, { cause: initialErr });
+    const isAlive = isProcessAlive(owner.pid);
+    const isRunner = isAlive && isVerifiedRunnerProcess(owner);
+    if (!isAlive || !isRunner) {
+      await forceUnlock(directory);
+      await removeOwnerFile(directory);
+      try {
+        rawRelease = await lockfile.lock(directory, lockOpts);
+      } catch (retryErr) {
+        throw new DurableStorageError(`Session is already open in another process (PID: ${owner.pid}): ${directory}`, retryErr);
+      }
+    } else {
+      throw new DurableStorageError(`Session is already open in another live process (PID: ${owner.pid}): ${directory}`, initialErr);
+    }
+  }
+  await writeOwnerFile(directory, { pid: process.pid, id, cwd, startedAt: Date.now() });
+  let released = false;
+  return async () => {
+    if (released) return;
+    released = true;
+    try {
+      await removeOwnerFile(directory);
+    } finally {
+      await rawRelease();
+    }
+  };
+}
+var genericDocFamily = defineDocFamily({
+  checkpointWhen: () => false,
+  kind: "dz.document",
+  version: 1,
+  scope: "session",
+  initial: () => ({})
+});
+function getAgentDir() {
+  const custom = process.env.PI_CODING_AGENT_DIR;
+  if (custom) return resolve32(custom);
+  return join4(homedir(), ".pi", "agent");
+}
+async function selectSession(cwdInput, continueSession, targetSession) {
+  const cwd = await realpath(resolve32(cwdInput));
+  const root = join4(getAgentDir(), "experimental", "durable-sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 24));
+  await mkdir(root, { recursive: true });
+  let directory;
+  let created = false;
+  if (targetSession) {
+    const clean = targetSession.endsWith(".sqlite") ? resolve32(targetSession, "..") : targetSession;
+    directory = clean.includes("/") || clean.includes("\\") ? resolve32(clean) : join4(root, clean);
+    try {
+      await mkdir(directory, { recursive: true });
+      const entries = await readdir(directory);
+      if (!entries.includes("session.sqlite")) {
+        created = true;
+      }
+    } catch (err) {
+      if (err?.code !== "ENOENT") {
+        console.warn(`[SessionStorage] Directory inspection failed in ${directory}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+  } else if (continueSession) {
+    const entries = await readdir(root, { withFileTypes: true });
+    const newest = entries.filter((entry) => entry.isDirectory() && /^\d{13}-[0-9a-f-]{36}$/u.test(entry.name)).map((entry) => entry.name).sort().at(-1);
+    if (!newest) throw new Error(`No durable session exists for ${cwd}`);
+    directory = join4(root, newest);
+  } else {
+    directory = join4(root, `${String(Date.now()).padStart(13, "0")}-${randomUUID()}`);
+    await mkdir(directory);
+    created = true;
+  }
+  const id = basename2(directory);
+  const release = await acquireSessionLock(directory, cwd, id);
+  return { id, directory, database: join4(directory, "session.sqlite"), cwd, created, release };
+}
+var DynamicPromptSections = class {
+  sections = {};
+  revision = 0;
+  getSections() {
+    return { ...this.sections };
+  }
+  updateSections(sections) {
+    this.sections = { ...sections };
+    this.revision++;
+  }
+  getRevision() {
+    return this.revision;
+  }
+};
 var CANONICAL_TOOL_DEFS = {
   read: createReadToolDefinition(process.cwd()),
   write: createWriteToolDefinition(process.cwd()),
@@ -321,6 +976,198 @@ var CANONICAL_TOOL_DEFS = {
     ]
   }
 };
+var KEYS = ["preamble", "tools", "rules", "docs", "addendum", "project_context", "skills", "cwd", "mcp_servers", "dynamic_sections"];
+function resolveContextFiles(options) {
+  return options.contextFiles && options.contextFiles.length > 0 ? options.contextFiles : options.resourceLoader?.getAgentsFiles?.()?.agentsFiles ?? [];
+}
+function resolveSkills(options) {
+  return options.resourceLoader?.getSkills?.()?.skills ?? [];
+}
+function buildRules(tools) {
+  const rules = [];
+  const seen = /* @__PURE__ */ new Set();
+  const addRule = (rule) => {
+    const normalized = rule.trim();
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    rules.push(normalized);
+  };
+  if (tools.some((t) => t.name === "bash")) {
+    addRule("Use bash for file operations like ls, rg, find");
+  }
+  for (const tool2 of tools) {
+    const def = CANONICAL_TOOL_DEFS[tool2.name];
+    if (def?.promptGuidelines) {
+      for (const guideline of def.promptGuidelines) addRule(guideline);
+    }
+    if (tool2.promptGuidelines) {
+      for (const guideline of tool2.promptGuidelines) addRule(guideline);
+    }
+  }
+  addRule("Be concise in your responses");
+  addRule("Show file paths clearly when working with files");
+  return rules.map((r) => `- ${r}`).join("\n");
+}
+function tryReadPromptFile(path22, label) {
+  if (!path22 || !existsSync2(path22)) return void 0;
+  try {
+    return readFileSync(path22, "utf8").trim();
+  } catch (err) {
+    console.error(`Warning: failed to read ${label ?? "prompt"}: ${err}`);
+    return void 0;
+  }
+}
+function createPiPrompt(_settings, fallbackCwd, options = {}) {
+  const systemPromptOverride = tryReadPromptFile(options.systemPromptPath, "system-prompt");
+  const appendPrompt = tryReadPromptFile(options.appendSystemPromptPath, "append-system-prompt");
+  const buildSections = (input) => {
+    const cwd = input.env?.cwd ?? input.agent.cwd ?? fallbackCwd;
+    const contextFiles = resolveContextFiles(options);
+    const skills = resolveSkills(options);
+    const tools = input.agent.tools ?? [];
+    const sections = {};
+    if (systemPromptOverride) {
+      sections.preamble = systemPromptOverride;
+    } else {
+      sections.preamble = "You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.";
+      const visibleTools = tools.flatMap((t) => {
+        const def = CANONICAL_TOOL_DEFS[t.name];
+        const snippet = def?.promptSnippet ?? t.promptSnippet;
+        return snippet ? [`- ${t.name}: ${snippet}`] : [];
+      });
+      const toolsText = visibleTools.length > 0 ? visibleTools.join("\n") : "(none)";
+      sections.tools = `<tools>
+${toolsText}
+
+In addition to the tools above, you may have access to other custom tools depending on the project.
+</tools>`;
+      sections.rules = `<rules>
+${buildRules(tools)}
+</rules>`;
+    }
+    if (appendPrompt) sections.addendum = `<addendum>
+${appendPrompt}
+</addendum>`;
+    if (contextFiles.length > 0) {
+      const rendered = contextFiles.map((cf) => `<project_instructions path="${cf.path}">
+${cf.content}
+</project_instructions>`).join("\n\n");
+      sections.project_context = `<project_context>
+Project-specific instructions and guidelines:
+
+${rendered}
+</project_context>`;
+    }
+    if (skills.length > 0) sections.skills = `<skills>
+${formatSkillsForPrompt(skills, "read")}
+</skills>`;
+    sections.cwd = `<cwd>
+${cwd.replace(/\\/g, "/")}
+</cwd>`;
+    if (options.dynamicSections) {
+      const extra = options.dynamicSections.getSections();
+      if (extra.mcp_servers?.trim()) sections.mcp_servers = `<mcp_servers>
+${extra.mcp_servers}
+</mcp_servers>`;
+      const otherEntries = Object.entries(extra).filter(([k, text]) => k !== "mcp_servers" && Boolean(text?.trim()));
+      if (otherEntries.length > 0) {
+        sections.dynamic_sections = otherEntries.map(([name, text]) => `<${name}>
+${text}
+</${name}>`).join("\n\n");
+      }
+    }
+    return sections;
+  };
+  const built = /* @__PURE__ */ new WeakMap();
+  const getOrBuild = (input) => {
+    const currentRev = options.dynamicSections?.getRevision?.() ?? 0;
+    const cached = built.get(input);
+    if (cached === void 0 || cached.revision !== currentRev) {
+      const sections = buildSections(input);
+      built.set(input, { revision: currentRev, sections });
+      return sections;
+    }
+    return cached.sections;
+  };
+  return defineExtension({
+    name: "pi-prompt",
+    sections: KEYS.map((key) => section(key, (input) => getOrBuild(input)[key], { tag: false }))
+  });
+}
+var DurableHarnessError22 = class extends Error {
+  code;
+  constructor(message, code, cause) {
+    super(message, { cause });
+    this.name = new.target.name;
+    this.code = code;
+  }
+};
+var BuiltinExtensionError = class extends DurableHarnessError22 {
+  extensionId;
+  constructor(extensionId, message, options) {
+    super(`[Built-in Extension ${extensionId}] ${message}`, "BUILTIN_EXTENSION_ERROR", options?.cause);
+    this.name = "BuiltinExtensionError";
+    this.extensionId = extensionId;
+  }
+};
+var BuiltinExtensionRegistry = class {
+  #extensions = /* @__PURE__ */ new Map();
+  register(extension) {
+    if (this.#extensions.has(extension.id)) {
+      throw new BuiltinExtensionError(
+        extension.id,
+        `Built-in extension with id '${extension.id}' is already registered`
+      );
+    }
+    this.#extensions.set(extension.id, extension);
+  }
+  get(id) {
+    return this.#extensions.get(id);
+  }
+  list() {
+    return Array.from(this.#extensions.values());
+  }
+  async initAll(ctx) {
+    for (const extension of this.#extensions.values()) {
+      try {
+        await extension.register(ctx);
+      } catch (err) {
+        if (err instanceof BuiltinExtensionError) throw err;
+        throw new BuiltinExtensionError(
+          extension.id,
+          `Failed to initialize built-in extension '${extension.id}': ${err instanceof Error ? err.message : String(err)}`,
+          { cause: err }
+        );
+      }
+    }
+  }
+  async teardownAll() {
+    const extensions = Array.from(this.#extensions.values()).reverse();
+    for (const extension of extensions) {
+      if (typeof extension.teardown === "function") {
+        try {
+          await extension.teardown();
+        } catch {
+        }
+      }
+    }
+  }
+};
+var codingToolsExtension = {
+  id: "coding-tools",
+  name: "Coding Tools",
+  version: "1.0.0",
+  async register(ctx) {
+    if (!ctx.registry) return;
+    let tools = CodingTools;
+    try {
+      const images = await createNodePhotonImages();
+      tools = createCodingTools({ images });
+    } catch {
+    }
+    ctx.registry.install(tools);
+  }
+};
 var SubagentsDoc = defineDoc({
   kind: "durable.subagents",
   version: 1,
@@ -338,6 +1185,10 @@ function extractAssistantText(entry) {
   const firstMessage = entry.model[0];
   if (!isRecord(firstMessage) || !Array.isArray(firstMessage.content)) return "";
   return firstMessage.content.flatMap((p) => isRecord(p) && p.type === "text" && typeof p.text === "string" ? [p.text] : []).join("");
+}
+async function answerText(api, answer, context) {
+  const entry = await api.commit((tx) => tx.entry(AssistantEntry, answer), context);
+  return extractAssistantText(entry);
 }
 function isWatchCall(item) {
   return typeof item === "object" && item !== null && "kind" in item && item.kind === "value" && "value" in item;
@@ -427,20 +1278,20 @@ ${prompt}`;
           return runtime.commit(() => ({ status: "running", checkpoint: { phase: "next" } }), context);
         }
         try {
-          await new Promise((resolve52) => {
-            const timer = setTimeout(() => resolve52(), holdTimeoutMs);
+          await new Promise((resolve42) => {
+            const timer = setTimeout(() => resolve42(), holdTimeoutMs);
             timer.unref?.();
             watch.start((rawCall) => {
               const v = unwrapWatchValue(rawCall);
               if (v?.deliveryHold === void 0) {
                 clearTimeout(timer);
-                resolve52();
+                resolve42();
               }
               return Promise.resolve();
             });
             void watch.closed.then(() => {
               clearTimeout(timer);
-              resolve52();
+              resolve42();
             });
           });
         } finally {
@@ -520,13 +1371,934 @@ function reporterFor(courier, admit) {
 }
 var DefaultCourier = courierFor();
 var DefaultReporter = reporterFor(DefaultCourier);
-var genericDocFamily = defineDocFamily({
-  checkpointWhen: () => false,
-  kind: "dz.document",
-  version: 1,
-  scope: "session",
-  initial: () => ({})
-});
+function buildTechnicalWorkerRole() {
+  return [
+    "You are an isolated worker subagent.",
+    "Your goal is to solve the delegated task using your available tools.",
+    "Execute the assigned task thoroughly, verify your findings, and return your final answer concisely."
+  ].join("\n");
+}
+function normalizeModelReference2(raw, defaultProvider) {
+  if (!raw || typeof raw !== "object") return void 0;
+  const r = raw;
+  const provider = typeof r.provider === "string" && r.provider.trim() ? r.provider.trim() : defaultProvider?.trim();
+  const rawId = typeof r.modelId === "string" && r.modelId.trim() ? r.modelId.trim() : typeof r.id === "string" && r.id.trim() ? r.id.trim() : void 0;
+  if (!provider || !rawId) return void 0;
+  const prefix = `${provider}/`;
+  const cleanModelId = rawId.startsWith(prefix) ? rawId.slice(prefix.length) : rawId;
+  return { provider, modelId: cleanModelId };
+}
+function createSubagentExtension(getPolicy) {
+  return defineExtension2({
+    name: "subagent",
+    tools: [
+      defineTool({
+        name: "subagent",
+        description: "Delegate a self-contained task to an async subagent. Uses the configured runtime subagent model policy (inherits parent model or uses provider-configured model). Runs in the background by default without blocking the conversation.",
+        parameters: Type.Object({
+          task: Type.String({ description: "What the subagent should do" }),
+          background: Type.Optional(
+            Type.Boolean({
+              description: "Run in background asynchronously (default: true). Set false only if an immediate synchronous answer is strictly required.",
+              default: true
+            })
+          )
+        }),
+        replay: "safe",
+        execute: async (rawArgs, api, context) => {
+          const args = rawArgs;
+          if (api.conversationId !== void 0 && Number(api.conversationId) > 1) {
+            return {
+              output: [
+                {
+                  type: "text",
+                  text: "Subagent recursion blocked: nested subagents are not permitted to spawn further subagents (max depth 1 reached)."
+                }
+              ],
+              isError: true,
+              details: { error: "MAX_DEPTH_EXCEEDED", task: args.task }
+            };
+          }
+          const isBackground = args.background !== false;
+          const key = `subagent:${api.taskId}`;
+          const requestId = `subagent:${api.taskId}`;
+          const existingRecord = await api.commit(async (tx) => {
+            const state = await tx.doc(SubagentsDoc, api.conversationId);
+            return state?.agents?.[key];
+          }, context);
+          let childRecord;
+          if (existingRecord) {
+            childRecord = existingRecord;
+          } else {
+            const parentAgent = await api.agent(context);
+            const policySnapshot = getPolicy();
+            const availableModels = policySnapshot.policy.mode === "configured" ? await api.models.getAvailable() : [];
+            const resolved = resolveSubagentModelConfiguration(
+              policySnapshot,
+              {
+                model: normalizeModelReference2(parentAgent?.model),
+                thinkingLevel: parentAgent?.thinkingLevel ?? "off"
+              },
+              availableModels
+            );
+            childRecord = await api.commit(async (tx) => {
+              const state = await tx.doc(SubagentsDoc, api.conversationId);
+              if (state?.agents?.[key]) {
+                return state.agents[key];
+              }
+              const existingAnchorId = state?.agents?.[key]?.anchorTaskId;
+              let existingConv = (await tx.scanConversations({ ownerTaskId: api.taskId }, 1)).items[0];
+              if (!existingConv && existingAnchorId !== void 0) {
+                existingConv = (await tx.scanConversations({ ownerTaskId: existingAnchorId }, 1)).items[0];
+              }
+              let childId = existingConv?.id ?? state?.agents?.[key]?.conversationId;
+              let anchorId = existingAnchorId;
+              if (childId === void 0) {
+                if (isBackground) {
+                  anchorId = await tx.createTask(Anchor, null, BACKGROUND);
+                }
+                const ownership = isBackground && anchorId !== void 0 ? { kind: "task", taskId: anchorId } : { kind: "task", taskId: api.taskId };
+                const created = await tx.createConversation({ ownership });
+                await configure(tx, created.id, {
+                  model: resolved.model,
+                  thinkingLevel: resolved.thinkingLevel,
+                  instructions: buildTechnicalWorkerRole()
+                });
+                childId = created.id;
+              }
+              const record = {
+                name: args.task.trim(),
+                conversationId: childId,
+                requestId,
+                task: args.task,
+                role: "worker",
+                ownerTaskId: api.taskId,
+                ...anchorId !== void 0 ? { anchorTaskId: anchorId } : {},
+                background: isBackground,
+                actualModel: resolved.model,
+                thinkingLevel: resolved.thinkingLevel,
+                source: resolved.source,
+                policyRevision: resolved.policyRevision
+              };
+              if (isBackground) {
+                record.reporter = await tx.createTask(
+                  DefaultReporter,
+                  { key, conversationId: childId, task: args.task, requestId },
+                  BACKGROUND
+                );
+              }
+              if (state) {
+                state.agents ??= {};
+                state.agents[key] = record;
+              }
+              return record;
+            }, context);
+          }
+          const detailsPayload = {
+            conversationId: childRecord.conversationId,
+            task: args.task,
+            background: isBackground
+          };
+          if (childRecord.actualModel) {
+            detailsPayload.actualModel = childRecord.actualModel;
+          }
+          if (childRecord.thinkingLevel) {
+            detailsPayload.thinkingLevel = childRecord.thinkingLevel;
+          }
+          if (childRecord.source) {
+            detailsPayload.source = childRecord.source;
+          }
+          if (childRecord.policyRevision !== void 0) {
+            detailsPayload.policyRevision = childRecord.policyRevision;
+          }
+          await api.details(detailsPayload, context);
+          if (isBackground) {
+            return {
+              output: [
+                {
+                  type: "text",
+                  text: `Subagent spawned in background (conversation ${childRecord.conversationId}). The task is running independently and will report upon completion.`
+                }
+              ],
+              details: detailsPayload
+            };
+          }
+          const handle = await api.conversation(childRecord.conversationId, context);
+          if (!handle) throw new Error(`Failed to access subagent conversation: ${childRecord.conversationId}`);
+          const submission = await handle.submit({ type: "input", content: args.task, requestId }, context);
+          const settled = await submission.wait(context);
+          if (settled.status !== "done" || settled.type !== "input") {
+            throw new Error(`Subagent ${childRecord.conversationId} failed: ${settled.status}`);
+          }
+          const text = await answerText(api, settled.answer, context);
+          await api.commit(async (tx) => {
+            const state = await tx.doc(SubagentsDoc, api.conversationId);
+            if (state?.agents?.[key]) {
+              state.agents[key].settled = true;
+              state.agents[key].report = text;
+            }
+          }, context);
+          return {
+            output: [{ type: "text", text }],
+            details: detailsPayload
+          };
+        }
+      })
+    ]
+  });
+}
+var subagentsExtension = {
+  id: "subagents",
+  name: "Subagents",
+  version: "1.0.0",
+  register(ctx) {
+    if (!ctx.registry) return;
+    if (typeof ctx.getSubagentPolicy === "function") {
+      ctx.registry.install(createSubagentExtension(ctx.getSubagentPolicy));
+    }
+    ctx.registry.install(Anchor);
+    ctx.registry.install(DefaultCourier);
+    ctx.registry.install(DefaultReporter);
+  },
+  teardown() {
+  }
+};
+function configureHarnessHttp(settingsManager) {
+  const proxy = settingsManager.getGlobalSettings()?.httpProxy?.trim();
+  if (proxy) {
+    process.env.HTTP_PROXY ??= proxy;
+    process.env.HTTPS_PROXY ??= proxy;
+  }
+}
+function createHarnessSettings(settingsManager, getActiveModel) {
+  return {
+    get stream() {
+      const provider = settingsManager.getProviderRetrySettings?.() ?? {};
+      const idle = settingsManager.getHttpIdleTimeoutMs?.() ?? 3e5;
+      return {
+        timeoutMs: provider.timeoutMs ?? (idle === 0 ? 2147483647 : idle),
+        maxRetryDelayMs: provider.maxRetryDelayMs,
+        ...provider.maxRetries === void 0 ? {} : { maxRetries: provider.maxRetries }
+      };
+    },
+    get compaction() {
+      const active = getActiveModel?.();
+      const model = active ? { provider: active.provider, id: active.modelId } : (() => {
+        const p = settingsManager.getDefaultProvider();
+        const m = settingsManager.getDefaultModel();
+        return p && m ? { provider: p, id: m } : void 0;
+      })();
+      return settingsManager.getCompactionSettings?.(model) ?? {};
+    },
+    get retry() {
+      return settingsManager.getRetrySettings?.() ?? {};
+    },
+    get steeringMode() {
+      return settingsManager.getSteeringMode?.() ?? "immediate";
+    },
+    get followUpMode() {
+      return settingsManager.getFollowUpMode?.() ?? "queue";
+    }
+  };
+}
+async function createCodingRegistry(settingsManager, cwd, getSubagentPolicy, promptOptions, dynamicNamespaces, customBuiltins = []) {
+  const registry = createRegistry();
+  const builtinRegistry = new BuiltinExtensionRegistry();
+  builtinRegistry.register(codingToolsExtension);
+  builtinRegistry.register(subagentsExtension);
+  for (const builtin of customBuiltins) {
+    builtinRegistry.register(builtin);
+  }
+  const ctx = {
+    registry,
+    settingsManager,
+    cwd,
+    storageDir: cwd,
+    getSubagentPolicy,
+    prompt: promptOptions,
+    dynamicNamespaces
+  };
+  await builtinRegistry.initAll(ctx);
+  registry.install(createToolSearchExtension());
+  registry.install(createPiPrompt(settingsManager, cwd, promptOptions));
+  return Object.assign(registry, { builtinRegistry });
+}
+var ExecutionEnvs = class {
+  #defaultCwd;
+  #factory;
+  #envs = /* @__PURE__ */ new Map();
+  constructor(defaultCwd, factory) {
+    if (typeof factory !== "function") {
+      throw new Error("ExecutionEnvFactory is required (AP-012, AP-072, AP-073: no fallback in core)");
+    }
+    this.#defaultCwd = defaultCwd;
+    this.#factory = factory;
+  }
+  env = ({ cwd = this.#defaultCwd, conversationId }) => {
+    let env = this.#envs.get(cwd);
+    if (env === void 0) {
+      const created = this.#factory({ cwd, conversationId });
+      env = created;
+      this.#envs.set(cwd, env);
+    }
+    return env;
+  };
+  async cleanup(context) {
+    const envs = [...this.#envs.values()];
+    this.#envs.clear();
+    for (const env of envs) await env.cleanup(context);
+  }
+};
+async function findInitialAgentModel(settingsManager, modelRuntime, cli) {
+  if (cli?.model !== void 0) {
+    const resolved = resolveCliModel({ cliProvider: cli.provider, cliModel: cli.model, modelRuntime });
+    if (resolved.error !== void 0 || resolved.model === void 0) {
+      throw new Error(`Could not resolve model: ${resolved.error ?? cli.model}`);
+    }
+    return {
+      model: { provider: resolved.model.provider, modelId: resolved.model.id },
+      thinkingLevel: cli.thinking ?? resolved.thinkingLevel ?? "off"
+    };
+  }
+  const defaultProvider = settingsManager.getDefaultProvider?.();
+  const defaultModelId = settingsManager.getDefaultModel?.();
+  const defaultThinkingLevel = settingsManager.getDefaultThinkingLevel?.();
+  if (defaultProvider && defaultModelId) {
+    const models = modelRuntime.getAvailableSnapshot();
+    const matched = models.find((m) => m.provider === defaultProvider && m.id === defaultModelId);
+    if (matched) {
+      return {
+        model: { provider: matched.provider, modelId: matched.id },
+        thinkingLevel: defaultThinkingLevel ?? "off"
+      };
+    }
+  }
+  const available = modelRuntime.getAvailableSnapshot();
+  if (available.length > 0) {
+    return {
+      model: { provider: available[0].provider, modelId: available[0].id },
+      thinkingLevel: "off"
+    };
+  }
+  return {};
+}
+var runtimeContext = BACKGROUND_CONTEXT2;
+function agentOf(view) {
+  return view.docs["pi.agent"] ?? {};
+}
+function titleOf(entry) {
+  const message = entry?.model?.[0];
+  if (message?.role !== "user") return {};
+  const text = typeof message.content === "string" ? message.content : message.content.flatMap((block) => block.type === "text" ? [block.text] : []).join(" ");
+  return { title: text.replace(/\s+/g, " ").trim() };
+}
+async function firstInput(harness, id) {
+  if (id === ROOT_CONVERSATION_ID) return {};
+  const conversation = await harness.conversation(id, runtimeContext);
+  let first;
+  let cursor;
+  do {
+    const page = await conversation.entries({}, 256, cursor, runtimeContext);
+    first = [...page.items].reverse().find((entry) => entry.kind === "pi.user") ?? first;
+    cursor = page.next;
+  } while (cursor !== void 0);
+  return titleOf(first);
+}
+var CompactionSideEffectError = class extends Error {
+  code;
+  operation;
+  constructor(operation, cause) {
+    const code = operation === "compact_context" ? "CONTEXT_RETRIEVAL_FAILED" : "COMPACTION_HOOK_FAILED";
+    super(`${operation} failed (${code})`, { cause });
+    this.name = "CompactionSideEffectError";
+    this.operation = operation;
+    this.code = code;
+  }
+};
+async function runCompactionSideEffect(operation, action, notice) {
+  try {
+    return { status: "succeeded", value: await action() };
+  } catch (cause) {
+    const error = new CompactionSideEffectError(operation, cause);
+    notice("warning", error.message);
+    return { status: "failed", error };
+  }
+}
+function hydrateSessionActiveTools(rootAgent, activeEnvState) {
+  if (Array.isArray(rootAgent.tools)) {
+    activeEnvState.setActiveTools?.(rootAgent.tools.map((t) => t.name));
+  }
+}
+async function createConversationBinding(conversation, ctx = runtimeContext) {
+  if (typeof conversation.viewState === "function") {
+    return conversation.viewState(ctx);
+  }
+  const watch = await conversation.watch(ctx);
+  let currentVal = watch.value;
+  const subscribers = /* @__PURE__ */ new Set();
+  watch.start(async (call) => {
+    if (call && "value" in call) {
+      currentVal = call.value;
+      for (const sub of subscribers) sub(call.value);
+    }
+  });
+  return {
+    get value() {
+      return currentVal;
+    },
+    subscribe(listener) {
+      subscribers.add(listener);
+      return () => subscribers.delete(listener);
+    },
+    dispose() {
+      void watch.stop();
+    }
+  };
+}
+async function createTaskGraphBinding(harness, ctx = runtimeContext) {
+  if (typeof harness.taskGraph === "function") {
+    return harness.taskGraph(ctx);
+  }
+  const watch = await harness.watchTaskGraph(ctx);
+  let currentVal = watch.value;
+  const subscribers = /* @__PURE__ */ new Set();
+  watch.start(async (call) => {
+    if (call && "value" in call) {
+      currentVal = call.value;
+      for (const sub of subscribers) sub(call.value);
+    }
+  });
+  return {
+    get value() {
+      return currentVal;
+    },
+    subscribe(listener) {
+      subscribers.add(listener);
+      return () => subscribers.delete(listener);
+    },
+    dispose() {
+      void watch.stop();
+    }
+  };
+}
+async function loadSummaries(harness, rootId) {
+  const summaries = [];
+  let cursor;
+  do {
+    const page = await harness.commit((tx) => tx.scanConversations({}, 256, cursor), runtimeContext);
+    for (const { id } of page.items) summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...await firstInput(harness, id) });
+    cursor = page.next;
+  } while (cursor !== void 0);
+  return summaries;
+}
+function createDurableController(ctx) {
+  let queue = Promise.resolve();
+  const command = (operation) => {
+    const next = queue.then(operation);
+    queue = next.then(() => {
+    }, ctx.fail);
+    return next;
+  };
+  const watchAnswer = (submission) => {
+    void submission.wait(runtimeContext).then(async (settled) => {
+      if (settled.status === "unanswered" && settled.reason !== "aborted") {
+        ctx.notice(
+          "error",
+          `No answer: ${settled.reason}${settled.detail === void 0 ? "" : ` ${JSON.stringify(settled.detail)}`}`
+        );
+      }
+      if (ctx.extensionRunner) {
+        try {
+          await ctx.extensionRunner.emit({ type: "agent_end", messages: [] });
+          await ctx.extensionRunner.emit({ type: "agent_settled", aborted: settled.status === "unanswered" && settled.reason === "aborted" });
+        } catch (err) {
+          ctx.notice("warning", `agent lifecycle hook error: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+    }, ctx.fail);
+  };
+  const agentModel = () => {
+    const ref = agentOf(ctx.getState().conversation).model;
+    const model = ref === void 0 ? void 0 : ctx.modelRuntime.getModel(ref.provider, ref.modelId);
+    if (model === void 0) {
+      throw new Error(ref === void 0 ? "No model selected" : "Current model is unavailable");
+    }
+    return model;
+  };
+  return {
+    submit: (input, whenBusy) => command(async () => {
+      const isStr = typeof input === "string";
+      const prompt = isStr ? input : input.filter((c) => c.type === "text").map((c) => c.text).join("\n");
+      const images = isStr ? void 0 : input.filter((c) => c.type === "image");
+      if (ctx.extensionRunner) {
+        try {
+          const currentAgent = await ctx.bindings.current.agent(runtimeContext);
+          const activeTools = currentAgent.tools.map((t) => t.name);
+          const hookRes = await ctx.extensionRunner.emitBeforeAgentStart(
+            { messageType: "user", prompt, images: images?.length ? images : void 0 },
+            {
+              cwd: ctx.cwd ?? process.cwd(),
+              selectedTools: activeTools,
+              sections: ctx.dynamicSections?.getSections() ?? {}
+            }
+          );
+          if (hookRes?.systemPromptOptions?.sections && ctx.dynamicSections) {
+            ctx.dynamicSections.updateSections(hookRes.systemPromptOptions.sections);
+          }
+          const selectedTools = hookRes?.systemPromptOptions?.selectedTools;
+          const handlerEdited = selectedTools && (selectedTools.length !== activeTools.length || selectedTools.some((name, i) => name !== activeTools[i]));
+          const nextActiveTools = handlerEdited ? selectedTools : ctx.getActiveTools?.() ?? ctx.extensionRunner?.getActiveTools?.() ?? activeTools;
+          if (handlerEdited && ctx.setActiveTools) ctx.setActiveTools(selectedTools);
+          if (nextActiveTools && (nextActiveTools.length !== activeTools.length || nextActiveTools.some((name, i) => name !== activeTools[i]))) {
+            await ctx.bindings.current.configure({ modelTools: nextActiveTools.map((name) => ({ name })) }, runtimeContext);
+          }
+        } catch (err) {
+          ctx.notice(
+            "warning",
+            `before_agent_start error: ${err instanceof Error ? err.message : String(err)}`
+          );
+        }
+      }
+      const submission = await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext);
+      watchAnswer(submission);
+      const seq = typeof submission.id === "number" ? submission.id : !isNaN(Number(submission.id)) ? Number(submission.id) : void 0;
+      return {
+        requestId: String(submission.id),
+        conversationId: String(ctx.bindings.current.id),
+        status: "accepted",
+        ...seq !== void 0 ? { sequence: seq } : {}
+      };
+    }),
+    compact: (instructions) => command(async () => {
+      const extensionRunner = ctx.extensionRunner;
+      if (extensionRunner) {
+        const context = await runCompactionSideEffect("compact_context", () => ctx.bindings.current.context(runtimeContext), ctx.notice);
+        if (context.status === "succeeded") {
+          const ctxView = context.value;
+          const msgs = [...ctxView.messages], entries = [...ctxView.entries];
+          await runCompactionSideEffect("session_before_compact", () => extensionRunner.emit({
+            type: "session_before_compact",
+            preparation: { firstKeptEntryId: ctxView.head?.id !== void 0 ? String(ctxView.head.id) : "", messagesToSummarize: msgs, turnPrefixMessages: [], isSplitTurn: false, tokensBefore: 0, fileOps: { read: /* @__PURE__ */ new Set(), written: /* @__PURE__ */ new Set(), edited: /* @__PURE__ */ new Set() }, settings: {} },
+            branchEntries: entries,
+            customInstructions: instructions,
+            reason: "manual",
+            willRetry: false,
+            signal: new AbortController().signal
+          }), ctx.notice);
+        }
+      }
+      const id = await ctx.bindings.current.compact(instructions, runtimeContext);
+      void ctx.opened.waitForTask(id, runtimeContext).then(async (receipt) => {
+        const outcome = receipt.state.outcome;
+        if (outcome.status === "completed") {
+          if (extensionRunner) {
+            void runCompactionSideEffect("session_compact", () => extensionRunner.emit({
+              type: "session_compact",
+              compactionEntry: { id: outcome.result?.entryId ?? "", type: "compaction", summary: "", tokensBefore: 0, tokensAfter: 0 },
+              fromExtension: false,
+              reason: "manual",
+              willRetry: false
+            }), ctx.notice).catch(ctx.fail);
+          }
+          const { entryId, submissionId } = outcome.result;
+          const status = submissionId === void 0 ? void 0 : (await (await ctx.opened.submission(submissionId, runtimeContext))?.status(runtimeContext))?.status;
+          const msg = entryId !== void 0 || status === "done" ? "Compacted." : status === "queued" ? "Compaction summary queued; it is placed at the next turn boundary." : status === "unanswered" ? "Compaction summary dropped: the context changed under it." : "Nothing to compact: the context fits in the recent window that is kept verbatim.";
+          ctx.notice("info", msg);
+        } else if (outcome.status === "aborted") {
+          ctx.notice("info", "Compaction aborted.");
+        } else {
+          ctx.notice("error", `Compaction ${outcome.status}: ${outcome.error?.message ?? outcome.reason ?? ""}`);
+        }
+      }).catch(ctx.fail);
+    }),
+    abort: () => command(async () => {
+      await ctx.bindings.current.abort(runtimeContext, { background: true });
+      const childConversationIds = [];
+      await ctx.bindings.current.commit(async (tx) => {
+        const doc = await tx.doc(SubagentsDoc, ctx.bindings.current.id);
+        for (const agent of Object.values(doc?.agents ?? {})) {
+          if (!agent.settled && agent.conversationId) {
+            childConversationIds.push(agent.conversationId);
+          }
+        }
+      }, runtimeContext).catch((err) => {
+        ctx.notice("warning", `Cascade abort read error: ${err}`);
+      });
+      for (const childId of childConversationIds) {
+        const child = await ctx.opened.conversation(childId, runtimeContext).catch((err) => {
+          ctx.notice("warning", `Failed to access subagent: ${err}`);
+          return void 0;
+        });
+        if (child) {
+          await child.abort(runtimeContext, { background: true }).catch((err) => {
+            ctx.notice("warning", `Failed to abort subagent: ${err}`);
+          });
+        }
+      }
+    }),
+    cycleThinking: () => command(async () => {
+      const model = agentModel();
+      if (!model.reasoning) throw new Error("Current model does not support thinking");
+      const levels = getSupportedThinkingLevels2(model), level = agentOf(ctx.getState().conversation).thinkingLevel ?? "off";
+      await ctx.bindings.current.configure({ thinkingLevel: levels[(levels.indexOf(level) + 1) % levels.length] ?? "off" }, runtimeContext);
+    }),
+    setThinkingLevel: (targetLevel) => command(async () => {
+      const model = agentModel();
+      if (!model.reasoning) {
+        if (targetLevel === "off" || targetLevel === "none") {
+          return void await ctx.bindings.current.configure({ thinkingLevel: "off" }, runtimeContext);
+        }
+        throw new Error("Current model does not support thinking");
+      }
+      await ctx.bindings.current.configure({ thinkingLevel: clampThinkingLevel(model, targetLevel) }, runtimeContext);
+    }),
+    setModel: (ref) => command(async () => {
+      const model = ctx.modelRuntime.getModel(ref.provider, ref.modelId);
+      if (model === void 0) throw new Error(`Unknown model: ${ref.provider}/${ref.modelId}`);
+      ctx.setActiveModelRef(ref);
+      const thinking = agentOf(ctx.getState().conversation).thinkingLevel ?? "off";
+      await ctx.bindings.current.configure({ model: ref, thinkingLevel: clampThinkingLevel(model, thinking) }, runtimeContext);
+    }),
+    toggleTasks: () => command(async () => {
+      if (ctx.bindings.tasksOpen) return ctx.bindings.closeTasks();
+      ctx.bindings.attachTasks(await createTaskGraphBinding(ctx.opened, runtimeContext));
+    }),
+    switchConversation: (id) => command(async () => {
+      const next = await ctx.opened.conversation(id, runtimeContext);
+      if (next === void 0) throw new Error(`Conversation ${id} does not exist`);
+      ctx.bindings.bindConversation(next, await createConversationBinding(next, runtimeContext));
+    })
+  };
+}
+var RuntimeBindings = class {
+  conversation;
+  view;
+  unsubscribe;
+  tasks;
+  unsubscribeTasks;
+  epoch = 0;
+  taskEpoch = 0;
+  closed = false;
+  update;
+  constructor(conversation, view, update2) {
+    this.conversation = conversation;
+    this.view = view;
+    this.update = update2;
+    try {
+      this.unsubscribe = view.subscribe((value) => {
+        if (!this.closed && this.epoch === 0) this.update({ conversation: value });
+      });
+    } catch (cause) {
+      try {
+        view.dispose();
+      } catch (cleanup) {
+        throw new AggregateError([cause, cleanup], "SUBSCRIBE_FAILED");
+      }
+      throw new Error("SUBSCRIBE_FAILED", { cause });
+    }
+  }
+  get current() {
+    return this.conversation;
+  }
+  get tasksOpen() {
+    return this.tasks !== void 0;
+  }
+  bindConversation(conversation, view) {
+    if (this.closed) {
+      view.dispose();
+      throw new Error("BINDING_CLOSED");
+    }
+    if (this.view === view) return;
+    const epoch = this.epoch + 1;
+    let unsubscribe;
+    try {
+      unsubscribe = view.subscribe((value) => {
+        if (!this.closed && this.epoch === epoch) this.update({ conversation: value });
+      });
+    } catch (cause) {
+      view.dispose();
+      throw new Error("SUBSCRIBE_FAILED", { cause });
+    }
+    const previous = this.view, previousUnsubscribe = this.unsubscribe;
+    this.view = view;
+    this.conversation = conversation;
+    this.unsubscribe = unsubscribe;
+    this.epoch = epoch;
+    try {
+      previousUnsubscribe();
+    } finally {
+      previous.dispose();
+    }
+    this.update({ conversation: view.value });
+  }
+  attachTasks(view) {
+    if (this.closed) {
+      view.dispose();
+      throw new Error("BINDING_CLOSED");
+    }
+    if (this.tasks === view) return;
+    const epoch = this.taskEpoch + 1;
+    let unsubscribe;
+    try {
+      unsubscribe = view.subscribe((value) => {
+        if (!this.closed && this.taskEpoch === epoch) this.update({ tasks: value });
+      });
+    } catch (cause) {
+      view.dispose();
+      throw new Error("SUBSCRIBE_FAILED", { cause });
+    }
+    const previous = this.tasks, previousUnsubscribe = this.unsubscribeTasks;
+    this.tasks = view;
+    this.unsubscribeTasks = unsubscribe;
+    this.taskEpoch = epoch;
+    try {
+      previousUnsubscribe?.();
+    } finally {
+      previous?.dispose();
+    }
+    this.update({ tasks: view.value });
+  }
+  closeTasks() {
+    if (!this.tasks) return;
+    this.taskEpoch++;
+    const previous = this.tasks, unsubscribe = this.unsubscribeTasks;
+    this.tasks = void 0;
+    this.unsubscribeTasks = void 0;
+    try {
+      unsubscribe?.();
+    } finally {
+      previous.dispose();
+    }
+    if (!this.closed) this.update({ tasks: void 0 });
+  }
+  close() {
+    if (this.closed) return;
+    this.closed = true;
+    this.epoch++;
+    try {
+      this.unsubscribe();
+    } finally {
+      try {
+        this.view.dispose();
+      } finally {
+        this.closeTasks();
+      }
+    }
+  }
+};
+async function closeRuntimeResources(operations) {
+  const failures = [];
+  for (const operation of operations) {
+    try {
+      await operation();
+    } catch (cause) {
+      failures.push(cause);
+    }
+  }
+  if (failures.length) throw new AggregateError(failures, "RUNTIME_CLEANUP_FAILED");
+}
+var activeInteractionRequester = null;
+function requestHostInteraction(kind, payload) {
+  if (!activeInteractionRequester) {
+    return Promise.resolve(null);
+  }
+  return activeInteractionRequester(kind, payload);
+}
+function createExtensionUIContext(onNotice, requestInteraction = requestHostInteraction) {
+  return {
+    select: async (title, options) => {
+      const res = await requestInteraction("select", { title, data: { options } });
+      return typeof res === "string" ? res : void 0;
+    },
+    confirm: async (title, message) => {
+      const res = await requestInteraction("confirm", { title, message });
+      return Boolean(res);
+    },
+    input: async (title, placeholder) => {
+      const res = await requestInteraction("input", { title, message: placeholder });
+      return typeof res === "string" ? res : void 0;
+    },
+    notify: (message, type = "info") => {
+      onNotice?.(type, message);
+    },
+    onTerminalInput: () => () => {
+    },
+    setStatus: () => {
+    },
+    setWorkingMessage: () => {
+    },
+    setWorkingVisible: () => {
+    },
+    setWorkingIndicator: () => {
+    },
+    setHiddenThinkingLabel: () => {
+    },
+    setWidget: () => {
+    },
+    setFooter: () => {
+    },
+    setHeader: () => {
+    },
+    setTitle: () => {
+    },
+    custom: async () => void 0,
+    pasteToEditor: () => {
+    },
+    setEditorText: () => {
+    },
+    getEditorText: () => "",
+    editor: async () => void 0,
+    addAutocompleteProvider: () => {
+    },
+    setEditorComponent: () => {
+    },
+    getEditorComponent: () => void 0,
+    theme: {},
+    getAllThemes: () => [],
+    getTheme: () => void 0,
+    setTheme: () => ({ success: true }),
+    getToolsExpanded: () => false,
+    setToolsExpanded: () => {
+    }
+  };
+}
+function createStandardExtensionFactories() {
+  return [createMcpExtension()];
+}
+function createExtensionActions(options, initialActiveTools = []) {
+  let activeToolNames = [...initialActiveTools];
+  let sessionName;
+  const sendMessage = (message, sendOptions) => {
+    if (sendOptions?.triggerTurn && message?.content) {
+      const text = typeof message.content === "string" ? message.content : JSON.stringify(message.content);
+      void options.onSubmitUserMessage?.(text, sendOptions.deliverAs === "steer" ? "steer" : "followUp");
+    }
+  };
+  const sendUserMessage = (content, sendOptions) => {
+    void options.onSubmitUserMessage?.(content, sendOptions?.deliverAs);
+  };
+  return {
+    getActiveTools: () => activeToolNames,
+    getAllTools: () => {
+      const map = /* @__PURE__ */ new Map();
+      if (options.getCallableTools) {
+        for (const t of options.getCallableTools()) {
+          map.set(t.name, {
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters,
+            exposure: "direct",
+            reachesTools: t.name === "codemode" || t.name === "tool_search"
+          });
+        }
+      }
+      if (options.getRegisteredTools) {
+        for (const t of options.getRegisteredTools()) {
+          map.set(t.definition.name, {
+            name: t.definition.name,
+            description: t.definition.description,
+            parameters: t.definition.parameters,
+            promptGuidelines: t.definition.promptGuidelines,
+            exposure: t.definition.exposure ?? "direct",
+            namespace: t.definition.namespace,
+            annotations: t.definition.annotations,
+            sourceInfo: t.sourceInfo
+          });
+        }
+      }
+      return Array.from(map.values());
+    },
+    getSettings: () => ({
+      ...options.settingsManager?.getGlobalSettings() ?? {},
+      ...options.settingsManager?.getProjectSettings() ?? {}
+    }),
+    setActiveTools: (toolNames) => {
+      activeToolNames = [...toolNames];
+      options.onActiveToolsChanged?.(activeToolNames);
+    },
+    refreshTools: () => {
+      options.onToolsChanged?.();
+    },
+    getThinkingLevel: () => options.settingsManager?.getDefaultThinkingLevel?.() ?? "high",
+    setThinkingLevel: () => {
+    },
+    setModel: async () => false,
+    getCommands: () => [],
+    sendMessage,
+    sendUserMessage,
+    appendEntry: (customType, data) => {
+      options.sessionManager?.appendCustomEntry(customType, data);
+    },
+    setSessionName: (name) => {
+      sessionName = name;
+    },
+    getSessionName: () => sessionName,
+    setLabel: () => {
+    }
+  };
+}
+async function setupExtensionRunner(options) {
+  const sessionManager = SessionManager.create(options.cwd);
+  const modelRegistry = new ModelRegistry(options.modelRuntime);
+  const runner = new ExtensionRunner(options.extensions, options.runtime, options.cwd, sessionManager, modelRegistry);
+  runner.setUIContext(createExtensionUIContext(options.onNotice));
+  const initialActive = options.initialActiveTools ? [...options.initialActiveTools] : options.getCallableTools ? options.getCallableTools().map((t) => t.name) : [];
+  const actions = createExtensionActions({
+    getRegisteredTools: () => runner.getAllRegisteredTools(),
+    getCallableTools: options.getCallableTools,
+    settingsManager: options.settingsManager,
+    onActiveToolsChanged: options.onActiveToolsChanged,
+    onToolsChanged: options.onToolsChanged,
+    sessionManager,
+    onSubmitUserMessage: options.onSubmitUserMessage
+  }, initialActive);
+  const contextActions = {
+    getModel: () => {
+      const active = options.settingsManager?.getDefaultModel?.();
+      const provider = options.settingsManager?.getDefaultProvider?.();
+      if (active && provider) {
+        const found = options.modelRuntime.getModel(provider, active);
+        if (found) return found;
+      }
+      return options.modelRuntime.getAvailableSnapshot()[0];
+    },
+    getScopedModels: () => options.modelRuntime.getAvailableSnapshot().map((model) => ({ model })),
+    isIdle: () => options.isIdle ? options.isIdle() : true,
+    isProjectTrusted: () => true,
+    getSignal: () => void 0,
+    abort: () => {
+      options.onAbort?.();
+    },
+    hasPendingMessages: () => false,
+    shutdown: () => {
+    },
+    getContextUsage: () => {
+      const u = options.getContextUsage?.();
+      if (!u) return void 0;
+      const pct = typeof u.tokens === "number" && u.contextWindow > 0 ? u.tokens / u.contextWindow * 100 : null;
+      return { tokens: u.tokens, contextWindow: u.contextWindow, percent: pct };
+    },
+    compact: (opts) => {
+      options.onCompact?.(typeof opts === "string" ? opts : opts?.customInstructions);
+    },
+    getSystemPrompt: () => "",
+    getSystemPromptOptions: () => ({ cwd: options.cwd }),
+    executeTool: (callerId, name, args, opts) => options.executeToolFn(callerId, name, args, opts),
+    getCallableTools: () => options.getCallableTools ? options.getCallableTools() : runner.getAllRegisteredTools().map((t) => ({
+      name: t.definition.name,
+      description: t.definition.description,
+      parameters: t.definition.parameters,
+      promptGuidelines: t.definition.promptGuidelines,
+      exposure: t.definition.exposure,
+      namespace: t.definition.namespace,
+      annotations: t.definition.annotations,
+      sourceInfo: t.sourceInfo
+    }))
+  };
+  runner.bindCore(actions, contextActions);
+  await runner.emit({ type: "session_start", reason: "startup" });
+  return runner;
+}
 var SchemaPort = class {
   coerce(schema, value) {
     if (!value || typeof value !== "object" || !schema) {
@@ -565,49 +2337,376 @@ var SchemaPort = class {
   }
 };
 var schemaPort = new SchemaPort();
-var subagentThinkingLevelSchema = z2.enum([
-  "off",
-  "minimal",
-  "low",
-  "medium",
-  "high",
-  "xhigh",
-  "max"
-]);
-var subagentModelReferenceSchema = z2.object({
-  provider: z2.string().min(1),
-  modelId: z2.string().min(1)
-}).strict();
-var subagentModelProfileSchema = z2.object({
-  model: subagentModelReferenceSchema,
-  thinkingLevel: subagentThinkingLevelSchema
-}).strict();
-var subagentPolicySchema = z2.discriminatedUnion("mode", [
-  z2.object({
-    mode: z2.literal("inherit"),
-    configuredProfile: subagentModelProfileSchema.optional()
-  }).strict(),
-  z2.object({
-    mode: z2.literal("configured"),
-    configuredProfile: subagentModelProfileSchema
-  }).strict()
-]);
-var subagentPolicyRecordSchema = z2.object({
-  version: z2.literal(1),
-  revision: z2.number().int().nonnegative(),
-  updatedAt: z2.string().optional(),
-  policy: subagentPolicySchema
-}).strict();
-var subagentPolicySetInputSchema = z2.object({
-  policy: subagentPolicySchema,
-  expectedRevision: z2.number().int().nonnegative()
-}).strict();
-var subagentPolicyGetOutputSchema = z2.object({
-  record: subagentPolicyRecordSchema
-}).strict();
-var subagentPolicySetOutputSchema = z2.object({
-  record: subagentPolicyRecordSchema
-}).strict();
+function hasOutput(api) {
+  return typeof api === "object" && api !== null && "output" in api && typeof api.output === "function";
+}
+function adaptExtensionTool(toolDef, executeToolFn, createToolContext, getExtensionRunner) {
+  const exposure = toolDef.exposure;
+  const isDeferred = exposure === "deferred";
+  const callers = exposure === "model-only" ? ["model"] : exposure === "codemode" || exposure === "codemode-deferred" ? ["tools"] : exposure === "hidden" ? [] : ["model", "tools"];
+  return defineTool2({
+    name: toolDef.name,
+    description: toolDef.description,
+    parameters: toolDef.parameters,
+    callers,
+    ...toolDef.promptSnippet ? { promptSnippet: toolDef.promptSnippet } : {},
+    ...toolDef.promptGuidelines?.length ? { promptGuidelines: toolDef.promptGuidelines } : {},
+    ...isDeferred ? { deferred: true } : {},
+    ...toolDef.outputSchema ? {
+      outputSchema: toolDef.outputSchema,
+      structuredOutputSchema: toolDef.outputSchema
+    } : {},
+    async execute(args, api, runtimeContext2) {
+      const runner = getExtensionRunner?.();
+      const abortSignal = runtimeContext2?.abortSignal;
+      if (runner?.hasHandlers("tool_call")) {
+        const hookResult = await runner.emitToolCall({
+          type: "tool_call",
+          toolName: toolDef.name,
+          toolCallId: api.callId,
+          input: args ?? {}
+        });
+        if (hookResult?.block) {
+          const blockContent = [{ type: "text", text: `Tool execution blocked: ${hookResult.reason ?? "policy"}` }];
+          return {
+            output: blockContent,
+            isError: true
+          };
+        }
+      }
+      const base2 = createToolContext?.(api.callId);
+      const descriptors = {
+        ...Object.getOwnPropertyDescriptors(base2 ?? {}),
+        tools: {
+          get: () => base2?.tools ?? [],
+          configurable: true,
+          enumerable: true
+        },
+        executeTool: {
+          value: async (name, nestedArgs, options) => base2?.executeTool ? base2.executeTool(name, nestedArgs, options) : executeToolFn(api.callId, name, nestedArgs, options),
+          configurable: true,
+          enumerable: true,
+          writable: true
+        }
+      };
+      const ctx = Object.defineProperties({}, descriptors);
+      const coercedArgs = schemaPort.coerce(toolDef.parameters, args);
+      try {
+        const result = await toolDef.execute(
+          api.callId,
+          coercedArgs,
+          abortSignal,
+          (update2) => {
+            if (update2?.content && hasOutput(api)) {
+              const textChunks = update2.content.filter((c) => c.type === "text").map((c) => c.text).join("");
+              if (textChunks.length > 0) api.output(textChunks);
+            }
+          },
+          ctx
+        );
+        if (runner?.hasHandlers("tool_result")) {
+          await runner.emitToolResult({
+            type: "tool_result",
+            toolName: toolDef.name,
+            toolCallId: api.callId,
+            input: args ?? {},
+            content: result.content,
+            details: result.details ?? void 0,
+            isError: result.isError ?? false
+          });
+        }
+        const structuredOutput = result.structuredContent !== void 0 ? result.structuredContent : result.structuredOutput;
+        return {
+          output: result.content,
+          isError: result.isError,
+          details: result.details ?? void 0,
+          ...structuredOutput !== void 0 ? { structuredOutput } : {}
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const errorContent = [{ type: "text", text: message }];
+        if (runner?.hasHandlers("tool_result")) {
+          await runner.emitToolResult({
+            type: "tool_result",
+            toolName: toolDef.name,
+            toolCallId: api.callId,
+            input: args ?? {},
+            content: errorContent,
+            details: void 0,
+            isError: true
+          });
+        }
+        return {
+          output: errorContent,
+          isError: true
+        };
+      }
+    }
+  });
+}
+function installExtensionTools(registry, tools) {
+  if (tools.length === 0) return;
+  registry.install(defineExtension3({ name: "extension-tools", tools }));
+}
+function createNestedToolExecutor(registry, getExtensionRunner, getEnv) {
+  return async (callerId, name, args, options) => {
+    const runner = getExtensionRunner?.();
+    let target = registry.snapshot().tools().find((t) => t.tool.name === name);
+    if (!target && runner) {
+      const toolDef = runner.getAllRegisteredTools().find((t) => t.definition.name === name);
+      if (toolDef) {
+        const ctx = (callId) => runner.createToolContext(callId, options?.signal);
+        const adapted = adaptExtensionTool(toolDef.definition, createNestedToolExecutor(registry, getExtensionRunner, getEnv), ctx, () => runner);
+        installExtensionTools(registry, [adapted]);
+        target = registry.snapshot().tools().find((t) => t.tool.name === name);
+      }
+    }
+    if (!target) {
+      return { toolCall: { type: "toolCall", id: `${callerId}/nested`, name, arguments: args }, result: { content: [{ type: "text", text: `Tool ${name} not found` }], details: {} }, isError: true };
+    }
+    if (runner?.hasHandlers("tool_call")) {
+      const hook = await runner.emitToolCall({
+        type: "tool_call",
+        toolName: name,
+        toolCallId: `${callerId}/nested`,
+        parentToolCallId: callerId,
+        input: args ?? {}
+      });
+      if (hook?.block) {
+        return {
+          toolCall: { type: "toolCall", id: `${callerId}/nested`, name, arguments: args },
+          result: { content: [{ type: "text", text: `Tool execution blocked: ${hook.reason ?? "policy"}` }], details: {} },
+          isError: true
+        };
+      }
+    }
+    try {
+      const executor = target.tool.execute;
+      let outputText = "";
+      const api = {
+        callId: `${callerId}/nested`,
+        output: (chunk) => {
+          outputText += typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+        },
+        retainedOutput: () => ({ text: outputText, truncated: false }),
+        outputWindow: void 0,
+        env: getEnv?.(),
+        diagnostic: () => {
+        }
+      };
+      const res = await executor(args, api, runtimeContext);
+      const rawBlocks = res?.output;
+      const content = Array.isArray(rawBlocks) ? rawBlocks : rawBlocks !== void 0 ? [{ type: "text", text: String(rawBlocks) }] : [{ type: "text", text: outputText }];
+      if (runner?.hasHandlers("tool_result")) {
+        await runner.emitToolResult({
+          type: "tool_result",
+          toolName: name,
+          toolCallId: `${callerId}/nested`,
+          parentToolCallId: callerId,
+          input: args ?? {},
+          content,
+          details: res?.details,
+          isError: !!res?.isError
+        });
+      }
+      const structuredOutput = res?.structuredContent !== void 0 ? res.structuredContent : res?.structuredOutput;
+      return {
+        toolCall: { type: "toolCall", id: `${callerId}/nested`, name, arguments: args },
+        result: {
+          content,
+          details: res?.details,
+          ...structuredOutput !== void 0 ? { structuredOutput } : {}
+        },
+        isError: !!res?.isError
+      };
+    } catch (err) {
+      const errorContent = [{ type: "text", text: err instanceof Error ? err.message : String(err) }];
+      if (runner?.hasHandlers("tool_result")) {
+        await runner.emitToolResult({
+          type: "tool_result",
+          toolName: name,
+          toolCallId: `${callerId}/nested`,
+          parentToolCallId: callerId,
+          input: args ?? {},
+          content: errorContent,
+          details: {},
+          isError: true
+        });
+      }
+      return { toolCall: { type: "toolCall", id: `${callerId}/nested`, name, arguments: args }, result: { content: errorContent, details: {} }, isError: true };
+    }
+  };
+}
+async function mountExtensionBridge(location, modelRuntime, extensionsResult, registry, executeToolFn, report, dynamicSections, onNotice, settingsManager, dynamicNamespaces, actionsDelegate) {
+  let extensionRunner;
+  try {
+    const syncToolsToRegistry = () => {
+      if (!extensionRunner) return;
+      const all = extensionRunner.getAllRegisteredTools();
+      dynamicNamespaces?.registerFromToolDefinitions(all.map((t) => t.definition));
+      const adapted = all.map(
+        (t) => adaptExtensionTool(t.definition, executeToolFn, (callId) => extensionRunner.createToolContext(callId, void 0), () => extensionRunner)
+      );
+      installExtensionTools(registry, adapted);
+    };
+    extensionRunner = await setupExtensionRunner({
+      extensions: extensionsResult.extensions,
+      runtime: extensionsResult.runtime,
+      cwd: location.cwd,
+      modelRuntime,
+      executeToolFn,
+      getCallableTools: () => {
+        const map = /* @__PURE__ */ new Map();
+        for (const t of registry.snapshot().tools()) {
+          map.set(t.tool.name, { name: t.tool.name, description: t.tool.description ?? "", parameters: t.tool.parameters });
+        }
+        for (const t of extensionRunner?.getAllRegisteredTools() ?? []) {
+          map.set(t.definition.name, { ...t.definition, sourceInfo: t.sourceInfo });
+        }
+        return Array.from(map.values());
+      },
+      onToolsChanged: syncToolsToRegistry,
+      onActiveToolsChanged: (tools) => {
+        try {
+          void actionsDelegate?.onConfigureModelTools?.(tools)?.catch((err) => console.warn("[ExtensionMount] Configure model tools error:", err));
+        } catch (err) {
+          console.warn("[ExtensionMount] Synchronous error configuring model tools:", err);
+        }
+      },
+      onNotice,
+      settingsManager,
+      onAbort: () => actionsDelegate?.onAbort?.(),
+      onCompact: (i) => actionsDelegate?.onCompact?.(i),
+      getContextUsage: () => actionsDelegate?.getContextUsage?.(),
+      isIdle: () => actionsDelegate?.isIdle ? actionsDelegate.isIdle() : true,
+      onSubmitUserMessage: (c, d) => actionsDelegate?.onSubmitUserMessage?.(c, d)
+    });
+    if (extensionRunner) {
+      extensionRunner.onError((err) => {
+        report(err);
+        onNotice?.("error", `[Extension Error] ${err.extensionPath} (${err.event}): ${err.error}`);
+      });
+      syncToolsToRegistry();
+      try {
+        await new Promise((r) => setImmediate(r));
+        const currentTools = extensionRunner.getActiveTools?.() ?? registry.snapshot().tools().map((t) => t.tool.name);
+        const beforeStart = await extensionRunner.emitBeforeAgentStart(
+          { messageType: "user", prompt: "", images: void 0 },
+          { cwd: location.cwd, selectedTools: currentTools, sections: dynamicSections?.getSections() ?? {} }
+        );
+        if (beforeStart?.systemPromptOptions?.sections && dynamicSections) {
+          dynamicSections.updateSections(beforeStart.systemPromptOptions.sections);
+        }
+        const selected = beforeStart?.systemPromptOptions?.selectedTools;
+        if (selected && (selected.length !== currentTools.length || selected.some((t, i) => t !== currentTools[i]))) {
+          extensionsResult.runtime.setActiveTools?.(selected);
+        }
+      } catch (err) {
+        report(err);
+      }
+    }
+  } catch (error) {
+    report(error);
+  }
+  return {
+    extensionRunner,
+    cleanup: () => extensionRunner?.emit({ type: "session_shutdown", reason: "quit" }).catch((err) => console.warn("[ExtensionBridge] Cleanup session_shutdown:", err)) ?? Promise.resolve(),
+    setActiveTools: (tools) => extensionsResult.runtime.setActiveTools?.(tools),
+    getActiveTools: () => extensionsResult.runtime.getActiveTools?.() ?? []
+  };
+}
+var DynamicCodemodeNamespaces = class {
+  list = [];
+  seen = /* @__PURE__ */ new Set();
+  getNamespaces() {
+    return this.list;
+  }
+  registerNamespace(ns) {
+    if (this.seen.has(ns.prefix)) {
+      const idx = this.list.findIndex((n) => n.prefix === ns.prefix);
+      if (idx !== -1) {
+        const existing = this.list[idx];
+        this.list[idx] = {
+          name: ns.name || existing.name,
+          prefix: ns.prefix,
+          description: ns.description ?? existing.description,
+          instructions: ns.instructions ?? existing.instructions
+        };
+      }
+      return;
+    }
+    this.seen.add(ns.prefix);
+    this.list.push(ns);
+  }
+  registerFromToolDefinitions(toolDefs) {
+    for (const def of toolDefs) {
+      const match = def.name.match(/^mcp__([a-zA-Z0-9_\-]+?)__/);
+      if (match && match[1]) {
+        const serverName = match[1];
+        const prefix = `mcp__${serverName}__`;
+        this.registerNamespace({
+          name: def.namespace?.name ?? serverName,
+          prefix,
+          ...def.namespace?.description ? { description: def.namespace.description } : {},
+          ...def.namespace?.instructions ? { instructions: def.namespace.instructions } : {}
+        });
+      } else if (def.namespace?.name) {
+        const name = def.namespace.name;
+        const prefix = def.name.startsWith(`${name}__`) ? `${name}__` : def.name.startsWith(`${name}_`) ? `${name}_` : `${name}:`;
+        this.registerNamespace({
+          name,
+          prefix,
+          ...def.namespace.description ? { description: def.namespace.description } : {},
+          ...def.namespace.instructions ? { instructions: def.namespace.instructions } : {}
+        });
+      }
+    }
+  }
+};
+function createSubagentPolicyHolder(options) {
+  let currentRecord = options.initialRecord ? subagentPolicyRecordSchema2.parse(options.initialRecord) : {
+    version: 1,
+    revision: 0,
+    policy: { mode: "inherit" }
+  };
+  let writeQueue = Promise.resolve();
+  return {
+    getRecord() {
+      return structuredClone(currentRecord);
+    },
+    async setRecord(record) {
+      const validated = subagentPolicyRecordSchema2.parse(record);
+      return new Promise((resolve42, reject) => {
+        writeQueue = writeQueue.catch(() => {
+        }).then(async () => {
+          try {
+            if (validated.revision < currentRecord.revision) {
+              throw new SubagentRevisionConflictError(
+                `Revision downgrade rejected: incoming revision ${validated.revision} < current ${currentRecord.revision}`
+              );
+            }
+            if (validated.revision === currentRecord.revision) {
+              const currentStr = JSON.stringify(currentRecord);
+              const incomingStr = JSON.stringify(validated);
+              if (currentStr === incomingStr) {
+                resolve42();
+                return;
+              }
+              throw new SubagentRevisionConflictError(
+                `Revision conflict: revision ${validated.revision} already exists with different payload`
+              );
+            }
+            await options.persist(validated);
+            currentRecord = validated;
+            resolve42();
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    }
+  };
+}
 var SubagentPolicyAckDoc = defineDoc2({
   kind: "durable.subagent-policy-ack",
   version: 1,
@@ -615,6 +2714,1564 @@ var SubagentPolicyAckDoc = defineDoc2({
   checkpointWhen: () => false,
   initial: () => ({ record: null })
 });
+async function loadSubagentPolicyHolder(harness) {
+  let initialRecord;
+  await harness.commit(async (tx) => {
+    const doc = await tx.doc(SubagentPolicyAckDoc);
+    if (doc.record !== null && doc.record !== void 0) {
+      const parsed = subagentPolicyRecordSchema2.safeParse(doc.record);
+      if (!parsed.success) {
+        throw new SubagentPolicyLoadError("Stored subagent policy ACK is corrupted", {
+          cause: parsed.error
+        });
+      }
+      initialRecord = parsed.data;
+    }
+  }, runtimeContext);
+  return createSubagentPolicyHolder({
+    initialRecord,
+    persist: async (record) => {
+      await harness.commit(async (tx) => {
+        const doc = await tx.doc(SubagentPolicyAckDoc);
+        doc.record = record;
+      }, runtimeContext);
+    }
+  });
+}
+function logRegError(kind, identifier, err) {
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  if (!msg.includes("already registered") && !msg.includes("duplicate")) {
+    console.warn(`[RuntimeLoader] Failed to register ${kind} '${identifier}': ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+function registerPendingProviders(modelRuntime, runtime) {
+  for (const { name, config } of runtime.pendingProviderRegistrations) {
+    try {
+      modelRuntime.registerProvider(name, config);
+    } catch (err) {
+      logRegError("provider", name, err);
+    }
+  }
+  for (const { provider } of runtime.pendingNativeProviderRegistrations) {
+    try {
+      modelRuntime.registerNativeProvider(provider);
+    } catch (err) {
+      logRegError("native provider", provider?.id ?? "unknown", err);
+    }
+  }
+  for (const { definition } of runtime.pendingVirtualModelRegistrations) {
+    try {
+      modelRuntime.registerVirtualModel(definition);
+    } catch (err) {
+      logRegError("virtual model", definition?.id ?? "unknown", err);
+    }
+  }
+}
+async function loadHarnessEnvironment(location, options, envs) {
+  try {
+    initTheme();
+  } catch (err) {
+    console.warn(`[RuntimeLoader] Theme initialization warning: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  const deps = options.dependencies;
+  const modelRuntime = deps?.modelRuntime ?? await ModelRuntime.create();
+  for (const provider of deps?.nativeProviders ?? []) {
+    try {
+      modelRuntime.registerNativeProvider(provider);
+    } catch (err) {
+      logRegError("native provider", provider?.id ?? "unknown", err);
+    }
+  }
+  const settingsManager = deps?.settingsManager ?? SettingsManager.create(location.cwd);
+  const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
+  const extPaths = [
+    ...options.cli?.extensions ?? (options.cli?.extension ? [options.cli.extension] : []),
+    ...extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []
+  ];
+  const resourceLoader = deps?.resourceLoader ?? new DefaultResourceLoader({
+    cwd: location.cwd,
+    agentDir: getAgentDir(),
+    settingsManager,
+    extensionFactories: createStandardExtensionFactories(),
+    additionalSkillPaths: options.cli?.skills,
+    additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
+    noExtensions: options.cli?.noGlobalExtensions ?? false
+  });
+  await resourceLoader.reload();
+  const extensionsResult = resourceLoader.getExtensions();
+  registerPendingProviders(modelRuntime, extensionsResult.runtime);
+  configureHarnessHttp(settingsManager);
+  let activeModelRef;
+  const getActiveModel = () => {
+    if (activeModelRef) return activeModelRef;
+    const p = settingsManager.getDefaultProvider();
+    const m = settingsManager.getDefaultModel();
+    return p && m ? { provider: p, modelId: m } : void 0;
+  };
+  const dynamicSections = deps?.dynamicSections ?? new DynamicPromptSections();
+  const dynamicNamespaces = new DynamicCodemodeNamespaces();
+  const settings = createHarnessSettings(settingsManager, getActiveModel);
+  let subagentPolicyHolder;
+  const getSubagentPolicy = () => {
+    if (!subagentPolicyHolder) {
+      throw new Error("Subagent policy accessed before runtime initialization");
+    }
+    return subagentPolicyHolder.getRecord();
+  };
+  const builtins = [
+    ...deps?.builtins ?? [],
+    ...options.builtins ?? options.plugins ?? []
+  ];
+  const promptOptions = deps?.prompt ?? options.prompt;
+  const codingRegistry = await createCodingRegistry(
+    settingsManager,
+    location.cwd,
+    getSubagentPolicy,
+    { ...promptOptions, resourceLoader, dynamicSections },
+    dynamicNamespaces,
+    builtins
+  );
+  const registry = codingRegistry;
+  const pendingReports = [];
+  const report = (error) => pendingReports.push(error);
+  let liveNoticeForwarder;
+  let runnerRef;
+  const executeToolFn = createNestedToolExecutor(
+    registry,
+    () => runnerRef,
+    () => envs.env({ cwd: location.cwd })
+  );
+  const actionsDelegate = {};
+  const mounted = await mountExtensionBridge(
+    location,
+    modelRuntime,
+    extensionsResult,
+    registry,
+    executeToolFn,
+    report,
+    dynamicSections,
+    (level, message) => {
+      if (liveNoticeForwarder) {
+        liveNoticeForwarder(level, message);
+      } else {
+        pendingReports.push({ kind: "notice", level, message });
+      }
+    },
+    settingsManager,
+    dynamicNamespaces,
+    actionsDelegate
+  );
+  runnerRef = mounted.extensionRunner;
+  let harness;
+  const sessionCleanup = async () => {
+    await codingRegistry.builtinRegistry.teardownAll().catch((err) => {
+      console.warn("[RuntimeLoader] Built-in extension teardown error:", err);
+    });
+    await mounted.cleanup?.();
+  };
+  try {
+    harness = await Harness.open(
+      await openNodeSqliteStorage2(location.database),
+      { models: modelRuntime, registry, settings, env: envs.env, onReport: report },
+      runtimeContext
+    );
+    subagentPolicyHolder = await loadSubagentPolicyHolder(harness);
+  } catch (error) {
+    await Promise.allSettled([
+      harness?.close(runtimeContext),
+      sessionCleanup()
+    ]);
+    throw error;
+  }
+  const initial = location.created ? await findInitialAgentModel(settingsManager, modelRuntime, options.cli) : void 0;
+  if (initial?.model) activeModelRef = initial.model;
+  return {
+    modelRuntime,
+    settingsManager,
+    harness,
+    subagentPolicyHolder,
+    initialModelRef: initial?.model,
+    initialThinkingLevel: initial?.thinkingLevel,
+    fallbackMessage: initial?.fallbackMessage,
+    pendingReports,
+    getActiveModel,
+    setActiveModelRef: (ref) => {
+      activeModelRef = ref;
+    },
+    cleanup: sessionCleanup,
+    extensionRunner: mounted.extensionRunner,
+    actionsDelegate,
+    dynamicSections,
+    setNoticeForwarder: (forwarder) => {
+      liveNoticeForwarder = forwarder;
+    },
+    setActiveTools: mounted.setActiveTools,
+    getActiveTools: mounted.getActiveTools
+  };
+}
+async function openDurable(options = {}) {
+  const executionEnvFactory = options.dependencies?.executionEnvFactory ?? options.executionEnvFactory;
+  if (!executionEnvFactory) {
+    throw new Error("ExecutionEnvFactory is required in openDurable (AP-012, AP-072, AP-073: no fallback in core)");
+  }
+  const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
+  const envs = new ExecutionEnvs(location.cwd, executionEnvFactory);
+  let harness;
+  let envState;
+  try {
+    const activeEnvState = await loadHarnessEnvironment(location, options, envs);
+    envState = activeEnvState;
+    const { modelRuntime, settingsManager } = activeEnvState;
+    harness = activeEnvState.harness;
+    const initialTools = activeEnvState.extensionRunner?.getActiveTools?.();
+    const root = await harness.root(runtimeContext, {
+      agent: {
+        cwd: location.cwd,
+        ...activeEnvState.initialModelRef ? { model: activeEnvState.initialModelRef } : {},
+        ...activeEnvState.initialThinkingLevel ? { thinkingLevel: activeEnvState.initialThinkingLevel } : {},
+        ...Array.isArray(initialTools) ? { modelTools: initialTools.map((name) => ({ name })) } : {}
+      }
+    });
+    if (!location.created) {
+      const rootAgent = await root.agent(runtimeContext);
+      if (rootAgent.model) activeEnvState.setActiveModelRef(rootAgent.model);
+      hydrateSessionActiveTools(rootAgent, activeEnvState);
+      if (options.cli !== void 0) {
+        const cli = await findInitialAgentModel(settingsManager, modelRuntime, options.cli);
+        if (cli.model) {
+          activeEnvState.setActiveModelRef(cli.model);
+          await root.configure({ model: cli.model, thinkingLevel: cli.thinkingLevel }, runtimeContext);
+        } else if (cli.thinkingLevel !== void 0) {
+          await root.configure({ thinkingLevel: cli.thinkingLevel }, runtimeContext);
+        }
+      }
+    }
+    const summaries = await loadSummaries(harness, root.id);
+    const conversation = await createConversationBinding(root, runtimeContext);
+    const enabled = settingsManager.getEnabledModels();
+    const scoped = enabled?.length ? await resolveModelScopeWithDiagnostics(enabled, modelRuntime) : void 0;
+    const scopedList = scoped?.scopedModels?.length ? scoped.scopedModels.map((sm) => sm.model) : modelRuntime.getAvailableSnapshot();
+    const models = () => scopedList.map((m) => ({ provider: m.provider, modelId: m.id, name: m.name, contextWindow: m.contextWindow }));
+    let state = {
+      session: { id: location.id, directory: location.directory, cwd: location.cwd },
+      conversation: conversation.value,
+      conversations: summaries,
+      models: models(),
+      notices: []
+    };
+    const listeners = /* @__PURE__ */ new Set();
+    let notifying = false;
+    const update2 = (patch) => {
+      state = { ...state, ...patch };
+      if (notifying) return;
+      notifying = true;
+      setImmediate(() => {
+        notifying = false;
+        for (const listener of listeners) listener();
+      });
+    };
+    let nextNotice = 1;
+    const notice = (level, message) => {
+      update2({ notices: [...state.notices, { id: nextNotice++, level, message }].slice(-20) });
+    };
+    const fail = (err) => notice("error", err instanceof Error ? err.message : String(err));
+    for (const report of activeEnvState.pendingReports) {
+      if (report && typeof report === "object" && "kind" in report && report.kind === "notice") {
+        const nr = report;
+        notice(nr.level, nr.message);
+      } else {
+        notice("warning", report instanceof Error ? report.message : String(report));
+      }
+    }
+    activeEnvState.setNoticeForwarder?.((level, message) => notice(level, message));
+    const bindings = new RuntimeBindings(root, conversation, update2);
+    const handlePublication = (pub) => {
+      let convs = state.conversations;
+      for (const ch of pub.changes ?? []) {
+        if (ch.type === "conversation") {
+          convs = [...convs, { id: ch.value.id, label: ch.value.id === root.id ? "main" : `subagent ${ch.value.id}` }];
+        } else if (ch.type === "entry" && ch.value.kind === "pi.user") {
+          const id = ch.value.conversationId;
+          convs = convs.map((s) => s.id === id && !s.title ? { ...s, ...titleOf(ch.value) } : s);
+        }
+      }
+      if (convs !== state.conversations) update2({ conversations: convs });
+    };
+    const observation = typeof harness.observeCommits === "function" ? harness.observeCommits({ advance: handlePublication, end: () => {
+    } }) : void 0;
+    const unsubscribeCommits = observation ? () => observation.detach?.() : harness.subscribeCommits?.(handlePublication);
+    const opened = harness;
+    const controller = createDurableController({
+      bindings,
+      opened,
+      modelRuntime,
+      getState: () => state,
+      notice,
+      fail,
+      setActiveModelRef: (ref) => activeEnvState.setActiveModelRef(ref),
+      extensionRunner: activeEnvState.extensionRunner,
+      dynamicSections: activeEnvState.dynamicSections,
+      cwd: location.cwd,
+      setActiveTools: activeEnvState.setActiveTools,
+      getActiveTools: activeEnvState.getActiveTools
+    });
+    if (activeEnvState.actionsDelegate) {
+      activeEnvState.actionsDelegate.onAbort = () => {
+        void controller.abort();
+      };
+      activeEnvState.actionsDelegate.onCompact = (i) => {
+        void controller.compact(i);
+      };
+      activeEnvState.actionsDelegate.isIdle = () => true;
+      activeEnvState.actionsDelegate.onSubmitUserMessage = async (content, deliverAs) => {
+        await controller.submit(content, deliverAs ?? "followUp");
+      };
+      activeEnvState.actionsDelegate.onConfigureModelTools = async (tools) => {
+        await root.configure({ modelTools: tools.map((name) => ({ name })) }, runtimeContext);
+      };
+      activeEnvState.actionsDelegate.getContextUsage = () => {
+        const doc = state.conversation.docs["pi.agent"] ?? {};
+        const p = doc.model?.provider, m = doc.model?.modelId ?? doc.model?.id;
+        return { tokens: null, contextWindow: (p && m ? modelRuntime.getModel(p, m)?.contextWindow : void 0) ?? 128e3 };
+      };
+    }
+    const saved = agentOf(state.conversation).model;
+    if (!saved) notice("warning", "No model configured; select one with /model.");
+    else if (!modelRuntime.getModel(saved.provider, saved.modelId)) {
+      notice("warning", `Saved model is unavailable: ${saved.provider}/${saved.modelId}`);
+    }
+    if (activeEnvState.fallbackMessage) notice("info", activeEnvState.fallbackMessage);
+    await controller.toggleTasks();
+    await options.beforeResume?.(harness);
+    await harness.resume();
+    let closing;
+    return {
+      view: {
+        current: () => state,
+        subscribe: (listener) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        }
+      },
+      controller,
+      settings: settingsManager,
+      modelRuntime,
+      harness,
+      subagentPolicyHolder: activeEnvState.subagentPolicyHolder,
+      close() {
+        return closing ??= closeRuntimeResources([
+          () => {
+            listeners.clear();
+            bindings.close();
+          },
+          unsubscribeCommits,
+          () => opened.close(runtimeContext),
+          () => envs.cleanup(runtimeContext),
+          () => activeEnvState.cleanup?.(),
+          () => location.release()
+        ]);
+      }
+    };
+  } catch (error) {
+    await envState?.cleanup?.().catch((err) => console.warn("[DurableRuntime] Cleanup extension runner:", err));
+    await harness?.close(runtimeContext).catch((err) => console.warn("[DurableRuntime] Cleanup harness:", err));
+    await location.release().catch((err) => console.warn("[DurableRuntime] Cleanup location:", err));
+    throw error;
+  }
+}
+function parseConversationId(id) {
+  if (id === void 0 || id === null) return ROOT_CONVERSATION_ID2;
+  const trimmed = typeof id === "string" ? id.trim() : id;
+  if (trimmed === "") {
+    throw new Error(`Invalid conversationId: ${String(id)}`);
+  }
+  const num = typeof trimmed === "number" ? trimmed : Number(trimmed);
+  if (!Number.isInteger(num) || num <= 0) {
+    throw new Error(`Invalid conversationId: ${String(id)}`);
+  }
+  return num;
+}
+function findToolCallInEntries(entries, callId) {
+  if (!Array.isArray(entries)) return {};
+  for (let j = entries.length - 1; j >= 0; j--) {
+    const prevMsg = entries[j]?.model?.[0];
+    if (prevMsg?.role === "assistant" && Array.isArray(prevMsg.content)) {
+      const call = prevMsg.content.find((c) => c.type === "toolCall" && (c.id === callId || c.callId === callId));
+      if (call) {
+        return {
+          toolName: call.name,
+          args: call.arguments && typeof call.arguments === "object" ? call.arguments : {}
+        };
+      }
+    }
+  }
+  return {};
+}
+async function watchEvents(harness, conversationId, context) {
+  let conversation = await harness.conversation(conversationId, context);
+  if (!conversation) {
+    if (conversationId === 1 || conversationId === "1" || conversationId === void 0) {
+      conversation = await harness.root(context);
+    } else {
+      throw new Error(`Conversation not found: ${conversationId}`);
+    }
+  }
+  const watch = await conversation.watch(context);
+  const initial = watch.value;
+  const snapshot = {
+    type: "snapshot",
+    entries: initial?.entries ?? [],
+    ...initial?.docs?.["pi.live"]?.run ? { run: { inputs: initial.docs["pi.live"].run.inputs } } : {},
+    tools: initial?.docs?.["pi.live"]?.tools ?? [],
+    nestedTools: initial?.docs?.["pi.live"]?.nestedTools ?? [],
+    compactions: initial?.docs?.["pi.live"]?.compactions ?? [],
+    inbox: [],
+    agent: initial?.docs?.["pi.agent"] ?? {},
+    usage: initial?.docs?.["pi.usage"] ?? {}
+  };
+  return {
+    snapshot,
+    start(listener) {
+      let seenEntriesCount = initial?.entries?.length ?? 0;
+      const emittedToolStarts = /* @__PURE__ */ new Set();
+      const emittedToolEnds = /* @__PURE__ */ new Set();
+      const seenNestedTools = /* @__PURE__ */ new Map();
+      let currentGenerationId;
+      const seenTextByIndex = /* @__PURE__ */ new Map();
+      const seenThinkingByIndex = /* @__PURE__ */ new Map();
+      watch.start(async (call, ctx) => {
+        const val = call?.value ?? call;
+        if (!val) return;
+        const events = [];
+        const gen = val.docs?.["pi.live"]?.generation;
+        if (gen) {
+          const genId = `${gen.attempt ?? 0}`;
+          if (genId !== currentGenerationId) {
+            currentGenerationId = genId;
+            seenTextByIndex.clear();
+            seenThinkingByIndex.clear();
+          }
+          const genContent = gen.message?.content;
+          if (Array.isArray(genContent)) {
+            const changes = [];
+            for (let i = 0; i < genContent.length; i++) {
+              const block = genContent[i];
+              if (block?.type === "text" && typeof block.text === "string") {
+                const prev = seenTextByIndex.get(i) ?? "";
+                if (block.text.length > prev.length && block.text.startsWith(prev)) {
+                  const delta = block.text.slice(prev.length);
+                  seenTextByIndex.set(i, block.text);
+                  changes.push({ type: "text_delta", contentIndex: i, delta });
+                } else if (block.text !== prev && block.text.length > 0) {
+                  seenTextByIndex.set(i, block.text);
+                  changes.push({ type: "text_delta", contentIndex: i, delta: block.text });
+                }
+              } else if (block?.type === "thinking" && typeof block.thinking === "string") {
+                const prev = seenThinkingByIndex.get(i) ?? "";
+                if (block.thinking.length > prev.length && block.thinking.startsWith(prev)) {
+                  const delta = block.thinking.slice(prev.length);
+                  seenThinkingByIndex.set(i, block.thinking);
+                  changes.push({ type: "thinking_delta", contentIndex: i, delta });
+                } else if (block.thinking !== prev && block.thinking.length > 0) {
+                  seenThinkingByIndex.set(i, block.thinking);
+                  changes.push({ type: "thinking_delta", contentIndex: i, delta: block.thinking });
+                }
+              }
+            }
+            if (changes.length > 0) {
+              events.push({
+                type: "message_update",
+                usage: val.docs?.["pi.usage"] ?? {},
+                changes
+              });
+            }
+          }
+        } else {
+          currentGenerationId = void 0;
+          seenTextByIndex.clear();
+          seenThinkingByIndex.clear();
+        }
+        const liveTools = val.docs?.["pi.live"]?.tools ?? [];
+        for (const t of liveTools) {
+          if (t.callId && !emittedToolStarts.has(t.callId)) {
+            let toolName = t.name ?? "tool";
+            let args = {};
+            const genContent = val.docs?.["pi.live"]?.generation?.message?.content;
+            if (Array.isArray(genContent)) {
+              const match = genContent.find((c) => c.type === "toolCall" && (c.id === t.callId || c.callId === t.callId));
+              if (match) {
+                if (match.name) toolName = match.name;
+                if (match.arguments && typeof match.arguments === "object") args = match.arguments;
+              }
+            }
+            if (Object.keys(args).length === 0) {
+              const fromEntries = findToolCallInEntries(val.entries, t.callId);
+              if (fromEntries.toolName) toolName = fromEntries.toolName;
+              if (fromEntries.args) args = fromEntries.args;
+            }
+            emittedToolStarts.add(t.callId);
+            events.push({
+              type: "tool_execution_start",
+              toolCallId: t.callId,
+              toolName,
+              args
+            });
+          }
+          if (t.callId && t.status === "running" && typeof t.output === "string") {
+            events.push({
+              type: "tool_execution_update",
+              toolCallId: t.callId,
+              toolName: t.name ?? "tool",
+              output: { set: t.output },
+              details: t.details,
+              diagnostics: t.diagnostics
+            });
+          }
+        }
+        const nested = val.docs?.["pi.live"]?.nestedTools ?? [];
+        for (const n of nested) {
+          if (n.callId && !seenNestedTools.has(n.callId)) {
+            seenNestedTools.set(n.callId, n);
+          }
+          if (n.callId && !emittedToolStarts.has(n.callId)) {
+            emittedToolStarts.add(n.callId);
+            const toolName = n.name ?? n.toolName ?? "tool";
+            events.push({
+              type: "tool_execution_start",
+              toolCallId: n.callId,
+              toolName,
+              taskId: n.taskId,
+              parentToolCallId: n.parentCallId,
+              parentTaskId: n.parentTaskId,
+              args: n.arguments && typeof n.arguments === "object" ? n.arguments : {}
+            });
+          }
+          if (n.callId && n.status === "running" && typeof n.output === "string") {
+            events.push({
+              type: "tool_execution_update",
+              toolCallId: n.callId,
+              toolName: n.name ?? n.toolName ?? "tool",
+              parentToolCallId: n.parentCallId,
+              parentTaskId: n.parentTaskId,
+              output: { set: n.output },
+              details: n.details,
+              diagnostics: n.diagnostics
+            });
+          }
+          if (n.callId && n.status === "done" && !emittedToolEnds.has(n.callId)) {
+            emittedToolEnds.add(n.callId);
+            const toolName = n.name ?? n.toolName ?? "tool";
+            let nestedResult;
+            if (n.parentTaskId && typeof harness.snapshot === "function") {
+              const key = n.callId.split("/").pop();
+              try {
+                const stored = await harness.snapshot(NestedCallDoc, n.parentTaskId, key, context);
+                nestedResult = stored?.result;
+              } catch {
+              }
+            }
+            events.push({
+              type: "tool_execution_end",
+              toolCallId: n.callId,
+              toolName,
+              taskId: n.taskId,
+              parentToolCallId: n.parentCallId,
+              parentTaskId: n.parentTaskId,
+              result: nestedResult ?? {
+                isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
+                output: n.output,
+                details: n.details
+              },
+              args: n.arguments && typeof n.arguments === "object" ? n.arguments : {}
+            });
+          }
+        }
+        if (!val.docs?.["pi.live"]?.nestedTools && seenNestedTools.size > 0) {
+          for (const [callId, n] of seenNestedTools) {
+            if (!emittedToolEnds.has(callId)) {
+              emittedToolEnds.add(callId);
+              const toolName = n.name ?? n.toolName ?? "tool";
+              events.push({
+                type: "tool_execution_end",
+                toolCallId: callId,
+                toolName,
+                taskId: n.taskId,
+                parentToolCallId: n.parentCallId,
+                parentTaskId: n.parentTaskId,
+                result: n.result ?? {
+                  isError: Boolean(n.summary?.isError ?? n.summary?.error ?? n.isError),
+                  output: n.output,
+                  details: n.details
+                },
+                args: n.arguments && typeof n.arguments === "object" ? n.arguments : {}
+              });
+            }
+          }
+        }
+        if (val.entries?.length && val.entries.length > seenEntriesCount) {
+          for (let i = seenEntriesCount; i < val.entries.length; i++) {
+            const entry = val.entries[i];
+            const modelMsg = entry?.model?.[0];
+            if (modelMsg?.role === "assistant" && Array.isArray(modelMsg.content)) {
+              for (const part of modelMsg.content) {
+                if (part.type === "toolCall" && part.id && !emittedToolStarts.has(part.id)) {
+                  emittedToolStarts.add(part.id);
+                  events.push({
+                    type: "tool_execution_start",
+                    toolCallId: part.id,
+                    toolName: part.name ?? "tool",
+                    args: part.arguments && typeof part.arguments === "object" ? part.arguments : {}
+                  });
+                }
+              }
+            }
+            if (modelMsg?.role === "toolResult") {
+              let toolName = modelMsg.toolName ?? "tool";
+              let toolArgs = {};
+              const found = findToolCallInEntries(val.entries, modelMsg.toolCallId ?? String(entry.id));
+              if (found.toolName && !modelMsg.toolName) toolName = found.toolName;
+              if (found.args) toolArgs = found.args;
+              const callId = modelMsg.toolCallId ?? String(entry.id);
+              if (!emittedToolStarts.has(callId)) {
+                emittedToolStarts.add(callId);
+                events.push({
+                  type: "tool_execution_start",
+                  toolCallId: callId,
+                  toolName,
+                  args: toolArgs
+                });
+              }
+              if (!emittedToolEnds.has(callId)) {
+                emittedToolEnds.add(callId);
+                events.push({
+                  type: "tool_execution_end",
+                  toolCallId: callId,
+                  toolName,
+                  entry,
+                  args: toolArgs
+                });
+              }
+            }
+            events.push({ type: "entry_appended", entry });
+          }
+          seenEntriesCount = val.entries.length;
+        }
+        if (events.length > 0) {
+          await listener(events, ctx);
+        }
+      });
+    },
+    async stop() {
+      return watch.stop(context);
+    }
+  };
+}
+function isAgentDocument(doc) {
+  return typeof doc === "object" && doc !== null;
+}
+function isUsageDocument(doc) {
+  return typeof doc === "object" && doc !== null;
+}
+function isToolCallBlock(block) {
+  return typeof block === "object" && block !== null && block.type === "toolCall";
+}
+function isConversationEntryRecord(entry) {
+  return typeof entry === "object" && entry !== null;
+}
+function extractCumulativeUsage(current) {
+  const rawUsageDoc = current?.conversation?.docs?.["pi.usage"];
+  if (!rawUsageDoc || typeof rawUsageDoc !== "object") {
+    return void 0;
+  }
+  const usageDoc = rawUsageDoc;
+  let totalTokens = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let cachedInputTokens = 0;
+  let cacheWriteInputTokens = 0;
+  let hasUsage = false;
+  const accumulate = (entry) => {
+    if (!entry || typeof entry !== "object") return;
+    const inTok = Number(entry.input ?? 0);
+    const outTok = Number(entry.output ?? 0);
+    const totTok = Number(entry.totalTokens ?? inTok + outTok);
+    const cacheRead = Number(entry.cacheRead ?? 0);
+    const cacheWrite = Number(entry.cacheWrite ?? 0);
+    if (totTok > 0 || inTok > 0 || outTok > 0 || cacheRead > 0 || cacheWrite > 0) {
+      hasUsage = true;
+      totalTokens += totTok;
+      inputTokens += inTok;
+      outputTokens += outTok;
+      cachedInputTokens += cacheRead;
+      cacheWriteInputTokens += cacheWrite;
+    }
+  };
+  if (usageDoc.models && typeof usageDoc.models === "object") {
+    for (const modelUsage of Object.values(usageDoc.models)) {
+      accumulate(modelUsage);
+    }
+  }
+  if (usageDoc.tools && typeof usageDoc.tools === "object") {
+    for (const toolUsage of Object.values(usageDoc.tools)) {
+      accumulate(toolUsage);
+    }
+  }
+  if (!hasUsage && (usageDoc.totalTokens != null || usageDoc.input != null || usageDoc.output != null)) {
+    accumulate(usageDoc);
+  }
+  if (!hasUsage && totalTokens === 0) {
+    return void 0;
+  }
+  return {
+    totalTokens,
+    inputTokens,
+    outputTokens,
+    ...cachedInputTokens > 0 ? { cachedInputTokens } : {},
+    ...cacheWriteInputTokens > 0 ? { cacheWriteInputTokens } : {}
+  };
+}
+function buildFinalAssistantMessage(current, contentBlocksOrText, lastThinkingText) {
+  const entries = current?.conversation?.entries ?? [];
+  const lastAssistantEntry = [...entries].reverse().find(
+    (e) => isConversationEntryRecord(e) && e.kind === "pi.assistant"
+  );
+  const lastAssistantMsg = lastAssistantEntry?.model?.[0];
+  if (lastAssistantMsg) {
+    const rawErr = lastAssistantMsg.errorMessage;
+    const errorMessage = typeof rawErr === "string" ? rawErr : void 0;
+    const stopReason = typeof lastAssistantMsg.stopReason === "string" ? lastAssistantMsg.stopReason : errorMessage ? "error" : "stop";
+    let content = Array.isArray(lastAssistantMsg.content) ? lastAssistantMsg.content : [{ type: "text", text: typeof contentBlocksOrText === "string" ? contentBlocksOrText : "" }];
+    if (content.length === 0 && (stopReason === "error" || errorMessage)) {
+      content = [{ type: "text", text: errorMessage ? `\u26A0\uFE0F ${errorMessage}` : "An error occurred during turn generation." }];
+    }
+    const usage = typeof lastAssistantMsg.usage === "object" && lastAssistantMsg.usage !== null ? lastAssistantMsg.usage : void 0;
+    return {
+      role: "assistant",
+      content,
+      stopReason,
+      ...errorMessage ? { errorMessage } : {},
+      usage
+    };
+  }
+  const finalContent = [];
+  if (contentBlocksOrText instanceof Map) {
+    const sorted = Array.from(contentBlocksOrText.keys()).sort((a, b) => a - b);
+    for (const idx of sorted) {
+      const b = contentBlocksOrText.get(idx);
+      if (b?.type === "thinking" && b.thinking) {
+        finalContent.push({ type: "thinking", thinking: b.thinking });
+      } else if (b?.type === "text" && b.text !== void 0) {
+        finalContent.push({ type: "text", text: b.text });
+      }
+    }
+  } else {
+    if (lastThinkingText) {
+      finalContent.push({ type: "thinking", thinking: lastThinkingText });
+    }
+    if (contentBlocksOrText) {
+      finalContent.push({ type: "text", text: contentBlocksOrText });
+    }
+  }
+  const rawUsageDoc = current?.conversation?.docs?.["pi.usage"];
+  const usageDoc = isUsageDocument(rawUsageDoc) ? rawUsageDoc : {};
+  const cumUsage = extractCumulativeUsage(current);
+  const inTok = cumUsage?.inputTokens ?? usageDoc.input;
+  const outTok = cumUsage?.outputTokens ?? usageDoc.output;
+  const cacheRead = cumUsage?.cachedInputTokens ?? usageDoc.cacheRead;
+  const cacheWrite = cumUsage?.cacheWriteInputTokens ?? usageDoc.cacheWrite;
+  const totalTokens = cumUsage?.totalTokens ?? usageDoc.totalTokens ?? (inTok ?? 0) + (outTok ?? 0);
+  return {
+    role: "assistant",
+    content: finalContent.length > 0 ? finalContent : [{ type: "text", text: "" }],
+    stopReason: "stop",
+    usage: {
+      input: inTok,
+      output: outTok,
+      cacheRead,
+      cacheWrite,
+      totalTokens,
+      cost: usageDoc.cost
+    }
+  };
+}
+function findSubmissionFault(inputs, submissions, lastTaskError) {
+  if (inputs && submissions) {
+    for (const id of inputs) {
+      const sub = submissions.get(id);
+      if (sub && sub.status === "unanswered") {
+        const isAborted = sub.reason === "aborted";
+        return {
+          isAborted,
+          isError: !isAborted,
+          errorMessage: sub.detail || sub.reason || lastTaskError || "Turn ended with unanswered input"
+        };
+      }
+    }
+  }
+  if (lastTaskError) {
+    return { isAborted: false, isError: true, errorMessage: lastTaskError };
+  }
+  return void 0;
+}
+function resolveTurnSummary(current, contentBlocksOrText, lastAssistantMessage, resolveContextWindow, fault, lastThinkingText) {
+  const tail = current?.conversation?.entries?.at(-1);
+  const lastCheckpointId = tail?.id !== void 0 ? String(tail.id) : void 0;
+  const finalMsg = lastAssistantMessage ?? buildFinalAssistantMessage(
+    current,
+    contentBlocksOrText,
+    lastThinkingText
+  );
+  const rawAgentDoc = current?.conversation?.docs?.["pi.agent"];
+  const agentDoc = isAgentDocument(rawAgentDoc) ? rawAgentDoc : {};
+  const cw = resolveContextWindow?.(agentDoc.model?.provider, agentDoc.model?.modelId);
+  const cumulativeUsage = extractCumulativeUsage(current);
+  const entries = current?.conversation?.entries ?? [];
+  const lastAssistantEntry = [...entries].reverse().find(
+    (e) => isConversationEntryRecord(e) && e.kind === "pi.assistant"
+  );
+  const firstModelMsg = lastAssistantEntry?.model?.[0];
+  const isLastAssistantAborted = Boolean(
+    firstModelMsg && "stopReason" in firstModelMsg && firstModelMsg.stopReason === "aborted"
+  );
+  const isAborted = finalMsg.stopReason === "aborted" || isLastAssistantAborted || Boolean(fault?.isAborted);
+  const rawLastErr = firstModelMsg && "errorMessage" in firstModelMsg ? firstModelMsg.errorMessage : void 0;
+  const lastErrStr = typeof rawLastErr === "string" ? rawLastErr : void 0;
+  const isLastAssistantError = Boolean(
+    firstModelMsg && "stopReason" in firstModelMsg && firstModelMsg.stopReason === "error" || lastErrStr
+  );
+  const isError = finalMsg.stopReason === "error" || isLastAssistantError || Boolean(fault?.isError);
+  const errorMessage = finalMsg.errorMessage ?? fault?.errorMessage ?? lastErrStr;
+  if (isAborted && finalMsg.stopReason !== "aborted") {
+    finalMsg.stopReason = "aborted";
+  } else if (isError && finalMsg.stopReason !== "error") {
+    finalMsg.stopReason = "error";
+  }
+  if (errorMessage && !finalMsg.errorMessage) {
+    finalMsg.errorMessage = errorMessage;
+  }
+  return { finalMsg, cw, cumulativeUsage, isAborted, isError, errorMessage, lastCheckpointId };
+}
+function extractCanonicalToolDetails(event) {
+  if (typeof event !== "object" || event === null) return void 0;
+  const rec = event;
+  if (rec.result && typeof rec.result === "object" && "details" in rec.result) {
+    return rec.result.details;
+  }
+  if (rec.entry && typeof rec.entry === "object" && Array.isArray(rec.entry.model)) {
+    const msg = rec.entry.model[0];
+    if (msg && typeof msg === "object" && "details" in msg) {
+      return msg.details;
+    }
+  }
+  if ("details" in rec) {
+    return rec.details;
+  }
+  return void 0;
+}
+function decodeEntry(entry) {
+  const msg = entry.model?.[0];
+  if (!msg || typeof msg !== "object" || msg.role !== "toolResult") {
+    return {
+      status: "invalid",
+      isError: true,
+      errorMessage: "Tool execution entry is missing a valid toolResult message"
+    };
+  }
+  return {
+    status: "entry",
+    isError: Boolean(msg.isError),
+    rawOutput: msg.content ?? msg.output,
+    details: "details" in msg ? msg.details : void 0
+  };
+}
+function decodeResult(result) {
+  return {
+    status: "result",
+    isError: Boolean(result.isError),
+    rawOutput: result.output ?? result.structuredOutput,
+    details: "details" in result ? result.details : void 0,
+    diagnostics: result.diagnostics ?? []
+  };
+}
+function decodeNativeToolEnd(event) {
+  const hasEntry = event.entry !== void 0;
+  const hasResult = event.result !== void 0;
+  if (hasEntry && hasResult) {
+    return {
+      status: "invalid",
+      isError: true,
+      errorMessage: "Tool protocol invariant violation: both entry and result present in tool_execution_end"
+    };
+  }
+  if (!hasEntry && !hasResult) {
+    return {
+      status: "missing",
+      isError: true,
+      errorMessage: "Tool execution completed without generating an entry record or nested result"
+    };
+  }
+  if (hasResult && event.result) {
+    return decodeResult(event.result);
+  }
+  if (event.entry) {
+    return decodeEntry(event.entry);
+  }
+  return {
+    status: "invalid",
+    isError: true,
+    errorMessage: "Tool execution entry is missing"
+  };
+}
+function isImageContent(value) {
+  if (typeof value !== "object" || value === null) return false;
+  const rec = value;
+  return rec.type === "image" && (typeof rec.data === "string" || typeof rec.mimeType === "string");
+}
+function redactImageStructures(value) {
+  if (typeof value !== "object" || value === null) return value;
+  if (isImageContent(value)) {
+    const rec = value;
+    return { ...rec, data: "[image data omitted]" };
+  }
+  if (Array.isArray(value)) {
+    return value.map(redactImageStructures);
+  }
+  const result = {};
+  for (const [k, v] of Object.entries(value)) {
+    result[k] = redactImageStructures(v);
+  }
+  return result;
+}
+function formatContentBlock(block) {
+  if (typeof block === "string") return block;
+  if (typeof block !== "object" || block === null) return String(block);
+  const rec = block;
+  if (typeof rec.text === "string") return rec.text;
+  if (isImageContent(rec)) {
+    return `[image: ${String(rec.mimeType ?? "image")}]`;
+  }
+  return JSON.stringify(redactImageStructures(rec));
+}
+function formatRawOutput(toolName, raw) {
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "number" || typeof raw === "boolean" || raw === null) {
+    return String(raw);
+  }
+  if (Array.isArray(raw)) {
+    return raw.map(formatContentBlock).filter(Boolean).join("\n");
+  }
+  if (typeof raw === "object" && raw !== null) {
+    const rec = raw;
+    if (toolName === "bash" && typeof rec.output === "string") {
+      return rec.output;
+    }
+    if (isImageContent(rec)) {
+      return `[image: ${String(rec.mimeType ?? "image")}]`;
+    }
+    return JSON.stringify(redactImageStructures(raw), null, 2);
+  }
+  return "";
+}
+function renderDiagnostics(diagnostics) {
+  return diagnostics.filter((d) => d && typeof d.message === "string" && d.message.length > 0).map((d) => d.severity && d.severity !== "info" ? `[${d.severity}] ${d.message}` : d.message).join("\n");
+}
+function presentToolResult(params) {
+  const { toolName, rawOutput, isError, diagnostics, retainedOutput } = params;
+  let text = "";
+  if (rawOutput !== void 0) {
+    text = formatRawOutput(toolName, rawOutput);
+  } else if (retainedOutput) {
+    text = retainedOutput;
+  }
+  if (diagnostics && diagnostics.length > 0) {
+    const diagText = renderDiagnostics(diagnostics);
+    if (diagText) {
+      text = text ? `${text}
+${diagText}` : diagText;
+    }
+  }
+  if (!text && isError) {
+    text = `Tool ${toolName} failed`;
+  }
+  return truncateTail(text, {
+    maxBytes: DEFAULT_MAX_BYTES,
+    maxLines: DEFAULT_MAX_LINES
+  }).content;
+}
+var ToolProgressState = class {
+  active = /* @__PURE__ */ new Map();
+  applyOutputUpdate(callId, output) {
+    if (!output) {
+      return this.active.get(callId)?.output;
+    }
+    let current = this.active.get(callId)?.output ?? "";
+    if ("set" in output) {
+      current = output.set;
+    } else {
+      const trim = typeof output.trimStart === "number" ? Math.max(0, output.trimStart) : 0;
+      const append = typeof output.append === "string" ? output.append : "";
+      current = current.slice(trim) + append;
+    }
+    const existing = this.active.get(callId);
+    if (existing) {
+      existing.output = current;
+    } else {
+      this.active.set(callId, { output: current });
+    }
+    return current;
+  }
+  setDetails(callId, details) {
+    const existing = this.active.get(callId);
+    if (existing) {
+      existing.details = details;
+    } else {
+      this.active.set(callId, { output: "", details });
+    }
+  }
+  getDetails(callId) {
+    return this.active.get(callId)?.details;
+  }
+  getRetainedOutput(callId) {
+    return this.active.get(callId)?.output;
+  }
+  take(callId) {
+    const slot = this.active.get(callId);
+    this.active.delete(callId);
+    return slot ? { output: slot.output, details: slot.details } : {};
+  }
+  clear() {
+    this.active.clear();
+  }
+  seedFromSnapshot(tools, nestedTools) {
+    const all = [...tools ?? [], ...nestedTools ?? []];
+    for (const t of all) {
+      if (t && t.callId !== void 0) {
+        const outputStr = typeof t.output === "string" ? t.output : "";
+        this.active.set(t.callId, { output: outputStr, details: t.details });
+      }
+    }
+  }
+};
+function buildTerminalError(event, decoded, canonicalDetails, parentRef) {
+  return {
+    type: "tool_execution_end",
+    toolCallId: event.toolCallId,
+    toolName: event.toolName,
+    result: decoded.errorMessage,
+    isError: true,
+    ..."args" in event && typeof event.args === "object" && event.args !== null ? { args: event.args } : {},
+    ...canonicalDetails !== void 0 ? { details: canonicalDetails } : {},
+    ...parentRef !== void 0 ? { parentRef } : {}
+  };
+}
+function buildTerminalSuccess(event, decoded, scoped, canonicalDetails, parentRef) {
+  const details = canonicalDetails !== void 0 ? canonicalDetails : scoped.details;
+  const result = presentToolResult({
+    toolName: event.toolName,
+    rawOutput: decoded.rawOutput,
+    isError: decoded.isError,
+    diagnostics: decoded.status === "result" ? decoded.diagnostics : void 0,
+    retainedOutput: scoped.output
+  });
+  return {
+    type: "tool_execution_end",
+    toolCallId: event.toolCallId,
+    toolName: event.toolName,
+    result,
+    isError: decoded.isError,
+    ..."args" in event && typeof event.args === "object" && event.args !== null ? { args: event.args } : {},
+    ...details !== void 0 ? { details } : {},
+    ...parentRef !== void 0 ? { parentRef } : {}
+  };
+}
+var ToolEventProjector = class {
+  progressState = new ToolProgressState();
+  projectToolUpdate(event, parentRef) {
+    let partialResult;
+    if (event.output) {
+      partialResult = this.progressState.applyOutputUpdate(event.toolCallId, event.output);
+    } else if (event.details !== void 0) {
+      partialResult = this.progressState.getRetainedOutput(event.toolCallId) ?? "";
+    }
+    if (event.details !== void 0) {
+      this.progressState.setDetails(event.toolCallId, event.details);
+    }
+    let trimStart;
+    if (event.output && "trimStart" in event.output && typeof event.output.trimStart === "number") {
+      trimStart = event.output.trimStart;
+    }
+    if (partialResult !== void 0 || trimStart !== void 0 || event.details !== void 0) {
+      return {
+        type: "tool_execution_update",
+        toolCallId: event.toolCallId,
+        toolName: event.toolName,
+        partialResult: partialResult ?? "",
+        ...trimStart !== void 0 ? { trimStart } : {},
+        ...event.details !== void 0 ? { details: event.details } : {},
+        ...parentRef !== void 0 ? { parentRef } : {}
+      };
+    }
+    return void 0;
+  }
+  projectToolEnd(event, parentRef) {
+    const decoded = decodeNativeToolEnd(event);
+    const scoped = this.progressState.take(event.toolCallId);
+    const canonicalDetails = extractCanonicalToolDetails(event);
+    if (decoded.status === "missing" || decoded.status === "invalid") {
+      const fallback = canonicalDetails !== void 0 ? canonicalDetails : scoped.details;
+      return buildTerminalError(event, decoded, fallback, parentRef);
+    }
+    return buildTerminalSuccess(event, decoded, scoped, canonicalDetails, parentRef);
+  }
+  clear() {
+    this.progressState.clear();
+  }
+  seedFromSnapshot(tools, nestedTools) {
+    this.progressState.seedFromSnapshot(tools, nestedTools);
+  }
+};
+function resolveChildRunOutcome(inputs, submissions, lastTaskError) {
+  if (inputs && submissions) {
+    let hasDoneInput = false;
+    for (const id of inputs) {
+      const sub = submissions.get(id);
+      if (sub) {
+        if (sub.status === "done") {
+          hasDoneInput = true;
+        } else if (sub.status === "unanswered") {
+          const isAborted = sub.reason === "aborted" || sub.reason === "cancelled";
+          return {
+            status: isAborted ? "interrupted" : "failed",
+            isAborted,
+            isError: !isAborted,
+            errorMessage: sub.detail || sub.reason || lastTaskError || "Task failed"
+          };
+        }
+      }
+    }
+    if (hasDoneInput) {
+      return { status: "completed" };
+    }
+  }
+  if (lastTaskError) {
+    return {
+      status: "failed",
+      isError: true,
+      errorMessage: lastTaskError
+    };
+  }
+  return { status: "completed" };
+}
+var DurableChildEventAdapter = class {
+  output;
+  parentRef;
+  conversationId;
+  toolProjector = new ToolEventProjector();
+  submissions = /* @__PURE__ */ new Map();
+  lastTaskError;
+  contentBlocks = /* @__PURE__ */ new Map();
+  activeThinkingIndex;
+  constructor(output, parentRef, conversationId) {
+    this.output = output;
+    this.parentRef = parentRef;
+    this.conversationId = conversationId;
+  }
+  closeThinkingIfNeeded() {
+    if (this.activeThinkingIndex === void 0) return;
+    const idx = this.activeThinkingIndex;
+    this.activeThinkingIndex = void 0;
+    const content = this.contentBlocks.get(idx)?.thinking ?? "";
+    this.output({
+      type: "message_update",
+      assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content },
+      parentRef: this.parentRef,
+      ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+    });
+  }
+  handleBatch(batch, current) {
+    if (batch.some((ev) => ev.type === "run_start")) {
+      this.lastTaskError = void 0;
+      this.submissions.clear();
+      this.contentBlocks.clear();
+      this.activeThinkingIndex = void 0;
+    }
+    for (const ev of batch) {
+      if (ev.type === "task_failed") {
+        this.lastTaskError = ev.message;
+      } else if (ev.type === "submission" && ev.record?.id !== void 0) {
+        this.submissions.set(ev.record.id, ev.record);
+      }
+    }
+    for (const ev of batch) {
+      this.handleEvent(ev, current);
+    }
+  }
+  handleEvent(event, _current) {
+    switch (event.type) {
+      case "message_update": {
+        for (const change of event.changes) {
+          const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
+          const thinkDelta = change.type === "thinking_delta" ? change.delta : change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking ? change.block.thinking : void 0;
+          const textDelta = change.type === "text_delta" ? change.delta : change.type === "text_start" && change.block.type === "text" && change.block.text ? change.block.text : void 0;
+          if (thinkDelta) {
+            this.activeThinkingIndex = idx;
+            const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+            block.thinking = (block.thinking ?? "") + thinkDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({
+              type: "message_update",
+              assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta },
+              parentRef: this.parentRef,
+              ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+            });
+          } else if (textDelta) {
+            this.closeThinkingIfNeeded();
+            const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+            block.text = (block.text ?? "") + textDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({
+              type: "message_update",
+              assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta },
+              parentRef: this.parentRef,
+              ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+            });
+          }
+        }
+        break;
+      }
+      case "tool_execution_start": {
+        this.closeThinkingIfNeeded();
+        this.output({
+          type: "tool_execution_start",
+          toolCallId: `${this.parentRef}:${event.toolCallId}`,
+          toolName: event.toolName,
+          args: event.args ?? {},
+          parentRef: this.parentRef,
+          ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+        });
+        break;
+      }
+      case "tool_execution_update": {
+        const update2 = this.toolProjector.projectToolUpdate(
+          { ...event, toolCallId: `${this.parentRef}:${event.toolCallId}` },
+          this.parentRef
+        );
+        if (update2) {
+          this.output({
+            ...update2,
+            ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+          });
+        }
+        break;
+      }
+      case "tool_execution_end": {
+        const end = this.toolProjector.projectToolEnd(
+          { ...event, toolCallId: `${this.parentRef}:${event.toolCallId}` },
+          this.parentRef
+        );
+        this.output({
+          ...end,
+          ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+        });
+        break;
+      }
+      case "message_end": {
+        this.closeThinkingIfNeeded();
+        const message = event.entry?.model?.[0];
+        if (message?.role === "assistant" && Array.isArray(message.content)) {
+          for (let i = 0; i < message.content.length; i++) {
+            const part = message.content[i];
+            if (part && typeof part === "object" && part.type === "text" && typeof part.text === "string") {
+              const existing = this.contentBlocks.get(i);
+              const streamed = (existing?.type === "text" ? existing.text : "") ?? "";
+              if (part.text.startsWith(streamed)) {
+                const suffix = part.text.slice(streamed.length);
+                if (suffix.length > 0) {
+                  this.output({
+                    type: "message_update",
+                    assistantMessageEvent: { type: "text_delta", contentIndex: i, delta: suffix },
+                    parentRef: this.parentRef,
+                    ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+                  });
+                  this.contentBlocks.set(i, { type: "text", text: part.text });
+                }
+              } else if (part.text.length > 0) {
+                this.output({
+                  type: "message_update",
+                  assistantMessageEvent: { type: "text_delta", contentIndex: i, delta: part.text },
+                  parentRef: this.parentRef,
+                  ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+                });
+                this.contentBlocks.set(i, { type: "text", text: part.text });
+              }
+            }
+          }
+        }
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
+        break;
+      }
+      case "run_end": {
+        this.closeThinkingIfNeeded();
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
+        this.toolProjector.clear();
+        const outcome = resolveChildRunOutcome(event.inputs, this.submissions, this.lastTaskError);
+        this.output({
+          type: "agent_end",
+          messages: [],
+          parentRef: this.parentRef,
+          ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {},
+          ...outcome.isAborted ? { aborted: true, stopReason: "aborted" } : {},
+          ...outcome.isError && !outcome.isAborted ? { stopReason: "error", ...outcome.errorMessage ? { errorMessage: outcome.errorMessage } : {} } : {}
+        });
+        break;
+      }
+      case "turn_start": {
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
+        this.output({
+          type: "turn_start",
+          parentRef: this.parentRef,
+          ...this.conversationId !== void 0 ? { conversationId: this.conversationId } : {}
+        });
+        break;
+      }
+      case "snapshot": {
+        const snap = event;
+        const prefix = (slots) => slots?.map((s) => ({ ...s, callId: `${this.parentRef}:${s.callId}` }));
+        this.toolProjector.seedFromSnapshot(prefix(snap.tools), prefix(snap.nestedTools));
+        break;
+      }
+      case "run_start": {
+        this.toolProjector.clear();
+        break;
+      }
+      default:
+        break;
+    }
+  }
+};
+function resolveToolCallArgs(callId, current) {
+  const rawLive = current.conversation.docs["pi.live"];
+  const live = typeof rawLive === "object" && rawLive !== null ? rawLive : {};
+  const rawBlocks = Array.isArray(live.generation?.message?.content) ? live.generation.message.content : [];
+  const activeCalls = rawBlocks.filter(isToolCallBlock);
+  if (activeCalls.length > 0) {
+    const matched = activeCalls.find((c) => c.id === callId || c.callId === callId);
+    if (matched?.arguments && typeof matched.arguments === "object") {
+      return matched.arguments;
+    }
+  }
+  const entries = current.conversation.entries ?? [];
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i];
+    if (isConversationEntryRecord(entry) && entry.kind === "pi.assistant" && Array.isArray(entry.model)) {
+      for (const msg of entry.model) {
+        if (Array.isArray(msg?.content)) {
+          for (const part of msg.content) {
+            if (isToolCallBlock(part) && (part.id === callId || part.callId === callId)) {
+              if (part.arguments && typeof part.arguments === "object") {
+                return part.arguments;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  const rawTools = Array.isArray(live.tools) ? live.tools : [];
+  const slot = rawTools.find((s) => {
+    if (typeof s !== "object" || s === null) return false;
+    const candidate = s;
+    const sid = candidate.callId ?? (candidate.id !== void 0 ? String(candidate.id) : void 0);
+    return sid === callId;
+  });
+  if (slot?.args && typeof slot.args === "object") {
+    return slot.args;
+  }
+  return {};
+}
+var DurableEventAdapter = class {
+  output;
+  resolveContextWindow;
+  submissions = /* @__PURE__ */ new Map();
+  activeToolNames = /* @__PURE__ */ new Map();
+  toolProjector = new ToolEventProjector();
+  lastTaskError;
+  lastAssistantMessage;
+  lastCheckpointId;
+  contentBlocks = /* @__PURE__ */ new Map();
+  activeThinkingIndex;
+  constructor(output, resolveContextWindow) {
+    this.output = output;
+    this.resolveContextWindow = resolveContextWindow;
+  }
+  closeThinkingIfNeeded() {
+    if (this.activeThinkingIndex === void 0) return;
+    const idx = this.activeThinkingIndex;
+    this.activeThinkingIndex = void 0;
+    const content = this.contentBlocks.get(idx)?.thinking ?? "";
+    this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: idx, content } });
+  }
+  resolveParentRef(parentToolCallId) {
+    if (parentToolCallId === void 0) return void 0;
+    const name = this.activeToolNames.get(parentToolCallId);
+    if (name === "codemode" || name !== void 0 && name !== "subagent" && name !== "agent_spawn" && name !== "agent_spawn_graph") return void 0;
+    return String(parentToolCallId);
+  }
+  createChildAdapter(parentCallId, conversationId) {
+    return new DurableChildEventAdapter(this.output, parentCallId, conversationId);
+  }
+  emitTerminal(type, current, inputs) {
+    this.closeThinkingIfNeeded();
+    const fault = type === "agent_end" ? findSubmissionFault(inputs, this.submissions, this.lastTaskError) : void 0;
+    const summary = resolveTurnSummary(current, this.contentBlocks, this.lastAssistantMessage, this.resolveContextWindow, fault);
+    if (summary.lastCheckpointId) this.lastCheckpointId = summary.lastCheckpointId;
+    const isAborted = summary.isAborted;
+    const isError = summary.isError && !isAborted;
+    const base2 = {
+      contextWindow: summary.cw,
+      ...this.lastCheckpointId && { providerCheckpointId: this.lastCheckpointId },
+      ...summary.cumulativeUsage && { cumulativeUsage: summary.cumulativeUsage },
+      ...isAborted && { aborted: true, stopReason: "aborted" },
+      ...isError && { stopReason: "error", ...summary.errorMessage && { errorMessage: summary.errorMessage } }
+    };
+    if (type === "turn_end") this.output({ type: "turn_end", message: summary.finalMsg, ...base2 });
+    else this.output({ type: "agent_end", messages: [summary.finalMsg], ...base2 });
+  }
+  handleBatch(batch, current) {
+    for (const ev of batch) {
+      if (ev.type === "task_failed") this.lastTaskError = ev.message;
+      else if (ev.type === "submission" && ev.record?.id !== void 0) this.submissions.set(ev.record.id, ev.record);
+    }
+    for (const ev of batch) this.handleEvent(ev, current);
+  }
+  handleEvent(event, current) {
+    switch (event.type) {
+      case "snapshot": {
+        const snap = event;
+        const entries = snap.view?.conversation?.entries ?? snap.entries ?? current?.conversation?.entries;
+        const tail = entries?.at(-1);
+        if (tail?.id !== void 0) this.lastCheckpointId = String(tail.id);
+        this.toolProjector.seedFromSnapshot(snap.tools, snap.nestedTools);
+        break;
+      }
+      case "run_start": {
+        this.lastTaskError = void 0;
+        this.contentBlocks.clear();
+        this.activeThinkingIndex = void 0;
+        this.lastAssistantMessage = void 0;
+        this.activeToolNames.clear();
+        this.toolProjector.clear();
+        this.output({ type: "agent_start" });
+        break;
+      }
+      case "turn_start": {
+        this.output({ type: "turn_start" });
+        break;
+      }
+      case "message_update": {
+        for (const change of event.changes) {
+          const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
+          const thinkDelta = change.type === "thinking_delta" ? change.delta : change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking ? change.block.thinking : void 0;
+          const textDelta = change.type === "text_delta" ? change.delta : change.type === "text_start" && change.block.type === "text" && change.block.text ? change.block.text : void 0;
+          if (thinkDelta) {
+            this.activeThinkingIndex = idx;
+            const block = this.contentBlocks.get(idx) ?? { type: "thinking", thinking: "" };
+            block.thinking = (block.thinking ?? "") + thinkDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: idx, delta: thinkDelta } });
+          } else if (textDelta) {
+            this.closeThinkingIfNeeded();
+            const block = this.contentBlocks.get(idx) ?? { type: "text", text: "" };
+            block.text = (block.text ?? "") + textDelta;
+            this.contentBlocks.set(idx, block);
+            this.output({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: idx, delta: textDelta } });
+          }
+        }
+        break;
+      }
+      case "tool_execution_start": {
+        this.closeThinkingIfNeeded();
+        this.activeToolNames.set(event.toolCallId, event.toolName);
+        const parentRef = this.resolveParentRef(event.parentToolCallId);
+        this.output({ type: "tool_execution_start", toolCallId: event.toolCallId, toolName: event.toolName, args: event.args ?? {}, ...parentRef !== void 0 ? { parentRef } : {} });
+        break;
+      }
+      case "tool_execution_update": {
+        const update2 = this.toolProjector.projectToolUpdate(event, this.resolveParentRef(event.parentToolCallId));
+        if (update2) this.output(update2);
+        break;
+      }
+      case "tool_execution_end": {
+        this.output(this.toolProjector.projectToolEnd(event, this.resolveParentRef(event.parentToolCallId)));
+        break;
+      }
+      case "message_end": {
+        this.closeThinkingIfNeeded();
+        const modelItem = event.entry?.model?.[0];
+        const msg = typeof modelItem === "object" && modelItem !== null ? modelItem : void 0;
+        if (msg?.role === "assistant") {
+          const errMsg = typeof msg.errorMessage === "string" ? msg.errorMessage : void 0;
+          const stopReason = msg.stopReason ?? (errMsg ? "error" : "stop");
+          let content = Array.isArray(msg.content) ? msg.content : (() => {
+            const blocks = [];
+            const sorted = Array.from(this.contentBlocks.keys()).sort((a, b) => a - b);
+            for (const i of sorted) {
+              const b = this.contentBlocks.get(i);
+              if (b?.type === "thinking" && b.thinking) {
+                blocks.push({ type: "thinking", thinking: b.thinking });
+              } else if (b?.type === "text" && b.text !== void 0) {
+                blocks.push({ type: "text", text: b.text });
+              }
+            }
+            return blocks.length > 0 ? blocks : [{ type: "text", text: "" }];
+          })();
+          if (content.length === 0 && (stopReason === "error" || errMsg)) {
+            content = [{ type: "text", text: errMsg ? `\u26A0\uFE0F ${errMsg}` : "An error occurred during turn generation." }];
+          }
+          this.lastAssistantMessage = {
+            role: "assistant",
+            content,
+            stopReason,
+            ...errMsg ? { errorMessage: errMsg } : {},
+            usage: msg.usage
+          };
+          this.output({ type: "message_end", message: this.lastAssistantMessage });
+          this.contentBlocks.clear();
+          this.activeThinkingIndex = void 0;
+        }
+        break;
+      }
+      case "task_failed":
+        this.lastTaskError = event.message;
+        break;
+      case "submission":
+        if (event.record?.id !== void 0) this.submissions.set(event.record.id, event.record);
+        break;
+      case "compaction_start":
+        this.output({ type: "compaction_start", reason: event.reason === "threshold" ? "threshold" : "manual" });
+        break;
+      case "compaction_end":
+        this.output({ type: "compaction_end", reason: event.reason === "threshold" ? "threshold" : "manual", aborted: false });
+        break;
+      case "turn_end":
+        this.emitTerminal("turn_end", current);
+        break;
+      case "run_end":
+        this.toolProjector.clear();
+        this.emitTerminal("agent_end", current, event.inputs);
+        break;
+      case "auto_retry_start":
+        this.output({ type: "auto_retry_start", attempt: event.attempt, ...event.at !== void 0 ? { at: event.at } : {}, ...event.errorMessage ? { errorMessage: event.errorMessage } : {} });
+        break;
+      case "auto_retry_end":
+        this.output({ type: "auto_retry_end", attempt: event.attempt });
+        break;
+    }
+  }
+};
 var BindingDoc = defineDoc3({
   kind: "durable.binding",
   version: 2,
@@ -631,8 +4288,87 @@ var BindingIndexDoc = defineDoc3({
   checkpointWhen: () => false,
   initial: () => ({ byIdentity: {}, byThreadId: {} })
 });
-var esmRequire = createRequire(import.meta.url);
-var currentDir = dirname(fileURLToPath(import.meta.url));
+function extractChildConversationId(event) {
+  if (event.type === "tool_execution_update" || event.type === "tool_execution_end") {
+    const details = extractCanonicalToolDetails(event);
+    return details?.conversationId;
+  }
+  return void 0;
+}
+async function startSubagentWatcher(harness, adapter, getCurrentView, options) {
+  const watch = options?.watchEventsFn ?? watchEvents;
+  const attached = /* @__PURE__ */ new Set();
+  const activeStreams = /* @__PURE__ */ new Map();
+  const attach = async (conversationId, parentCallId) => {
+    if (attached.has(conversationId)) return;
+    attached.add(conversationId);
+    const isChild = parentCallId !== void 0;
+    const childAdapter = isChild ? adapter.createChildAdapter(parentCallId, conversationId) : void 0;
+    try {
+      const stream = await watch(harness, conversationId, BACKGROUND_CONTEXT3);
+      activeStreams.set(conversationId, stream);
+      stream.start(async (batch) => {
+        try {
+          const view = getCurrentView();
+          if (childAdapter) {
+            childAdapter.handleBatch(batch, view);
+          } else {
+            adapter.handleBatch(batch, view);
+          }
+          for (const event of batch) {
+            const childId = extractChildConversationId(event);
+            if (childId !== void 0 && !attached.has(childId)) {
+              const callId = "toolCallId" in event ? isChild ? `${parentCallId}:${String(event.toolCallId)}` : String(event.toolCallId) : parentCallId ?? "subagent";
+              void attach(childId, callId);
+            }
+          }
+        } catch (err) {
+          console.error(`[SubagentWatcher] Batch handling error for conversation ${conversationId}:`, err);
+        }
+      });
+    } catch (err) {
+      attached.delete(conversationId);
+      console.error(`[SubagentWatcher] Failed to attach stream for conversation ${conversationId}:`, err);
+    }
+  };
+  await attach(ROOT_CONVERSATION_ID3);
+  try {
+    const index = await harness.snapshot(BindingIndexDoc, BACKGROUND_CONTEXT3);
+    if (index?.byThreadId) {
+      for (const convId of Object.values(index.byThreadId)) {
+        if (convId && convId !== ROOT_CONVERSATION_ID3) {
+          await attach(convId, "subagent");
+        }
+      }
+    }
+    const subagents = await harness.snapshot(SubagentsDoc, ROOT_CONVERSATION_ID3, BACKGROUND_CONTEXT3);
+    if (subagents?.agents) {
+      for (const agent of Object.values(subagents.agents)) {
+        if (agent?.conversationId && agent.conversationId !== ROOT_CONVERSATION_ID3) {
+          await attach(agent.conversationId, String(agent.ownerTaskId ?? "subagent"));
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[SubagentWatcher] Bootstrap child discovery warning: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  return {
+    ensureAttached: async (conversationId, parentCallId) => {
+      await attach(conversationId, parentCallId ?? "subagent");
+    },
+    close: () => {
+      for (const stream of activeStreams.values()) {
+        try {
+          stream.stop();
+        } catch (err) {
+          console.warn(`[SubagentWatcher] Stream stop warning: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+      activeStreams.clear();
+      attached.clear();
+    }
+  };
+}
 var piPathStatusSchema = z22.object({
   path: z22.string(),
   exists: z22.boolean(),
@@ -673,64 +4409,64 @@ var piDiagnosticsReportSchema = z22.object({
   status: z22.enum(["healthy", "warning", "error"]),
   summary: z22.string()
 });
-var runnerChannelSchema = z3.discriminatedUnion("kind", [
-  z3.object({ kind: z3.literal("ready"), ready: z3.boolean().optional() }).passthrough(),
-  z3.object({ kind: z3.literal("model-scope"), scopedModelIds: z3.array(z3.string()).optional(), defaultModelId: z3.string().optional() }).passthrough(),
-  z3.object({ kind: z3.literal("reply"), id: z3.union([z3.string(), z3.number()]), result: z3.unknown().optional(), error: z3.unknown().optional() }).passthrough(),
-  z3.object({
-    kind: z3.literal("tool_call_request"),
-    callId: z3.string(),
-    toolName: z3.string(),
-    arguments: z3.unknown().default({})
+var runnerChannelSchema = z222.discriminatedUnion("kind", [
+  z222.object({ kind: z222.literal("ready"), ready: z222.boolean().optional() }).passthrough(),
+  z222.object({ kind: z222.literal("model-scope"), scopedModelIds: z222.array(z222.string()).optional(), defaultModelId: z222.string().optional() }).passthrough(),
+  z222.object({ kind: z222.literal("reply"), id: z222.union([z222.string(), z222.number()]), result: z222.unknown().optional(), error: z222.unknown().optional() }).passthrough(),
+  z222.object({
+    kind: z222.literal("tool_call_request"),
+    callId: z222.string(),
+    toolName: z222.string(),
+    arguments: z222.unknown().default({})
   }).passthrough(),
-  z3.object({
-    kind: z3.literal("tool_call_response"),
-    callId: z3.string(),
-    result: z3.unknown().optional(),
-    isError: z3.boolean().optional()
+  z222.object({
+    kind: z222.literal("tool_call_response"),
+    callId: z222.string(),
+    result: z222.unknown().optional(),
+    isError: z222.boolean().optional()
   }).passthrough(),
-  z3.object({
-    kind: z3.literal("interaction_request"),
-    id: z3.union([z3.string(), z3.number()]),
-    interactionKind: z3.string().optional(),
-    dialogKind: z3.string().optional(),
-    title: z3.string().optional(),
-    message: z3.string().optional(),
-    data: z3.unknown().optional()
+  z222.object({
+    kind: z222.literal("interaction_request"),
+    id: z222.union([z222.string(), z222.number()]),
+    interactionKind: z222.string().optional(),
+    dialogKind: z222.string().optional(),
+    title: z222.string().optional(),
+    message: z222.string().optional(),
+    data: z222.unknown().optional()
   }).passthrough(),
-  z3.object({
-    kind: z3.literal("interaction_response"),
-    id: z3.union([z3.string(), z3.number()]),
-    result: z3.unknown().optional(),
-    error: z3.unknown().optional()
+  z222.object({
+    kind: z222.literal("interaction_response"),
+    id: z222.union([z222.string(), z222.number()]),
+    result: z222.unknown().optional(),
+    error: z222.unknown().optional()
   }).passthrough()
 ]);
-var runnerBridgeRequestSchema = z3.object({
-  kind: z3.literal("request"),
-  id: z3.union([z3.string(), z3.number()]),
-  method: z3.string(),
-  params: z3.unknown().optional()
+var runnerBridgeRequestSchema = z222.object({
+  kind: z222.literal("request"),
+  id: z222.union([z222.string(), z222.number()]),
+  method: z222.string(),
+  params: z222.unknown().optional()
 }).passthrough();
 var knownChannelKinds = new Set(runnerChannelSchema.options.map((schema) => schema.shape.kind.value));
-var conversationIdSchema = z4.union([z4.number().int().positive(), z4.string().regex(/^[1-9]\d*$/)]);
-var cumulativeUsageSchema = z4.object({
-  totalTokens: z4.number(),
-  inputTokens: z4.number(),
-  outputTokens: z4.number(),
-  cachedInputTokens: z4.number().optional(),
-  cacheWriteInputTokens: z4.number().optional()
+var conversationIdSchema = z32.union([z32.number().int().positive(), z32.string().regex(/^[1-9]\d*$/)]);
+var cumulativeUsageSchema = z32.object({
+  totalTokens: z32.number(),
+  inputTokens: z32.number(),
+  outputTokens: z32.number(),
+  cachedInputTokens: z32.number().optional(),
+  cacheWriteInputTokens: z32.number().optional()
 }).passthrough();
-var wireContextSchema = z4.object({
-  parentRef: z4.string().optional(),
+var wireContextSchema = z32.object({
+  parentRef: z32.string().optional(),
   conversationId: conversationIdSchema.optional(),
-  providerCheckpointId: z4.string().optional(),
+  providerCheckpointId: z32.string().optional(),
   cumulativeUsage: cumulativeUsageSchema.optional(),
-  aborted: z4.boolean().optional(),
-  stopReason: z4.string().optional(),
-  errorMessage: z4.string().optional()
+  aborted: z32.boolean().optional(),
+  stopReason: z32.string().optional(),
+  errorMessage: z32.string().optional()
 }).passthrough();
-var runnerCommandSchema = z5.object({
-  type: z5.enum([
+var runnerCommandSchema = z4.object({
+  type: z4.enum([
     "prompt",
     "steer",
     "abort",
@@ -748,90 +4484,90 @@ var runnerCommandSchema = z5.object({
     "host_tool_result",
     "host_interaction_response"
   ]),
-  id: z5.string().optional(),
-  message: z5.string().optional(),
-  images: z5.array(z5.object({ type: z5.literal("image"), data: z5.string(), mimeType: z5.string() })).optional(),
-  streamingBehavior: z5.enum(["steer", "followUp"]).optional(),
-  provider: z5.string().optional(),
-  modelId: z5.string().optional(),
-  instructions: z5.string().optional(),
-  level: z5.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
+  id: z4.string().optional(),
+  message: z4.string().optional(),
+  images: z4.array(z4.object({ type: z4.literal("image"), data: z4.string(), mimeType: z4.string() })).optional(),
+  streamingBehavior: z4.enum(["steer", "followUp"]).optional(),
+  provider: z4.string().optional(),
+  modelId: z4.string().optional(),
+  instructions: z4.string().optional(),
+  level: z4.enum(["off", "minimal", "low", "medium", "high", "xhigh"]).optional(),
   conversationId: conversationIdSchema.optional(),
-  threadId: z5.string().optional(),
-  parentThreadId: z5.string().optional(),
-  sessionId: z5.string().optional(),
-  policyRecord: z5.unknown().optional(),
-  taskId: z5.number().int().positive().optional(),
-  sourceDir: z5.string().optional(),
-  targetDir: z5.string().optional(),
-  checkpointId: z5.union([z5.number(), z5.string()]).optional(),
-  sourceProviderThreadId: z5.string().optional(),
-  targetProviderThreadId: z5.string().optional(),
-  callId: z5.string().optional(),
-  result: z5.unknown().optional(),
-  isError: z5.boolean().optional(),
-  dialogKind: z5.string().optional(),
-  interactionId: z5.string().optional()
+  threadId: z4.string().optional(),
+  parentThreadId: z4.string().optional(),
+  sessionId: z4.string().optional(),
+  policyRecord: z4.unknown().optional(),
+  taskId: z4.number().int().positive().optional(),
+  sourceDir: z4.string().optional(),
+  targetDir: z4.string().optional(),
+  checkpointId: z4.union([z4.number(), z4.string()]).optional(),
+  sourceProviderThreadId: z4.string().optional(),
+  targetProviderThreadId: z4.string().optional(),
+  callId: z4.string().optional(),
+  result: z4.unknown().optional(),
+  isError: z4.boolean().optional(),
+  dialogKind: z4.string().optional(),
+  interactionId: z4.string().optional()
 }).passthrough();
 var knownCommandTypes = new Set(runnerCommandSchema.shape.type.options);
-var runnerRequestHeaderSchema = z5.object({ type: z5.string().min(1), id: z5.string().optional() }).passthrough();
-var number = z6.number().optional();
-var assistantUsageSchema = z6.object({
+var runnerRequestHeaderSchema = z4.object({ type: z4.string().min(1), id: z4.string().optional() }).passthrough();
+var number = z5.number().optional();
+var assistantUsageSchema = z5.object({
   input: number,
   output: number,
   cacheRead: number,
   cacheWrite: number,
   totalTokens: number,
-  cost: z6.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
+  cost: z5.object({ input: number, output: number, cacheRead: number, cacheWrite: number, total: number }).passthrough().optional()
 }).passthrough();
-var assistantMessageSchema = z6.object({
-  role: z6.literal("assistant"),
-  content: z6.array(z6.discriminatedUnion("type", [
-    z6.object({ type: z6.literal("text"), text: z6.string() }),
-    z6.object({ type: z6.literal("thinking"), thinking: z6.string() }),
-    z6.object({ type: z6.literal("toolCall"), id: z6.string(), name: z6.string(), arguments: z6.record(z6.string(), z6.unknown()) })
+var assistantMessageSchema = z5.object({
+  role: z5.literal("assistant"),
+  content: z5.array(z5.discriminatedUnion("type", [
+    z5.object({ type: z5.literal("text"), text: z5.string() }),
+    z5.object({ type: z5.literal("thinking"), thinking: z5.string() }),
+    z5.object({ type: z5.literal("toolCall"), id: z5.string(), name: z5.string(), arguments: z5.record(z5.string(), z5.unknown()) })
   ])),
-  stopReason: z6.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
-  errorMessage: z6.string().optional(),
+  stopReason: z5.enum(["stop", "toolUse", "length", "aborted", "error"]).optional(),
+  errorMessage: z5.string().optional(),
   usage: assistantUsageSchema.optional()
 }).passthrough();
-var contentIndex = z6.number().int().nonnegative();
-var update = z6.discriminatedUnion("type", [
-  z6.object({ type: z6.literal("thinking_delta"), contentIndex, delta: z6.string() }).passthrough(),
-  z6.object({ type: z6.literal("thinking_end"), contentIndex, content: z6.string() }).passthrough(),
-  z6.object({ type: z6.literal("text_delta"), contentIndex, delta: z6.string() }).passthrough(),
-  z6.object({ type: z6.literal("thinking_start"), contentIndex }).passthrough(),
-  z6.object({ type: z6.literal("text_start"), contentIndex }).passthrough(),
-  z6.object({ type: z6.literal("text_end"), contentIndex, content: z6.string() }).passthrough()
+var contentIndex = z5.number().int().nonnegative();
+var update = z5.discriminatedUnion("type", [
+  z5.object({ type: z5.literal("thinking_delta"), contentIndex, delta: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("thinking_end"), contentIndex, content: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("text_delta"), contentIndex, delta: z5.string() }).passthrough(),
+  z5.object({ type: z5.literal("thinking_start"), contentIndex }).passthrough(),
+  z5.object({ type: z5.literal("text_start"), contentIndex }).passthrough(),
+  z5.object({ type: z5.literal("text_end"), contentIndex, content: z5.string() }).passthrough()
 ]);
-var messageUpdateSchema = wireContextSchema.extend({ type: z6.literal("message_update"), assistantMessageEvent: update });
+var messageUpdateSchema = wireContextSchema.extend({ type: z5.literal("message_update"), assistantMessageEvent: update });
 var messageSchemas = [
   messageUpdateSchema,
-  wireContextSchema.extend({ type: z6.literal("message_end"), message: assistantMessageSchema })
+  wireContextSchema.extend({ type: z5.literal("message_end"), message: assistantMessageSchema })
 ];
 var tool = wireContextSchema.extend({
-  toolCallId: z7.union([z7.string().min(1), z7.number().int().nonnegative()]),
-  toolName: z7.string().min(1)
+  toolCallId: z6.union([z6.string().min(1), z6.number().int().nonnegative()]),
+  toolName: z6.string().min(1)
 });
-var toolStartSchema = tool.extend({ type: z7.literal("tool_execution_start"), args: z7.record(z7.string(), z7.unknown()) });
+var toolStartSchema = tool.extend({ type: z6.literal("tool_execution_start"), args: z6.record(z6.string(), z6.unknown()) });
 var toolUpdateSchema = tool.extend({
-  type: z7.literal("tool_execution_update"),
-  partialResult: z7.string(),
-  trimStart: z7.number().optional(),
-  details: z7.unknown().optional()
+  type: z6.literal("tool_execution_update"),
+  partialResult: z6.string(),
+  trimStart: z6.number().optional(),
+  details: z6.unknown().optional()
 });
 var toolEndSchema = tool.extend({
-  type: z7.literal("tool_execution_end"),
-  result: z7.string(),
-  isError: z7.boolean(),
-  args: z7.record(z7.string(), z7.unknown()).optional(),
-  details: z7.unknown().optional()
+  type: z6.literal("tool_execution_end"),
+  result: z6.string(),
+  isError: z6.boolean(),
+  args: z6.record(z6.string(), z6.unknown()).optional(),
+  details: z6.unknown().optional()
 });
 var hostToolCallSchema = wireContextSchema.extend({
-  type: z7.literal("host_tool_call"),
-  callId: z7.string().min(1),
-  toolName: z7.string().min(1),
-  arguments: z7.record(z7.string(), z7.unknown()).default({})
+  type: z6.literal("host_tool_call"),
+  callId: z6.string().min(1),
+  toolName: z6.string().min(1),
+  arguments: z6.record(z6.string(), z6.unknown()).default({})
 });
 var toolSchemas = [toolStartSchema, toolUpdateSchema, toolEndSchema, hostToolCallSchema];
 var MAX_LIVE_NODES = 512;
@@ -840,110 +4576,110 @@ var MAX_LABEL_LENGTH = 160;
 var MAX_PREVIEW_LENGTH = 500;
 var MAX_SNAPSHOT_BYTES = 1048576;
 var TASK_OUTCOMES = ["completed", "failed", "aborted", "faulted", "orphaned"];
-var taskOutcomeSchema = z8.enum(TASK_OUTCOMES);
+var taskOutcomeSchema = z7.enum(TASK_OUTCOMES);
 var LIVE_TASK_STATUSES = ["pending", "running", "waiting", "sleeping", "completing"];
-var liveTaskStatusSchema = z8.enum(LIVE_TASK_STATUSES);
+var liveTaskStatusSchema = z7.enum(LIVE_TASK_STATUSES);
 var BLOCKED_REASONS = ["missing_task", "task_too_old", "migration_failed", "restart_limit"];
-var blockedReasonSchema = z8.enum(BLOCKED_REASONS);
-var graphScopeSchema = z8.object({
-  sessionId: z8.string().min(1).max(256),
-  rootConversationId: z8.string().min(1).max(64),
-  buildId: z8.string().min(1).max(64)
+var blockedReasonSchema = z7.enum(BLOCKED_REASONS);
+var graphScopeSchema = z7.object({
+  sessionId: z7.string().min(1).max(256),
+  rootConversationId: z7.string().min(1).max(64),
+  buildId: z7.string().min(1).max(64)
 });
-var graphObservationSchema = z8.object({
-  epoch: z8.string().min(1).max(64),
-  revision: z8.number().int().nonnegative(),
-  observedAt: z8.number().int().positive(),
-  completeness: z8.enum(["complete", "limited"])
+var graphObservationSchema = z7.object({
+  epoch: z7.string().min(1).max(64),
+  revision: z7.number().int().nonnegative(),
+  observedAt: z7.number().int().positive(),
+  completeness: z7.enum(["complete", "limited"])
 });
-var runtimeTaskStateSchema = z8.discriminatedUnion("status", [
-  z8.object({
-    status: z8.literal("pending"),
-    phase: z8.string().max(64).optional()
+var runtimeTaskStateSchema = z7.discriminatedUnion("status", [
+  z7.object({
+    status: z7.literal("pending"),
+    phase: z7.string().max(64).optional()
   }),
-  z8.object({
-    status: z8.literal("running"),
-    phase: z8.string().max(64).optional()
+  z7.object({
+    status: z7.literal("running"),
+    phase: z7.string().max(64).optional()
   }),
-  z8.object({
-    status: z8.literal("waiting"),
-    phase: z8.string().max(64).optional(),
-    on: z8.array(z8.number().int().positive()).max(MAX_LIVE_NODES),
-    policy: z8.enum(["failFast", "allSettled", "all", "first"]).optional()
+  z7.object({
+    status: z7.literal("waiting"),
+    phase: z7.string().max(64).optional(),
+    on: z7.array(z7.number().int().positive()).max(MAX_LIVE_NODES),
+    policy: z7.enum(["failFast", "allSettled", "all", "first"]).optional()
   }),
-  z8.object({
-    status: z8.literal("sleeping"),
-    phase: z8.string().max(64).optional(),
-    until: z8.number().int().positive()
+  z7.object({
+    status: z7.literal("sleeping"),
+    phase: z7.string().max(64).optional(),
+    until: z7.number().int().positive()
   }),
-  z8.object({
-    status: z8.literal("completing"),
+  z7.object({
+    status: z7.literal("completing"),
     outcome: taskOutcomeSchema
   })
 ]);
-var taskTokensUsageSchema = z8.object({
-  total: z8.number().int().nonnegative().optional(),
-  input: z8.number().int().nonnegative().optional(),
-  output: z8.number().int().nonnegative().optional(),
-  reasoning: z8.number().int().nonnegative().optional(),
-  cacheRead: z8.number().int().nonnegative().optional()
+var taskTokensUsageSchema = z7.object({
+  total: z7.number().int().nonnegative().optional(),
+  input: z7.number().int().nonnegative().optional(),
+  output: z7.number().int().nonnegative().optional(),
+  reasoning: z7.number().int().nonnegative().optional(),
+  cacheRead: z7.number().int().nonnegative().optional()
 });
-var runtimeTaskNodeSchema = z8.object({
-  id: z8.number().int().positive(),
-  kind: z8.string().min(1).max(64),
-  conversationId: z8.number().int().positive(),
-  owner: z8.number().int().positive().optional(),
-  background: z8.boolean(),
-  abortRequested: z8.boolean(),
+var runtimeTaskNodeSchema = z7.object({
+  id: z7.number().int().positive(),
+  kind: z7.string().min(1).max(64),
+  conversationId: z7.number().int().positive(),
+  owner: z7.number().int().positive().optional(),
+  background: z7.boolean(),
+  abortRequested: z7.boolean(),
   state: runtimeTaskStateSchema,
   blocked: blockedReasonSchema.optional(),
-  label: z8.string().min(1).max(MAX_LABEL_LENGTH),
-  startedAt: z8.number().int().positive().optional(),
-  endedAt: z8.number().int().positive().optional(),
-  durationMs: z8.number().int().nonnegative().optional(),
-  toolName: z8.string().max(64).optional(),
-  targetHint: z8.string().max(128).optional(),
-  model: z8.object({
-    provider: z8.string().max(64),
-    modelId: z8.string().max(128)
+  label: z7.string().min(1).max(MAX_LABEL_LENGTH),
+  startedAt: z7.number().int().positive().optional(),
+  endedAt: z7.number().int().positive().optional(),
+  durationMs: z7.number().int().nonnegative().optional(),
+  toolName: z7.string().max(64).optional(),
+  targetHint: z7.string().max(128).optional(),
+  model: z7.object({
+    provider: z7.string().max(64),
+    modelId: z7.string().max(128)
   }).optional(),
-  thinkingLevel: z8.string().max(32).optional(),
+  thinkingLevel: z7.string().max(32).optional(),
   tokens: taskTokensUsageSchema.optional()
 });
-var runtimeConversationNodeSchema = z8.object({
-  id: z8.number().int().positive(),
-  owner: z8.object({
-    conversationId: z8.number().int().positive(),
-    taskId: z8.number().int().positive()
+var runtimeConversationNodeSchema = z7.object({
+  id: z7.number().int().positive(),
+  owner: z7.object({
+    conversationId: z7.number().int().positive(),
+    taskId: z7.number().int().positive()
   }).optional(),
-  parent: z8.object({
-    conversationId: z8.number().int().positive(),
-    at: z8.number().int().positive()
+  parent: z7.object({
+    conversationId: z7.number().int().positive(),
+    at: z7.number().int().positive()
   }).optional()
 });
-var runtimeTaskReceiptSchema = z8.object({
-  taskId: z8.number().int().positive(),
-  conversationId: z8.number().int().positive(),
-  owner: z8.number().int().positive().optional(),
-  kind: z8.string().min(1).max(64),
+var runtimeTaskReceiptSchema = z7.object({
+  taskId: z7.number().int().positive(),
+  conversationId: z7.number().int().positive(),
+  owner: z7.number().int().positive().optional(),
+  kind: z7.string().min(1).max(64),
   outcome: taskOutcomeSchema,
-  isToolError: z8.boolean().optional(),
-  error: z8.object({
-    message: z8.string().max(1024),
-    code: z8.string().max(64).optional()
+  isToolError: z7.boolean().optional(),
+  error: z7.object({
+    message: z7.string().max(1024),
+    code: z7.string().max(64).optional()
   }).optional(),
-  endedAt: z8.number().int().positive(),
-  durationMs: z8.number().int().nonnegative().optional(),
-  preview: z8.string().max(MAX_PREVIEW_LENGTH).optional(),
-  toolName: z8.string().max(64).optional(),
-  targetHint: z8.string().max(128).optional(),
-  startedAt: z8.number().int().positive().optional(),
+  endedAt: z7.number().int().positive(),
+  durationMs: z7.number().int().nonnegative().optional(),
+  preview: z7.string().max(MAX_PREVIEW_LENGTH).optional(),
+  toolName: z7.string().max(64).optional(),
+  targetHint: z7.string().max(128).optional(),
+  startedAt: z7.number().int().positive().optional(),
   tokens: taskTokensUsageSchema.optional()
 });
-var runtimeGraphStatsSchema = z8.object({
-  liveCount: z8.number().int().nonnegative(),
-  terminalCount: z8.number().int().nonnegative(),
-  totalCount: z8.number().int().nonnegative()
+var runtimeGraphStatsSchema = z7.object({
+  liveCount: z7.number().int().nonnegative(),
+  terminalCount: z7.number().int().nonnegative(),
+  totalCount: z7.number().int().nonnegative()
 });
 function getUtf8ByteLength(str) {
   if (typeof Buffer !== "undefined") {
@@ -964,15 +4700,15 @@ function getUtf8ByteLength(str) {
   }
   return bytes;
 }
-var runtimeGraphSnapshotSchema = z8.object({
-  version: z8.literal(1),
+var runtimeGraphSnapshotSchema = z7.object({
+  version: z7.literal(1),
   scope: graphScopeSchema,
   observation: graphObservationSchema,
-  nodes: z8.record(z8.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
+  nodes: z7.record(z7.string(), runtimeTaskNodeSchema).refine((nodes) => Object.keys(nodes).length <= MAX_LIVE_NODES, {
     message: `Live nodes exceed maximum of ${MAX_LIVE_NODES}`
   }),
-  conversations: z8.record(z8.string(), runtimeConversationNodeSchema),
-  receipts: z8.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
+  conversations: z7.record(z7.string(), runtimeConversationNodeSchema),
+  receipts: z7.array(runtimeTaskReceiptSchema).max(MAX_RECEIPTS),
   stats: runtimeGraphStatsSchema
 }).refine(
   (snapshot) => {
@@ -986,593 +4722,953 @@ var runtimeGraphSnapshotSchema = z8.object({
   { message: "Runtime graph snapshot exceeds 1 MiB payload limit" }
 );
 var runtimeGraphSnapshotEventSchema = wireContextSchema.extend({
-  type: z9.literal("runtime_graph_snapshot"),
+  type: z8.literal("runtime_graph_snapshot"),
   snapshot: runtimeGraphSnapshotSchema
 });
 var hostInteractionRequestSchema = wireContextSchema.extend({
-  type: z9.literal("host_interaction_request"),
-  id: z9.union([z9.string().min(1), z9.number().int()]),
-  interactionId: z9.string().min(1).optional(),
-  dialogKind: z9.string().min(1),
-  interactionKind: z9.string().optional(),
-  title: z9.string().optional(),
-  message: z9.string().optional(),
-  data: z9.unknown().optional()
+  type: z8.literal("host_interaction_request"),
+  id: z8.union([z8.string().min(1), z8.number().int()]),
+  interactionId: z8.string().min(1).optional(),
+  dialogKind: z8.string().min(1),
+  interactionKind: z8.string().optional(),
+  title: z8.string().optional(),
+  message: z8.string().optional(),
+  data: z8.unknown().optional()
+});
+var turnCompleteSchema = wireContextSchema.extend({
+  type: z8.literal("turn_complete"),
+  status: z8.enum(["completed", "aborted", "error"]),
+  requestId: z8.string().min(1),
+  error: z8.string().optional()
 });
 var lifecycleSchemas = [
-  wireContextSchema.extend({ type: z9.literal("agent_start") }),
-  wireContextSchema.extend({ type: z9.literal("context_window"), usedTokens: z9.number().nullable().optional(), contextWindow: z9.number() }),
-  wireContextSchema.extend({ type: z9.literal("turn_start") }),
-  wireContextSchema.extend({ type: z9.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z9.number().optional() }),
-  wireContextSchema.extend({ type: z9.literal("agent_end"), messages: z9.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z9.number().optional() }),
-  wireContextSchema.extend({ type: z9.literal("compaction_start"), reason: z9.enum(["manual", "threshold"]) }),
-  wireContextSchema.extend({ type: z9.literal("compaction_end"), reason: z9.enum(["manual", "threshold"]), aborted: z9.boolean() }),
-  wireContextSchema.extend({ type: z9.literal("auto_retry_start"), attempt: z9.number(), at: z9.number().optional() }),
-  wireContextSchema.extend({ type: z9.literal("auto_retry_end"), attempt: z9.number(), success: z9.boolean().optional() }),
+  wireContextSchema.extend({ type: z8.literal("agent_start") }),
+  wireContextSchema.extend({ type: z8.literal("context_window"), usedTokens: z8.number().nullable().optional(), contextWindow: z8.number() }),
+  wireContextSchema.extend({ type: z8.literal("turn_start") }),
+  wireContextSchema.extend({ type: z8.literal("turn_end"), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("agent_end"), messages: z8.array(assistantMessageSchema), message: assistantMessageSchema.optional(), contextWindow: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("compaction_start"), reason: z8.enum(["manual", "threshold"]) }),
+  wireContextSchema.extend({ type: z8.literal("compaction_end"), reason: z8.enum(["manual", "threshold"]), aborted: z8.boolean() }),
+  wireContextSchema.extend({ type: z8.literal("auto_retry_start"), attempt: z8.number(), at: z8.number().optional() }),
+  wireContextSchema.extend({ type: z8.literal("auto_retry_end"), attempt: z8.number(), success: z8.boolean().optional() }),
   runtimeGraphSnapshotEventSchema,
-  hostInteractionRequestSchema
+  hostInteractionRequestSchema,
+  turnCompleteSchema
 ];
-var sessionStatsSchema = z9.object({ contextUsage: z9.object({ tokens: z9.number().nullable(), contextWindow: z9.number() }) });
-var runnerEventSchema = z10.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
+var sessionStatsSchema = z8.object({ contextUsage: z8.object({ tokens: z8.number().nullable(), contextWindow: z8.number() }) });
+var runnerEventSchema = z9.discriminatedUnion("type", [...messageSchemas, ...toolSchemas, ...lifecycleSchemas]);
 var knownEventTypes = new Set(runnerEventSchema.options.map((schema) => schema.shape.type.value));
-var base = z11.object({ id: z11.string().optional(), type: z11.literal("response"), command: z11.string().min(1) });
-var runnerResponseSchema = z11.discriminatedUnion("success", [
-  base.extend({ success: z11.literal(true), data: z11.unknown().optional() }).passthrough(),
-  base.extend({ success: z11.literal(false), error: z11.string() }).passthrough()
+var base = z10.object({ id: z10.string().optional(), type: z10.literal("response"), command: z10.string().min(1) });
+var runnerResponseSchema = z10.discriminatedUnion("success", [
+  base.extend({ success: z10.literal(true), data: z10.unknown().optional() }).passthrough(),
+  base.extend({ success: z10.literal(false), error: z10.string() }).passthrough()
 ]);
-var SessionCoordinator = class {
-  store;
-  modelProvider;
-  executionEnv;
-  resourceLoader;
-  isStarted = false;
-  isClosed = false;
-  isAborted = false;
+function normalizeUsage(raw) {
+  if (!raw || typeof raw !== "object") return void 0;
+  const u = raw;
+  const total = typeof u.totalTokens === "number" ? u.totalTokens : typeof u.total === "number" ? u.total : void 0;
+  const input = typeof u.input === "number" ? u.input : typeof u.inputTokens === "number" ? u.inputTokens : void 0;
+  const output = typeof u.output === "number" ? u.output : typeof u.outputTokens === "number" ? u.outputTokens : void 0;
+  const reasoning = typeof u.reasoning === "number" ? u.reasoning : void 0;
+  const cacheRead = typeof u.cacheRead === "number" ? u.cacheRead : typeof u.cachedInputTokens === "number" ? u.cachedInputTokens : void 0;
+  const computedTotal = total ?? (input ?? 0) + (output ?? 0);
+  if (computedTotal <= 0 && (output ?? 0) <= 0) return void 0;
+  return {
+    total: computedTotal,
+    input,
+    output,
+    reasoning,
+    cacheRead
+  };
+}
+function extractLiveTokens(node, current) {
+  if (node.kind !== "pi.generation") return void 0;
+  const cur = current;
+  if (!cur || typeof cur !== "object") return void 0;
+  const liveDoc = cur?.conversation?.docs?.["pi.live"];
+  if (liveDoc?.generation?.message?.usage) {
+    const usage = normalizeUsage(liveDoc.generation.message.usage);
+    if (usage) return usage;
+  }
+  return void 0;
+}
+function extractTerminalTokens(task, current, recentEntries) {
+  if (task.kind !== "pi.generation") return void 0;
+  const state = task.state;
+  const outcome = state?.outcome;
+  const entryId = outcome?.result?.entryId;
+  if (entryId === void 0) return void 0;
+  const entryIdNum = Number(entryId);
+  if (recentEntries) {
+    const rawEntry = recentEntries.get(entryIdNum);
+    const usage = rawEntry?.record?.model?.[0]?.usage ?? rawEntry?.model?.[0]?.usage;
+    if (usage) {
+      const normalized = normalizeUsage(usage);
+      if (normalized) return normalized;
+    }
+  }
+  const cur = current;
+  const entries = cur?.conversation?.entries;
+  if (Array.isArray(entries)) {
+    const target = entries.find((e) => Number(e?.id) === entryIdNum);
+    if (target?.model?.[0]?.usage) {
+      return normalizeUsage(target.model[0].usage);
+    }
+  }
+  return void 0;
+}
+var MAX_ERROR_MESSAGE_LENGTH = 1024;
+var MAX_ERROR_CODE_LENGTH = 64;
+var RuntimeGraphReceiptsCollector = class {
+  capacity;
+  receipts = [];
+  knownTaskIds = /* @__PURE__ */ new Set();
+  pendingEntryIds = /* @__PURE__ */ new Map();
+  constructor(capacity = MAX_RECEIPTS) {
+    this.capacity = capacity;
+  }
+  recordTerminal(task, options) {
+    const state = task.state;
+    if (state.status !== "terminal") {
+      return void 0;
+    }
+    const taskId = Number(task.id);
+    let outcome = "completed";
+    let error;
+    const taskOutcome = typeof state.outcome === "object" && state.outcome !== null && "status" in state.outcome ? state.outcome : { status: String(state.outcome ?? "completed") };
+    outcome = taskOutcome.status ?? "completed";
+    if ("error" in taskOutcome && taskOutcome.error !== void 0 && taskOutcome.error !== null) {
+      let rawMsg = "Task execution failed";
+      let rawCode;
+      if (typeof taskOutcome.error === "object") {
+        const err = taskOutcome.error;
+        if (err.message !== void 0 && err.message !== null) rawMsg = String(err.message);
+        if (err.code !== void 0 && err.code !== null) rawCode = String(err.code);
+      } else {
+        rawMsg = String(taskOutcome.error);
+      }
+      error = {
+        message: rawMsg.length > MAX_ERROR_MESSAGE_LENGTH ? rawMsg.slice(0, MAX_ERROR_MESSAGE_LENGTH) : rawMsg,
+        code: rawCode ? rawCode.length > MAX_ERROR_CODE_LENGTH ? rawCode.slice(0, MAX_ERROR_CODE_LENGTH) : rawCode : void 0
+      };
+    } else if ("reason" in taskOutcome && taskOutcome.reason !== void 0 && taskOutcome.reason !== null) {
+      const rawReason = String(taskOutcome.reason);
+      error = {
+        message: rawReason.length > MAX_ERROR_MESSAGE_LENGTH ? rawReason.slice(0, MAX_ERROR_MESSAGE_LENGTH) : rawReason
+      };
+    }
+    let preview = options?.preview;
+    let toolName = options?.toolName;
+    let targetHint = options?.targetHint;
+    if (preview && preview.length > MAX_PREVIEW_LENGTH) {
+      preview = preview.slice(0, MAX_PREVIEW_LENGTH);
+    }
+    if (toolName && toolName.length > 64) {
+      toolName = toolName.slice(0, 64);
+    }
+    if (targetHint && targetHint.length > 128) {
+      targetHint = targetHint.slice(0, 128);
+    }
+    if (!preview && toolName) {
+      preview = targetHint ? `${toolName}: ${targetHint}` : toolName;
+    }
+    const startedAt = options?.startedAt ?? (task.startedAt !== void 0 && task.startedAt !== null ? Number(task.startedAt) : void 0);
+    const durationMs = options?.durationMs ?? (task.endedAt && startedAt && task.endedAt >= startedAt ? task.endedAt - startedAt : void 0);
+    const owner = task.owner !== void 0 && task.owner !== null && Number(task.owner) > 0 ? Number(task.owner) : void 0;
+    const receipt = {
+      taskId,
+      conversationId: Number(task.conversationId),
+      owner,
+      kind: task.kind,
+      outcome,
+      isToolError: options?.isToolError,
+      error,
+      endedAt: task.endedAt ?? Date.now(),
+      startedAt,
+      durationMs,
+      preview,
+      toolName,
+      targetHint,
+      tokens: options?.tokens
+    };
+    if (options?.entryId && !options.tokens) {
+      this.pendingEntryIds.set(taskId, options.entryId);
+    } else if (options?.tokens) {
+      this.pendingEntryIds.delete(taskId);
+    }
+    this.pushReceipt(receipt);
+    return receipt;
+  }
+  hydrateFromScan(tasks) {
+    for (const task of tasks) {
+      if (task.state.status === "terminal") {
+        this.recordTerminal(task);
+      }
+    }
+  }
+  getReceipts() {
+    return [...this.receipts];
+  }
+  hasReceipt(taskId) {
+    return this.knownTaskIds.has(taskId);
+  }
+  updateReceiptTokens(taskId, tokens) {
+    const existingIndex = this.receipts.findIndex((r) => r.taskId === taskId);
+    if (existingIndex !== -1) {
+      this.receipts[existingIndex] = { ...this.receipts[existingIndex], tokens };
+      this.pendingEntryIds.delete(taskId);
+      return true;
+    }
+    return false;
+  }
+  backfillTokensFromEntries(entries) {
+    if (this.pendingEntryIds.size === 0 || !Array.isArray(entries)) return false;
+    let updated = false;
+    for (const [taskId, entryId] of this.pendingEntryIds) {
+      const target = entries.find((e) => Number(e?.id) === entryId);
+      const usage = target?.model?.[0]?.usage ?? target?.record?.model?.[0]?.usage;
+      if (usage) {
+        const tokens = normalizeUsage(usage);
+        if (tokens && this.updateReceiptTokens(taskId, tokens)) {
+          updated = true;
+        }
+      }
+    }
+    return updated;
+  }
+  pushReceipt(receipt) {
+    const existingIndex = this.receipts.findIndex((r) => r.taskId === receipt.taskId);
+    if (existingIndex !== -1) {
+      this.receipts[existingIndex] = receipt;
+      return;
+    }
+    if (this.receipts.length >= this.capacity) {
+      const evicted = this.receipts.shift();
+      if (evicted) {
+        this.knownTaskIds.delete(evicted.taskId);
+      }
+    }
+    this.receipts.push(receipt);
+    this.knownTaskIds.add(receipt.taskId);
+  }
+};
+var RuntimeGraphConversations = class {
+  known = /* @__PURE__ */ new Map();
+  constructor(rootConversationId) {
+    this.known.set(rootConversationId, { id: Number(rootConversationId) });
+  }
+  recordFromLiveNode(convId, id, ownedConversations) {
+    const convStr = String(convId);
+    if (!this.known.has(convStr)) {
+      this.known.set(convStr, { id: convId });
+    }
+    for (const ownedConvId of ownedConversations ?? []) {
+      const cid = Number(ownedConvId);
+      this.known.set(String(cid), {
+        id: cid,
+        owner: { conversationId: convId, taskId: id }
+      });
+    }
+  }
+  recordConversation(conv) {
+    const cid = Number(conv.id);
+    const existing = this.known.get(String(cid)) ?? { id: cid };
+    const owner = conv.owner ? { conversationId: Number(conv.owner.conversationId), taskId: Number(conv.owner.taskId) } : existing.owner;
+    const parent = conv.parent ? { conversationId: Number(conv.parent.conversationId), at: Number(conv.parent.at) } : existing.parent;
+    this.known.set(String(cid), { id: cid, ...owner ? { owner } : {}, ...parent ? { parent } : {} });
+  }
+  recordLogicalOwner(childId, parentConversationId, ownerTaskId) {
+    const cidStr = String(childId);
+    const existing = this.known.get(cidStr) ?? { id: childId };
+    this.known.set(cidStr, {
+      ...existing,
+      owner: { conversationId: parentConversationId, taskId: ownerTaskId }
+    });
+  }
+  snapshot() {
+    return Object.fromEntries(this.known);
+  }
+};
+var MAX_NAME = 48;
+var MAX_TARGET_HINT = 128;
+var MAX_TASK_NAMES = 512;
+var KIND_NAMES = {
+  "pi.generation": "assistant turn",
+  "pi.compaction": "compacting context"
+};
+var ARG_KEYS = ["command", "task", "path", "file_path", "pattern", "query", "url", "prompt"];
+function clip(text, max = MAX_NAME) {
+  const oneLine = text.replace(/\s+/g, " ").trim();
+  return oneLine.length <= max ? oneLine : `${oneLine.slice(0, max - 1)}\u2026`;
+}
+function sanitizeTargetHint(raw, max = MAX_TARGET_HINT) {
+  let s = raw.replace(/\s+/g, " ").trim();
+  s = s.replace(/bearer\s+[a-zA-Z0-9_\-\.]+/gi, "Bearer [redacted]");
+  s = s.replace(/(ghp|gho|ghu|ghs|ghr|sec)_[a-zA-Z0-9]+/g, "[redacted]");
+  s = s.replace(/(api[_-]?key|token|secret|password|passwd|auth)\s*[:=]\s*[^\s&]+/gi, "$1=[redacted]");
+  return clip(s, max);
+}
+function argumentHint(args) {
+  if (typeof args !== "object" || args === null) return void 0;
+  const record = args;
+  for (const key of ARG_KEYS) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim() !== "") return sanitizeTargetHint(value);
+  }
+  return void 0;
+}
+function liveOf(view) {
+  const raw = view?.conversation?.docs?.["pi.live"];
+  return typeof raw === "object" && raw !== null ? raw : {};
+}
+function isNested(slot) {
+  return "parentCallId" in slot;
+}
+var TaskNames = class {
+  names = /* @__PURE__ */ new Map();
+  details = /* @__PURE__ */ new Map();
+  learn(view) {
+    const live = liveOf(view);
+    for (const slot of [...live.tools ?? [], ...live.nestedTools ?? []]) {
+      if (slot.taskId === void 0) continue;
+      const key = String(slot.taskId);
+      if (this.names.has(key)) continue;
+      const args = isNested(slot) ? slot.arguments : resolveToolCallArgs(slot.callId, view);
+      const hint = argumentHint(args);
+      const toolName = slot.name ? clip(slot.name, MAX_NAME) : void 0;
+      const preview = clip(hint === void 0 ? slot.name : `${slot.name}: ${hint}`, MAX_NAME);
+      if (this.names.size >= MAX_TASK_NAMES) {
+        const oldest = this.names.keys().next().value;
+        if (oldest !== void 0) {
+          this.names.delete(oldest);
+          this.details.delete(oldest);
+        }
+      }
+      this.names.set(key, preview);
+      this.details.set(key, { toolName, targetHint: hint, preview });
+    }
+  }
+  get(taskId) {
+    return this.names.get(taskId);
+  }
+  getDetails(taskId) {
+    return this.details.get(taskId);
+  }
+};
+function taskLabel(node, names, modelLabel) {
+  const state = node.state;
+  const call = names?.get(String(node.id));
+  const plain = node.kind === "pi.generation" && modelLabel ? modelLabel : KIND_NAMES[node.kind];
+  const kind = call ?? plain ?? (node.kind.startsWith("pi.") ? node.kind.slice(3) : node.kind);
+  if (state.status === "waiting") return `${kind} \xB7 waiting on ${state.on.length}`;
+  if (state.status === "completing") {
+    const outcome = typeof state.outcome === "object" && state.outcome !== null && "status" in state.outcome ? state.outcome.status : state.outcome;
+    return `${kind} \xB7 completing (${String(outcome ?? "completed")})`;
+  }
+  return call !== void 0 || plain !== void 0 ? kind : `${kind} \xB7 ${state.phase}`;
+}
+function extractTaskGraph(current) {
+  if (!current || typeof current !== "object") return { tasks: {} };
+  const obj = current;
+  if ("tasks" in obj && obj.tasks && typeof obj.tasks === "object") {
+    const inner = obj.tasks;
+    if ("tasks" in inner && inner.tasks && typeof inner.tasks === "object") {
+      return inner;
+    }
+    return current;
+  }
+  return { tasks: {} };
+}
+function mapTaskGraphNodeState(state) {
+  switch (state.status) {
+    case "pending":
+    case "running":
+      return { status: state.status, phase: state.phase };
+    case "waiting":
+      return {
+        status: "waiting",
+        phase: state.phase,
+        on: state.on ? state.on.map(Number) : [],
+        policy: state.policy
+      };
+    case "sleeping":
+      return { status: "sleeping", phase: state.phase, until: state.until };
+    case "completing": {
+      const outcome = typeof state.outcome === "object" && state.outcome !== null && "status" in state.outcome ? state.outcome.status : state.outcome;
+      return { status: "completing", outcome: outcome ?? "completed" };
+    }
+  }
+}
+function extractTaskModelMeta(node, current, rootConvId) {
+  if (node.kind !== "pi.generation") return {};
+  const cp = node.state?.checkpoint ?? node.checkpoint;
+  let provider;
+  let modelId;
+  let thinkingLevel;
+  if (cp && typeof cp === "object" && cp.model && typeof cp.model === "object") {
+    if (cp.model.provider && (cp.model.modelId || cp.model.id)) {
+      provider = String(cp.model.provider);
+      modelId = String(cp.model.modelId ?? cp.model.id);
+    }
+    if (cp.thinkingLevel !== void 0 && cp.thinkingLevel !== null) thinkingLevel = String(cp.thinkingLevel);
+  }
+  if (!provider || !modelId) {
+    const convId = Number(node.conversationId);
+    if (convId === rootConvId) {
+      const doc = current?.conversation?.docs?.["pi.agent"];
+      if (doc?.model?.provider) {
+        provider = String(doc.model.provider);
+        modelId = String(doc.model.modelId ?? doc.model.id);
+      }
+      if (doc?.thinkingLevel !== void 0 && doc?.thinkingLevel !== null) thinkingLevel = String(doc.thinkingLevel);
+    } else {
+      const doc = current?.conversation?.docs?.["durable.subagents"];
+      const sub = doc?.agents ? Object.values(doc.agents).find((a) => Number(a?.conversationId) === convId) : void 0;
+      if (sub?.actualModel?.provider) {
+        provider = String(sub.actualModel.provider);
+        modelId = String(sub.actualModel.modelId ?? sub.actualModel.id);
+      }
+      if (sub?.thinkingLevel !== void 0 && sub?.thinkingLevel !== null) thinkingLevel = String(sub.thinkingLevel);
+    }
+  }
+  if (!provider || !modelId) return {};
+  const model = { provider, modelId };
+  const modelLabel = thinkingLevel && thinkingLevel !== "off" ? `assistant turn \xB7 ${modelId} (${thinkingLevel})` : `assistant turn \xB7 ${modelId}`;
+  return { model, thinkingLevel, modelLabel };
+}
+function recordSubagentOwnership(conversations, current, rootConvId) {
+  const doc = current?.conversation?.docs?.["durable.subagents"];
+  if (!doc?.agents) return;
+  for (const a of Object.values(doc.agents)) {
+    if (a?.conversationId && a?.ownerTaskId) {
+      conversations.recordLogicalOwner(Number(a.conversationId), Number(rootConvId), Number(a.ownerTaskId));
+    }
+  }
+}
+function findSubagentMeta(current, taskId) {
+  const doc = current?.conversation?.docs?.["durable.subagents"];
+  if (!doc?.agents) return void 0;
+  for (const a of Object.values(doc.agents)) {
+    if (Number(a?.anchorTaskId) === taskId || Number(a?.ownerTaskId) === taskId) {
+      return { name: a.name, task: a.task };
+    }
+  }
+  return void 0;
+}
+function buildMappedNode(node, current, rootConvId, names, nativeStartedAt, clock) {
+  const id = Number(node.id);
+  const convId = Number(node.conversationId);
+  const meta = extractTaskModelMeta(node, current, rootConvId);
+  const callDetails = names.getDetails(String(id));
+  const subMeta = findSubagentMeta(current, id);
+  let label = taskLabel(node, names, meta.modelLabel);
+  if (node.kind === "durable.subagent-anchor" && subMeta?.name) {
+    label = `durable.subagent-anchor \xB7 subagent: ${subMeta.name}`;
+  }
+  if (label.length > MAX_LABEL_LENGTH) label = label.slice(0, MAX_LABEL_LENGTH);
+  const startedAt = node.startedAt !== void 0 && node.startedAt !== null ? Number(node.startedAt) : nativeStartedAt.get(id);
+  const durationMs = startedAt !== void 0 ? Math.max(0, clock() - startedAt) : void 0;
+  return {
+    id,
+    kind: node.kind,
+    conversationId: convId,
+    owner: node.owner !== void 0 ? Number(node.owner) : void 0,
+    background: Boolean(node.background),
+    abortRequested: Boolean(node.abortRequested),
+    state: mapTaskGraphNodeState(node.state),
+    blocked: node.blocked,
+    label,
+    startedAt,
+    durationMs,
+    toolName: callDetails?.toolName ?? (subMeta ? "subagent" : void 0),
+    targetHint: callDetails?.targetHint ?? (subMeta ? subMeta.name || subMeta.task : void 0),
+    model: meta.model,
+    thinkingLevel: meta.thinkingLevel,
+    tokens: extractLiveTokens(node, current)
+  };
+}
+function recordTerminalWithDetails(receipts, task, names, nativeStartedAt, current, recentEntries) {
+  const id = Number(task.id);
+  const details = names.getDetails(String(id));
+  const subMeta = findSubagentMeta(current, id);
+  const toolName = details?.toolName ?? (subMeta ? "subagent" : void 0);
+  const targetHint = details?.targetHint ?? (subMeta ? subMeta.name || subMeta.task : void 0);
+  const preview = subMeta?.task ?? details?.preview ?? names.get(String(id));
+  const state = task.state;
+  const rawEntryId = state?.outcome?.result?.entryId;
+  const entryId = rawEntryId !== void 0 ? Number(rawEntryId) : void 0;
+  receipts.recordTerminal(task, {
+    preview,
+    toolName,
+    targetHint,
+    entryId,
+    startedAt: nativeStartedAt.get(id),
+    tokens: extractTerminalTokens(task, current, recentEntries)
+  });
+}
+var RuntimeGraphSource = class {
+  viewSource;
+  scope;
+  debounceMs;
+  maxDebounceMs;
+  clock;
+  receipts;
+  harness;
+  names = new TaskNames();
   listeners = /* @__PURE__ */ new Set();
+  epoch;
+  conversations;
+  nativeStartedAt = /* @__PURE__ */ new Map();
+  recentEntries = /* @__PURE__ */ new Map();
+  revision = 0;
+  previousNodes = /* @__PURE__ */ new Map();
+  lastStructuralJson = "";
+  timer;
+  firstScheduledAt;
+  unsubscribeView;
+  unsubscribeCommits;
+  isDisposed = false;
+  constructor(viewSource, scope, options) {
+    this.viewSource = viewSource;
+    this.scope = scope;
+    this.debounceMs = options?.debounceMs ?? 250;
+    this.maxDebounceMs = options?.maxDebounceMs ?? 1e3;
+    this.clock = options?.clock ?? Date.now;
+    this.receipts = options?.receipts ?? new RuntimeGraphReceiptsCollector();
+    this.harness = options?.harness;
+    this.epoch = `epoch_${this.clock()}_${Math.random().toString(36).slice(2, 7)}`;
+    this.conversations = new RuntimeGraphConversations(this.scope.rootConversationId);
+    if (this.harness?.subscribeCommits) {
+      this.unsubscribeCommits = this.harness.subscribeCommits((pub) => {
+        for (const ch of pub.changes) {
+          if (ch?.type === "entry" && ch.value) {
+            this.recentEntries.set(Number(ch.value.id), ch.value);
+            if (this.recentEntries.size > 256) {
+              const oldest = this.recentEntries.keys().next().value;
+              if (oldest !== void 0) this.recentEntries.delete(oldest);
+            }
+          } else if (ch?.type === "task") {
+            const taskVal = ch.value;
+            const idNum = Number(taskVal?.id);
+            if (taskVal?.startedAt) {
+              if (this.nativeStartedAt.size >= 256) {
+                const oldest = this.nativeStartedAt.keys().next().value;
+                if (oldest !== void 0) this.nativeStartedAt.delete(oldest);
+              }
+              this.nativeStartedAt.set(idNum, Number(taskVal.startedAt));
+            }
+            if (taskVal?.state?.status === "terminal") {
+              this.learnNames();
+              recordTerminalWithDetails(this.receipts, taskVal, this.names, this.nativeStartedAt, this.viewSource.current(), this.recentEntries);
+            }
+            this.schedule();
+          } else if (ch?.type === "conversation" && ch.value) {
+            this.conversations.recordConversation(ch.value);
+            this.schedule();
+          }
+        }
+      });
+    }
+    this.unsubscribeView = this.viewSource.subscribe(() => {
+      const cur = this.viewSource.current();
+      if (cur?.conversation?.entries) {
+        this.receipts.backfillTokensFromEntries(cur.conversation.entries);
+      }
+      this.schedule();
+    });
+    this.schedule();
+  }
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  teardown() {
+    if (this.isDisposed) return;
+    this.isDisposed = true;
+    if (this.timer !== void 0) {
+      clearTimeout(this.timer);
+      this.timer = void 0;
+      this.publish();
+    }
+    this.unsubscribeCommits?.();
+    this.unsubscribeView?.();
+    this.listeners.clear();
+  }
+  schedule() {
+    if (this.isDisposed) return;
+    const now = this.clock();
+    if (this.firstScheduledAt === void 0) this.firstScheduledAt = now;
+    const elapsed = now - this.firstScheduledAt;
+    if (elapsed >= this.maxDebounceMs) {
+      clearTimeout(this.timer);
+      this.timer = void 0;
+      this.publish();
+      return;
+    }
+    clearTimeout(this.timer);
+    const delay = Math.min(this.debounceMs, this.maxDebounceMs - elapsed);
+    this.timer = setTimeout(() => {
+      this.timer = void 0;
+      this.publish();
+    }, Math.max(0, delay));
+  }
+  publish() {
+    this.firstScheduledAt = void 0;
+    if (this.isDisposed) return;
+    const current = this.viewSource.current();
+    this.learnNames(current);
+    const rawNodes = extractTaskGraph(current).tasks ?? {};
+    const totalLiveCount = Object.keys(rawNodes).length;
+    const liveNodeEntries = Object.entries(rawNodes).slice(0, MAX_LIVE_NODES);
+    const currentLiveIds = /* @__PURE__ */ new Set();
+    const mappedNodes = {};
+    const rootConvId = Number(this.scope.rootConversationId);
+    for (const [key, node] of liveNodeEntries) {
+      currentLiveIds.add(Number(node.id));
+      this.conversations.recordFromLiveNode(Number(node.conversationId), Number(node.id), node.conversations);
+      mappedNodes[key] = buildMappedNode(node, current, rootConvId, this.names, this.nativeStartedAt, this.clock);
+    }
+    const hasMissingReceipts = this.reconcileDisappearedNodes(currentLiveIds);
+    this.previousNodes = new Map(
+      liveNodeEntries.map(([_, n]) => [Number(n.id), { conversationId: Number(n.conversationId), kind: n.kind }])
+    );
+    const completeness = totalLiveCount > MAX_LIVE_NODES || hasMissingReceipts ? "limited" : "complete";
+    const conversations = this.conversations.snapshot();
+    const receipts = this.receipts.getReceipts();
+    const allTaskIds = /* @__PURE__ */ new Set();
+    for (const key of Object.keys(rawNodes)) allTaskIds.add(Number(key));
+    for (const r of receipts) allTaskIds.add(r.taskId);
+    const stats = { liveCount: Object.keys(mappedNodes).length, terminalCount: receipts.length, totalCount: allTaskIds.size };
+    const structuralJson = JSON.stringify({ nodes: mappedNodes, conversations, receipts, completeness, stats });
+    if (structuralJson === this.lastStructuralJson) return;
+    this.lastStructuralJson = structuralJson;
+    const snapshot = {
+      version: 1,
+      scope: this.scope,
+      observation: { epoch: this.epoch, revision: ++this.revision, observedAt: this.clock(), completeness },
+      nodes: mappedNodes,
+      conversations,
+      receipts,
+      stats
+    };
+    for (const listener of this.listeners) listener(snapshot);
+  }
+  learnNames(current) {
+    const cur = current ?? this.viewSource.current();
+    if (cur && typeof cur === "object" && "session" in cur && "conversation" in cur) {
+      this.names.learn(cur);
+    }
+    recordSubagentOwnership(this.conversations, cur, this.scope.rootConversationId);
+  }
+  reconcileDisappearedNodes(currentLiveIds) {
+    let hasMissing = false;
+    for (const [prevId] of this.previousNodes) {
+      if (!currentLiveIds.has(prevId) && !this.receipts.hasReceipt(prevId)) {
+        hasMissing = true;
+        if (this.harness?.getTask) {
+          void this.harness.getTask(prevId).then((task) => {
+            if (task && task.state?.status === "terminal") {
+              this.learnNames();
+              recordTerminalWithDetails(this.receipts, task, this.names, this.nativeStartedAt, this.viewSource.current(), this.recentEntries);
+              this.schedule();
+            }
+          }).catch(() => {
+          });
+        }
+      }
+    }
+    return hasMissing;
+  }
+};
+var PiDurableEngine = class {
+  options;
+  instance = null;
+  eventAdapter;
+  watcher;
+  graphSource;
+  unsubscribeView;
+  listeners = /* @__PURE__ */ new Set();
+  sessionDir = "";
   constructor(options) {
-    this.store = options.store;
-    this.modelProvider = options.modelProvider;
-    this.executionEnv = options.executionEnv;
-    this.resourceLoader = options.resourceLoader;
-  }
-  async start() {
-    await this.store.acquireLock();
-    this.isStarted = true;
-  }
-  async prompt(content, _options) {
-    if (this.isClosed) {
-      throw new Error("Session is closed");
-    }
-    if (this.isAborted) {
-      throw new Error("Session is aborted");
-    }
-    if (!this.isStarted) {
-      throw new Error("Session is not started. Call start() before submitting prompts");
-    }
-    if (typeof content !== "string" || content.trim().length === 0) {
-      throw new Error("Prompt content must be a non-empty string");
-    }
-    const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    return { status: "accepted", id };
+    this.options = options;
+    this.eventAdapter = new DurableEventAdapter((event) => {
+      this.emitEvent(event);
+    });
   }
   emitEvent(event) {
     for (const listener of this.listeners) {
       listener(event);
     }
   }
-  events(callback) {
-    this.listeners.add(callback);
-    return () => {
-      this.listeners.delete(callback);
-    };
-  }
-  async abort() {
-    this.isAborted = true;
-    this.emitEvent({ type: "session/aborted" });
-  }
-  getState() {
-    return {
-      isStarted: this.isStarted,
-      isAborted: this.isAborted,
-      isClosed: this.isClosed,
-      sessionDir: this.store.sessionDir
-    };
-  }
-  async setSubagentPolicy(params) {
-    await this.store.saveDocument("subagents", "policy_ack", params);
-    return { ok: true };
-  }
-  async close() {
-    this.isClosed = true;
-    this.isStarted = false;
-    this.listeners.clear();
-    await this.store.releaseLock();
-    await this.store.close();
-  }
-};
-
-// packages/execution/dist/index.js
-import { promises as fs2 } from "node:fs";
-import * as path2 from "node:path";
-import { exec, execFile } from "node:child_process";
-var LocalNodeExecutionEnv = class {
-  id;
-  cwd;
-  constructor(options) {
-    this.id = options?.id ?? "local-node";
-    this.cwd = options?.cwd ?? process.cwd();
-  }
-  resolvePath(filePath) {
-    return path2.isAbsolute(filePath) ? filePath : path2.resolve(this.cwd, filePath);
-  }
-  async readFile(filePath) {
-    return await fs2.readFile(this.resolvePath(filePath), "utf8");
-  }
-  async writeFile(filePath, content) {
-    const fullPath = this.resolvePath(filePath);
-    await fs2.mkdir(path2.dirname(fullPath), { recursive: true });
-    await fs2.writeFile(fullPath, content, "utf8");
-  }
-  async exec(argvOrCommand, options, context) {
-    return new Promise((resolve23) => {
-      const execCwd = options?.cwd ?? this.cwd;
-      const execEnv = { ...process.env, ...options?.env };
-      const timeout = options?.timeoutMs ?? 3e4;
-      let stdout = "";
-      let stderr = "";
-      const handleOutput = (chunk, isErr = false) => {
-        const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
-        if (isErr) stderr += text;
-        else stdout += text;
-        if (options?.onOutput) {
-          const buf = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
-          options.onOutput(buf, context, { skipped: false });
-        }
-      };
-      const child = typeof argvOrCommand === "string" ? exec(argvOrCommand, { cwd: execCwd, env: execEnv, timeout, signal: options?.signal }) : execFile(argvOrCommand[0], argvOrCommand.slice(1), {
-        cwd: execCwd,
-        env: execEnv,
-        timeout,
-        signal: options?.signal
-      });
-      child.stdout?.on("data", (chunk) => handleOutput(chunk, false));
-      child.stderr?.on("data", (chunk) => handleOutput(chunk, true));
-      child.on("error", (err) => {
-        resolve23({
-          ok: false,
-          value: { exitCode: 1 },
-          stdout,
-          stderr: stderr || err.message,
-          exitCode: 1
-        });
-      });
-      child.on("close", (code) => {
-        const exitCode = code ?? 0;
-        resolve23({
-          ok: exitCode === 0,
-          value: { exitCode },
-          stdout,
-          stderr,
-          exitCode
-        });
+  async start(sessionDir) {
+    this.sessionDir = sessionDir || this.options.sessionDir || this.options.session || process.cwd();
+    this.instance = await openDurable({
+      cwd: this.options.cwd ?? process.cwd(),
+      sessionDir: this.sessionDir,
+      session: this.options.session,
+      continueSession: this.options.continueSession,
+      cli: this.options.cli,
+      dependencies: this.options.dependencies,
+      executionEnvFactory: this.options.dependencies?.executionEnvFactory
+    });
+    this.watcher = await startSubagentWatcher(
+      this.instance.harness,
+      this.eventAdapter,
+      () => this.instance.view.current()
+    );
+    this.graphSource = new RuntimeGraphSource(
+      this.instance.view,
+      { rootConversationId: ROOT_CONVERSATION_ID4 },
+      { harness: this.instance.harness }
+    );
+    this.graphSource.subscribe((snapshot) => {
+      this.emitEvent({
+        type: "runtime_graph_snapshot",
+        snapshot
       });
     });
+    this.unsubscribeView = this.instance.view.subscribe(() => {
+    });
   }
-  async statFile(filePath) {
-    const stat = await fs2.stat(this.resolvePath(filePath));
+  async submit(input, options) {
+    if (!this.instance) {
+      throw new SessionError2("SESSION_NOT_STARTED", "Engine not started");
+    }
+    let nativeInput;
+    if (typeof input === "string") {
+      nativeInput = input;
+    } else {
+      nativeInput = input.map((part) => {
+        if (part.type === "text") {
+          return { type: "text", text: part.text };
+        }
+        return { type: "image", data: part.data, mimeType: part.mimeType };
+      });
+    }
+    const whenBusy = options?.deliverAs ?? "followUp";
+    const convId = options?.conversationId ? parseConversationId(options.conversationId) : ROOT_CONVERSATION_ID4;
+    let requestId;
+    let conversationId;
+    if (this.watcher) {
+      void this.watcher.ensureAttached(convId);
+    }
+    if (convId === ROOT_CONVERSATION_ID4) {
+      const receipt = await this.instance.controller.submit(nativeInput, whenBusy);
+      requestId = receipt.requestId;
+      conversationId = "1";
+    } else {
+      const conv = await this.instance.harness.conversation(convId, runtimeContext);
+      if (!conv) {
+        throw new SessionError2("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+      }
+      const submission = await conv.submit({ type: "input", content: nativeInput, whenBusy }, runtimeContext);
+      requestId = String(submission.id);
+      conversationId = String(convId);
+    }
+    const numId = Number(requestId);
+    if (!isNaN(numId)) {
+      void this.instance.harness.submission(numId, runtimeContext).then((submission) => {
+        if (!submission) return;
+        void submission.wait(runtimeContext).then((settled) => {
+          let status = "completed";
+          let errorMsg;
+          if (settled.status === "unanswered") {
+            if (settled.reason === "aborted") {
+              status = "aborted";
+            } else {
+              status = "error";
+              errorMsg = settled.reason;
+            }
+          }
+          this.emitEvent({
+            type: "turn_complete",
+            status,
+            requestId,
+            error: errorMsg,
+            conversationId: String(conversationId)
+          });
+        }).catch((err) => {
+          this.emitEvent({
+            type: "turn_complete",
+            status: "error",
+            requestId,
+            error: err instanceof Error ? err.message : String(err),
+            conversationId: String(conversationId)
+          });
+        });
+      }).catch(() => {
+      });
+    }
     return {
-      isFile: stat.isFile(),
-      isDirectory: stat.isDirectory(),
-      sizeBytes: stat.size,
-      mtimeMs: stat.mtimeMs
+      status: "accepted",
+      id: requestId,
+      conversationId
     };
   }
-  async listFiles(dirPath) {
-    return await fs2.readdir(this.resolvePath(dirPath));
-  }
-  async cleanup(_context) {
-  }
-};
-
-// packages/adapter-pi-durable/dist/index.js
-import { basename as basename3, join as join32, resolve as resolve22 } from "node:path";
-import { BACKGROUND_CONTEXT as BACKGROUND_CONTEXT6 } from "@earendil-works/chord/context";
-import {
-  createSession as createSession2,
-  defineDocFamily as defineDocFamily2
-} from "@earendil-works/pi-durable";
-import { openNodeSqliteStorage as openNodeSqliteStorage3 } from "@earendil-works/pi-durable/storage/sqlite/node";
-import { execFileSync as execFileSync2 } from "node:child_process";
-import { readFile as readFile2, rm as rm2, writeFile as writeFile2 } from "node:fs/promises";
-import { join as join8 } from "node:path";
-import lockfile2 from "proper-lockfile";
-import { existsSync as existsSync6, mkdirSync as mkdirSync3, readdirSync as readdirSync3, rmSync as rmSync3 } from "node:fs";
-import { DatabaseSync as DatabaseSync3 } from "node:sqlite";
-import { join as join22, resolve as resolve6 } from "node:path";
-import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
-import { mkdir as mkdir2, readdir as readdir2, realpath as realpath2 } from "node:fs/promises";
-import { homedir as homedir2 } from "node:os";
-import { basename as basename22, join as join42, resolve as resolve32 } from "node:path";
-var DurableHarnessError = class extends Error {
-  code;
-  constructor(message, code, cause) {
-    super(message, { cause });
-    this.name = new.target.name;
-    this.code = code;
-  }
-};
-var DurableStorageError = class extends DurableHarnessError {
-  constructor(message, cause, code = "STORAGE_ERROR") {
-    super(message, code, cause);
-  }
-};
-function isProcessAlive(pid) {
-  if (!pid || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err.code === "EPERM";
-  }
-}
-function isVerifiedRunnerProcess(owner) {
-  if (!isProcessAlive(owner.pid)) return false;
-  try {
-    const output = execFileSync2("ps", ["-p", String(owner.pid), "-o", "command="], {
-      encoding: "utf8",
-      timeout: 1e3,
-      stdio: ["ignore", "pipe", "ignore"]
-    }).trim();
-    return output.includes("node") || output.includes("runner") || output.includes("durable") || output.includes("bb");
-  } catch {
-    return false;
-  }
-}
-function logUnexpectedErr(err, allowedCode, context) {
-  if (err?.code !== allowedCode) {
-    console.warn(`[SessionStorage] ${context}: ${err instanceof Error ? err.message : String(err)}`);
-  }
-}
-async function writeOwnerFile(directory, owner) {
-  await writeFile2(join8(directory, "session.owner.json"), JSON.stringify(owner, null, 2), "utf8");
-}
-async function readOwnerFile(directory) {
-  try {
-    const content = await readFile2(join8(directory, "session.owner.json"), "utf8");
-    return JSON.parse(content);
-  } catch (err) {
-    logUnexpectedErr(err, "ENOENT", `Corrupted or unreadable session.owner.json in ${directory}`);
-    return null;
-  }
-}
-async function removeOwnerFile(directory) {
-  await rm2(join8(directory, "session.owner.json"), { force: true }).catch(
-    (err) => logUnexpectedErr(err, "ENOENT", `Failed to remove owner file in ${directory}`)
-  );
-}
-async function forceUnlock(directory) {
-  await lockfile2.unlock(directory, { realpath: false }).catch(
-    (err) => logUnexpectedErr(err, "ENOENT", `unlock warning for ${directory}`)
-  );
-  await rm2(`${directory}.lock`, { recursive: true, force: true }).catch(
-    (err) => logUnexpectedErr(err, "ENOENT", `lockfile cleanup warning for ${directory}`)
-  );
-}
-async function acquireSessionLock(directory, cwd, id) {
-  const lockOpts = { realpath: false, retries: { retries: 2, minTimeout: 100, maxTimeout: 200 } };
-  let rawRelease;
-  try {
-    rawRelease = await lockfile2.lock(directory, lockOpts);
-  } catch (initialErr) {
-    let owner = await readOwnerFile(directory);
-    if (!owner) {
-      await new Promise((r) => setTimeout(r, 100));
-      owner = await readOwnerFile(directory);
-    }
-    if (!owner) throw new Error(`Session is already open in another process: ${directory}`, { cause: initialErr });
-    const isAlive = isProcessAlive(owner.pid);
-    const isRunner = isAlive && isVerifiedRunnerProcess(owner);
-    if (!isAlive || !isRunner) {
-      await forceUnlock(directory);
-      await removeOwnerFile(directory);
-      try {
-        rawRelease = await lockfile2.lock(directory, lockOpts);
-      } catch (retryErr) {
-        throw new DurableStorageError(`Session is already open in another process (PID: ${owner.pid}): ${directory}`, retryErr);
-      }
+  async abort(conversationId) {
+    if (!this.instance) return;
+    const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID4;
+    if (convId === ROOT_CONVERSATION_ID4) {
+      await this.instance.controller.abort();
     } else {
-      throw new DurableStorageError(`Session is already open in another live process (PID: ${owner.pid}): ${directory}`, initialErr);
+      const conv = await this.instance.harness.conversation(convId, runtimeContext);
+      await conv?.abort(runtimeContext, { background: true });
     }
   }
-  await writeOwnerFile(directory, { pid: process.pid, id, cwd, startedAt: Date.now() });
-  let released = false;
-  return async () => {
-    if (released) return;
-    released = true;
-    try {
-      await removeOwnerFile(directory);
-    } finally {
-      await rawRelease();
+  async abortTask(taskId) {
+    if (!this.instance) return;
+    await this.instance.harness.abortTask(taskId, runtimeContext);
+  }
+  async compact(instructions) {
+    if (!this.instance) return;
+    await this.instance.controller.compact(instructions);
+  }
+  async setSubagentPolicy(record) {
+    if (!this.instance) return;
+    await this.instance.subagentPolicyHolder.setRecord(record);
+  }
+  async setModel(model) {
+    if (!this.instance) return;
+    await this.instance.controller.setModel(model);
+  }
+  async setThinkingLevel(level) {
+    if (!this.instance) return;
+    await this.instance.controller.setThinkingLevel(level);
+  }
+  async getState(conversationId) {
+    if (!this.instance) {
+      throw new SessionError2("SESSION_NOT_STARTED", "Engine not started");
     }
-  };
-}
-function forkSessionDatabase(options) {
-  let sourceDir = resolve6(options.sourceDir);
-  if (sourceDir.endsWith(".sqlite")) {
-    sourceDir = resolve6(sourceDir, "..");
+    const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID4;
+    const conv = await this.instance.harness.conversation(convId, runtimeContext);
+    if (!conv) {
+      throw new SessionError2("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+    }
+    let entryCount = 0;
+    let cursor = void 0;
+    do {
+      const page = await conv.entries({}, 100, cursor, runtimeContext);
+      entryCount += page.items.length;
+      cursor = page.next;
+    } while (cursor !== void 0);
+    const viewSnapshot = this.instance.view.current();
+    const agentState = viewSnapshot.conversation.docs["pi.agent"] ?? {};
+    return {
+      sessionId: viewSnapshot.session.id,
+      cwd: viewSnapshot.session.cwd,
+      activeConversationId: String(conv.id),
+      activeModel: agentState.model ? { provider: agentState.model.provider, modelId: agentState.model.modelId } : void 0,
+      thinkingLevel: agentState.thinkingLevel,
+      models: viewSnapshot.models.map((m) => ({
+        provider: m.provider,
+        modelId: m.modelId,
+        name: m.name,
+        contextWindow: m.contextWindow
+      })),
+      entryCount
+    };
   }
-  const sourceDb = join22(sourceDir, "session.sqlite");
-  if (!existsSync6(sourceDir) || !existsSync6(sourceDb)) {
-    throw new Error(`Cannot fork: source session database not found for "${options.sourceDir}"`);
+  async getTranscript(conversationId, limit) {
+    if (!this.instance) {
+      throw new SessionError2("SESSION_NOT_STARTED", "Engine not started");
+    }
+    const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID4;
+    const conv = await this.instance.harness.conversation(convId, runtimeContext);
+    if (!conv) {
+      throw new SessionError2("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+    }
+    const page = await conv.entries({ order: "ascending" }, limit ?? 100, void 0, runtimeContext);
+    const entries = [];
+    for (const item of page.items) {
+      let role;
+      let text;
+      if (item.kind === "pi.user") {
+        role = "user";
+        const msg = item.model?.[0];
+        if (msg) {
+          text = typeof msg.content === "string" ? msg.content : Array.isArray(msg.content) ? msg.content.map((c) => c.text ?? "").join("") : void 0;
+        }
+      } else if (item.kind === "pi.assistant") {
+        role = "assistant";
+        const msg = item.model?.[0];
+        if (msg) {
+          text = typeof msg.content === "string" ? msg.content : Array.isArray(msg.content) ? msg.content.map((c) => c.text ?? "").join("") : void 0;
+        }
+      }
+      entries.push({
+        id: String(item.id),
+        conversationId: String(conv.id),
+        kind: item.kind,
+        role,
+        text
+      });
+    }
+    return {
+      conversationId: String(conv.id),
+      entries
+    };
   }
-  let targetDir = resolve6(options.targetDir);
-  if (targetDir.endsWith(".sqlite")) {
-    targetDir = resolve6(targetDir, "..");
-  }
-  mkdirSync3(targetDir, { recursive: true });
-  const targetDb = join22(targetDir, "session.sqlite");
-  for (const suffix of ["", "-wal", "-shm"]) {
-    const targetFile = `${targetDb}${suffix}`;
-    if (existsSync6(targetFile)) rmSync3(targetFile, { force: true });
-  }
-  const sourceConn = new DatabaseSync3(sourceDb);
-  try {
+  async getStats(conversationId) {
+    if (!this.instance) {
+      throw new SessionError2("SESSION_NOT_STARTED", "Engine not started");
+    }
+    const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID4;
+    const conv = await this.instance.harness.conversation(convId, runtimeContext);
+    if (!conv) {
+      throw new SessionError2("CONVERSATION_NOT_FOUND", `Conversation not found: ${convId}`);
+    }
+    const agent = await conv.agent(runtimeContext);
+    let contextWindow = 0;
+    if (agent.model) {
+      const m = this.instance.modelRuntime.getModel(agent.model.provider, agent.model.modelId);
+      if (m?.contextWindow) {
+        contextWindow = m.contextWindow;
+      }
+    }
+    let tokens = null;
     try {
-      sourceConn.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+      const usage = await this.instance.harness.usage(runtimeContext);
+      if (typeof usage?.totalTokens === "number") {
+        tokens = usage.totalTokens;
+      }
     } catch {
     }
-    const escapedTarget = targetDb.replace(/'/g, "''");
-    sourceConn.exec(`VACUUM INTO '${escapedTarget}';`);
-  } finally {
-    sourceConn.close();
-  }
-  const db = new DatabaseSync3(targetDb);
-  try {
-    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
-    if (options.checkpointId !== void 0) {
-      const entryId = Number(options.checkpointId);
-      if (Number.isFinite(entryId) && entryId > 0) {
-        const hasEntries = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "entries");
-        if (hasEntries) {
-          db.prepare("DELETE FROM entries WHERE id > ?").run(entryId);
-        }
-        const hasTasks = db.prepare("SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?").get("table", "tasks");
-        if (hasTasks) {
-          db.prepare("DELETE FROM tasks WHERE id > ?").run(entryId);
-        }
+    return {
+      contextUsage: {
+        tokens,
+        contextWindow
       }
-    }
-  } finally {
-    db.close();
+    };
   }
-  const targetLockDir = `${targetDir}.lock`;
-  if (existsSync6(targetLockDir)) {
-    rmSync3(targetLockDir, { recursive: true, force: true });
-  }
-  if (existsSync6(targetDir)) {
-    const entries = readdirSync3(targetDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.name.endsWith(".lock") || entry.name === ".lock" || entry.name === "session.owner.json") {
-        rmSync3(join22(targetDir, entry.name), { recursive: true, force: true });
-      }
-    }
-  }
-}
-var genericDocFamily2 = defineDocFamily2({
-  checkpointWhen: () => false,
-  kind: "dz.document",
-  version: 1,
-  scope: "session",
-  initial: () => ({})
-});
-var PiDurableSessionStore = class {
-  sessionDir;
-  cwd;
-  releaseLockFn = null;
-  sessionInstance = null;
-  constructor(options) {
-    this.sessionDir = resolve22(options.sessionDir);
-    this.cwd = options.cwd ? resolve22(options.cwd) : process.cwd();
-  }
-  get isLocked() {
-    return this.releaseLockFn !== null;
-  }
-  async getSession() {
-    if (!this.sessionInstance) {
-      const dbPath = join32(this.sessionDir, "session.sqlite");
-      const storage = await openNodeSqliteStorage3(dbPath);
-      this.sessionInstance = createSession2(storage);
-    }
-    return this.sessionInstance;
-  }
-  async acquireLock() {
-    if (this.isLocked) throw new Error(`Lock already held for session: ${this.sessionDir}`);
-    const id = basename3(this.sessionDir);
-    this.releaseLockFn = await acquireSessionLock(this.sessionDir, this.cwd, id);
-  }
-  async releaseLock() {
-    if (this.releaseLockFn) {
-      const release = this.releaseLockFn;
-      this.releaseLockFn = null;
-      await release();
-    }
-  }
-  async saveDocument(collection, docId, data) {
-    const session = await this.getSession();
-    await session.commit(async (tx) => {
-      const doc = await tx.doc(genericDocFamily2, `${collection}:${docId}`);
-      for (const key of Object.keys(doc)) {
-        delete doc[key];
-      }
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        Object.assign(doc, structuredClone(data));
-      } else {
-        doc._value = structuredClone(data);
-      }
-    }, BACKGROUND_CONTEXT6);
-  }
-  async readDocument(collection, docId) {
-    const session = await this.getSession();
-    const snap = await session.snapshot(genericDocFamily2, `${collection}:${docId}`, BACKGROUND_CONTEXT6);
-    if (!snap || Object.keys(snap).length === 0) return void 0;
-    if ("_value" in snap && Object.keys(snap).length === 1) {
-      return snap._value;
-    }
-    return structuredClone(snap);
-  }
-  async forkSession(checkpointId, newSessionDir) {
-    forkSessionDatabase({ sourceDir: this.sessionDir, targetDir: newSessionDir, checkpointId });
-  }
-  watchTasks(onUpdate) {
-    onUpdate([]);
-    return { close: () => {
-    } };
+  events(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
   async close() {
-    if (this.sessionInstance) {
-      const session = this.sessionInstance;
-      this.sessionInstance = null;
-      await session.close(BACKGROUND_CONTEXT6);
+    this.listeners.clear();
+    this.unsubscribeView?.();
+    this.graphSource?.teardown();
+    this.watcher?.close();
+    if (this.instance) {
+      await this.instance.close();
+      this.instance = null;
     }
-    await this.releaseLock();
   }
 };
 
-// packages/adapter-pi-ai/dist/index.js
+// packages/runner/src/composition.ts
 import {
-  resolveCliModel as resolveCliModel2
+  SettingsManager as SettingsManager3,
+  DefaultResourceLoader as DefaultResourceLoader3,
+  createMcpExtension as createMcpExtension3,
+  getAgentDir as getAgentDir3
 } from "@earendil-works/pi-coding-agent";
-import {
-  DefaultResourceLoader as DefaultResourceLoader2,
-  ModelRuntime as ModelRuntime2,
-  SettingsManager as SettingsManager2,
-  getAgentDir,
-  resolveModelScopeWithDiagnostics as resolveModelScopeWithDiagnostics2
-} from "@earendil-works/pi-coding-agent";
-var PiAiModelProvider = class {
-  #modelRuntime;
-  #settingsManager;
-  constructor(modelRuntime, settingsManager) {
-    this.#modelRuntime = modelRuntime;
-    this.#settingsManager = settingsManager;
-  }
-  get modelRuntime() {
-    return this.#modelRuntime;
-  }
-  get settingsManager() {
-    return this.#settingsManager;
-  }
-  async getAvailableModels() {
-    const models = this.#modelRuntime.getAvailableSnapshot();
-    return models.map((m) => ({
-      provider: m.provider,
-      modelId: m.id
-    }));
-  }
-  async resolveModel(ref) {
-    if (ref?.model !== void 0) {
-      const resolved = resolveCliModel2({
-        cliProvider: ref.provider,
-        cliModel: ref.model,
-        modelRuntime: this.#modelRuntime
-      });
-      if (resolved.error !== void 0 || resolved.model === void 0) {
-        throw new Error(`Could not resolve model: ${resolved.error ?? ref.model}`);
-      }
-      return {
-        model: { provider: resolved.model.provider, modelId: resolved.model.id },
-        thinkingLevel: ref.thinking ?? resolved.thinkingLevel ?? "off"
-      };
-    }
-    const defaultProvider = this.#settingsManager?.getDefaultProvider?.();
-    const defaultModelId = this.#settingsManager?.getDefaultModel?.();
-    const defaultThinkingLevel = this.#settingsManager?.getDefaultThinkingLevel?.();
-    if (defaultProvider && defaultModelId) {
-      const models = this.#modelRuntime.getAvailableSnapshot();
-      const matched = models.find((m) => m.provider === defaultProvider && m.id === defaultModelId);
-      if (matched) {
-        return {
-          model: { provider: matched.provider, modelId: matched.id },
-          thinkingLevel: defaultThinkingLevel ?? "off"
-        };
-      }
-    }
-    const available = this.#modelRuntime.getAvailableSnapshot();
-    if (available.length > 0) {
-      return {
-        model: { provider: available[0].provider, modelId: available[0].id },
-        thinkingLevel: "off"
-      };
-    }
-    return {};
-  }
-};
-async function setupRunnerModels(cwd, args) {
-  const agentDir = getAgentDir();
-  const settingsManager = SettingsManager2.create(cwd, agentDir);
-  const modelRuntime = await ModelRuntime2.create();
-  const resourceLoader = new DefaultResourceLoader2({ cwd, agentDir, settingsManager });
-  await resourceLoader.reload();
-  const extensionsResult = resourceLoader.getExtensions();
-  for (const { name, config } of extensionsResult.runtime.pendingProviderRegistrations) {
-    try {
-      modelRuntime.registerProvider(name, config);
-    } catch (err) {
-      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-      if (!msg.includes("already registered") && !msg.includes("duplicate")) {
-        console.warn(`[ModelSetup] Failed to register provider ${name}: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    }
-  }
-  for (const { provider } of extensionsResult.runtime.pendingNativeProviderRegistrations) {
-    try {
-      modelRuntime.registerNativeProvider(provider);
-    } catch (err) {
-      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-      if (!msg.includes("already registered") && !msg.includes("duplicate")) {
-        console.warn(`[ModelSetup] Failed to register native provider ${provider?.id}: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    }
-  }
-  for (const { definition } of extensionsResult.runtime.pendingVirtualModelRegistrations) {
-    try {
-      modelRuntime.registerVirtualModel(definition);
-    } catch (err) {
-      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-      if (!msg.includes("already registered") && !msg.includes("duplicate")) {
-        console.warn(`[ModelSetup] Failed to register virtual model ${definition?.id}: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    }
-  }
-  const availableModels = modelRuntime.getAvailableSnapshot();
-  const enabledPatterns = settingsManager.getEnabledModels();
-  const scopedScope = enabledPatterns && enabledPatterns.length > 0 ? await resolveModelScopeWithDiagnostics2(enabledPatterns, modelRuntime) : void 0;
-  const scopedModelList = scopedScope && scopedScope.scopedModels.length > 0 ? scopedScope.scopedModels.map((sm) => sm.model) : availableModels;
-  const scopedModelIds = scopedModelList.map((m) => `${m.provider}/${m.id}`);
-  const modelProvider = new PiAiModelProvider(modelRuntime, settingsManager);
-  const initialAgent = await modelProvider.resolveModel(
-    args.model ? { provider: args.provider, model: args.model, thinking: args.thinking } : void 0
-  );
-  const defaultModel = initialAgent.model ? modelRuntime.getModel(initialAgent.model.provider, initialAgent.model.modelId) ?? scopedModelList[0] : scopedModelList[0];
-  const defaultModelId = defaultModel ? `${defaultModel.provider}/${defaultModel.id}` : void 0;
-  const defaultThinkingLevel = initialAgent.thinkingLevel ?? "off";
-  const modelScope = {
-    scopedModelIds,
-    defaultModelId
-  };
-  return {
-    settingsManager,
-    modelRuntime,
-    scopedModelList,
-    defaultModel,
-    defaultThinkingLevel,
-    modelScope
-  };
-}
 
 // packages/adapter-codemode/dist/index.js
-import { CodemodeSandbox as CodemodeSandbox2 } from "@earendil-works/pi-codemode";
-import { createCodemodeExtension as createCodemodeExtension2 } from "@earendil-works/pi-durable/codemode";
+import { CodemodeSandbox } from "@earendil-works/pi-codemode";
+import { createCodemodeExtension } from "@earendil-works/pi-durable/codemode";
 var CodemodeExtension = class {
   id = "codemode";
   name = "Codemode";
@@ -1588,11 +5684,11 @@ var CodemodeExtension = class {
   }
   register(ctx) {
     if (!ctx.registry) return;
-    const sandbox = new CodemodeSandbox2();
+    const sandbox = new CodemodeSandbox();
     this.#activeSandbox = sandbox;
     this.#sandboxes.add(sandbox);
     this.#contextSandboxes.set(ctx, sandbox);
-    const ext = createCodemodeExtension2({
+    const ext = createCodemodeExtension({
       sandbox,
       get namespaces() {
         return ctx.dynamicNamespaces?.getNamespaces?.() ?? [];
@@ -1614,15 +5710,18 @@ var CodemodeExtension = class {
     }
   }
 };
+function createCodemodeBuiltinExtension() {
+  return new CodemodeExtension();
+}
 
 // packages/extension-pi-resource/dist/index.js
 import { defineExtension as defineExtension4 } from "@earendil-works/pi-durable";
-import { SettingsManager as SettingsManager3, DefaultResourceLoader as DefaultResourceLoader3, getAgentDir as getAgentDir2 } from "@earendil-works/pi-coding-agent";
+import { SettingsManager as SettingsManager2, DefaultResourceLoader as DefaultResourceLoader2, getAgentDir as getAgentDir2 } from "@earendil-works/pi-coding-agent";
 function createPiResourceExtension(options = {}) {
   const cwd = options.cwd ?? process.cwd();
   const agentDir = options.agentDir ?? getAgentDir2();
-  const settingsManager = options.settingsManager ?? SettingsManager3.create(cwd);
-  const resourceLoader = options.resourceLoader ?? new DefaultResourceLoader3({
+  const settingsManager = options.settingsManager ?? SettingsManager2.create(cwd);
+  const resourceLoader = options.resourceLoader ?? new DefaultResourceLoader2({
     cwd,
     agentDir,
     settingsManager
@@ -1638,40 +5737,105 @@ function createPiResourceExtension(options = {}) {
 
 // packages/runner/src/composition.ts
 async function assembleDurableZero(options = {}) {
-  const cwd = resolve7(options.cwd ?? process.cwd());
-  const sessionDir = options.sessionDir ? resolve7(options.sessionDir) : options.session ? resolve7(cwd, options.session) : resolve7(cwd, ".durable/sessions/default");
-  const executionEnv = options.executionEnv ?? new LocalNodeExecutionEnv({ cwd });
-  const store = options.store ?? new PiDurableSessionStore({ sessionDir, cwd });
-  const resourceExt = createPiResourceExtension({ cwd });
-  const codemodeExt = new CodemodeExtension();
-  let modelProvider = options.modelProvider;
-  if (!modelProvider) {
-    try {
-      const { modelRuntime, settingsManager } = await setupRunnerModels(cwd, {
-        provider: options.provider,
-        model: options.model,
-        thinking: options.thinking
-      });
-      modelProvider = new PiAiModelProvider(modelRuntime, settingsManager);
-    } catch {
-    }
+  const cwd = resolve4(options.cwd ?? process.cwd());
+  const sessionDir = options.sessionDir ? resolve4(options.sessionDir) : options.session ? resolve4(cwd, options.session) : resolve4(cwd, ".durable/sessions/default");
+  let engine;
+  let codemodeBuiltin;
+  if (options.engine) {
+    engine = options.engine;
+  } else {
+    codemodeBuiltin = createCodemodeBuiltinExtension();
+    const extEnv = process.env.PI_ADDITIONAL_EXTENSIONS;
+    const extPaths = [
+      ...options.extensions ?? (options.extension ? [options.extension] : []),
+      ...extEnv ? extEnv.split(",").map((s) => s.trim()).filter(Boolean) : []
+    ];
+    const settingsManager = SettingsManager3.create(cwd);
+    const agentDir = getAgentDir3();
+    const resourceLoader = new DefaultResourceLoader3({
+      cwd,
+      agentDir,
+      settingsManager,
+      extensionFactories: [createMcpExtension3()],
+      additionalSkillPaths: options.skills,
+      additionalExtensionPaths: extPaths.length > 0 ? extPaths : void 0,
+      noExtensions: options.noGlobalExtensions ?? false
+    });
+    const resourceExt = createPiResourceExtension({
+      cwd,
+      settingsManager,
+      resourceLoader
+    });
+    const executionEnvFactory = options.executionEnvFactory ?? ((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
+    const dependencies = {
+      executionEnvFactory,
+      settingsManager: resourceExt.configProvider,
+      resourceLoader: resourceExt.resourceLoader,
+      builtins: [codemodeBuiltin]
+    };
+    const cli = {
+      provider: options.provider,
+      model: options.model,
+      thinking: options.thinking,
+      extension: options.extension,
+      extensions: options.extensions,
+      skills: options.skills,
+      noGlobalExtensions: options.noGlobalExtensions
+    };
+    engine = new PiDurableEngine({
+      sessionDir,
+      session: options.session,
+      cwd,
+      continueSession: options.continueSession,
+      cli,
+      dependencies
+    });
   }
   const coordinator = new SessionCoordinator({
-    store,
-    modelProvider,
-    executionEnv
+    engine,
+    sessionDir
   });
+  try {
+    await coordinator.start();
+  } catch (err) {
+    if (codemodeBuiltin && typeof codemodeBuiltin.teardown === "function") {
+      await codemodeBuiltin.teardown().catch(() => {
+      });
+    }
+    throw err;
+  }
   const server = new StdioJsonRpcServer({
     stdin: options.stdin,
     stdout: options.stdout,
     handler: async (method, params) => {
       if (method === "session/prompt") {
-        return coordinator.prompt(params.content, params.options);
+        return await coordinator.prompt(params.content, params.options);
       }
-      if (method === "session/abort") return coordinator.abort();
-      if (method === "session/getState") return coordinator.getState();
-      if (method === "session/setSubagentPolicy") return coordinator.setSubagentPolicy(params);
-      throw new Error(`Unknown method: ${method}`);
+      if (method === "session/abort") {
+        return await coordinator.abort(params?.conversationId);
+      }
+      if (method === "session/getState") {
+        return await coordinator.getState(params?.conversationId);
+      }
+      if (method === "session/getTranscript") {
+        return await coordinator.getTranscript(
+          params?.conversationId,
+          params?.limit
+        );
+      }
+      if (method === "session/getStats") {
+        return await coordinator.getStats(params?.conversationId);
+      }
+      if (method === "session/setSubagentPolicy") {
+        return await coordinator.setSubagentPolicy(params);
+      }
+      const MethodNotFoundClass = JsonRpcMethodNotFoundError;
+      if (MethodNotFoundClass) {
+        throw new MethodNotFoundClass(method);
+      }
+      const err = new Error(`Method not found: ${method}`);
+      err.code = -32601;
+      throw err;
     }
   });
   server.start();
@@ -1690,27 +5854,32 @@ async function assembleDurableZero(options = {}) {
   };
   return {
     coordinator,
-    store,
-    executionEnv,
+    engine,
     server,
-    resourceExt,
-    codemodeExt,
-    modelProvider,
     close
   };
 }
 
 // packages/runner/src/main.ts
-async function main() {
-  const args = parseCliArgs(process.argv.slice(2));
+async function main(argv = process.argv.slice(2)) {
+  const args = parseCliArgs(argv);
   const instance = await assembleDurableZero({
     cwd: args.cwd,
     session: args.session,
+    sessionDir: args.sessionDir,
+    continueSession: args.continueSession,
     provider: args.provider,
     model: args.model,
-    thinking: args.thinking
+    thinking: args.thinking,
+    extension: args.extension,
+    extensions: args.extensions,
+    skills: args.skills,
+    noGlobalExtensions: args.noGlobalExtensions
   });
+  let isExiting = false;
   const cleanup = async () => {
+    if (isExiting) return;
+    isExiting = true;
     try {
       await instance.close();
     } catch (err) {
@@ -1718,10 +5887,16 @@ async function main() {
     }
     process.exit(0);
   };
-  process.on("SIGINT", () => {
+  process.stdin.once("end", () => {
     void cleanup();
   });
-  process.on("SIGTERM", () => {
+  process.stdin.once("close", () => {
+    void cleanup();
+  });
+  process.once("SIGINT", () => {
+    void cleanup();
+  });
+  process.once("SIGTERM", () => {
     void cleanup();
   });
   process.on("uncaughtException", (err) => {

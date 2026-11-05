@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Task 1 Root Delta — Independent Execution Environment Seam Probes" time="0.080918" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="Probe 1: Rejects configuration with BOTH executionEnvFactory and nativeExecutionEnvFactory as genuine error (AP-012, AP-074)" time="0.002173" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/independent-review/native-env-seam-probes.test.mjs"/>
+		<testcase name="Probe 2: Actual native Root startup with custom Core executionEnvFactory invokes factory and creates owned file effect" time="0.042850" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/independent-review/native-env-seam-probes.test.mjs"/>
+		<testcase name="Probe 3: Actual native Root startup with custom Native nativeExecutionEnvFactory invokes factory and creates owned file effect" time="0.018983" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/independent-review/native-env-seam-probes.test.mjs"/>
+		<testcase name="Probe 4: Actual native Root startup with DEFAULT wiring uses NodeExecutionEnv with 24 required native methods" time="0.016271" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/native-env-seam/independent-review/native-env-seam-probes.test.mjs"/>
+	</testsuite>
+	<!-- tests 4 -->
+	<!-- suites 1 -->
+	<!-- pass 4 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 895.435792 -->
+</testsuites>

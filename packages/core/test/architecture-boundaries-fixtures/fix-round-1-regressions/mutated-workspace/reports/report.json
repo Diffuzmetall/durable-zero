@@ -1,0 +1,61 @@
+{
+  "task": "Task 5A: Architecture Boundary & Regression Guards (Round 4)",
+  "timestamp": "2026-11-04T23:27:50.556Z",
+  "status": "FAIL",
+  "sourceBaseline": "7d4b235",
+  "summary": {
+    "coreSourceFilesScanned": 1,
+    "coreBoundaryViolationsCount": 1,
+    "corePackageJsonViolationsCount": 0,
+    "workspaceCyclesCount": 0,
+    "layeringViolationsCount": 0,
+    "cliServeDelegationValid": false,
+    "legacyFilesFoundCount": 0,
+    "totalViolations": 2,
+    "testSuiteResults": {
+      "note": "Standalone audit execution"
+    }
+  },
+  "cliServeAudit": {
+    "isOk": false,
+    "callsMain": false,
+    "error": "CLI entry script not found: /Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mutated-workspace/packages/cli/bin/durable-zero.js"
+  },
+  "workspaceCycles": [],
+  "layeringViolations": [],
+  "coreBoundaryViolations": [
+    {
+      "file": "/Users/vanya/Projects/durable-zero/packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mutated-workspace/packages/core/src/violation.ts",
+      "line": 1,
+      "character": 1,
+      "specifier": "@earendil-works/pi-durable",
+      "kind": "static-import",
+      "rule": "AP-010",
+      "severity": "P0",
+      "message": "Forbidden vendor dependency in Core: \"@earendil-works/pi-durable\". All vendor packages must live strictly in adapters."
+    }
+  ],
+  "corePackageJsonViolations": [],
+  "legacyFilesFound": [],
+  "workspaceGraph": {
+    "@durable-zero/core": [
+      "@durable-zero/contracts"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/core/src/violation.ts",
+      "sha256": "bc7e89bed9df2bc78ed6687c545fc3ff82eed98036f4c29afb77bfe6bfea0637",
+      "lines": 3,
+      "dependencies": [
+        {
+          "specifier": "@earendil-works/pi-durable",
+          "kind": "static-import",
+          "line": 1,
+          "character": 1,
+          "rawText": "import { Harness } from \"@earendil-works/pi-durable\";"
+        }
+      ]
+    }
+  ]
+}

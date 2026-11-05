@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Type Remediation B (Runner Foundation) Independent Semantic Probes" time="0.023618" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="Probe 1: parseCliArgs produces valid DTO and handles trailing flags without crashing" time="0.001755" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/remediation-b-probes.test.mjs"/>
+		<testcase name="Probe 2: Contracts projectTaskState and projectTaskReceipt omit undefined keys under exactOptionalPropertyTypes" time="0.002856" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/remediation-b-probes.test.mjs"/>
+		<testcase name="Probe 3: JsonRpcMethodNotFoundError preserves nominal identity and optional method field" time="0.000562" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/remediation-b-probes.test.mjs"/>
+		<testcase name="Probe 4: Root session/abort executes coordinator, engine, and emits session/aborted event without sticky boolean" time="0.008647" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/remediation-b-probes.test.mjs"/>
+		<testcase name="Probe 5: tsconfig.src.json enforces strict source typechecking across all packages" time="0.008333" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/remediation-b-probes.test.mjs"/>
+	</testsuite>
+	<!-- tests 5 -->
+	<!-- suites 1 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 336.311959 -->
+</testsuites>

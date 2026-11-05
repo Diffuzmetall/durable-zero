@@ -3,7 +3,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { DurableEngine } from "@durable-zero/core";
 
 const argv = process.argv.slice(2);
 
@@ -34,30 +33,18 @@ async function main() {
 	const command = argv[0];
 
 	if (command === "doctor") {
-		console.log("durable-zero doctor: checking environment...");
-		console.log(`- Node.js: ${process.version}`);
-		console.log(`- Platform: ${process.platform} (${process.arch})`);
-		console.log("- SQLite WAL: Supported (Node.js native storage)");
-		console.log("- QuickJS WASI: Available");
-		console.log("- Socket Daemon: Available (Unix domain socket)");
-		console.log("HEALTHY: All durable-zero core capabilities are operational.");
-		process.exit(0);
+		console.error("durable-zero: 'doctor' command is not implemented in this release. Use 'serve' for JSON-RPC agent execution.");
+		process.exit(1);
 	}
 
 	if (command === "run") {
-		const prompt = argv[1];
-		if (!prompt) {
-			console.error("Error: prompt is required. Example: durable-zero run \"Check git status\"");
-			process.exit(1);
-		}
-		console.log(`Starting agent task: "${prompt}"...`);
-		// Standalone execution using DurableEngine
-		process.exit(0);
+		console.error("durable-zero: standalone 'run' command is not supported. Use 'durable-zero serve' for JSON-RPC agent execution.");
+		process.exit(1);
 	}
 
 	if (command === "serve") {
-		// Launch stdio/socket runner server
-		await import("../../core/src/runner-server.ts");
+		const { main: runRunner } = await import("../../runner/dist/main.js");
+		await runRunner(argv.slice(1));
 		return;
 	}
 

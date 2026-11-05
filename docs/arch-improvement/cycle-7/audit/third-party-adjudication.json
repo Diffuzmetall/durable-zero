@@ -1,0 +1,68 @@
+[
+  {
+    "claim": "Task 1–3 — отдельные горизонтальные gates вместо одного Slice 0",
+    "verdict": "Подтверждено",
+    "why": "В ab637a6 задачи всё ещё разделены по core/adapter/runner. Сам порядок подшагов не дефект; опасны самостоятельные DONE/PASS до общего E2E outcome.",
+    "action": "Один reviewable deliverable для сквозной вертикали; unit tests внутри допустимы."
+  },
+  {
+    "claim": "Host-обвязка забыта в core",
+    "verdict": "Устарело частично",
+    "why": "ab637a6 явно добавил host-rpc extraction, stdout guard, host/interaction и removal globals. Но порт, consumers и RED→GREEN не определены.",
+    "action": "Не повторять старое замечание; закрыть конкретные пробелы F06."
+  },
+  {
+    "claim": "Host/probe нужно проверить до массовой миграции",
+    "verdict": "Подтверждено с оговоркой",
+    "why": "В новой версии Task 5 всё ещё идёт после переноса Task 4. Это разумное снижение интеграционного риска, но AP-075 не требует вместить все features в Slice 0.",
+    "action": "Ранний отдельный обратный tool round-trip; probe — отдельная read-only проверка."
+  },
+  {
+    "claim": "Probe Mode решит конфликт блокировок",
+    "verdict": "Отклонено",
+    "why": "Отсутствие session в discovery не решает двойное владение store/openDurable в persistent mode.",
+    "action": "Отдельно решить F04; no-session не использовать как обход lifecycle ошибки."
+  },
+  {
+    "claim": "unknown в events автоматически нарушает AP-011/076; core должен знать JsonRpcNotification",
+    "verdict": "Отклонено в такой формулировке",
+    "why": "AP-011 — когезия/связность, strictness — AP-029. unknown допустим на непроверенной границе; JsonRpcNotification в core сам создаст transport leak.",
+    "action": "Типизированный доменный event union + проверенный mapper в protocol/runner. Конкретный host RPC method не обязан входить в IAgentEngine."
+  },
+  {
+    "claim": "start(sessionDir) неизбежно теряет cwd/model/thinking",
+    "verdict": "Частично",
+    "why": "Эти параметры могут быть constructor-injected. В плане точной constructor signature/config mapping нет — вот доказуемый дефект.",
+    "action": "Зафиксировать engine factory/config contract; не раздувать start по догадке."
+  },
+  {
+    "claim": "Переносить по три файла или слоями events → runtime → SQLite",
+    "verdict": "Отклонено как готовое решение",
+    "why": "Число файлов не задаёт безопасную границу. Storage уже перемещён. Слои повторяют запрещённую горизонтальную нарезку и могут разрывать import closure.",
+    "action": "Нарезать по исполняемому поведению и замыканию зависимостей с green E2E."
+  },
+  {
+    "claim": "Task 5 очистки core хорошо описан; достаточно pnpm --filter core build",
+    "verdict": "Не подтверждено",
+    "why": "В ab637a6 это Task 6; остаются F01/F09. В core/package.json нет script build, только build:runner.",
+    "action": "Использовать реальные команды и добавить failing graph/packaging gates, не выдумывать отсутствующий script."
+  },
+  {
+    "claim": "Review Focus не привязан к тестам",
+    "verdict": "Подтверждено",
+    "why": "Новая редакция не добавила точные cases/assertions для empty/closed/cancel и test-first host/probe.",
+    "action": "Owner task + literal assertions + mutation caught для каждого пункта."
+  },
+  {
+    "claim": "В финальном gate вообще не указан compiled binary",
+    "verdict": "Отклонено",
+    "why": "Task 7 явно требует compiled binary; ошибка другая: dist/bin/durable-zero.js не создаётся нынешней сборкой, а до E2E нет свежего build.",
+    "action": "Исправить путь/packaged entrypoint и проверять compiled artifact без TS source fallback."
+  },
+  {
+    "claim": "Всегда возвращать фиксы прежнему автору, никогда fresh",
+    "verdict": "Уточнить",
+    "why": "Superpowers fix-loop сохраняет автора в rounds 1–3, дальше fresh context/escalation; runtime может не поддерживать resume. Арх-гейт строже generic parking после cap.",
+    "action": "Resume в рамках slice, fresh при подтверждённом stuck, structural block не превращать в PASS."
+  }
+]

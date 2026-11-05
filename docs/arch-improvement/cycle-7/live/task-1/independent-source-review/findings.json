@@ -1,0 +1,97 @@
+{
+  "milestone": "fc0909602e7969df080259a2e2d4a7114be450b8",
+  "review_type": "independent-source-spec-architecture-review",
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "id": "FND-T1-01",
+      "severity": "P1",
+      "title": "Sticky Abort in SessionCoordinator Bricks Subsequent Prompts and Leaks Child Abort to Root",
+      "file": "packages/core/src/session/coordinator.ts:70-72, 120-124",
+      "evidence": "In coordinator.ts, abort() sets this.isAborted = true unconditionally. In prompt(), if (this.isAborted) throws SessionError('SESSION_ABORTED'). The flag is never reset to false. In a living agent session, aborting generation cancels the current turn but allows subsequent user prompts/steering; the current implementation permanently bricks all future prompts. Furthermore, calling abort(childConversationId) sets this.isAborted on the root coordinator, terminating the root session.",
+      "impact": "Session becomes permanently unusable after aborting an in-flight prompt, and subagent abort cascades to brick root session.",
+      "rule": "AP-012, AP-021",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-02",
+      "severity": "P1",
+      "title": "Hardcoded contentIndex in DurableEventAdapter Collapses Multi-Part Streaming Blocks",
+      "file": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts:43, 118, 122",
+      "evidence": "In durable-event-adapter.ts lines 43, 118, 122, assistantMessageEvent emissions for thinking_delta, text_delta, and thinking_end hardcode contentIndex: 0. While watchEvents correctly extracts contentIndex: i from multi-block generations, DurableEventAdapter discards change.contentIndex. Multi-part responses (e.g. index 0 thinking, index 1 text) collide at index 0.",
+      "impact": "Streaming text and thinking deltas for multi-block responses overwrite or collide at contentIndex 0 on the JSON-RPC wire.",
+      "rule": "AP-026, AP-076",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-03",
+      "severity": "P1",
+      "title": "Decorative Dependencies in SessionCoordinator (Hollow Constructor Injection)",
+      "file": "packages/core/src/session/coordinator.ts:28-30, 37-39, 52-54",
+      "evidence": "SessionCoordinatorOptions declares modelProvider?: IModelProvider, executionEnv?: IExecutionEnvironment, and resourceLoader?: IResourceLoader. SessionCoordinator constructor assigns them to private fields, but none of these three fields are ever called or referenced anywhere in the class methods.",
+      "impact": "Violates AP-074 and AP-076: decorative dependencies and hollow DI surface misleading callers into passing uninvoked services.",
+      "rule": "AP-074, AP-076",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-04",
+      "severity": "P2",
+      "title": "Incomplete Assertion Integrity in Walking Skeleton Test Oracle (Second Turn Reply Unverified)",
+      "file": "packages/runner/test/e2e-walking-skeleton.test.ts:319-335",
+      "evidence": "Step 10 of e2e-walking-skeleton.test.ts submits prompt 'Second turn', waits for turn_complete, and asserts stateAfterSecondPrompt.entryCount >= 4. It never queries session/getTranscript to verify the assistant's second reply text is 'Echo: Second turn'. Furthermore, the test does not verify that streaming deltas arrived strictly prior to turn_complete emission.",
+      "impact": "Verification relies on receipt and count assertions rather than end-to-end transcript content integrity (AP-076).",
+      "rule": "AP-028, AP-076",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-05",
+      "severity": "P2",
+      "title": "Double Disposal of Built-in Codemode Extension on Session Close",
+      "file": "packages/runner/src/composition.ts:167-170",
+      "evidence": "assembleDurableZero.close() explicitly calls codemodeBuiltin.teardown(). However, coordinator.close() -> PiDurableEngine.close() -> runtime.close() -> activeEnvState.cleanup() -> codingRegistry.builtinRegistry.teardownAll() already invokes teardown() on all registered builtins. codemodeBuiltin is torn down twice.",
+      "impact": "Double invocation of teardown on the same extension instance risks double-free errors or unhandled rejections during shutdown.",
+      "rule": "AP-023, AP-074",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-06",
+      "severity": "P2",
+      "title": "StdioJsonRpcServer Ignores Stdin EOF / Close Event (Process Hang Hazard)",
+      "file": "packages/protocol/src/transport/stdio-server.ts:31-33",
+      "evidence": "StdioJsonRpcServer.start() registers a listener for 'data' on stdin, but does not attach listeners for 'end' or 'close'. When the parent pipe closes without an OS signal, durable-zero serve keeps running indefinitely.",
+      "impact": "Subprocesses spawned by parent orchestrators or test runners hang as zombie processes when stdin closes.",
+      "rule": "AP-023, AP-059",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-07",
+      "severity": "P2",
+      "title": "Hollow CLI Command Prototypes in Production Entrypoint ('run' and 'doctor')",
+      "file": "packages/cli/bin/durable-zero.js:34-56",
+      "evidence": "durable-zero run prints a string and calls process.exit(0) without executing any agent task. durable-zero doctor prints hardcoded capability strings asserting operational health without running any actual environment or storage checks.",
+      "impact": "Production CLI prints fake success receipts for commands that are not implemented.",
+      "rule": "AP-059, AP-076",
+      "fix_decision": "fix-now"
+    },
+    {
+      "id": "FND-T1-08",
+      "severity": "P3",
+      "title": "Latent Dual-Lock Contention in SessionCoordinator if ISessionStore is Supplied",
+      "file": "packages/core/src/session/coordinator.ts:58-61, 148-150",
+      "evidence": "SessionCoordinator.start() calls this.engine.start() (which acquires SQLite session.lock via selectSession) and then if (this.store) await this.store.acquireLock(). If store is supplied, two locks are acquired on the same session directory.",
+      "impact": "Potential lock contention or split-brain lock ownership if store is passed; currently latent as assembleDurableZero omits store.",
+      "rule": "AP-034, AP-074",
+      "fix_decision": "log-only"
+    },
+    {
+      "id": "FND-T1-09",
+      "severity": "P3",
+      "title": "Residual Split-Brain Between Runner Inline Handler and SessionDispatcher Module",
+      "file": "packages/runner/src/composition.ts:122-153",
+      "evidence": "assembleDurableZero implements an inline switch/case for 6 methods, while Task 4B developed createSessionDispatcher with full parameter extraction and typed errors. These paths should be unified in the composition step.",
+      "impact": "Two distinct request dispatch implementations exist in runner until composition integration.",
+      "rule": "AP-011, AP-020",
+      "fix_decision": "log-only"
+    }
+  ]
+}

@@ -1,0 +1,615 @@
+✔ CodemodeExtension encapsulates native QuickJS sandbox per instance (2.4635ms)
+✔ CodemodeExtension tracks separate sandboxes per context (0.222542ms)
+✔ PiAiModelProvider implements IModelProvider with explicit dependency injection (57.970625ms)
+✔ PiAiModelProvider lists available models from native ModelRuntime (39.574208ms)
+✔ PiAiModelProvider resolves valid model by id and normalizes model reference (22.225541ms)
+✔ PiAiModelProvider resolves model when provider is omitted or prefixed in model string (15.765583ms)
+✔ PiAiModelProvider fails fast when model cannot be resolved (30.664792ms)
+✔ PiAiModelProvider resolves fallback model when ref is undefined (40.178834ms)
+✔ controller.submit returns atomic AdmissionReceipt upon input admission (12480.593875ms)
+✔ openDurable calls beforeResume hook strictly before harness.resume (10939.22675ms)
+✔ BuiltinExtensionRegistry: registers, gets, and lists built-in extensions (4.759125ms)
+✔ BuiltinExtensionRegistry: throws on duplicate extension id (0.613958ms)
+✔ BuiltinExtensionRegistry: runs teardownAll in reverse order (0.175916ms)
+✔ session-commands: canonical set_subagent_policy rejects legacy body and accepts canonical record (15.975875ms)
+▶ Child Native Batch Outcome Truth (Task 7)
+  ✔ run_end followed by submission unanswered with reason aborted emits wire aborted (11.685083ms)
+  ✔ run_end followed by submission unanswered with reason cancelled emits wire aborted (0.183875ms)
+  ✔ DONE input submission wins over intermediate recoverable tool task_failed (0.148541ms)
+  ✔ unanswered submission without abort reason emits stopReason error with details (0.164375ms)
+✔ Child Native Batch Outcome Truth (Task 7) (14.445083ms)
+✔ DynamicCodemodeNamespaces preserves distinct description and instructions (0.977833ms)
+✔ DynamicCodemodeNamespaces updates existing namespace with richer instructions (0.123459ms)
+✔ Cycle 85: createNestedToolExecutor passes execution environment to CodingTools (31.13925ms)
+✔ Cycle 85: codemode script successfully executes tools.bash and tools.read via nested executor (206.543791ms)
+✔ rejected compact context is diagnosed distinctly, not silently treated as empty context (2.209583ms)
+✔ rejected post-compact hook is best effort with safe causal diagnostic, not a new native failure (3.155375ms)
+✔ successful hook preserves value and the controller has no silent compact catches (3.276584ms)
+✔ createHarnessSettings resolves model-specific compaction override for 300k max window from settings (1.570041ms)
+✔ createHarnessSettings uses standard settings when model has no explicit override (0.120583ms)
+✔ createHarnessSettings uses default model from settingsManager when no active model provided (0.099416ms)
+✔ Durable read contracts are imported directly, not through runtime composition root (2.938917ms)
+✔ Cycle 95: startRunnerControlChannel processes abort_task from control.jsonl (59.931209ms)
+✔ parseConversationId accepts valid numeric and string IDs (2.028791ms)
+✔ parseConversationId throws on invalid or non-positive IDs (0.553125ms)
+✔ TaskNames: limits internal cache to 512 entries without unbounded memory leak (2.121083ms)
+✔ courier liveness retains every nonterminal native status, including sleeping and completing (1.288625ms)
+✔ an actual reporter queues to an existing sleeping courier without creating another courier (40.296ms)
+✔ courier durably sleeps until exact next-phase deadline and resumes same ID after reopen (42.379291ms)
+✔ actual 1.3 SQLite fixture opens/reopens in 1.4 preserving transcript IDs, child and adapter documents (26.600958ms)
+▶ FND-T1-10: DurableChildEventAdapter Per-Content-Index Catchup and Turn Isolation
+  ✔ multi-turn: already-complete text emits NO duplicate delta on message_end across turns (1.817208ms)
+  ✔ partial tail catchup: emits ONLY missing suffix at the correct non-zero contentIndex with parentRef correlation (0.339542ms)
+  ✔ malformed/empty content: does not manufacture undefined text or throw (0.254333ms)
+✔ FND-T1-10: DurableChildEventAdapter Per-Content-Index Catchup and Turn Isolation (4.296375ms)
+▶ FND-T1-02: ContentIndex preservation in DurableEventAdapter
+  ✔ preserves real contentIndex for thinking and multi-block text deltas (no hardcoded 0 collapse) (2.24ms)
+✔ FND-T1-02: ContentIndex preservation in DurableEventAdapter (3.452708ms)
+✔ createCodingRegistry installs native Subagent tool (5.133166ms)
+▶ ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)
+  ✔ delegates environment instantiation to injected ExecutionEnvFactory without depending on concrete adapters (0.73125ms)
+  ✔ fails fast when ExecutionEnvFactory is not provided (AP-012, AP-072, AP-073) (0.213917ms)
+  ✔ fails fast in openDurable when executionEnvFactory is not provided (AP-012, AP-072, AP-073) (0.397417ms)
+✔ ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072) (1.982625ms)
+▶ Extension UI Context Safety (Issue #14 Defect 1)
+  ✔ provides a full SDK-shaped no-op context that prevents TypeError when extensions access ui members (1.985166ms)
+✔ Extension UI Context Safety (Issue #14 Defect 1) (2.686209ms)
+✔ ExtensionActions.sendUserMessage: delegates to onSubmitUserMessage in FSM (1.337291ms)
+✔ safeCloneRecord: clones frozen objects so downstream mutation does not throw (2.168333ms)
+✔ safeCloneRecord: clones arrays defensively (1.017375ms)
+✔ D-17: Dynamic System Prompt renders mcp_servers and dynamic sections from before_agent_start (3.553834ms)
+✔ D-16: mountExtensionBridge synchronizes direct MCP servers and dynamic sections at boot (54.957ms)
+✔ normalizeModelReference handles { provider, modelId } and { provider, id } (1.854792ms)
+✔ normalizeModelReference strips redundant provider prefix from modelId (0.098334ms)
+✔ formatModelCliArg generates single clean provider/modelId argument (0.086959ms)
+▶ Prompt Adapter (Cycle 61 - AP-010, AP-018)
+  ✔ derives tool snippets directly from canonical tool definitions (1.647208ms)
+  ✔ maps canonical tool guidelines into rules section (0.279583ms)
+  ✔ injects context files provided via resourceLoader.getAgentsFiles() (0.38375ms)
+  ✔ injects context files provided directly via promptOptions.contextFiles (0.28325ms)
+  ✔ formats skills when resourceLoader provides skills (0.535042ms)
+  ✔ renders prompt guidelines for extension tools registered on input.agent.tools (0.336042ms)
+✔ Prompt Adapter (Cycle 61 - AP-010, AP-018) (4.746209ms)
+✔ native execution ACK restore: restores persisted checkpoint from harness doc (29.269375ms)
+✔ native execution ACK: corrupt record throws typed SubagentPolicyLoadError with Zod cause (11.526167ms)
+✔ holder instance isolation: separate holders maintain independent state (4.34275ms)
+✔ monotonic revisions: idempotent retry, conflict, downgrade, and recovery (1.050042ms)
+✔ session-commands: set_subagent_policy updates holder and persists before prompt (10.229625ms)
+✔ session-commands: targeted child get_state reads child agent without altering root (10.884792ms)
+✔ initial subscription failure releases the newly acquired view (14.3855ms)
+✔ conversation replacement disposes old binding and ignores stale callbacks (3.428833ms)
+✔ failed new subscription preserves the previous active conversation (1.696291ms)
+✔ task binding is not double subscribed, closes once and suppresses late updates (2.660833ms)
+✔ runtime cleanup tries every owned teardown in order and retains failures (2.034834ms)
+✔ runtime-graph-ownership: root conversation scope includes all root-owned conversations (1.805709ms)
+✔ runtime-graph-ownership: child conversation scope includes self and owned descendants, NOT parent or unrelated (0.173ms)
+✔ runtime-graph-ownership: fork parent is NOT creator ownership (0.1795ms)
+✔ runtime-graph-ownership: terminal owner retains conversation ownership (1.82075ms)
+✔ runtime-graph-ownership: filterSnapshotForConversation isolates nodes, conversations, and receipts (1.738166ms)
+✔ runtime-graph-receipts: records terminal task with exact outcome and duration (1.949875ms)
+✔ runtime-graph-receipts: preserves tool isError separately from task outcome (0.284833ms)
+✔ runtime-graph-receipts: preserves exact failed/aborted/faulted/orphaned outcomes (1.561916ms)
+✔ runtime-graph-receipts: bounds capacity to 128 items and evicts oldest (0.628459ms)
+✔ runtime-graph-receipts: preserves native Pi Durable orphaned outcome when genuinely reported (0.159333ms)
+✔ runtime-graph-receipts: preserves task owner on terminal receipt (0.149875ms)
+✔ runtime-graph-source: owner chain is preserved after owner task completes (84.115708ms)
+✔ runtime-graph-source: disappearance without receipt marks completeness limited without inventing orphaned outcome (83.164792ms)
+✔ runtime-graph-source: harness commits record authoritative terminal task receipts and conversation records (82.364833ms)
+✔ runtime-graph-source: projects live tasks into snapshot with bounded debounce (73.280417ms)
+✔ runtime-graph-source: sustained updates do not starve publication (maxDebounceMs fires) (251.17525ms)
+✔ runtime-graph-source: marks completeness as limited when live tasks exceed 512 (40.935666ms)
+✔ runtime-graph-source: deduplicates identical structural state before revision and timestamp (does not spam) (125.436709ms)
+✔ forkSessionDatabase: forks database, prunes entries and tasks above checkpointId, and cleans locks (9.540334ms)
+▶ Session Lock Eviction and Ownership Tracking (Cycle 71, D-20)
+  ✔ isProcessAlive correctly checks process liveness (1.173959ms)
+  ✔ writes session.owner.json upon lock acquisition and removes it on release (8.990375ms)
+[SessionStorage] unlock warning for /var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/pi-dead-lock-test-NEUXNr/dead-session: Lock is not acquired/owned by you
+  ✔ forcibly evicts stale lock and session.owner.json left by dead PID (320.539875ms)
+  ✔ fails closed when another live runner process holds the session lock (331.398958ms)
+  ✔ fails with actionable error containing holding PID if process is alive (312.46375ms)
+✔ Session Lock Eviction and Ownership Tracking (Cycle 71, D-20) (975.695ms)
+✔ SessionDaemon: Master creates unix socket and client communicates over IPC (BL-DZ-01) (6.767292ms)
+✔ SessionDaemon: cleans up stale orphan socket file when previous master crashed (3.32875ms)
+✔ isProcessAlive accurately identifies process liveness and handles invalid pids (1.839625ms)
+✔ isVerifiedRunnerProcess: returns true for current node process (10.325625ms)
+✔ isVerifiedRunnerProcess: returns false for non-existent or invalid PID (0.217542ms)
+✔ isVerifiedRunnerProcess: returns false for PID 0 or negative (0.070625ms)
+✔ acquireSessionLock fails closed and does not kill live runner process (370.971959ms)
+▶ @durable-zero/adapter-pi-durable (SQLite Storage Integration)
+  ✔ acquires lock, persists documents in SQLite, and releases lock safely (33.116292ms)
+✔ @durable-zero/adapter-pi-durable (SQLite Storage Integration) (33.921125ms)
+✔ HostRpcManager: forwardToolCall emits host_tool_call event and resolves via handleHostToolResult (2.493458ms)
+✔ HostRpcManager: requestInteraction emits host_interaction_request and resolves via handleHostInteractionResponse (0.226459ms)
+✔ HostRpcManager: handles unknown or late results gracefully (1.119083ms)
+✔ buildTechnicalWorkerRole creates a focused, non-meta instruction envelope (0.947792ms)
+✔ Subagent tool parameters accept task and optional background flag (0.091125ms)
+✔ Subagent tool in background mode returns immediately without waiting for completion (0.54625ms)
+✔ Subagent tool in foreground mode (background: false) waits for child completion (0.768459ms)
+✔ Subagent tool execution returns output property according to Durable 1.2.0 contract (0.949458ms)
+✔ Subagent tool announces conversationId and task for BB subthread mirror (1.23575ms)
+✔ Subagent tool definition safely handles missing BB_THREAD_ID without crashing (0.090166ms)
+✔ Subagent: background conversation lookup reuses existing anchor conversation on replay (2.302542ms)
+✔ createDurableController: abort() performs cascading abort with { background: true } across all subagents (2.666917ms)
+✔ createDurableController: abort() does not execute child.abort inside commit transaction (prevents deadlock) (0.207125ms)
+✔ Courier: recovers from uncertain delivery via hold watchdog instead of deadlocking (52.260667ms)
+✔ clearDeliveryHold: explicitly removes hold from document (0.180666ms)
+✔ formatSubagentMirrorPrompt generates sovereign pi prefix when requested (1.035416ms)
+✔ parseSubagentMirrorPrompt parses both sovereign pi and legacy bb prefixes (0.436542ms)
+✔ formatSubagentMirrorPrompt formats explicit versioned envelope with session, parent, conv, and task (1.096125ms)
+✔ formatSubagentMirrorPrompt formats numeric conversation IDs cleanly (0.084375ms)
+✔ parseSubagentMirrorPrompt detects and extracts envelope and task (0.238ms)
+✔ parseSubagentMirrorPrompt handles whitespace gracefully (0.186333ms)
+✔ parseSubagentMirrorPrompt returns isMirror: false for ordinary prompts not using reserved prefix (0.272833ms)
+✔ parseSubagentMirrorPrompt throws InvalidSubagentMirrorEnvelopeError for reserved prefix with invalid schema or unsupported version (0.359416ms)
+✔ parseSubagentMirrorPrompt permits safe dots in session key for .jsonl formats (0.216459ms)
+✔ stripSubagentMirrorEnvelope strips envelope if present and returns clean task (0.437875ms)
+✔ Subagent module is exported and valid (1.30425ms)
+✔ foreground subagent: record is valid strict JSON, omits anchorTaskId, and executes to result (41.179375ms)
+✔ background subagent: preserves anchorTaskId and reporter under strict JSON (2.000375ms)
+✔ Subagent: rejects nested subagent recursion when conversationId > 1 (1.347541ms)
+✔ Subagent: rejects with SubagentModelUnavailableError when configured model is unavailable (0.472417ms)
+✔ startSubagentWatcher: bootstraps existing subagent conversations on initialization (1.29625ms)
+✔ startSubagentWatcher: ensureAttached attaches on resume without duplicate streams (0.160875ms)
+✔ Issue #21: adaptExtensionTool preserves own property descriptors on context across shallow copy (1.273334ms)
+✔ Slice 3: DurableEventAdapter routes nested tool end cleanly with projector (2.77775ms)
+✔ Remediation P1 RED: DurableChildEventAdapter seeds snapshot with PREFIXED keys and resets on run_start (0.567541ms)
+✔ Remediation P1 RED: DurableEventAdapter clears scoped projection state on run_end (0.612416ms)
+✔ Slice 3: DurableChildEventAdapter prefixes toolCallId and preserves conversationId (0.227542ms)
+✔ Slice 3: Subagent terminal discovery resolves conversationId from canonical details (0.135375ms)
+✔ ViewStreamProjector: synthesizes agent_start and turn_start on live run transition (1.027583ms)
+✔ ViewStreamProjector: synthesizes turn_end and agent_end when live run completes (0.094292ms)
+✔ watchEvents: emits message_update with incremental text deltas from pi.live.generation (2.25025ms)
+✔ watchEvents: emits tool_execution_start with arguments from assistant toolCall entries (3.018916ms)
+✔ watchEvents: emits tool_execution_start from liveTools with generation content arguments (0.257792ms)
+✔ WatcherCompat: extracts value from v1.5 WatchCall ({ kind: 'value', value }) (2.666791ms)
+✔ WatcherCompat: preserves raw value from v1.4 watch callback (0.092333ms)
+✔ CLI: --version prints version string (113.063ms)
+✔ CLI: doctor accurately reports unsupported prototype command with non-zero exit (FND-T1-07) (104.583583ms)
+✔ CLI: run accurately reports unsupported prototype command with non-zero exit (FND-T1-07) (107.289417ms)
+✔ CLI: serve starts JSON-RPC server and responds to requests (1118.902291ms)
+✔ runnerCommandSchema validates session_fork command (2.474167ms)
+✔ runnerCommandSchema validates host_tool_result command (0.122667ms)
+✔ runnerCommandSchema validates host_interaction_response command (0.085ms)
+✔ runnerEventSchema validates host_tool_call event (1.800625ms)
+✔ runnerEventSchema validates host_interaction_request event (0.653792ms)
+✔ tool result preserves image blocks untouched when isError is true for upstream pi-ai@1.3.0 handling (1.392916ms)
+▶ Task 5A Remediation: Regression Tests on Independent Review Findings
+  ▶ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement
+    ✔ REJECTS hollow CLI serve branch that imports runner but NEVER invokes main() (1994.869209ms)
+    ✔ REJECTS CLI serve target pointing to nonexistent runner file on disk (1.12575ms)
+    ✔ REJECTS CLI script that matches import only in string literal or comment (0.839ms)
+    ✔ REJECTS CLI serve where runner is imported as unusedModule and unrelated local main() is called [R2 Bypass 1] (1302.404042ms)
+    ✔ REJECTS CLI serve where target file under runner does NOT export main [R2 Bypass 2] (281.538334ms)
+    ✔ REJECTS CLI serve where path merely contains substring 'runner' outside packages/runner [R2 Bypass 3] (0.643875ms)
+    ✔ REJECTS CLI serve target where exported main is non-callable constant (e.g. main = 17) [R3 Defect 1] (257.948292ms)
+    ✔ REJECTS CLI script with inverted condition if (command !== 'serve') [R3 Defect 2] (0.555708ms)
+    ✔ REJECTS fake package prefix '@durable-zero/runner-fake' without blind substitution [R3 Defect 3] (0.362542ms)
+    ✔ REJECTS CLI serve where main() is inside uncalled nested function [R3 Defect 4] (1066.0485ms)
+    ✔ ACCEPTS valid CLI serve entrypoint that imports runner and calls main() (1238.105083ms)
+  ✔ FND-TASK5-01 (P1): CLI Serve Entrypoint Invariant Enforcement (6145.483167ms)
+  ▶ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports
+    ✔ DETECTS cross-package source import cycle even when package.json dependencies omit edges (2.879125ms)
+    ✔ DETECTS cross-package barrel re-export cycle when package.json dependencies omit edges (1.412208ms)
+  ✔ FND-TASK5-02 (P1): Workspace DAG Cycle Detection via Source & Re-Exports (4.511667ms)
+  ▶ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting
+    ✔ GENERATES failing report and non-zero violation count when violations exist (no false PASS) (0.920458ms)
+  ✔ FND-TASK5-03 (P1): Evidence Integrity & Dynamic Reporting (1.002375ms)
+  ▶ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage
+    ✔ DETECTS dynamic import with no-substitution template literal (import(`vendor`)) (0.616833ms)
+    ✔ DETECTS TypeScript import = require(...) syntax (0.27ms)
+    ✔ SCANS supported module extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.603292ms)
+  ✔ FND-TASK5-04 (P2): AST Syntax & File Extension Coverage (1.627042ms)
+✔ Task 5A Remediation: Regression Tests on Independent Review Findings (6153.15225ms)
+▶ Task 5A: Architecture Boundaries & Regression Guards (Fix Round 4)
+  ▶ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects)
+    ✔ fails on forbidden vendor import (@earendil-works/pi-durable) (9.073959ms)
+    ✔ fails on forbidden adapter import (@durable-zero/adapter-pi-durable) (1.523791ms)
+    ✔ fails on forbidden runner import (@durable-zero/runner) (4.770625ms)
+    ✔ fails on forbidden concrete Node I/O imports (node:fs, node:child_process, node:net) (2.977667ms)
+    ✔ fails on forbidden type-only vendor import (import type { ... }) (1.090125ms)
+    ✔ fails on forbidden TypeScript import-type syntax (import('mod').Type) (0.454792ms)
+    ✔ fails on forbidden literal dynamic import (await import('adapter')) (0.4535ms)
+    ✔ fails on forbidden template literal dynamic import (import(`vendor`)) [FND-TASK5-04] (0.435916ms)
+    ✔ fails on forbidden TypeScript import = require syntax [FND-TASK5-04] (0.405833ms)
+    ✔ fails on forbidden re-export barrel (export * from 'vendor') (0.339708ms)
+    ✔ fails on relative path escaping core root (../../../adapter) (0.423542ms)
+    ✔ fails on package.json declaring vendor dependencies in Core (0.21575ms)
+    ✔ fails on legacy CLI serve entrypoint pointing to deleted core runner (1.772709ms)
+    ✔ fails on hollow CLI serve entrypoint that never calls main() [FND-TASK5-01] (2036.979834ms)
+    ✔ fails on CLI serve pointing to nonexistent runner file on disk [FND-TASK5-01] (0.652917ms)
+    ✔ fails on CLI script matching dynamic import only in string literal [FND-TASK5-01] (0.351334ms)
+    ✔ fails on source-level cross-package import cycle with omitted manifest edges [FND-TASK5-02] (1.543958ms)
+  ✔ Suite 1: Negative Fixture Tests (Verifying Detector Catches Real Defects) (2064.634125ms)
+  ▶ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass)
+    ✔ passes cleanly on pure domain service with contracts and zod (1.955208ms)
+    ✔ passes cleanly on pure TypeScript port definitions (0.552791ms)
+    ✔ passes cleanly on conformant Core package.json (0.278166ms)
+    ✔ passes cleanly on real CLI serve entrypoint fixture pointing to runner and calling main() (1247.028958ms)
+    ✔ scans all supported source file extensions (.ts, .mts, .cts, .js, .mjs, .cjs, .tsx) (0.261167ms)
+    ✔ passes cleanly on acyclic multi-tier workspace (0.166084ms)
+  ✔ Suite 2: Positive Fixture Tests (Verifying Allowed Dependencies Pass) (1250.410292ms)
+  ▶ Suite 3: Live Project Source Snapshot Execution
+    ✔ scans live packages/core/src/ and checks AST boundaries (5.645625ms)
+    ✔ verifies live packages/core/package.json contains only contracts and zod (0.151875ms)
+    ✔ verifies live workspace package DAG is strictly acyclic via full AST source and manifest scan (48.416167ms)
+    ✔ verifies live packages/cli/bin/durable-zero.js serve entry resolves to runner and calls main() (1085.23175ms)
+    ✔ verifies legacy deleted files do not exist in packages/core/src/ (0.157375ms)
+  ✔ Suite 3: Live Project Source Snapshot Execution (1139.744625ms)
+  ▶ Suite 4: Durable Evidence & Report Integrity [FND-TASK5-03]
+    ✔ dynamically generates evidence report from computed audit facts (no hardcoded PASS) (1354.460375ms)
+    ✔ PROVES PIPELINE INTEGRITY: simulated forbidden Core mutation produces FAIL in report and non-zero violations (anti-false-pass) (2.470917ms)
+  ✔ Suite 4: Durable Evidence & Report Integrity [FND-TASK5-03] (1357.009875ms)
+✔ Task 5A: Architecture Boundaries & Regression Guards (Fix Round 4) (5812.827875ms)
+node:internal/modules/esm/resolve:271
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/vanya/Projects/durable-zero/packages/core/src/codemode-namespaces.ts' imported from /Users/vanya/Projects/durable-zero/packages/core/test/codemode-canonical-routines.test.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:861:10)
+    at defaultResolve (node:internal/modules/esm/resolve:988:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:700:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:717:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:749:52)
+    at #resolve (node:internal/modules/esm/loader:682:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:602:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:252:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///Users/vanya/Projects/durable-zero/packages/core/src/codemode-namespaces.ts'
+}
+
+Node.js v26.0.0
+✖ packages/core/test/codemode-canonical-routines.test.ts (173.272958ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@durable-zero/adapter-codemode' imported from /Users/vanya/Projects/durable-zero/packages/core/test/codemode-sandbox-isolation.test.ts
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:764:81)
+    at moduleResolve (node:internal/modules/esm/resolve:855:18)
+    at defaultResolve (node:internal/modules/esm/resolve:988:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:700:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:717:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:749:52)
+    at #resolve (node:internal/modules/esm/loader:682:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:602:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.0.0
+✖ packages/core/test/codemode-sandbox-isolation.test.ts (158.618167ms)
+node:internal/modules/esm/resolve:271
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/vanya/Projects/durable-zero/packages/core/src/engine.ts' imported from /Users/vanya/Projects/durable-zero/packages/core/test/durable-engine-facade.test.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:861:10)
+    at defaultResolve (node:internal/modules/esm/resolve:988:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:700:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:717:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:749:52)
+    at #resolve (node:internal/modules/esm/loader:682:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:602:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:252:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///Users/vanya/Projects/durable-zero/packages/core/src/engine.ts'
+}
+
+Node.js v26.0.0
+✖ packages/core/test/durable-engine-facade.test.ts (170.002667ms)
+node:internal/modules/esm/resolve:271
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/vanya/Projects/durable-zero/packages/core/src/cli-args.ts' imported from /Users/vanya/Projects/durable-zero/packages/core/test/extension-cli-multi.test.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:861:10)
+    at defaultResolve (node:internal/modules/esm/resolve:988:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:700:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:717:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:749:52)
+    at #resolve (node:internal/modules/esm/loader:682:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:602:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:252:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///Users/vanya/Projects/durable-zero/packages/core/src/cli-args.ts'
+}
+
+Node.js v26.0.0
+✖ packages/core/test/extension-cli-multi.test.ts (168.604958ms)
+node:internal/modules/esm/resolve:271
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/vanya/Projects/durable-zero/packages/core/src/harness-setup.ts' imported from /Users/vanya/Projects/durable-zero/packages/core/test/plugin-strategy-wiring.test.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:861:10)
+    at defaultResolve (node:internal/modules/esm/resolve:988:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:700:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:717:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:749:52)
+    at #resolve (node:internal/modules/esm/loader:682:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:602:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:252:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///Users/vanya/Projects/durable-zero/packages/core/src/harness-setup.ts'
+}
+
+Node.js v26.0.0
+✖ packages/core/test/plugin-strategy-wiring.test.ts (178.097625ms)
+▶ SessionCoordinator (AP-010, AP-012, AP-074, AP-076, FND-T1-01, FND-T1-08)
+  ✔ coordinates session lifecycle: engine-owned physical lock, prompt admission, abort, and release (1.070875ms)
+  ✔ fails fast when prompt is called before start() (Defect 2) (0.869833ms)
+  ✔ fails fast when prompt is called after close() (Defect 1) (0.114958ms)
+✔ SessionCoordinator (AP-010, AP-012, AP-074, AP-076, FND-T1-01, FND-T1-08) (3.851375ms)
+✔ CodingTools with createNodePhotonImages registers read tool capable of image processing (1.062333ms)
+✔ resolveSubagentModelConfiguration resolves inherit mode when parent has .id instead of .modelId (2.047042ms)
+✔ resolveSubagentModelConfiguration normalizes provider prefix in configured mode (0.277833ms)
+✔ DurableHarnessError serves as the base class with code and cause (2.840875ms)
+✔ DurableStorageError and its descendants maintain hierarchy and codes (0.275542ms)
+✔ DurableCommandError and descendants maintain hierarchy and codes (0.188292ms)
+✔ DurablePluginError maintains hierarchy and captures pluginId (0.132375ms)
+▶ FND-T1-01: SessionCoordinator Turn Abort Semantics
+  ✔ root abort cancels active turn without permanently disabling the session (2.450625ms)
+  ✔ child abort cancels target child conversation without poisoning root (0.200084ms)
+  ✔ abort rejects if called before start() or after close() (0.48ms)
+✔ FND-T1-01: SessionCoordinator Turn Abort Semantics (5.599416ms)
+▶ ISessionStore Domain Port (AP-010, AP-012)
+  ✔ provides in-memory session persistence without disk or native binaries (1.483416ms)
+✔ ISessionStore Domain Port (AP-010, AP-012) (2.089833ms)
+✔ resolveSubagentModelConfiguration: inherit mode resolves parent model and thinking (6.252291ms)
+✔ resolveSubagentModelConfiguration: inherit mode maps BB none to native off (0.340125ms)
+✔ resolveSubagentModelConfiguration: inherit mode fails fast when parent model missing (0.507041ms)
+✔ resolveSubagentModelConfiguration: configured mode matches model and checks thinking (0.321291ms)
+✔ resolveSubagentModelConfiguration: fail-fast on unavailable configured model (0.284167ms)
+✔ resolveSubagentModelConfiguration: fails fast on unsupported thinking level (0.177375ms)
+✔ boundary mapping: maps BB none <-> native off (0.113208ms)
+✔ subagentPolicySchema: validates inherit mode with or without configuredProfile (9.237209ms)
+✔ subagentPolicySchema: validates configured mode with mandatory configuredProfile (0.893792ms)
+✔ subagentPolicySchema: rejects unknown keys due to strict validation (0.173958ms)
+✔ subagentThinkingLevelSchema: accepts valid thinking levels and rejects invalid (0.163042ms)
+✔ subagentPolicyRecordSchema: validates canonical record shape and strict bounds (0.719792ms)
+✔ subagentPolicySetInputSchema: validates set input with expectedRevision and strict shape (0.31675ms)
+✔ SubagentPolicyStore: cold hydrate initializes canonical inherit default without timestamp (1.843792ms)
+✔ SubagentPolicyStore: serialized CAS setPolicy increments revision and injects clock (1.875125ms)
+✔ SubagentPolicyStore: defensive clones prevent caller mutation (0.12ms)
+✔ SubagentPolicyStore: optimistic locking conflict when expectedRevision mismatches (0.48625ms)
+✔ SubagentPolicyStore: concurrent updates with same expectedRevision yield exactly 1 success and 1 conflict (1.025875ms)
+✔ SubagentPolicyStore: failed persist keeps previous cache intact and queue stays resilient (0.331375ms)
+✔ SubagentPolicyStore: corrupt data on hydrate throws explicit SUBAGENT_POLICY_LOAD_ERROR (0.559208ms)
+✔ SubagentPolicyStore: storage read error on hydrate throws explicit SUBAGENT_POLICY_LOAD_ERROR (0.145667ms)
+▶ @durable-zero/execution Adapter Package
+  ✔ MockExecutionEnv provides fast in-memory filesystem for tests (0.812416ms)
+  ✔ LocalNodeExecutionEnv executes against local node filesystem (0.106083ms)
+✔ @durable-zero/execution Adapter Package (1.6355ms)
+▶ @durable-zero/extension-pi-resource (AP-073)
+  ✔ creates a pure declarative native Pi Durable extension without self-installing (3.577792ms)
+  ✔ creates extension with default options when called without arguments or with empty object (Defect 3) (0.785333ms)
+✔ @durable-zero/extension-pi-resource (AP-073) (5.213292ms)
+▶ Host Protocol Methods & Schemas (Task 2A / S7)
+  ▶ jsonValueSchema
+    ✔ accepts valid JSON primitives (2.384083ms)
+    ✔ rejects non-finite numbers (1.387458ms)
+    ✔ accepts valid JSON arrays and nested structures (0.580667ms)
+    ✔ rejects non-JSON values and objects containing them (0.482208ms)
+  ✔ jsonValueSchema (5.295375ms)
+  ▶ hostToolCallParamsSchema
+    ✔ validates valid toolName and JSON arguments (5.455417ms)
+    ✔ rejects invalid toolName (missing or empty) (0.238417ms)
+    ✔ rejects arguments with non-JSON values (0.167834ms)
+  ✔ hostToolCallParamsSchema (6.006125ms)
+  ▶ hostToolResultSchema
+    ✔ accepts valid tool result with content and optional isError (0.527041ms)
+    ✔ accepts multiple text blocks or empty content array (0.089916ms)
+    ✔ rejects malformed payloads (0.170792ms)
+  ✔ hostToolResultSchema (0.903ms)
+  ▶ hostInteractionParamsSchema
+    ✔ accepts valid kind and optional title, message, data (5.074625ms)
+    ✔ rejects missing or empty kind (0.382083ms)
+    ✔ rejects non-JSON values in data payload (0.437917ms)
+  ✔ hostInteractionParamsSchema (7.942167ms)
+✔ Host Protocol Methods & Schemas (Task 2A / S7) (20.698208ms)
+▶ JSON-RPC 2.0 Protocol Conformance
+  ▶ Defect 1: Inbound Notifications
+    ✔ invokes handler for valid notification and emits no response (53.458125ms)
+    ✔ invokes handler for notification and emits no response even if handler rejects (51.218583ms)
+    ✔ preserves request with numeric id 0 as request and responds (53.3815ms)
+    ✔ preserves request with empty string id as request and responds (50.829792ms)
+    ✔ does not classify an object with an id field as an ID-less notification (53.116541ms)
+  ✔ Defect 1: Inbound Notifications (262.785917ms)
+  ▶ Defect 2: Typed Method Not Found Error Mapping
+    ✔ maps JsonRpcMethodNotFoundError to -32601 error response (51.644583ms)
+    ✔ maps generic errors to -32603 internal error response (50.247667ms)
+    ✔ maps renamed ordinary Error to -32603 internal error response, not -32601 (52.164ms)
+    ✔ maps legitimate subclass of JsonRpcMethodNotFoundError to -32601 (53.040625ms)
+    ✔ preserves -32700 for malformed JSON text (50.971958ms)
+    ✔ preserves -32600 for invalid request payload (51.641875ms)
+  ✔ Defect 2: Typed Method Not Found Error Mapping (310.415625ms)
+  ▶ Defect 3: Response Schema XOR, Void Handler & Correlation
+    ✔ response schema rejects response with neither result nor error (0.779375ms)
+    ✔ response schema rejects response with both result and error (0.346833ms)
+    ✔ response schema accepts response with valid falsy and null results (0.089542ms)
+    ✔ serializes valid null result when handler returns void / undefined (51.394084ms)
+    ✔ does not reflect unsolicited responses back as invalid requests (51.6555ms)
+    ✔ rejects pending outbound request when client returns malformed response with neither result nor error (22.46225ms)
+    ✔ rejects pending outbound request when client returns malformed response with both result and error (22.11ms)
+    ✔ resolves outbound request with falsy results: false, 0, null, empty string (85.029167ms)
+    ✔ does not reflect unsolicited error responses back as invalid requests (51.041417ms)
+  ✔ Defect 3: Response Schema XOR, Void Handler & Correlation (285.448083ms)
+  ▶ Defect 4: Typed Invalid Params Error Mapping
+    ✔ maps JsonRpcInvalidParamsError to -32602 error response (51.633125ms)
+    ✔ maps renamed ordinary Error to -32603 internal error response, not -32602 (53.474417ms)
+    ✔ maps legitimate subclass of JsonRpcInvalidParamsError to -32602 (51.155417ms)
+  ✔ Defect 4: Typed Invalid Params Error Mapping (156.617041ms)
+✔ JSON-RPC 2.0 Protocol Conformance (1015.939542ms)
+▶ @durable-zero/protocol Full-Duplex Server
+  ✔ validates JSON-RPC 2.0 request envelope strictly (3.665ms)
+  ✔ processes inbound client requests and responds with JSON-RPC 2.0 result (52.653125ms)
+  ✔ supports outbound requests to client (host/toolCall) and resolves on response (22.547167ms)
+  ✔ fails fast and rejects pending request when client responds with malformed JSON-RPC (22.681708ms)
+✔ @durable-zero/protocol Full-Duplex Server (103.029833ms)
+▶ Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport
+  ▶ Unknown Method & Error Classification
+    ✔ throws nominal JsonRpcMethodNotFoundError for unmapped method (2.579333ms)
+    ✔ maps unmapped method to -32601 over protocol transport (42.739666ms)
+    ✔ maps typed invalid params to -32602 over protocol transport (42.015084ms)
+  ✔ Unknown Method & Error Classification (88.344333ms)
+  ▶ session/prompt, session/steer, session/followUp
+    ✔ session/prompt: string content forwards to coordinator and engine (0.575625ms)
+    ✔ session/prompt: images-only prompt accepted and forwarded without dummy text (0.7935ms)
+    ✔ session/prompt: mixed text and image content parts forwarded (0.126709ms)
+    ✔ session/prompt: legacy params (message + images) normalized and forwarded (0.323917ms)
+    ✔ session/prompt: forwards conversationId and deliverAs (0.329792ms)
+    ✔ session/prompt: normalizes numeric conversationId to string (e.g. 1 -> '1', 42 -> '42') (0.187416ms)
+    ✔ session/prompt: rejects invalid conversationId (0, negative, non-digit) (0.425625ms)
+    ✔ session/prompt: rejects empty prompt with JsonRpcInvalidParamsError (0.124ms)
+    ✔ session/steer: forces deliverAs: 'steer' (0.123166ms)
+    ✔ session/followUp: forces deliverAs: 'followUp' (0.075375ms)
+  ✔ session/prompt, session/steer, session/followUp (3.419084ms)
+  ▶ session/abort, session/abortTask, session/compact
+    ✖ session/abort: calls coordinator.abort for root (0.93825ms)
+    ✔ session/abort: forwards child conversationId string (0.108375ms)
+    ✔ session/abort: normalizes positive numeric conversationId to string (e.g. 12345 -> '12345') (0.130541ms)
+    ✔ session/abort: invalid conversationId (0, -1, 'abc', '0') throws JsonRpcInvalidParamsError (0.812917ms)
+    ✔ session/abortTask: forwards positive integer taskId to engine.abortTask (0.252708ms)
+    ✔ session/abortTask: missing or non-positive taskId throws JsonRpcInvalidParamsError (0.29075ms)
+    ✔ session/compact: forwards optional instructions to engine.compact (0.184708ms)
+    ✔ session/compact: non-string instructions throws JsonRpcInvalidParamsError (0.12975ms)
+  ✖ session/abort, session/abortTask, session/compact (3.274417ms)
+  ▶ subagent/setPolicy & session/setSubagentPolicy
+    ✔ subagent/setPolicy: forwards valid policy record to coordinator (1.40625ms)
+    ✔ session/setSubagentPolicy: alias functions identically (1.373875ms)
+    ✔ subagent/setPolicy: invalid policy record throws JsonRpcInvalidParamsError (0.9405ms)
+  ✔ subagent/setPolicy & session/setSubagentPolicy (3.911291ms)
+  ▶ models/list, models/set, models/setThinking
+    ✔ models/list: returns models array from engine state (0.34ms)
+    ✔ models/set: forwards provider and modelId to engine.setModel (0.387084ms)
+    ✔ models/set: missing provider or modelId throws JsonRpcInvalidParamsError (0.371667ms)
+    ✔ models/setThinking: forwards valid level to engine.setThinkingLevel (0.192583ms)
+    ✔ models/setThinking: invalid thinking level throws JsonRpcInvalidParamsError (0.223458ms)
+  ✔ models/list, models/set, models/setThinking (1.711833ms)
+  ▶ session/getState, session/getTranscript, session/getStats
+    ✔ session/getState: returns SessionStateDTO and normalizes numeric conversationId (0.26375ms)
+    ✔ session/getTranscript: returns SessionTranscriptDTO and normalizes numeric conversationId (0.214041ms)
+    ✔ session/getStats: returns SessionStatsDTO and normalizes numeric conversationId (0.175458ms)
+  ✔ session/getState, session/getTranscript, session/getStats (0.753041ms)
+  ▶ Unsupported Capabilities Policy (Anti-Fake / Missing Seams)
+    ✔ refuses binding/register with UnsupportedCapabilityError documenting missing seam (0.2915ms)
+    ✔ refuses binding/list with UnsupportedCapabilityError documenting missing seam (0.261375ms)
+    ✔ refuses session/fork with UnsupportedCapabilityError documenting missing seam (0.218292ms)
+    ✔ refuses tools/register with UnsupportedCapabilityError documenting missing seam (0.176583ms)
+    ✔ maps unsupported capabilities to -32603 internal error over protocol without fake success (40.555792ms)
+  ✔ Unsupported Capabilities Policy (Anti-Fake / Missing Seams) (41.748667ms)
+✖ Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport (144.248ms)
+▶ @durable-zero/runner Composition Root (AP-020, AP-073, AP-074)
+  ✔ exports executable main function (0.791458ms)
+  ✔ parseCliArgs: parses --session, --cwd, --provider, --model, and --thinking flags (0.133125ms)
+  ✔ assembleDurableZero: assembles coordinator, streams session/event notifications, and safely closes (5.902ms)
+✔ @durable-zero/runner Composition Root (AP-020, AP-073, AP-074) (7.60475ms)
+SENDING PROMPT 1
+[CHILD STDOUT] {"jsonrpc":"2.0","id":1,"result":{"status":"accepted","id":"9","conversationId":"1"}}
+ADMISSION 1: { status: 'accepted', id: '9', conversationId: '1' }
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"Echo: he"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"llo world"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"turn_complete","status":"completed","requestId":"9","conversationId":"1"}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":2,"result":{"conversationId":"1","entries":[{"id":"8","conversationId":"1","kind":"pi.user","role":"user","text":"Echo: hello world"},{"id":"11","conversationId":"1","kind":"pi.system"},{"id":"12","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: hello world"}]}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":3,"result":{"sessionId":"session","cwd":"/Users/vanya/Projects/durable-zero","activeConversationId":"1","activeModel":{"provider":"scripted-e2e","modelId":"echo"},"thinkingLevel":"off","models":[{"provider":"scripted-e2e","modelId":"echo","name":"Echo Model","contextWindow":128000}],"entryCount":3}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":4,"result":{"conversationId":"1","entries":[{"id":"8","conversationId":"1","kind":"pi.user","role":"user","text":"Echo: hello world"},{"id":"11","conversationId":"1","kind":"pi.system"},{"id":"12","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: hello world"}]}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":5,"result":{"status":"accepted","id":"14","conversationId":"1"}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"Echo: Se"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"cond turn"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"turn_complete","status":"completed","requestId":"14","conversationId":"1"}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":6,"result":{"sessionId":"session","cwd":"/Users/vanya/Projects/durable-zero","activeConversationId":"1","activeModel":{"provider":"scripted-e2e","modelId":"echo"},"thinkingLevel":"off","models":[{"provider":"scripted-e2e","modelId":"echo","name":"Echo Model","contextWindow":128000}],"entryCount":5}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":7,"result":{"conversationId":"1","entries":[{"id":"8","conversationId":"1","kind":"pi.user","role":"user","text":"Echo: hello world"},{"id":"11","conversationId":"1","kind":"pi.system"},{"id":"12","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: hello world"},{"id":"13","conversationId":"1","kind":"pi.user","role":"user","text":"Second turn"},{"id":"16","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: Second turn"}]}}
+✔ Slice 0 Walking Skeleton: End-to-end CLI JSON-RPC prompt streaming, persistence, and restart (2324.230666ms)
+▶ HostBridge Component (Task 2A / S7)
+  ▶ Constructor & Options Validation
+    ✔ rejects null or non-object options (1.388667ms)
+    ✔ requires a requester with a request method (0.133917ms)
+    ✔ defaults timeoutMs to 30,000ms when omitted (0.1065ms)
+    ✔ rejects non-positive or non-finite timeoutMs values (0.157667ms)
+    ✔ accepts valid positive finite timeoutMs (3.661167ms)
+  ✔ Constructor & Options Validation (6.217833ms)
+  ▶ forwardToolCall Unit Behavior
+    ✔ dispatches to host/toolCall with toolName, arguments, and timeoutMs (1.608958ms)
+    ✔ defaults arguments to empty object when null or undefined (0.311375ms)
+    ✔ preserves isError: true on tool failure payloads without throwing (0.238458ms)
+    ✔ preserves isError: false on tool success payloads (1.090541ms)
+    ✔ rejects when input arguments contain non-JSON values (1.812333ms)
+    ✔ rejects when returned tool result is malformed (0.450666ms)
+    ✔ propagates transport errors when requester.request rejects (0.194708ms)
+  ✔ forwardToolCall Unit Behavior (6.064541ms)
+  ▶ requestInteraction Unit Behavior
+    ✔ dispatches to host/interaction with kind and payload fields (0.697166ms)
+    ✔ ensures explicit interaction kind is authoritative and cannot be overridden by payload field (2.023333ms)
+    ✔ validates and accepts opaque JSON responses (null, boolean, number, string, array, object) (0.589417ms)
+    ✔ rejects non-JSON input data (0.421875ms)
+    ✔ rejects non-JSON responses from host (undefined, functions, BigInt) (0.663667ms)
+    ✔ propagates transport rejection without fabricating approval or returning null (0.254125ms)
+  ✔ requestInteraction Unit Behavior (4.905459ms)
+  ▶ Real StdioJsonRpcServer Integration
+    ✔ forwards tool call through real server and parses valid response (24.880667ms)
+    ✔ requests interaction through real server and parses valid JSON response (22.295167ms)
+    ✔ handles two concurrent calls answered out of order with actual ID correlation (20.671708ms)
+    ✔ enforces configurable short timeout and rejects outstanding call (50.424375ms)
+    ✔ rejects outstanding work when server is stopped (22.160666ms)
+  ✔ Real StdioJsonRpcServer Integration (140.853875ms)
+✔ HostBridge Component (Task 2A / S7) (158.989166ms)
+ℹ tests 353
+ℹ suites 48
+ℹ pass 347
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13606.48325
+
+✖ failing tests:
+
+test at packages/core/test/codemode-canonical-routines.test.ts:1:1
+✖ packages/core/test/codemode-canonical-routines.test.ts (173.272958ms)
+  'test failed'
+
+test at packages/core/test/codemode-sandbox-isolation.test.ts:1:1
+✖ packages/core/test/codemode-sandbox-isolation.test.ts (158.618167ms)
+  'test failed'
+
+test at packages/core/test/durable-engine-facade.test.ts:1:1
+✖ packages/core/test/durable-engine-facade.test.ts (170.002667ms)
+  'test failed'
+
+test at packages/core/test/extension-cli-multi.test.ts:1:1
+✖ packages/core/test/extension-cli-multi.test.ts (168.604958ms)
+  'test failed'
+
+test at packages/core/test/plugin-strategy-wiring.test.ts:1:1
+✖ packages/core/test/plugin-strategy-wiring.test.ts (178.097625ms)
+  'test failed'
+
+test at packages/runner/test/capability-dispatch.test.ts:360:3
+✖ session/abort: calls coordinator.abort for root (0.93825ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - true
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts:364:11)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

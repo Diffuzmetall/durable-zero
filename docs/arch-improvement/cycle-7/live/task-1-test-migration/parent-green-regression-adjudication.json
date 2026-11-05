@@ -1,0 +1,19 @@
+{
+  "source": "Genuine migrator root run on live mixed checkout including uncommitted Native A #instance fix; not isolated/frozen compiled acceptance",
+  "tests": 360,
+  "failed": 0,
+  "skipped": 0,
+  "receipt": "root-regression-green-360.junit.xml",
+  "preservedPreviousCommitReceipt": {
+    "sourceCommit": "b84a585",
+    "tests": 360,
+    "failures": 0,
+    "sha256": "368a14e0088f5189cd8f00185dd8a8b83ef13d24988d6b870edfc37907d4b9b9"
+  },
+  "testCorrectionsChecked": [
+    "Real codemode source-entry factory, delegated register spy, teardown in finally",
+    "Engine dynamic import after HOME/XDG/PI_AGENT_DIR isolation and explicit owned cwd",
+    "Exact environment restoration deleting previously absent keys"
+  ],
+  "gate": "PASS measured live root regression only; Native source/build/typecheck/fresh compiled gates separate"
+}

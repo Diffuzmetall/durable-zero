@@ -6,7 +6,7 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 // @ts-ignore proper-lockfile has untyped default export in some tsconfig settings
 import lockfile from "proper-lockfile";
-import { DurableStorageError } from "../../core/src/shared/errors.ts";
+import { DurableStorageError } from "@durable-zero/core";
 
 export interface SessionOwnerInfo {
 	pid: number;

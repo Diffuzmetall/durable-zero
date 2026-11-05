@@ -1,67 +1,84 @@
-import type { ISessionStore } from "./store.ts";
-import type { IModelProvider } from "../models/provider.ts";
-import type { IExecutionEnvironment } from "../tools/execution-env.ts";
+import type { PromptAdmissionReceipt, PromptInput, RunnerEvent } from "@durable-zero/contracts";
+import type {
+	IAgentEngine,
+	PromptExecutionOptions,
+	SessionStateDTO,
+	SessionTranscriptDTO,
+	SessionStatsDTO,
+} from "./engine.ts";
+import type { SubagentPolicyRecord } from "../policy/types.ts";
+import { SessionError } from "../errors.ts";
 
-export interface IResourceLoader {
-	getSystemPrompt?(): Promise<string> | string;
-	getContextFiles?(): Array<{ path: string; content: string }>;
-	getSkills?(): Array<{ name: string; description: string }>;
-}
-
-export interface PromptAdmissionReceipt {
-	status: "accepted" | "rejected";
-	id: string;
-	error?: string;
-}
-
-export interface PromptOptions {
-	deliverAs?: "steer" | "followUp";
-}
+export type { PromptAdmissionReceipt, PromptInput } from "@durable-zero/contracts";
+export type { PromptExecutionOptions } from "./engine.ts";
 
 export interface SessionCoordinatorOptions {
-	store: ISessionStore;
-	modelProvider?: IModelProvider;
-	executionEnv?: IExecutionEnvironment;
-	resourceLoader?: IResourceLoader;
+	engine: IAgentEngine;
+	sessionDir: string;
 }
 
 export class SessionCoordinator {
-	private readonly store: ISessionStore;
-	private readonly modelProvider?: IModelProvider;
-	private readonly executionEnv?: IExecutionEnvironment;
-	private readonly resourceLoader?: IResourceLoader;
-	private isStarted = false;
-	private isClosed = false;
-	public isAborted = false;
+	private readonly engine: IAgentEngine;
+	public readonly sessionDir: string;
+	public isStarted = false;
+	public isClosed = false;
 	private readonly listeners = new Set<(event: unknown) => void>();
 
 	constructor(options: SessionCoordinatorOptions) {
-		this.store = options.store;
-		this.modelProvider = options.modelProvider;
-		this.executionEnv = options.executionEnv;
-		this.resourceLoader = options.resourceLoader;
+		if (!options.engine) {
+			throw new Error("IAgentEngine is required by SessionCoordinator (AP-010, AP-076)");
+		}
+		if (!options.sessionDir || typeof options.sessionDir !== "string" || options.sessionDir.trim().length === 0) {
+			throw new Error("sessionDir must be a non-empty string (AP-010, AP-074)");
+		}
+		this.engine = options.engine;
+		this.sessionDir = options.sessionDir;
 	}
 
 	public async start(): Promise<void> {
-		await this.store.acquireLock();
+		if (this.isClosed) {
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
+		}
+		await this.engine.start(this.sessionDir);
 		this.isStarted = true;
 	}
 
-	public async prompt(content: string, _options?: PromptOptions): Promise<PromptAdmissionReceipt> {
+	public async prompt(
+		input: PromptInput,
+		options?: PromptExecutionOptions,
+	): Promise<PromptAdmissionReceipt> {
 		if (this.isClosed) {
-			throw new Error("Session is closed");
-		}
-		if (this.isAborted) {
-			throw new Error("Session is aborted");
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
 		}
 		if (!this.isStarted) {
-			throw new Error("Session is not started. Call start() before submitting prompts");
+			throw new SessionError(
+				"SESSION_NOT_STARTED",
+				"Session is not started. Call start() before submitting prompts",
+			);
 		}
-		if (typeof content !== "string" || content.trim().length === 0) {
-			throw new Error("Prompt content must be a non-empty string");
+
+		if (typeof input === "string") {
+			if (input.trim().length === 0) {
+				throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+			}
+		} else if (Array.isArray(input)) {
+			if (input.length === 0) {
+				throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+			}
+			const hasValidPart = input.some((p) => {
+				if (!p || typeof p !== "object") return false;
+				if (p.type === "text" && typeof p.text === "string" && p.text.trim().length > 0) return true;
+				if (p.type === "image" && typeof p.data === "string" && typeof p.mimeType === "string") return true;
+				return false;
+			});
+			if (!hasValidPart) {
+				throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
+			}
+		} else {
+			throw new SessionError("INVALID_PROMPT", "Prompt content must be a non-empty string or image list");
 		}
-		const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-		return { status: "accepted", id };
+
+		return await this.engine.submit(input, options);
 	}
 
 	public emitEvent(event: unknown): void {
@@ -70,37 +87,78 @@ export class SessionCoordinator {
 		}
 	}
 
-	public events(callback: (event: unknown) => void): () => void {
+	public events(callback: (event: any) => void): () => void {
+		const unsubEngine = this.engine.events(callback);
 		this.listeners.add(callback);
 		return () => {
+			unsubEngine();
 			this.listeners.delete(callback);
 		};
 	}
 
-	public async abort(): Promise<void> {
-		this.isAborted = true;
-		this.emitEvent({ type: "session/aborted" });
+	public async abort(conversationId?: string): Promise<void> {
+		if (this.isClosed) {
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
+		}
+		if (!this.isStarted) {
+			throw new SessionError(
+				"SESSION_NOT_STARTED",
+				"Session is not started. Call start() before aborting",
+			);
+		}
+		await this.engine.abort(conversationId);
+		this.emitEvent({
+			type: "session/aborted",
+			...(conversationId !== undefined ? { conversationId } : {}),
+		});
 	}
 
-	public getState(): Record<string, unknown> {
-		return {
-			isStarted: this.isStarted,
-			isAborted: this.isAborted,
-			isClosed: this.isClosed,
-			sessionDir: this.store.sessionDir,
-		};
+	public async getState(conversationId?: string): Promise<SessionStateDTO> {
+		if (this.isClosed) {
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
+		}
+		if (!this.isStarted) {
+			throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+		}
+		return await this.engine.getState(conversationId);
+	}
+
+	public async getTranscript(conversationId?: string, limit?: number): Promise<SessionTranscriptDTO> {
+		if (this.isClosed) {
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
+		}
+		if (!this.isStarted) {
+			throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+		}
+		return await this.engine.getTranscript(conversationId, limit);
+	}
+
+	public async getStats(conversationId?: string): Promise<SessionStatsDTO> {
+		if (this.isClosed) {
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
+		}
+		if (!this.isStarted) {
+			throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+		}
+		return await this.engine.getStats(conversationId);
 	}
 
 	public async setSubagentPolicy(params: unknown): Promise<{ ok: boolean }> {
-		await this.store.saveDocument("subagents", "policy_ack", params);
+		if (this.isClosed) {
+			throw new SessionError("SESSION_CLOSED", "Session is closed");
+		}
+		if (!this.isStarted) {
+			throw new SessionError("SESSION_NOT_STARTED", "Session is not started");
+		}
+		await this.engine.setSubagentPolicy(params as SubagentPolicyRecord);
 		return { ok: true };
 	}
 
 	public async close(): Promise<void> {
+		if (this.isClosed) return;
 		this.isClosed = true;
 		this.isStarted = false;
 		this.listeners.clear();
-		await this.store.releaseLock();
-		await this.store.close();
+		await this.engine.close();
 	}
 }

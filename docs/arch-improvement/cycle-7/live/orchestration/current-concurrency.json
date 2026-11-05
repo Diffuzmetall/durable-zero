@@ -1,0 +1,1 @@
+{"globalLimit":null,"hostOverrides":[],"hosts":[{"id":"host_z888m8vybs","name":"MacBook Air — Ivan","status":"connected","availableParallelism":10,"automaticLimit":10,"effectiveLimit":10,"override":null},{"id":"host_dfsz58i8p3","name":"LAPTOP-QT38MVQQ","status":"disconnected","availableParallelism":16,"automaticLimit":16,"effectiveLimit":16,"override":null}]}

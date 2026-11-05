@@ -1,0 +1,15 @@
+▶ Type Remediation B (Runner Foundation) Independent Semantic Probes
+  ✔ Probe 1: parseCliArgs produces valid DTO and handles trailing flags without crashing (1.755041ms)
+  ✔ Probe 2: Contracts projectTaskState and projectTaskReceipt omit undefined keys under exactOptionalPropertyTypes (2.856041ms)
+  ✔ Probe 3: JsonRpcMethodNotFoundError preserves nominal identity and optional method field (0.561542ms)
+  ✔ Probe 4: Root session/abort executes coordinator, engine, and emits session/aborted event without sticky boolean (8.646791ms)
+  ✔ Probe 5: tsconfig.src.json enforces strict source typechecking across all packages (8.332875ms)
+✔ Type Remediation B (Runner Foundation) Independent Semantic Probes (23.618292ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 336.311959

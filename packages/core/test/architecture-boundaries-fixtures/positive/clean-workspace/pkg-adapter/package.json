@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/adapter",
+  "dependencies": {
+    "@fixture/contracts": "workspace:*",
+    "@fixture/core": "workspace:*"
+  }
+}

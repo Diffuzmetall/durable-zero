@@ -1,0 +1,1 @@
+import { one } from "../../pkg-1/src/index.ts"; export const two = 2;

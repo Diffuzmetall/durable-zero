@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="Adversarial Architecture Review Probes (Task 5A)" time="0.010068" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Probe 1: auditCliServeEntrypoint Blindspots" time="0.004970" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="FLAW PROVEN: passes a serve branch that imports runner but NEVER calls main() (hollow entrypoint)" time="0.003919" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+			<testcase name="FLAW PROVEN: passes a serve target pointing to a NONEXISTENT runner file" time="0.000483" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+			<testcase name="FLAW PROVEN: matches dynamic import from string literals in comments or dummy variables via naive regex" time="0.000279" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+		</testsuite>
+		<testsuite name="Probe 2: Workspace DAG Cycle Detection via Source Imports / Re-exports" time="0.002859" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="FLAW PROVEN: cross-package source import cycle evades workspace DAG check when package.json dependencies omit edge" time="0.002235" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+			<testcase name="FLAW PROVEN: cross-package barrel re-export cycle evades workspace DAG check" time="0.000548" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+		</testsuite>
+		<testsuite name="Probe 3: Suite 4 Unconditional PASS Report Integrity" time="0.000279" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="FLAW PROVEN: Suite 4 writes status 'PASS' and 0 violations unconditionally even when Core has boundary violations" time="0.000219" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+		</testsuite>
+		<testsuite name="Probe 4: AST Syntax Blindspots" time="0.001561" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="FLAW PROVEN: ignores dynamic import with no-substitution template literal (import(`vendor`))" time="0.000748" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+			<testcase name="FLAW PROVEN: ignores TypeScript import = require('...') syntax" time="0.000358" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+			<testcase name="FLAW PROVEN: collectAllSourceFiles ignores .mts, .cts, .js and .tsx extensions" time="0.000381" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 9 -->
+	<!-- suites 5 -->
+	<!-- pass 9 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 267.393041 -->
+</testsuites>

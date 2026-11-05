@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="JSON-RPC 2.0 Protocol Conformance" time="1.006155" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Defect 1: Inbound Notifications" time="0.261630" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="invokes handler for valid notification and emits no response" time="0.054155" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="invokes handler for notification and emits no response even if handler rejects" time="0.052023" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="preserves request with numeric id 0 as request and responds" time="0.050794" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="preserves request with empty string id as request and responds" time="0.051734" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="does not classify an object with an id field as an ID-less notification" time="0.052069" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+		</testsuite>
+		<testsuite name="Defect 2: Typed Method Not Found Error Mapping" time="0.307599" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="maps JsonRpcMethodNotFoundError to -32601 error response" time="0.050975" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="maps generic errors to -32603 internal error response" time="0.050983" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="maps renamed ordinary Error to -32603 internal error response, not -32601" time="0.050913" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="maps legitimate subclass of JsonRpcMethodNotFoundError to -32601" time="0.051698" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="preserves -32700 for malformed JSON text" time="0.051309" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="preserves -32600 for invalid request payload" time="0.051197" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+		</testsuite>
+		<testsuite name="Defect 3: Response Schema XOR, Void Handler &amp; Correlation" time="0.280877" disabled="0" errors="0" tests="9" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="response schema rejects response with neither result nor error" time="0.000568" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="response schema rejects response with both result and error" time="0.000308" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="response schema accepts response with valid falsy and null results" time="0.000116" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="serializes valid null result when handler returns void / undefined" time="0.051402" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="does not reflect unsolicited responses back as invalid requests" time="0.051446" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="rejects pending outbound request when client returns malformed response with neither result nor error" time="0.021241" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="rejects pending outbound request when client returns malformed response with both result and error" time="0.021559" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="resolves outbound request with falsy results: false, 0, null, empty string" time="0.083047" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="does not reflect unsolicited error responses back as invalid requests" time="0.050742" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+		</testsuite>
+		<testsuite name="Defect 4: Typed Invalid Params Error Mapping" time="0.155107" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="maps JsonRpcInvalidParamsError to -32602 error response" time="0.051529" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="maps renamed ordinary Error to -32603 internal error response, not -32602" time="0.051754" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="maps legitimate subclass of JsonRpcInvalidParamsError to -32602" time="0.051600" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<testsuite name="@durable-zero/protocol Full-Duplex Server" time="0.104455" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="validates JSON-RPC 2.0 request envelope strictly" time="0.005041" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol.test.ts"/>
+		<testcase name="processes inbound client requests and responds with JSON-RPC 2.0 result" time="0.053673" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol.test.ts"/>
+		<testcase name="supports outbound requests to client (host/toolCall) and resolves on response" time="0.021797" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol.test.ts"/>
+		<testcase name="fails fast and rejects pending request when client responds with malformed JSON-RPC" time="0.022247" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol.test.ts"/>
+	</testsuite>
+	<testsuite name="Capability Dispatcher (Task 4B) — Pure Unit &amp; Protocol Transport" time="0.139460" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Unknown Method &amp; Error Classification" time="0.085537" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="throws nominal JsonRpcMethodNotFoundError for unmapped method" time="0.001760" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="maps unmapped method to -32601 over protocol transport" time="0.041983" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="maps typed invalid params to -32602 over protocol transport" time="0.041113" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+		<testsuite name="session/prompt, session/steer, session/followUp" time="0.004264" disabled="0" errors="0" tests="10" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="session/prompt: string content forwards to coordinator and engine" time="0.000439" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: images-only prompt accepted and forwarded without dummy text" time="0.000932" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: mixed text and image content parts forwarded" time="0.000143" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: legacy params (message + images) normalized and forwarded" time="0.000414" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: forwards conversationId and deliverAs" time="0.000267" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: normalizes numeric conversationId to string (e.g. 1 -> '1', 42 -> '42')" time="0.000466" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: rejects invalid conversationId (0, negative, non-digit)" time="0.000811" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/prompt: rejects empty prompt with JsonRpcInvalidParamsError" time="0.000172" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/steer: forces deliverAs: 'steer'" time="0.000181" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/followUp: forces deliverAs: 'followUp'" time="0.000078" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+		<testsuite name="session/abort, session/abortTask, session/compact" time="0.001273" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="session/abort: calls coordinator.abort for root" time="0.000217" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/abort: forwards child conversationId string" time="0.000084" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/abort: normalizes positive numeric conversationId to string (e.g. 12345 -> '12345')" time="0.000092" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/abort: invalid conversationId (0, -1, 'abc', '0') throws JsonRpcInvalidParamsError" time="0.000323" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/abortTask: forwards positive integer taskId to engine.abortTask" time="0.000098" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/abortTask: missing or non-positive taskId throws JsonRpcInvalidParamsError" time="0.000170" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/compact: forwards optional instructions to engine.compact" time="0.000097" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/compact: non-string instructions throws JsonRpcInvalidParamsError" time="0.000084" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+		<testsuite name="subagent/setPolicy &amp; session/setSubagentPolicy" time="0.002854" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="subagent/setPolicy: forwards valid policy record to coordinator" time="0.000910" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/setSubagentPolicy: alias functions identically" time="0.000955" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="subagent/setPolicy: invalid policy record throws JsonRpcInvalidParamsError" time="0.000901" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+		<testsuite name="models/list, models/set, models/setThinking" time="0.001214" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="models/list: returns models array from engine state" time="0.000477" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="models/set: forwards provider and modelId to engine.setModel" time="0.000255" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="models/set: missing provider or modelId throws JsonRpcInvalidParamsError" time="0.000154" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="models/setThinking: forwards valid level to engine.setThinkingLevel" time="0.000091" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="models/setThinking: invalid thinking level throws JsonRpcInvalidParamsError" time="0.000129" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+		<testsuite name="session/getState, session/getTranscript, session/getStats" time="0.000543" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="session/getState: returns SessionStateDTO and normalizes numeric conversationId" time="0.000146" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/getTranscript: returns SessionTranscriptDTO and normalizes numeric conversationId" time="0.000194" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="session/getStats: returns SessionStatsDTO and normalizes numeric conversationId" time="0.000122" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+		<testsuite name="Unsupported Capabilities Policy (Anti-Fake / Missing Seams)" time="0.043001" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="refuses binding/register with UnsupportedCapabilityError documenting missing seam" time="0.000195" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="refuses binding/list with UnsupportedCapabilityError documenting missing seam" time="0.000114" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="refuses session/fork with UnsupportedCapabilityError documenting missing seam" time="0.000111" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="refuses tools/register with UnsupportedCapabilityError documenting missing seam" time="0.000316" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+			<testcase name="maps unsupported capabilities to -32603 internal error over protocol without fake success" time="0.042057" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/capability-dispatch.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<testsuite name="@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)" time="0.005685" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="exports executable main function" time="0.000644" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+		<testcase name="parseCliArgs: parses --session, --cwd, --provider, --model, and --thinking flags" time="0.000117" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+		<testcase name="assembleDurableZero: assembles coordinator, streams session/event notifications, and safely closes" time="0.004291" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/composition-root.test.ts"/>
+	</testsuite>
+	<testsuite name="HostBridge Component (Task 2A / S7)" time="0.167958" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Constructor &amp; Options Validation" time="0.015792" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="rejects null or non-object options" time="0.001429" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="requires a requester with a request method" time="0.000166" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="defaults timeoutMs to 30,000ms when omitted" time="0.000340" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="rejects non-positive or non-finite timeoutMs values" time="0.000313" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="accepts valid positive finite timeoutMs" time="0.011014" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+		</testsuite>
+		<testsuite name="forwardToolCall Unit Behavior" time="0.005351" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="dispatches to host/toolCall with toolName, arguments, and timeoutMs" time="0.001870" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="defaults arguments to empty object when null or undefined" time="0.000625" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="preserves isError: true on tool failure payloads without throwing" time="0.000347" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="preserves isError: false on tool success payloads" time="0.000377" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="rejects when input arguments contain non-JSON values" time="0.001034" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="rejects when returned tool result is malformed" time="0.000433" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="propagates transport errors when requester.request rejects" time="0.000157" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+		</testsuite>
+		<testsuite name="requestInteraction Unit Behavior" time="0.004609" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="dispatches to host/interaction with kind and payload fields" time="0.001265" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="ensures explicit interaction kind is authoritative and cannot be overridden by payload field" time="0.001821" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="validates and accepts opaque JSON responses (null, boolean, number, string, array, object)" time="0.000286" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="rejects non-JSON input data" time="0.000210" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="rejects non-JSON responses from host (undefined, functions, BigInt)" time="0.000647" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="propagates transport rejection without fabricating approval or returning null" time="0.000218" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+		</testsuite>
+		<testsuite name="Real StdioJsonRpcServer Integration" time="0.141000" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="forwards tool call through real server and parses valid response" time="0.023839" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="requests interaction through real server and parses valid JSON response" time="0.021800" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="handles two concurrent calls answered out of order with actual ID correlation" time="0.021962" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="enforces configurable short timeout and rejects outstanding call" time="0.051900" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+			<testcase name="rejects outstanding work when server is stopped" time="0.021204" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/host-bridge.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<!-- tests 90 -->
+	<!-- suites 20 -->
+	<!-- pass 90 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 1273.14725 -->
+</testsuites>

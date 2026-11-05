@@ -1,0 +1,9 @@
+{
+  "candidate": "475745bb6c439cd4746b55335783ba22bb4b355f",
+  "frozenHelperSHA256": "e9688af2f08d1a854cb4e9848ac1b6afdf70058b2377179b3a4eeff40810420c",
+  "tests": 4,
+  "failed": 0,
+  "exit": 0,
+  "scope": "Exact old non-callable export counterexamples + genuine function positive; not whole checker/native acceptance",
+  "independentFullScope": "PENDING"
+}

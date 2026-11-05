@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="Task 4B Fix Round 1 Independent Re-Review Probes" tests="6" failures="0" errors="0" skipped="0">
+    <testcase name="Invalid params maps to -32602 over protocol transport" classname="FixRound1Probe" time="0.005">
+
+    </testcase>
+    <testcase name="Unmapped method maps to -32601 over protocol transport" classname="FixRound1Probe" time="0.005">
+
+    </testcase>
+    <testcase name="Generic spoofed error object maps to -32603, not -32602 (Anti-gaming nominal check)" classname="FixRound1Probe" time="0.005">
+
+    </testcase>
+    <testcase name="Numeric conversationId: 42 normalized to string '42' for Core port" classname="FixRound1Probe" time="0.005">
+
+    </testcase>
+    <testcase name="Invalid conversationId values (0, negative, non-digit, '0') rejected with -32602" classname="FixRound1Probe" time="0.005">
+
+    </testcase>
+    <testcase name="Root session/abort without conversationId forwards undefined to coordinator.abort" classname="FixRound1Probe" time="0.005">
+
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,29 @@
+▶ Task 5A Fix Round 2: Independent Adversarial Probes & Invariant Verification
+  ▶ Section 1: Verification of Former Round 1 Blockers (Now Properly Rejected)
+    ✔ FORMER BYPASS 1 REJECTED: unrelated local main() function declaration is rejected (47.418667ms)
+    ✔ FORMER BYPASS 2 REJECTED: target file with NO exported main is rejected (0.80475ms)
+    ✔ FORMER BYPASS 3 REJECTED: directory merely containing 'runner' in name is rejected via package.json check (1.502167ms)
+  ✔ Section 1: Verification of Former Round 1 Blockers (Now Properly Rejected) (50.053917ms)
+  ▶ Section 2: Verification of Legitimate Positives
+    ✔ LEGITIMATE POSITIVE 1: direct destructuring of main() (26.642542ms)
+    ✔ LEGITIMATE POSITIVE 2: destructured alias { main: runRunner } and invocation (17.699542ms)
+    ✔ LEGITIMATE POSITIVE 3: namespace import and runner.main() property call (17.642417ms)
+  ✔ Section 2: Verification of Legitimate Positives (62.126291ms)
+  ▶ Section 3: Probing Suspicious Paths & Edge Cases from Critical Review
+    ✔ PROBE 1 (CONFIRMED FLAW): export const main = 17 (non-callable constant) passes verifyFileExportsMain (0.483042ms)
+    ✔ PROBE 2 (CONFIRMED FLAW): inverted condition if (command !== 'serve') is recognized as serve branch (23.569375ms)
+    ✔ PROBE 3 (CONFIRMED FLAW): bare specifier '@durable-zero/runner-fake' substitutes real sibling main.js (0.941291ms)
+    ✔ PROBE 4 (CONFIRMED FLAW): main() call hidden inside never-invoked nested function satisfies callsMain (18.714958ms)
+  ✔ Section 3: Probing Suspicious Paths & Edge Cases from Critical Review (43.895417ms)
+  ▶ Section 4: Helper Module Purity & Side-Effect Free Import
+    ✔ proves importing modular checker submodules does not write reports or execute tests (0.1145ms)
+  ✔ Section 4: Helper Module Purity & Side-Effect Free Import (0.220792ms)
+✔ Task 5A Fix Round 2: Independent Adversarial Probes & Invariant Verification (156.712417ms)
+ℹ tests 11
+ℹ suites 5
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 417.714958

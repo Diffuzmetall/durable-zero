@@ -1,0 +1,1 @@
+import type { CoreSPI } from "@fixture/core"; export class Adapter implements CoreSPI { getReceipt() { return { id: "1" }; } }

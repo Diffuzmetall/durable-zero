@@ -1,3 +1,25 @@
+// packages/protocol/src/jsonrpc/errors.ts
+var JsonRpcMethodNotFoundError = class extends Error {
+  code = -32601;
+  method;
+  constructor(method) {
+    super(method ? `Method not found: ${method}` : "Method not found");
+    this.name = "JsonRpcMethodNotFoundError";
+    this.method = method;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+};
+var JsonRpcInvalidParamsError = class extends Error {
+  code = -32602;
+  data;
+  constructor(message = "Invalid params", data) {
+    super(message);
+    this.name = "JsonRpcInvalidParamsError";
+    this.data = data;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+};
+
 // packages/protocol/src/jsonrpc/schema.ts
 import { z } from "zod";
 var jsonRpcRequestSchema = z.object({
@@ -15,6 +37,20 @@ var jsonRpcResponseSchema = z.object({
     message: z.string(),
     data: z.unknown().optional()
   }).optional()
+}).superRefine((val, ctx) => {
+  const hasResult = Object.prototype.hasOwnProperty.call(val, "result") && val.result !== void 0;
+  const hasError = Object.prototype.hasOwnProperty.call(val, "error") && val.error !== void 0;
+  if (hasResult && hasError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Response cannot contain both 'result' and 'error'"
+    });
+  } else if (!hasResult && !hasError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Response must contain either 'result' or 'error'"
+    });
+  }
 });
 var jsonRpcNotificationSchema = z.object({
   jsonrpc: z.literal("2.0"),
@@ -36,49 +72,62 @@ var RequestDispatcher = class {
     this.pendingOutbound = pendingOutbound;
   }
   async processLine(line) {
+    let raw;
     try {
       const parsed = JSON.parse(line);
-      if (typeof parsed === "object" && parsed !== null && "id" in parsed && ("result" in parsed || "error" in parsed) && !("method" in parsed)) {
-        const responseVal = jsonRpcResponseSchema.safeParse(parsed);
-        if (responseVal.success) {
-          const { id: id2, result, error } = responseVal.data;
-          if (id2 !== null && this.pendingOutbound.has(id2)) {
-            const pending = this.pendingOutbound.get(id2);
-            clearTimeout(pending.timer);
-            this.pendingOutbound.delete(id2);
-            if (error) pending.reject(new Error(error.message));
-            else pending.resolve(result);
-            return;
-          }
-        } else if (parsed.id !== null && this.pendingOutbound.has(parsed.id)) {
-          const pending = this.pendingOutbound.get(parsed.id);
-          clearTimeout(pending.timer);
-          this.pendingOutbound.delete(parsed.id);
-          pending.reject(
-            new Error(`Malformed JSON-RPC response from client: ${responseVal.error.message}`)
-          );
-          return;
-        }
-      }
-      const validated = jsonRpcRequestSchema.safeParse(parsed);
-      if (!validated.success) {
-        const reqId = parsed && typeof parsed === "object" && "id" in parsed && (typeof parsed.id === "string" || typeof parsed.id === "number") ? parsed.id : null;
-        this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        this.send({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid Request" } });
         return;
       }
-      const { id, method, params } = validated.data;
-      try {
-        const result = await this.handler(method, params ?? {});
-        this.send({ jsonrpc: "2.0", id, result });
-      } catch (err) {
-        this.send({
-          jsonrpc: "2.0",
-          id,
-          error: { code: -32603, message: err instanceof Error ? err.message : String(err) }
-        });
-      }
+      raw = parsed;
     } catch {
       this.send({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
+      return;
+    }
+    if (!("method" in raw)) {
+      const id2 = "id" in raw && (typeof raw.id === "string" || typeof raw.id === "number") ? raw.id : null;
+      if (id2 !== null && this.pendingOutbound.has(id2)) {
+        const pending = this.pendingOutbound.get(id2);
+        clearTimeout(pending.timer);
+        this.pendingOutbound.delete(id2);
+        const resVal = jsonRpcResponseSchema.safeParse(raw);
+        if (resVal.success) {
+          if (resVal.data.error) pending.reject(new Error(resVal.data.error.message));
+          else pending.resolve(resVal.data.result);
+        } else {
+          pending.reject(new Error(`Malformed JSON-RPC response from client: ${resVal.error.message}`));
+        }
+        return;
+      }
+      if ("result" in raw || "error" in raw) return;
+    }
+    if (!("id" in raw)) {
+      const notifVal = jsonRpcNotificationSchema.safeParse(raw);
+      if (notifVal.success) {
+        try {
+          await this.handler(notifVal.data.method, notifVal.data.params ?? {});
+        } catch {
+        }
+        return;
+      }
+    }
+    const validated = jsonRpcRequestSchema.safeParse(raw);
+    if (!validated.success) {
+      const reqId = "id" in raw && (typeof raw.id === "string" || typeof raw.id === "number") ? raw.id : null;
+      this.send({ jsonrpc: "2.0", id: reqId, error: { code: -32600, message: "Invalid Request" } });
+      return;
+    }
+    const { id, method, params } = validated.data;
+    try {
+      const result = await this.handler(method, params ?? {});
+      this.send({ jsonrpc: "2.0", id, result: result === void 0 ? null : result });
+    } catch (err) {
+      const isNotFound = err instanceof JsonRpcMethodNotFoundError;
+      this.send({
+        jsonrpc: "2.0",
+        id,
+        error: isNotFound ? { code: -32601, message: err.message } : { code: -32603, message: err instanceof Error ? err.message : String(err) }
+      });
     }
   }
 };
@@ -148,6 +197,8 @@ var StdioJsonRpcServer = class {
   }
 };
 export {
+  JsonRpcInvalidParamsError,
+  JsonRpcMethodNotFoundError,
   RequestDispatcher,
   StdioJsonRpcServer,
   jsonRpcNotificationSchema,

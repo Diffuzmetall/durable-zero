@@ -1,0 +1,18 @@
+{
+  "base": "cdcb0cb9d94fc12d0e50afe805c21b14c2e09dc7",
+  "head": "ad122ffc9a7bf63c73a516d19fb07afcabeb7781",
+  "sourceHashes": {
+    "packages/protocol/src/index.ts": "52de64218ee8d140cdccb04f4955160d8462dd42b4d8ceae50d03d76f38b263a",
+    "packages/protocol/src/jsonrpc/schema.ts": "f556d701e5d9f856029324dbc5b7f95f148f3227da7d537bf1150f3b4767a968",
+    "packages/protocol/src/jsonrpc/errors.ts": "560ef4c1ff37e4d96d5f3e047d5371a3e93ddceee9603608672e86261af09e10",
+    "packages/protocol/src/transport/request-dispatcher.ts": "f1a28ecb76d70b3d612788d70924832fe044d9f8dd1ce0508925405977c35631",
+    "packages/protocol/test/protocol-conformance.test.ts": "fec6a0db89a9c73c4e1821fd17ba76edc1ce5e5d99b09ba63defe1adcebc7d49"
+  },
+  "artifact": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package",
+  "artifactSha256": "a4eafbd7365b261f6645442a4646b5c01fc9192ce056f8f479087b7e0573578f",
+  "buildCommand": "pnpm exec esbuild packages/protocol/src/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=<isolated-package>/dist/index.js",
+  "buildLog": "/Users/vanya/.bb/thread-storage/thr_9yjb93iwmn/protocol-package-build.log",
+  "greenJUnit": "/Users/vanya/.bb/thread-storage/thr_45qtxkivss/protocol-conformance-green.junit.xml",
+  "redJUnit": "/Users/vanya/.bb/thread-storage/thr_45qtxkivss/protocol-conformance-red.junit.xml",
+  "acceptance": "pending independent S9a/S9b; this is a candidate checkpoint, not release"
+}

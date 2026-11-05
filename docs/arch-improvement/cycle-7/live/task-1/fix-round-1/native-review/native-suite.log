@@ -1,0 +1,48 @@
+▶ FND-T1-02: ContentIndex preservation in DurableEventAdapter
+  ✔ preserves real contentIndex for thinking and multi-block text deltas (no hardcoded 0 collapse) (0.640875ms)
+✔ FND-T1-02: ContentIndex preservation in DurableEventAdapter (1.123375ms)
+✔ forkSessionDatabase: forks database, prunes entries and tasks above checkpointId, and cleans locks (12.427917ms)
+✔ watchEvents: emits message_update with incremental text deltas from pi.live.generation (2.048791ms)
+✔ CLI: --version prints version string (94.4985ms)
+✔ CLI: doctor accurately reports unsupported prototype command with non-zero exit (FND-T1-07) (76.483167ms)
+✔ CLI: run accurately reports unsupported prototype command with non-zero exit (FND-T1-07) (95.277209ms)
+✔ CLI: serve starts JSON-RPC server and responds to requests (802.746292ms)
+▶ SessionCoordinator (AP-010, AP-012, AP-074, AP-076, FND-T1-01, FND-T1-08)
+  ✔ coordinates session lifecycle: engine-owned physical lock, prompt admission, abort, and release (0.628958ms)
+  ✔ fails fast when prompt is called before start() (Defect 2) (2.06625ms)
+  ✔ fails fast when prompt is called after close() (Defect 1) (0.117625ms)
+✔ SessionCoordinator (AP-010, AP-012, AP-074, AP-076, FND-T1-01, FND-T1-08) (4.509334ms)
+▶ FND-T1-01: SessionCoordinator Turn Abort Semantics
+  ✔ root abort cancels active turn without permanently disabling the session (1.242791ms)
+  ✔ child abort cancels target child conversation without poisoning root (0.120167ms)
+  ✔ abort rejects if called before start() or after close() (0.647625ms)
+✔ FND-T1-01: SessionCoordinator Turn Abort Semantics (3.421708ms)
+▶ @durable-zero/runner Composition Root (AP-020, AP-073, AP-074)
+  ✔ exports executable main function (0.933167ms)
+  ✔ parseCliArgs: parses --session, --cwd, --provider, --model, and --thinking flags (0.240541ms)
+  ✔ assembleDurableZero: assembles coordinator, streams session/event notifications, and safely closes (4.121916ms)
+✔ @durable-zero/runner Composition Root (AP-020, AP-073, AP-074) (6.6195ms)
+SENDING PROMPT 1
+[CHILD STDOUT] {"jsonrpc":"2.0","id":1,"result":{"status":"accepted","id":"9","conversationId":"1"}}
+ADMISSION 1: { status: 'accepted', id: '9', conversationId: '1' }
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"Echo: he"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"llo world"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"turn_complete","status":"completed","requestId":"9","conversationId":"1"}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":2,"result":{"conversationId":"1","entries":[{"id":"8","conversationId":"1","kind":"pi.user","role":"user","text":"Echo: hello world"},{"id":"11","conversationId":"1","kind":"pi.system"},{"id":"12","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: hello world"}]}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":3,"result":{"sessionId":"session","cwd":"/Users/vanya/Projects/durable-zero","activeConversationId":"1","activeModel":{"provider":"scripted-e2e","modelId":"echo"},"thinkingLevel":"off","models":[{"provider":"scripted-e2e","modelId":"echo","name":"Echo Model","contextWindow":128000}],"entryCount":3}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":4,"result":{"conversationId":"1","entries":[{"id":"8","conversationId":"1","kind":"pi.user","role":"user","text":"Echo: hello world"},{"id":"11","conversationId":"1","kind":"pi.system"},{"id":"12","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: hello world"}]}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":5,"result":{"status":"accepted","id":"14","conversationId":"1"}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"Echo: Se"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","contentIndex":0,"delta":"cond turn"}}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","method":"session/event","params":{"event":{"type":"turn_complete","status":"completed","requestId":"14","conversationId":"1"}}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":6,"result":{"sessionId":"session","cwd":"/Users/vanya/Projects/durable-zero","activeConversationId":"1","activeModel":{"provider":"scripted-e2e","modelId":"echo"},"thinkingLevel":"off","models":[{"provider":"scripted-e2e","modelId":"echo","name":"Echo Model","contextWindow":128000}],"entryCount":5}}
+[CHILD STDOUT] {"jsonrpc":"2.0","id":7,"result":{"conversationId":"1","entries":[{"id":"8","conversationId":"1","kind":"pi.user","role":"user","text":"Echo: hello world"},{"id":"11","conversationId":"1","kind":"pi.system"},{"id":"12","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: hello world"},{"id":"13","conversationId":"1","kind":"pi.user","role":"user","text":"Second turn"},{"id":"16","conversationId":"1","kind":"pi.assistant","role":"assistant","text":"Echo: Second turn"}]}}
+✔ Slice 0 Walking Skeleton: End-to-end CLI JSON-RPC prompt streaming, persistence, and restart (2160.201583ms)
+ℹ tests 17
+ℹ suites 4
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2329.100166

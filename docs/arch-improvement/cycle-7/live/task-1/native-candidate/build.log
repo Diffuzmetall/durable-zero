@@ -1,0 +1,51 @@
+=== Native Candidate Build: fc0909602e7969df080259a2e2d4a7114be450b8 ===
+Repo root: /Users/vanya/Projects/durable-zero
+Target dir: /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-candidate
+Created isolated build workspace: /var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/dz-frozen-build-XXXXXX.ULOOzBjpYK
+Extracting clean git archive for commit fc0909602e7969df080259a2e2d4a7114be450b8...
+Running offline frozen-lockfile pnpm install...
+Scope: all 11 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +130
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 130, reused 130, downloaded 0, added 82
+Progress: resolved 130, reused 130, downloaded 0, added 125
+Progress: resolved 130, reused 130, downloaded 0, added 129
+Progress: resolved 130, reused 130, downloaded 0, added 130, done
+
+dependencies:
++ @earendil-works/chord 1.5.0
++ @earendil-works/pi-ai 1.5.0
++ @earendil-works/pi-codemode 1.5.0
++ @earendil-works/pi-coding-agent 1.5.0
++ @earendil-works/pi-durable 1.5.0
++ @earendil-works/pi-schema 1.5.0
++ @sinclair/typebox 0.34.52
++ proper-lockfile 4.1.2
++ quickjs-wasi 3.6.2
++ zod 4.6.7
+
+devDependencies:
++ esbuild 0.28.2
++ typescript 5.9.3
+
+Done in 4.1s using pnpm v11.5.0
+Building fresh packages with existing build pipeline...
+Building durable-zero packages...
+- Built packages/contracts/dist/index.js
+- Built packages/protocol/dist/index.js
+- Built packages/core/dist/index.js
+- Built packages/execution/dist/index.js
+- Built packages/adapter-pi-durable/dist/index.js
+- Built packages/adapter-pi-ai/dist/index.js
+- Built packages/adapter-codemode/dist/index.js
+- Built packages/extension-pi-resource/dist/index.js
+- Built packages/runner/dist/index.js
+- Built packages/runner/dist/main.js
+- Copied quickjs.wasm to packages/core/dist/ and packages/runner/dist/
+durable-zero build complete!
+Packaging frozen CLI and Runner into candidate directory...
+Build and packaging completed successfully.
+Cleaning up temp build workspace: /var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/dz-frozen-build-XXXXXX.ULOOzBjpYK
+Exit code: 0

@@ -45,9 +45,12 @@ describe("@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)", () =>
 			},
 		});
 
+		const { MockAgentEngine } = await import("../../core/test/mocks/mock-agent-engine.ts");
+		const engine = new MockAgentEngine();
 		const instance = await assembleDurableZero({
 			cwd: tempDir,
 			sessionDir: tempDir,
+			engine,
 			stdin,
 			stdout,
 			onNotification: (method, params) => {
@@ -57,14 +60,11 @@ describe("@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)", () =>
 
 		try {
 			assert.ok(instance.coordinator, "SessionCoordinator must be created");
-			assert.ok(instance.store, "SessionStore must be assembled");
-			assert.ok(instance.executionEnv, "ExecutionEnvironment must be assembled");
+			assert.ok(instance.engine, "IAgentEngine must be assembled");
 			assert.ok(instance.server, "StdioJsonRpcServer must be assembled");
 			assert.equal(typeof instance.close, "function");
 
-			assert.equal(instance.store.isLocked, false);
-			await instance.coordinator.start();
-			assert.equal(instance.store.isLocked, true);
+			assert.equal(instance.coordinator.isStarted, true);
 
 			// Test notification streaming from coordinator to onNotification and server
 			instance.coordinator.emitEvent({ type: "agent/chunk", text: "hello sovereign" });
@@ -85,12 +85,11 @@ describe("@durable-zero/runner Composition Root (AP-020, AP-073, AP-074)", () =>
 
 			// Test abort cascade
 			await instance.coordinator.abort();
-			assert.equal(instance.coordinator.isAborted, true);
 			assert.ok(notifications.some((n) => (n.params.event as any)?.type === "session/aborted"));
 
 			// Safe close
 			await instance.close();
-			assert.equal(instance.store.isLocked, false);
+			assert.equal(instance.coordinator.isClosed, true);
 
 			// Subsequent calls after close fail-fast (AP-012)
 			await assert.rejects(

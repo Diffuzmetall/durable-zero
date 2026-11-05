@@ -1,0 +1,12 @@
+2f9e7ae41e8bd4630155b5ea46cd06f30f1a87fbc5bf9b564e46c59c26e1d09a  ./build-candidate.sh
+401445e2630c08c1345a27884f82bfb0a173afcbf90da2605dc1c7afd68098ae  ./build.log
+c9f582ae1875d3e22577a8a05ab9460787b6b536373f0aa183a8d71fcfd87a69  ./fixtures/scripted-provider-extension.mjs
+9ed02f41ab01493ce2946d513dfc09e377bd774bf52bcbe8288197a8ae24700e  ./fixtures/scripted-provider-extension.ts
+29607108a366547a95852f4313c969e46c8c8cf482d5eacef27763536f44f301  ./packages/cli/bin/durable-zero.js
+d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9  ./packages/core/dist/quickjs.wasm
+813931832b4f689713b67cafb3421f4a4fe328a7daa64259acf845f1572efff6  ./packages/runner/dist/main.js
+110b7b30ef99398726ee6f9dbec3335172f9e602d424c6815e65836cd0e4bd8d  ./packages/runner/dist/main.js.map
+d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9  ./packages/runner/dist/quickjs.wasm
+83577f78adef1f029ff9388c53aa24b457d5fec8118ba70f59522bb1e5cfe75e  ./verify-results.junit.xml
+d1c8acabb7e2b0e555dcf7071ae28da50465f6445a954bdc780b8054f2e7458d  ./verify-smoke.mjs
+cba1cf2abffde700eecb150b23ecefb106a9a631bf575e109cc11bf6bfc36a4d  ./verify.log

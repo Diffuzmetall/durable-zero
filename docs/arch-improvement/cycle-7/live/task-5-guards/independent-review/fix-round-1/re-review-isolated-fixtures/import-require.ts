@@ -1,0 +1,1 @@
+import fs = require("node:fs"); export const x = fs;

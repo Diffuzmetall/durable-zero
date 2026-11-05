@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="JSON-RPC 2.0 Protocol Conformance" time="2.469658" disabled="0" errors="0" tests="3" failures="3" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testsuite name="Defect 1: Inbound Notifications" time="0.258573" disabled="0" errors="0" tests="5" failures="2" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="invokes handler for valid notification and emits no response" time="0.052443" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ ''&#10;- 'notify/update'&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;+ actual - expected&#10;&#10;+ ''&#10;- 'notify/update'">
+Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
++ actual - expected
+
++ ''
+- 'notify/update'
+
+    at async Promise.all (index 0)
+    at async Promise.all (index 0) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + ''
+  - 'notify/update'
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:66:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: 'notify/update',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="invokes handler for notification and emits no response even if handler rejects" time="0.051161" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="Expected values to be strictly equal:&#10;&#10;false !== true&#10;">
+				<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;false !== true">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+false !== true
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:89:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="preserves request with numeric id 0 as request and responds" time="0.051052" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="preserves request with empty string id as request and responds" time="0.051520" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="does not classify an object with an id field as an ID-less notification" time="0.051748" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+		</testsuite>
+		<testsuite name="Defect 2: Typed Method Not Found Error Mapping" time="0.104186" disabled="0" errors="0" tests="2" failures="1" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="maps JsonRpcMethodNotFoundError to -32601 error response" time="0.051719" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="Explicit JsonRpcMethodNotFoundError must map to code -32601&#10;&#10;-32603 !== -32601&#10;">
+				<failure type="testCodeFailure" message="Explicit JsonRpcMethodNotFoundError must map to code -32601&#10;&#10;-32603 !== -32601">
+Error [ERR_TEST_FAILURE]: Explicit JsonRpcMethodNotFoundError must map to code -32601
+
+-32603 !== -32601
+
+    at async Promise.all (index 0) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Explicit JsonRpcMethodNotFoundError must map to code -32601
+  
+  -32603 !== -32601
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:189:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -32603,
+    expected: -32601,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="maps generic errors to -32603 internal error response" time="0.052152" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+		</testsuite>
+		<testsuite name="Defect 3: Response Schema XOR, Void Handler &amp; Correlation" time="2.106415" disabled="0" errors="0" tests="6" failures="5" skipped="0" hostname="MacBook-Air-Ivan.local">
+			<testcase name="response schema rejects response with neither result nor error" time="0.000766" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="Schema must reject response with neither result nor error&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Schema must reject response with neither result nor error&#10;&#10;true !== false">
+Error [ERR_TEST_FAILURE]: Schema must reject response with neither result nor error
+
+true !== false
+
+    at new Promise (&lt;anonymous>)
+    at Array.map (&lt;anonymous>) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Schema must reject response with neither result nor error
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:230:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at node:internal/test_runner/test:1617:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (&lt;anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (&lt;anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="response schema rejects response with both result and error" time="0.000433" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="Schema must reject response with both result and error&#10;&#10;true !== false&#10;">
+				<failure type="testCodeFailure" message="Schema must reject response with both result and error&#10;&#10;true !== false">
+Error [ERR_TEST_FAILURE]: Schema must reject response with both result and error
+
+true !== false
+
+    at async Promise.all (index 0) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Schema must reject response with both result and error
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:240:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1619:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="response schema accepts response with valid falsy and null results" time="0.000138" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts"/>
+			<testcase name="serializes valid null result when handler returns void / undefined" time="0.051007" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="result member must be present">
+				<failure type="testCodeFailure" message="result member must be present">
+[Error [ERR_TEST_FAILURE]: result member must be present] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: result member must be present
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:275:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="does not reflect unsolicited responses back as invalid requests" time="0.051283" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="Server must not respond to unsolicited responses&#10;&#10;1 !== 0&#10;">
+				<failure type="testCodeFailure" message="Server must not respond to unsolicited responses&#10;&#10;1 !== 0">
+[Error [ERR_TEST_FAILURE]: Server must not respond to unsolicited responses
+
+1 !== 0
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Server must not respond to unsolicited responses
+  
+  1 !== 0
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:294:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+			<testcase name="rejects pending outbound request when client returns malformed response with neither result nor error" time="2.002301" classname="test" file="/Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts" failure="The input did not match the regular expression /Malformed JSON-RPC response from client:/. Input:&#10;&#10;'Error: Request host/toolCall (id: req_1793813362004_1) timed out after 2000ms'&#10;">
+				<failure type="testCodeFailure" message="The input did not match the regular expression /Malformed JSON-RPC response from client:/. Input:&#10;&#10;'Error: Request host/toolCall (id: req_1793813362004_1) timed out after 2000ms'">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /Malformed JSON-RPC response from client:/. Input:
+
+'Error: Request host/toolCall (id: req_1793813362004_1) timed out after 2000ms'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Malformed JSON-RPC response from client:/. Input:
+  
+  'Error: Request host/toolCall (id: req_1793813362004_1) timed out after 2000ms'
+  
+      at async TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/packages/protocol/test/protocol-conformance.test.ts:321:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Request host/toolCall (id: req_1793813362004_1) timed out after 2000ms
+        at Timeout._onTimeout (file:///Users/vanya/Projects/durable-zero/packages/protocol/src/transport/stdio-server.ts:69:16)
+        at listOnTimeout (node:internal/timers:605:17)
+        at process.processTimers (node:internal/timers:541:7),
+    expected: /Malformed JSON-RPC response from client:/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+}
+				</failure>
+			</testcase>
+		</testsuite>
+	</testsuite>
+	<!-- tests 13 -->
+	<!-- suites 4 -->
+	<!-- pass 5 -->
+	<!-- fail 8 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2647.083292 -->
+</testsuites>

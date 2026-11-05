@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "audit": "Cycle 7 Task 1 Final Cold Rerun Verification",
+  "testCandidateCommit": "513d37264c364cdcb733d3da7677911627d8c964",
+  "productionCandidateCommit": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "productionClosureByteIdentical": true,
+  "packageVersion": "0.26.31",
+  "externalSdkVersion": "1.5.0",
+  "timestamp": "2026-11-05T08:19:00Z",
+  "environment": {
+    "node": "v26.0.0",
+    "pnpm": "11.5.0",
+    "typescript": "5.9.3",
+    "esbuild": "0.28.2"
+  },
+  "cleanBuild": {
+    "command": "node scripts/build.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "durationMs": 1700
+  },
+  "officialTypecheck": {
+    "command": "pnpm run typecheck",
+    "actualExecuted": "tsc -p tsconfig.src.json --pretty false",
+    "status": "PASS",
+    "exitCode": 0,
+    "errorsCount": 0
+  },
+  "coldRootTestSuite": {
+    "command": "node --test --test-timeout 30000 packages/*/test/*.test.ts",
+    "status": "PASS",
+    "exitCode": 0,
+    "durationMs": 10728,
+    "hardTimeoutReached": false,
+    "totalSuites": 54,
+    "totalTests": 374,
+    "passedTests": 374,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "resolutionSummary": "All 5 prior failures resolved: PiAI tests made hermetic with real SDK fauxProvider registration and fake runtime key; env-strategy updated to await async native environment ABI. Zero production source changes."
+  },
+  "publishedExecutableArtifactsRetained": {
+    "runnerMainSha256": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136",
+    "cliSha256": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+    "quickjsWasmSha256": "d4c9375f2b1ca4dc95f72c8aa2982a7a9951ac8011490d79c6582df732b4bbd9"
+  }
+}

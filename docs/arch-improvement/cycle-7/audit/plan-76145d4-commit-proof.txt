@@ -1,0 +1,10 @@
+commit 76145d4d7841fdd878d2da7557c084efa74a98d5
+Author:     VanDalkvist <ivandalkvist@gmail.com>
+AuthorDate: Wed Nov 4 20:04:37 2026 +0300
+Commit:     VanDalkvist <ivandalkvist@gmail.com>
+CommitDate: Wed Nov 4 20:04:37 2026 +0300
+
+    docs(plan): synchronize Cycle 7 contracts with parent S7 rulings and native SDK types
+
+ ...-11-04-cycle-7-runtime-adapter-ioc-migration.md | 353 ++++++++++++++++-----
+ 1 file changed, 277 insertions(+), 76 deletions(-)

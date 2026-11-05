@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="Task 4B Independent Semantic &amp; Architecture Probes (Frozen Artifacts)" tests="3" failures="3" errors="0" skipped="0">
+    <testcase name="Runner public package exports createSessionDispatcher (Adjudicated non-blocking for internal runner component)" classname="SemanticProbe" time="0.005">
+      <failure message="OMISSION CONFIRMED: createSessionDispatcher is not exported from packages/runner/src/index.ts (adjudicated by parent as internal factory; composition.ts can import ./dispatch/index.ts without root export)">OMISSION CONFIRMED: createSessionDispatcher is not exported from packages/runner/src/index.ts (adjudicated by parent as internal factory; composition.ts can import ./dispatch/index.ts without root export)</failure>
+    </testcase>
+    <testcase name="Invalid params maps to -32602 over frozen compiled protocol transport" classname="SemanticProbe" time="0.005">
+      <failure message="FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure (tested against frozen dist sha256:eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d)">FAIL: returned -32603 instead of -32602 due to cross-package source-relative import instanceof failure (tested against frozen dist sha256:eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d)</failure>
+    </testcase>
+    <testcase name="Unknown method maps to -32601 over frozen compiled protocol transport" classname="SemanticProbe" time="0.005">
+      <failure message="FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure (tested against frozen dist sha256:eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d)">FAIL: returned -32603 instead of -32601 due to cross-package source-relative import instanceof failure (tested against frozen dist sha256:eb9a64afab9232099a9342b8e654daf6a27aa6aa9a49b44f354f3434df61e00d)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

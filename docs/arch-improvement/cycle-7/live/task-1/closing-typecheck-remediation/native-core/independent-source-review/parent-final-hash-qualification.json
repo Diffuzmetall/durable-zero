@@ -1,0 +1,38 @@
+[
+  {
+    "report": "final-r8-review.md",
+    "path": "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
+    "claimed": "1670e0ab7d0fb925181ca54202d55694a530ebc23b2b0051c50e21976a16c7a3",
+    "actualFrozen7e12Sha256": "1670e0abeb722fa9f93fff501b68ea5ed61f292614cdd75b8563596624a34db2"
+  },
+  {
+    "report": "final-r8-review.md",
+    "path": "packages/runner/src/composition.ts",
+    "claimed": "2e97adca02a0a2df335889bc0f601f782352ae07559aa3cf5475a363717df3e2",
+    "actualFrozen7e12Sha256": "2e97adca68cdda1e1fcf293b6d679fae86867ab51d4d0ce817c22747de36425e"
+  },
+  {
+    "report": "r8-review.md",
+    "path": "packages/adapter-pi-durable/src/engine/core-execution-env-adapter.ts",
+    "claimed": "7202a5832d91d46c2d9488cf3626469d842e96f7cf529db9f2ac34a8f81d2570",
+    "actualFrozen7e12Sha256": "f71cc85a58dede705b4b75f612d7ab950d13485aed2074638cf7d8bb045d0f08"
+  },
+  {
+    "report": "r8-review.md",
+    "path": "packages/adapter-pi-durable/src/engine/harness-setup.ts",
+    "claimed": "68d14c293883d683b15f762dc4714a2375c012c139a196edb0e5642e43918e30",
+    "actualFrozen7e12Sha256": "cd7262079effbb328dbff007faeead1d003169531b577dacf71959c89db7b790"
+  },
+  {
+    "report": "review.md",
+    "path": "packages/adapter-pi-durable/src/engine/pi-durable-engine.ts",
+    "claimed": "3af701614e4fc62b19a7ac7ec4388513ac8e58916f0e811f2e560d4e53d568a2",
+    "actualFrozen7e12Sha256": "1670e0abeb722fa9f93fff501b68ea5ed61f292614cdd75b8563596624a34db2"
+  },
+  {
+    "report": "review.md",
+    "path": "packages/runner/src/composition.ts",
+    "claimed": "2def6426690c37183adb393e7e46ad6cb280cabaa17729f1e1143ae519499e08",
+    "actualFrozen7e12Sha256": "2e97adca68cdda1e1fcf293b6d679fae86867ab51d4d0ce817c22747de36425e"
+  }
+]

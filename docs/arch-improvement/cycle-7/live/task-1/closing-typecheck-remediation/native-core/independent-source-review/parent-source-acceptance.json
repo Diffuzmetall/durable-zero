@@ -1,0 +1,29 @@
+{
+  "recordedAt": "2026-11-05T11:00:39.803496+03:00",
+  "verdict": "PASS bounded Native source / R8 semantics",
+  "sourceCommit": "08c6fd172bc90061a3e265745f183c1725c1d010",
+  "productionEquivalentCandidate": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "historicalRed": {
+    "cases": 18,
+    "failures": 17
+  },
+  "fixedReplay": {
+    "cases": 18,
+    "failures": 0
+  },
+  "sourceHashAudit": "parent-correct-reference-hash-audit.json",
+  "provenanceCorrection": "Parent mechanically corrected 2 literal SHA256 typos in finalreport fromactualgitblobs after reviewerquotaerror; originalreceivedreportretainedhistorical/final-r8-review-as-received.md. This ishashmetadatarepair, notnewindependentcoderreview.",
+  "closedGroups": [
+    "FND-T1-12 compilerABI",
+    "R8-01 honestunsupported/identity",
+    "R8-02 typederrors",
+    "R8-03 asyncownership/lifecycle",
+    "R8-04 honestminimalCoreShell"
+  ],
+  "qualifications": [
+    "Finite18empiricalprobes are bounded verification, not mathematicalproof",
+    "Currentfullrootregression remains369/374 until5testsetup/APIrepairs andisolatedrerun",
+    "No fullCycle7/admin/host/probe/dispatcher integration acceptance inferred",
+    "No release/install/npm publish"
+  ]
+}

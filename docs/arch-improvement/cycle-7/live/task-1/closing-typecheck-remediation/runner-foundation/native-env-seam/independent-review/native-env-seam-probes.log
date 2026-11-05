@@ -1,0 +1,14 @@
+▶ Task 1 Root Delta — Independent Execution Environment Seam Probes
+  ✔ Probe 1: Rejects configuration with BOTH executionEnvFactory and nativeExecutionEnvFactory as genuine error (AP-012, AP-074) (2.172708ms)
+  ✔ Probe 2: Actual native Root startup with custom Core executionEnvFactory invokes factory and creates owned file effect (42.849583ms)
+  ✔ Probe 3: Actual native Root startup with custom Native nativeExecutionEnvFactory invokes factory and creates owned file effect (18.983375ms)
+  ✔ Probe 4: Actual native Root startup with DEFAULT wiring uses NodeExecutionEnv with 24 required native methods (16.271167ms)
+✔ Task 1 Root Delta — Independent Execution Environment Seam Probes (80.918458ms)
+ℹ tests 4
+ℹ suites 1
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 895.435792

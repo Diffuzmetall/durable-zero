@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="DurableZero-ProductReview" tests="9" failures="0" errors="0" time="3.702">
+  <testsuite name="NativeSlice0-BlackBox" tests="9" failures="0" errors="0" time="3.702">
+    <testcase name="1.1 Cold startup, strict JSON-only stdout, readiness RPC handshake" classname="NativeSlice0" time="0.807">
+    </testcase>
+    <testcase name="1.2 Unique nonce prompt -&gt; gated model provider stream -&gt; first wire delta BEFORE completion allowed" classname="NativeSlice0" time="0.438">
+    </testcase>
+    <testcase name="1.3 Second prompt in SAME process with shared prefix to verify generation-reset and no delta replay" classname="NativeSlice0" time="0.327">
+    </testcase>
+    <testcase name="2.1 Clean SIGTERM shutdown of Process 1 with exit code 0" classname="NativeSlice0" time="0.023">
+    </testcase>
+    <testcase name="2.2 Restart same explicit session directory in new OS process; verify identical historic entries" classname="NativeSlice0" time="0.567">
+    </testcase>
+    <testcase name="2.3 Third distinct completed reply in restarted Process 2 with updated native entries" classname="NativeSlice0" time="0.348">
+    </testcase>
+    <testcase name="3.1 Malformed JSON returns -32700 Parse error without server crash" classname="NativeSlice0" time="0.511">
+    </testcase>
+    <testcase name="3.2 Unrecognized method returns -32601 Method not found" classname="NativeSlice0" time="0.526">
+    </testcase>
+    <testcase name="3.3 Pending in-flight requests rejected on child process exit" classname="NativeSlice0" time="0.155">
+    </testcase>
+  </testsuite>
+</testsuites>

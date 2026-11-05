@@ -6,7 +6,7 @@ import {
 	resolveModelScopeWithDiagnostics,
 } from "@earendil-works/pi-coding-agent";
 import type { ModelThinkingLevel } from "@earendil-works/pi-ai";
-import type { CliArgs } from "@durable-zero/core";
+import type { CliArgs } from "@durable-zero/contracts";
 import { PiAiModelProvider } from "./model-provider.ts";
 
 export interface RunnerModelSetupResult {
@@ -73,7 +73,13 @@ export async function setupRunnerModels(cwd: string, args: CliArgs): Promise<Run
 
 	const modelProvider = new PiAiModelProvider(modelRuntime, settingsManager);
 	const initialAgent = await modelProvider.resolveModel(
-		args.model ? { provider: args.provider, model: args.model, thinking: args.thinking } : undefined,
+		args.model
+			? {
+					model: args.model,
+					...(args.provider !== undefined ? { provider: args.provider } : {}),
+					...(args.thinking !== undefined ? { thinking: args.thinking } : {}),
+				}
+			: undefined,
 	);
 
 	const defaultModel = initialAgent.model
