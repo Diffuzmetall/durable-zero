@@ -1,0 +1,1089 @@
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(4,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(5,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(6,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(7,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(31,3): error TS2739: Type '{ start: () => Promise<void>; submit: (input: any) => Promise<{ status: "accepted"; id: string; conversationId: string; }>; abort: (convId?: string | undefined) => Promise<void>; ... 5 more ...; close: () => Promise<...>; }' is missing the following properties from type 'IAgentEngine': abortTask, compact, setModel, setThinkingLevel
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(99,25): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(103,22): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(107,21): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/fix-round-1/probe-re-review.test.ts(139,3): error TS2739: Type '{ start: () => Promise<void>; submit: () => Promise<{ status: "accepted"; id: string; conversationId: string; }>; abort: () => Promise<void>; getState: () => Promise<any>; ... 4 more ...; close: () => Promise<...>; }' is missing the following properties from type 'IAgentEngine': abortTask, compact, setModel, setThinkingLevel
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(3,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(4,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(28,3): error TS2739: Type '{ start: () => Promise<void>; submit: () => Promise<{ status: "accepted"; id: string; conversationId: string; }>; abort: () => Promise<void>; getState: () => Promise<any>; ... 4 more ...; close: () => Promise<...>; }' is missing the following properties from type 'IAgentEngine': abortTask, compact, setModel, setThinkingLevel
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(42,21): error TS2339: Property 'isAborted' does not exist on type 'SessionCoordinator'.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(92,25): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(97,22): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-1/independent-source-review/probe-slice0-findings.test.ts(101,21): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-1/native-candidate/fixtures/scripted-provider-extension.ts(69,3): error TS2741: Property 'name' is missing in type '{ resolve: () => Promise<{ auth: { apiKey: string; }; }>; }' but required in type 'ApiKeyAuth'.
+docs/arch-improvement/cycle-7/live/task-1/native-candidate/fixtures/scripted-provider-extension.ts(74,3): error TS2322: Type '{ id: string; provider: string; name: string; api: "echo-api"; contextWindow: number; maxTokens: number; reasoning: false; }' is not assignable to type 'ProviderModel<"echo-api">'.
+  Type '{ id: string; provider: string; name: string; api: "echo-api"; contextWindow: number; maxTokens: number; reasoning: false; }' is missing the following properties from type 'Model<"echo-api">': baseUrl, input, cost
+docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/fixtures/scripted-provider-extension.ts(69,3): error TS2741: Property 'name' is missing in type '{ resolve: () => Promise<{ auth: { apiKey: string; }; }>; }' but required in type 'ApiKeyAuth'.
+docs/arch-improvement/cycle-7/live/task-1/native-fix-round-1/fixtures/scripted-provider-extension.ts(74,3): error TS2322: Type '{ id: string; provider: string; name: string; api: "echo-api"; contextWindow: number; maxTokens: number; reasoning: false; }' is not assignable to type 'ProviderModel<"echo-api">'.
+  Type '{ id: string; provider: string; name: string; api: "echo-api"; contextWindow: number; maxTokens: number; reasoning: false; }' is missing the following properties from type 'Model<"echo-api">': baseUrl, input, cost
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts(16,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/adversarial-probes.test.ts(386,17): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/extracted-checker.ts(131,59): error TS2345: Argument of type 'Expression | undefined' is not assignable to parameter of type 'Node'.
+  Type 'undefined' is not assignable to type 'Node'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(6,26): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(385,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(386,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(390,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(391,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(404,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(405,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(409,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/adversarial-re-review.test.ts(410,20): error TS2532: Object is possibly 'undefined'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/focused-counterexamples.test.ts(6,26): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-reexport-cycle-workspace/packages/pkg-x/src/index.ts(1,15): error TS2307: Cannot find module '@durable-zero/pkg-y' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-reexport-cycle-workspace/packages/pkg-y/src/index.ts(1,15): error TS2307: Cannot find module '@durable-zero/pkg-x' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-relative-cycle-workspace/packages/pkg-1/src/index.ts(1,10): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-relative-cycle-workspace/packages/pkg-1/src/index.ts(1,21): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-relative-cycle-workspace/packages/pkg-1/src/index.ts(1,49): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-relative-cycle-workspace/packages/pkg-2/src/index.ts(1,10): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-relative-cycle-workspace/packages/pkg-2/src/index.ts(1,21): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-relative-cycle-workspace/packages/pkg-2/src/index.ts(1,49): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-source-cycle-workspace/packages/pkg-a/src/index.ts(1,19): error TS2307: Cannot find module '@durable-zero/pkg-b' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-source-cycle-workspace/packages/pkg-a/src/index.ts(1,42): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-source-cycle-workspace/packages/pkg-b/src/index.ts(1,19): error TS2307: Cannot find module '@durable-zero/pkg-a' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-1/re-review-isolated-fixtures/mock-source-cycle-workspace/packages/pkg-b/src/index.ts(1,42): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts(6,26): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts(7,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-2/r2-counterexamples.test.ts(8,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts(6,26): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts(7,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts(10,3): error TS2305: Module '"../../../../../../../packages/core/test/architecture-boundaries-runner-verify.ts"' has no exported member 'isCallableNode'.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-3/r3-counterexamples.test.ts(11,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts(6,26): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts(10,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts(11,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/fix-round-4/r4-adversarial.test.ts(12,59): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/mock-reexport-workspace/pkg-x/src/index.ts(1,15): error TS2307: Cannot find module '@mock/pkg-y' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/mock-reexport-workspace/pkg-y/src/index.ts(1,15): error TS2307: Cannot find module '@mock/pkg-x' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/mock-workspace/pkg-a/src/index.ts(1,19): error TS2307: Cannot find module '@mock/pkg-b' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/mock-workspace/pkg-a/src/index.ts(1,34): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/mock-workspace/pkg-b/src/index.ts(1,19): error TS2307: Cannot find module '@mock/pkg-a' or its corresponding type declarations.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/mock-workspace/pkg-b/src/index.ts(1,34): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+docs/arch-improvement/cycle-7/live/task-5-guards/independent-review/isolated-adversarial-fixtures/scan-ext-test/cjs.cts(1,1): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/adapter-codemode/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-codemode/test/codemode.test.ts(6,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-ai/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-ai/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-ai/src/model-provider.ts(41,37): error TS2379: Argument of type '{ cliProvider: string | undefined; cliModel: string; modelRuntime: ModelRuntime; }' is not assignable to parameter of type '{ cliProvider?: string; cliModel?: string; cliThinking?: ThinkingLevel; inlineApiKey?: boolean; modelRuntime: ModelRuntime; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'cliProvider' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-ai/src/model-provider.ts(73,24): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-ai/src/model-provider.ts(73,56): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-ai/src/model-setup.ts(9,15): error TS2305: Module '"@durable-zero/core"' has no exported member 'CliArgs'.
+packages/adapter-pi-ai/src/model-setup.ts(10,35): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-ai/test/model-provider.test.ts(4,35): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-ai/test/model-provider.test.ts(23,12): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(24,12): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(35,13): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(36,10): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(41,13): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(42,12): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(54,23): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(54,42): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(60,13): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(61,12): error TS18048: 'target' is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(87,39): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-ai/test/model-provider.test.ts(88,38): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/src/engine/binding-commands.ts(2,78): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/binding-commands.ts(3,56): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/assistant-message-builder.ts(11,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/contracts.ts(2,113): error TS2307: Cannot find module '../../../contracts/src/index.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/src/engine/bridge/contracts.ts(3,82): error TS2307: Cannot find module '../../../contracts/src/index.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/src/engine/bridge/contracts.ts(4,95): error TS2307: Cannot find module '../../../contracts/src/index.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/src/engine/bridge/contracts.ts(5,66): error TS2307: Cannot find module '../../../contracts/src/index.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/src/engine/bridge/contracts.ts(6,45): error TS2307: Cannot find module '../../../contracts/src/index.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/src/engine/bridge/contracts.ts(7,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(4,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(5,40): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(20,3): error TS2412: Type 'string | number | undefined' is not assignable to type 'string | number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string | number'.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(26,3): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(38,4): error TS2412: Type 'undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(41,4): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(59,32): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(59,67): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(157,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(163,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-child-event-adapter.ts(178,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-contracts.ts(129,29): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(4,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(5,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(6,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(8,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(36,3): error TS2412: Type '((p?: string | undefined, m?: string | undefined) => number | undefined) | undefined' is not assignable to type '(provider?: string | undefined, modelId?: string | undefined) => number | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type '(provider?: string | undefined, modelId?: string | undefined) => number | undefined'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(42,3): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(96,5): error TS2412: Type 'undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(98,5): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(113,32): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(113,67): error TS2339: Property 'contentIndex' does not exist on type 'MessageChange'.
+  Property 'contentIndex' does not exist on type '{ type: "message"; message: unknown; }'.
+packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts(183,6): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/bridge/tool-args-resolver.ts(7,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/tool-result-extractor.ts(12,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/tool-result-extractor.ts(13,35): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/tool-result-extractor.ts(14,56): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/tool-result-extractor.ts(45,35): error TS2379: Argument of type '{ toolName: string; rawOutput: unknown; isError: boolean; diagnostics: readonly ToolDiagnostic[] | undefined; retainedOutput: string | undefined; }' is not assignable to parameter of type '{ toolName: string; rawOutput: unknown; isError: boolean; diagnostics?: readonly ToolDiagnostic[]; retainedOutput?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'diagnostics' are incompatible.
+    Type 'readonly ToolDiagnostic[] | undefined' is not assignable to type 'readonly ToolDiagnostic[]'.
+      Type 'undefined' is not assignable to type 'readonly ToolDiagnostic[]'.
+packages/adapter-pi-durable/src/engine/bridge/turn-summary.ts(9,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/turn-summary.ts(13,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/bridge/turn-summary.ts(104,2): error TS2375: Type '{ finalMsg: any; cw: number | undefined; cumulativeUsage: any; isAborted: boolean; isError: boolean; errorMessage: any; lastCheckpointId: string | undefined; }' is not assignable to type 'TurnSummaryResult' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'cw' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/builtin-extensions/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/builtin-extensions/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/builtin-extensions/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/builtin-extensions/index.ts(4,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/builtin-extensions/registry.ts(1,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/builtin-extensions/subagents.ts(1,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/builtin-extensions/subagents.ts(2,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/codemode-namespaces.ts(21,5): error TS2375: Type '{ name: string; prefix: string; description: string | undefined; instructions: string | undefined; }' is not assignable to type 'CodemodeNamespace' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'description' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/extension-actions.ts(1,76): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/extension-bridge.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/extension-bridge.ts(2,70): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(3,84): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(4,38): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(6,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(144,48): error TS2379: Argument of type '{ extensions: Extension[]; runtime: ExtensionRuntime; cwd: string; modelRuntime: ModelRuntime; executeToolFn: NestedToolExecutor; ... 9 more ...; onSubmitUserMessage: (c: string, d: "steer" | ... 1 more ... | undefined) => void | ... 1 more ... | undefined; }' is not assignable to parameter of type 'SetupExtensionRunnerOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onNotice' are incompatible.
+    Type '((level: "error" | "warning" | "info", message: string) => void) | undefined' is not assignable to type '(level: "error" | "warning" | "info", message: string) => void'.
+      Type 'undefined' is not assignable to type '(level: "error" | "warning" | "info", message: string) => void'.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(187,6): error TS2345: Argument of type '{ messageType: "user"; prompt: string; images: undefined; }' is not assignable to parameter of type 'BeforeAgentStartTrigger'.
+  Type '{ messageType: "user"; prompt: string; images: undefined; }' is not assignable to type 'Pick<BeforeAgentStartUserEvent, "prompt" | "images" | "messageType">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'images' are incompatible.
+      Type 'undefined' is not assignable to type 'ImageContent[]'.
+packages/adapter-pi-durable/src/engine/extension-mount.ts(205,2): error TS2375: Type '{ extensionRunner: ExtensionRunner | undefined; cleanup: () => Promise<void>; setActiveTools: (tools: string[]) => void; getActiveTools: () => string[]; }' is not assignable to type 'MountedExtensionBridge' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'extensionRunner' are incompatible.
+    Type 'ExtensionRunner | undefined' is not assignable to type 'ExtensionRunner'.
+      Type 'undefined' is not assignable to type 'ExtensionRunner'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(18,52): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(20,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(21,38): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(22,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(90,8): error TS2375: Type '{ registry: Registry<ToolRegistration>; settingsManager: SettingsManager; cwd: string; storageDir: string; getSubagentPolicy: () => SubagentPolicyRecord; prompt: PromptOptions | undefined; dynamicNamespaces: DynamicCodemodeNamespaces | undefined; }' is not assignable to type 'BuiltinExtensionContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'prompt' are incompatible.
+    Type 'PromptOptions | undefined' is not assignable to type 'PromptOptions'.
+      Type 'undefined' is not assignable to type 'PromptOptions'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(148,36): error TS2379: Argument of type '{ cliProvider: string | undefined; cliModel: string; modelRuntime: ModelRuntime; }' is not assignable to parameter of type '{ cliProvider?: string; cliModel?: string; cliThinking?: ThinkingLevel; inlineApiKey?: boolean; modelRuntime: ModelRuntime; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'cliProvider' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(176,23): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/src/engine/harness-setup.ts(176,55): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(8,2): error TS2305: Module '"@durable-zero/core"' has no exported member 'RunnerEvent'.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(16,29): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(22,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(23,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(24,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(25,70): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(26,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(62,37): error TS2379: Argument of type '{ cwd: string; sessionDir: string; session: string | undefined; continueSession: boolean | undefined; cli: { readonly provider?: string; readonly model?: string; readonly thinking?: ModelThinkingLevel; readonly skills?: string[]; readonly extension?: string; readonly extensions?: string[]; readonly noGlobalExtension...' is not assignable to parameter of type 'OpenDurableOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'continueSession' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(80,6): error TS2322: Type 'ConversationId' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(142,42): error TS2345: Argument of type 'number' is not assignable to parameter of type 'SubmissionId'.
+  Type 'number' is not assignable to type '{ readonly [idBrand]: { readonly kind: "submission"; readonly type: unknown; }; }'.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(241,3): error TS2375: Type '{ sessionId: string; cwd: string; activeConversationId: string; activeModel: { provider: any; modelId: any; } | undefined; thinkingLevel: any; models: { provider: string; modelId: string; name: string; contextWindow: number; }[]; entryCount: number; }' is not assignable to type 'SessionStateDTO' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'activeModel' are incompatible.
+    Type '{ provider: any; modelId: any; } | undefined' is not assignable to type '{ readonly provider: string; readonly modelId: string; }'.
+      Type 'undefined' is not assignable to type '{ readonly provider: string; readonly modelId: string; }'.
+packages/adapter-pi-durable/src/engine/pi-durable-engine.ts(300,17): error TS2379: Argument of type '{ id: string; conversationId: string; kind: string; role: "system" | "assistant" | "user" | "tool" | undefined; text: string | undefined; }' is not assignable to parameter of type 'TranscriptEntryDTO' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'role' are incompatible.
+    Type '"system" | "assistant" | "user" | "tool" | undefined' is not assignable to type '"system" | "assistant" | "user" | "tool"'.
+      Type 'undefined' is not assignable to type '"system" | "assistant" | "user" | "tool"'.
+packages/adapter-pi-durable/src/engine/runtime-bindings.ts(75,3): error TS2412: Type 'undefined' is not assignable to type 'RuntimeReadBinding<TaskGraph>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-bindings.ts(75,27): error TS2412: Type 'undefined' is not assignable to type '() => void' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-bindings.ts(77,33): error TS2379: Argument of type '{ tasks: undefined; }' is not assignable to parameter of type 'Partial<DurableView>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'tasks' are incompatible.
+    Type 'undefined' is not assignable to type 'TaskGraph'.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(1,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(13,119): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(14,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(15,67): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(79,8): error TS2345: Argument of type '{ messageType: "user"; prompt: string; images: any[] | undefined; }' is not assignable to parameter of type 'BeforeAgentStartTrigger'.
+  Type '{ messageType: "user"; prompt: string; images: any[] | undefined; }' is not assignable to type 'Pick<BeforeAgentStartUserEvent, "prompt" | "images" | "messageType">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'images' are incompatible.
+      Type 'any[] | undefined' is not assignable to type 'ImageContent[]'.
+        Type 'undefined' is not assignable to type 'ImageContent[]'.
+packages/adapter-pi-durable/src/engine/runtime-controller.ts(125,90): error TS2345: Argument of type '{ type: "session_before_compact"; preparation: { firstKeptEntryId: string; messagesToSummarize: Message[]; turnPrefixMessages: never[]; isSplitTurn: false; tokensBefore: number; fileOps: { ...; }; settings: any; }; ... 4 more ...; signal: AbortSignal; }' is not assignable to parameter of type 'RunnerEmitEvent'.
+  Type '{ type: "session_before_compact"; preparation: { firstKeptEntryId: string; messagesToSummarize: Message[]; turnPrefixMessages: never[]; isSplitTurn: false; tokensBefore: number; fileOps: { ...; }; settings: any; }; ... 4 more ...; signal: AbortSignal; }' is not assignable to type 'SessionBeforeCompactEvent' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'customInstructions' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(6,27): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(8,58): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(15,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(17,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(54,2): error TS2375: Type '{ model: { provider: string; modelId: string; }; thinkingLevel: string | undefined; modelLabel: string; }' is not assignable to type 'ExtractedTaskMeta' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'thinkingLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(98,2): error TS2375: Type '{ id: number; kind: string; conversationId: number; owner: number | undefined; background: boolean; abortRequested: boolean; state: RuntimeTaskState; blocked: BlockedReason | undefined; ... 7 more ...; tokens: TaskTokensUsage | undefined; }' is not assignable to type 'RuntimeTaskNode' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'owner' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/runtime-graph-mapper.ts(129,32): error TS2379: Argument of type '{ preview: string | undefined; toolName: string | undefined; targetHint: string | undefined; entryId: number | undefined; startedAt: number | undefined; tokens: TaskTokensUsage | undefined; }' is not assignable to parameter of type 'TerminalOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'preview' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(4,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(62,4): error TS2375: Type '{ message: string; code: string | undefined; }' is not assignable to type '{ message: string; code?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'code' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(104,9): error TS2375: Type '{ taskId: number; conversationId: number; owner: number | undefined; kind: string; outcome: TaskOutcomeName; isToolError: boolean | undefined; error: { message: string; code?: string; } | undefined; ... 6 more ...; tokens: TaskTokensUsage | undefined; }' is not assignable to type 'RuntimeTaskReceipt' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'owner' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/runtime-graph-receipts.ts(150,4): error TS2375: Type '{ tokens: TaskTokensUsage; taskId?: number; conversationId?: number; owner?: number; kind?: string; outcome?: TaskOutcomeName; isToolError?: boolean; error?: { readonly message: string; readonly code?: string; }; ... 5 more ...; startedAt?: number; }' is not assignable to type 'RuntimeTaskReceipt' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Property 'taskId' is optional in type '{ tokens: TaskTokensUsage; taskId?: number; conversationId?: number; owner?: number; kind?: string; outcome?: TaskOutcomeName; isToolError?: boolean; error?: { ...; }; ... 5 more ...; startedAt?: number; }' but required in type 'RuntimeTaskReceipt'.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(4,47): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(5,43): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(6,27): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(15,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(50,3): error TS2412: Type 'HarnessGraphSource | undefined' is not assignable to type 'HarnessGraphSource' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'HarnessGraphSource'.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(105,4): error TS2412: Type 'undefined' is not assignable to type 'Timeout' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(120,4): error TS2412: Type 'undefined' is not assignable to type 'Timeout' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(126,35): error TS2412: Type 'undefined' is not assignable to type 'Timeout' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-graph-source.ts(130,3): error TS2412: Type 'undefined' is not assignable to type 'number' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+packages/adapter-pi-durable/src/engine/runtime-hydration.ts(2,95): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(15,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(16,50): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(17,64): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(18,51): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(21,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(22,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(23,43): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(25,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(93,29): error TS2379: Argument of type '{ cwd: string; agentDir: string; settingsManager: SettingsManager; extensionFactories: ExtensionFactory[]; additionalSkillPaths: string[] | undefined; additionalExtensionPaths: string[] | undefined; noExtensions: boolean; }' is not assignable to parameter of type 'DefaultResourceLoaderOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'additionalExtensionPaths' are incompatible.
+    Type 'string[] | undefined' is not assignable to type 'string[]'.
+      Type 'undefined' is not assignable to type 'string[]'.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(151,3): error TS2345: Argument of type '() => IExecutionEnvironment' is not assignable to parameter of type '() => ExecutionEnv | undefined'.
+  Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(186,48): error TS2322: Type '({ cwd, conversationId }: EnvTarget) => IExecutionEnvironment' is not assignable to type '(target: EnvTarget, context: Context) => ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
+  Type 'IExecutionEnvironment' is not assignable to type 'ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
+    Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(204,2): error TS2375: Type '{ modelRuntime: ModelRuntime; settingsManager: SettingsManager; harness: Harness; subagentPolicyHolder: SubagentPolicyHolder; ... 12 more ...; getActiveTools: (() => string[]) | undefined; }' is not assignable to type 'LoadedHarnessEnvironment' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'initialModelRef' are incompatible.
+    Type 'ModelRef | undefined' is not assignable to type 'ModelRef'.
+      Type 'undefined' is not assignable to type 'ModelRef'.
+packages/adapter-pi-durable/src/engine/runtime.ts(4,54): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(6,31): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(10,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(11,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(12,33): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(13,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(14,71): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(15,85): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(17,43): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/runtime.ts(53,27): error TS2379: Argument of type '{ model: ModelRef; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | undefined; }' is not assignable to parameter of type 'AgentChange' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'thinkingLevel' are incompatible.
+    Type '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | undefined' is not assignable to type '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | null'.
+      Type 'undefined' is not assignable to type '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | null'.
+packages/adapter-pi-durable/src/engine/runtime.ts(128,46): error TS2379: Argument of type '{ bindings: RuntimeBindings; opened: Harness; modelRuntime: ModelRuntime; getState: () => DurableView; notice: (level: "error" | "warning" | "info", message: string) => void; ... 6 more ...; getActiveTools: (() => string[]) | undefined; }' is not assignable to parameter of type 'ControllerContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'extensionRunner' are incompatible.
+    Type 'ExtensionRunner | undefined' is not assignable to type 'ExtensionRunner'.
+      Type 'undefined' is not assignable to type 'ExtensionRunner'.
+packages/adapter-pi-durable/src/engine/session-commands.ts(5,38): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/session-commands.ts(6,43): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/session-commands.ts(9,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/session-commands.ts(10,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/session-commands.ts(118,50): error TS2379: Argument of type '{ version: 1; revision: number; policy: { mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }; updatedAt?: string | undefined; }' is not assignable to parameter of type 'SubagentPolicyRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'updatedAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/session-commands.ts(156,25): error TS2379: Argument of type '{ sourceDir: string; targetDir: string; checkpointId: string | number | undefined; }' is not assignable to parameter of type 'ForkSessionDatabaseOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'checkpointId' are incompatible.
+    Type 'string | number | undefined' is not assignable to type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+packages/adapter-pi-durable/src/engine/session-state-commands.ts(6,30): error TS2307: Cannot find module './cli-args.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/src/engine/session-state-commands.ts(8,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/shared/extension-runner.ts(31,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/shared/extension-runner.ts(151,41): error TS2379: Argument of type '{ getRegisteredTools: () => any; getCallableTools: (() => Array<{ name: string; description: string; parameters: unknown; }>) | undefined; settingsManager: SettingsManager | undefined; onActiveToolsChanged: ((tools: string[]) => void) | undefined; onToolsChanged: (() => void) | undefined; sessionManager: SessionMana...' is not assignable to parameter of type 'CreateExtensionActionsOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'getCallableTools' are incompatible.
+    Type '(() => { name: string; description: string; parameters: unknown; }[]) | undefined' is not assignable to type '() => { name: string; description: string; parameters: unknown; }[]'.
+      Type 'undefined' is not assignable to type '() => { name: string; description: string; parameters: unknown; }[]'.
+packages/adapter-pi-durable/src/engine/shared/extension-ui-context.ts(2,73): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/shared/extension-ui-context.ts(18,50): error TS2379: Argument of type '{ title: string; message: string | undefined; }' is not assignable to parameter of type '{ title?: string; message?: string; data?: unknown; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'message' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/subagent-courier.ts(2,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-courier.ts(4,34): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-delivery.ts(4,52): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-delivery.ts(9,60): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-delivery.ts(12,28): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-delivery.ts(13,62): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-policy-ack.ts(8,44): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-policy-ack.ts(9,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-policy-ack.ts(35,4): error TS2375: Type '{ version: 1; revision: number; policy: { mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }; updatedAt?: string | undefined; }' is not assignable to type 'SubagentPolicyRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'updatedAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/subagent-policy-ack.ts(39,36): error TS2379: Argument of type '{ initialRecord: SubagentPolicyRecord | undefined; persist: (record: SubagentPolicyRecord) => Promise<void>; }' is not assignable to parameter of type 'CreateSubagentPolicyHolderOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'initialRecord' are incompatible.
+    Type 'SubagentPolicyRecord | undefined' is not assignable to type 'SubagentPolicyRecord'.
+      Type 'undefined' is not assignable to type 'SubagentPolicyRecord'.
+packages/adapter-pi-durable/src/engine/subagent-policy-state.ts(14,6): error TS2375: Type '{ version: 1; revision: number; policy: { mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }; updatedAt?: string | undefined; }' is not assignable to type 'SubagentPolicyRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'updatedAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/subagent-policy-state.ts(57,30): error TS2379: Argument of type '{ version: 1; revision: number; policy: { mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }; updatedAt?: string | undefined; }' is not assignable to parameter of type 'SubagentPolicyRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'updatedAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/subagent-policy-state.ts(58,8): error TS2375: Type '{ version: 1; revision: number; policy: { mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }; updatedAt?: string | undefined; }' is not assignable to type 'SubagentPolicyRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'updatedAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/subagent-watcher.ts(10,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-watcher.ts(15,45): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-watcher.ts(16,33): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent-watcher.ts(17,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent.ts(10,51): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent.ts(11,65): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent.ts(12,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent.ts(14,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/subagent.ts(75,8): error TS2379: Argument of type '{ model: NormalizedModelRef | undefined; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; }' is not assignable to parameter of type 'ResolveSubagentParentContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'model' are incompatible.
+    Type 'NormalizedModelRef | undefined' is not assignable to type 'SubagentModelReference'.
+      Type 'undefined' is not assignable to type 'SubagentModelReference'.
+packages/adapter-pi-durable/src/engine/task-labels.ts(2,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/task-labels.ts(86,26): error TS2379: Argument of type '{ toolName: string | undefined; targetHint: string | undefined; preview: string; }' is not assignable to parameter of type 'TaskCallDetails' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'toolName' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/adapter-pi-durable/src/engine/task-tokens.ts(16,2): error TS2375: Type '{ total: number; input: number | undefined; output: number | undefined; reasoning: number | undefined; cacheRead: number | undefined; }' is not assignable to type 'TaskTokensUsage' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'input' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+packages/adapter-pi-durable/src/engine/tool-adapter.ts(14,28): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/engine/tool-adapter.ts(82,9): error TS2322: Type '(args: unknown, api: ToolExecutionApi<JsonValue>, runtimeContext: Context) => Promise<{ output: { type: "text"; text: string; }[]; isError: true; } | { structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }>' is not assignable to type '(args: unknown, api: ToolExecutionApi<JsonValue>, context: Context) => Promise<ToolExecutionResult<JsonValue>>'.
+  Type 'Promise<{ output: { type: "text"; text: string; }[]; isError: true; } | { structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }>' is not assignable to type 'Promise<ToolExecutionResult<JsonValue>>'.
+    Type '{ output: { type: "text"; text: string; }[]; isError: true; } | { structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }' is not assignable to type 'ToolExecutionResult<JsonValue>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Type '{ structuredOutput?: JsonValue; output: (TextContent | ImageContent)[]; isError: boolean | undefined; details: JsonValue | undefined; }' is not assignable to type 'ToolExecutionResult<JsonValue>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Types of property 'isError' are incompatible.
+          Type 'boolean | undefined' is not assignable to type 'boolean'.
+            Type 'undefined' is not assignable to type 'boolean'.
+packages/adapter-pi-durable/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(4,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(5,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(6,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(7,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(8,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(9,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(10,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(11,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(12,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(13,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(14,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(15,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(16,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(17,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(18,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(19,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(20,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(21,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(22,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(23,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(24,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(25,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(26,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(27,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(28,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(29,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(30,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/index.ts(31,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/session-storage.ts(8,100): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/store.ts(10,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/store.ts(11,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/src/store.ts(18,42): error TS2344: Type 'Record<string, unknown>' does not satisfy the constraint 'JsonObject'.
+  'string' index signatures are incompatible.
+    Type 'unknown' is not assignable to type 'JsonValue'.
+packages/adapter-pi-durable/src/store.ts(67,29): error TS2769: No overload matches this call.
+  Overload 1 of 6, '(token: ConversationDocToken<JsonObject>, conversationId: ConversationId): Promise<{ [x: string]: string | number | boolean | (string | ... 4 more ... | null)[] | { ...; } | null; }>', gave the following error.
+    Argument of type 'SessionDocFamilyToken<Record<string, unknown>, string>' is not assignable to parameter of type 'ConversationDocToken<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'definition' are incompatible.
+        Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject> & (LatestConversationSemantics | RewindableConversationSemantics)' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject> & RewindableConversationSemantics' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+            Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+              Types of property 'initial' are incompatible.
+                Type '(seed: string) => Record<string, unknown>' is not assignable to type '() => JsonObject'.
+                  Target signature provides too few arguments. Expected 1 or more, but got 0.
+  Overload 2 of 6, '(token: TaskDocToken<JsonObject>, taskId: TaskId<unknown>): Promise<{ [x: string]: string | number | boolean | (string | number | boolean | (string | number | boolean | (string | ... 4 more ... | null)[] | { ...; } | null)[] | { ...; } | null)[] | { ...; } | null; }>', gave the following error.
+    Argument of type 'SessionDocFamilyToken<Record<string, unknown>, string>' is not assignable to parameter of type 'TaskDocToken<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'definition' are incompatible.
+        Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject> & { readonly scope: "task"; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+            Types of property 'initial' are incompatible.
+              Type '(seed: string) => Record<string, unknown>' is not assignable to type '() => JsonObject'.
+                Target signature provides too few arguments. Expected 1 or more, but got 0.
+packages/adapter-pi-durable/src/store.ts(74,5): error TS2322: Type 'unknown' is not assignable to type 'string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | ... 4 more ... | null)[] | { ...; } | null)[] | { ...; } | null)[] | { ...; } | null)[] | { ...; } | null)[] | { ...; } | null)[] | { ...'.
+packages/adapter-pi-durable/src/store.ts(81,39): error TS2769: No overload matches this call.
+  Overload 1 of 6, '(token: ConversationDocToken<JsonObject>, conversationId: ConversationId, context: Context): Promise<Readonly<JsonObject> | undefined>', gave the following error.
+    Argument of type 'SessionDocFamilyToken<Record<string, unknown>, string>' is not assignable to parameter of type 'ConversationDocToken<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'definition' are incompatible.
+        Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject> & (LatestConversationSemantics | RewindableConversationSemantics)' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject> & RewindableConversationSemantics' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+            Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+              Types of property 'initial' are incompatible.
+                Type '(seed: string) => Record<string, unknown>' is not assignable to type '() => JsonObject'.
+                  Target signature provides too few arguments. Expected 1 or more, but got 0.
+  Overload 2 of 6, '(token: TaskDocToken<JsonObject>, taskId: TaskId<unknown>, context: Context): Promise<Readonly<JsonObject> | undefined>', gave the following error.
+    Argument of type 'SessionDocFamilyToken<Record<string, unknown>, string>' is not assignable to parameter of type 'TaskDocToken<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'definition' are incompatible.
+        Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject> & { readonly scope: "task"; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Type 'Omit<CommonDocDefinition<Record<string, unknown>>, "initial"> & { readonly scope: "session"; readonly history?: never; readonly fork?: never; } & { ...; } & { ...; }' is not assignable to type 'CommonDocDefinition<JsonObject>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+            Types of property 'initial' are incompatible.
+              Type '(seed: string) => Record<string, unknown>' is not assignable to type '() => JsonObject'.
+                Target signature provides too few arguments. Expected 1 or more, but got 0.
+  Overload 3 of 6, '(token: SessionDocFamilyToken<JsonObject, string>, key: string, context: Context): Promise<Readonly<JsonObject> | undefined>', gave the following error.
+    Argument of type 'SessionDocFamilyToken<Record<string, unknown>, string>' is not assignable to parameter of type 'SessionDocFamilyToken<JsonObject, string>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Type 'Record<string, unknown>' is not assignable to type 'JsonObject'.
+        'string' index signatures are incompatible.
+          Type 'unknown' is not assignable to type 'JsonValue'.
+packages/adapter-pi-durable/test/builtin-extension-registry.test.ts(3,42): error TS2307: Cannot find module '../src/builtin-extensions/registry.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/builtin-extension-registry.test.ts(4,39): error TS2307: Cannot find module '../src/builtin-extensions/types.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/builtin-extension-registry.test.ts(5,39): error TS2307: Cannot find module '../src/shared/errors.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/child-native-batch-outcome.test.ts(3,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/codemode-namespaces-contract.test.ts(3,43): error TS2307: Cannot find module '../src/codemode-namespaces.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/compaction-hooks.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/compaction-hooks.test.ts(14,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/compaction-hooks.test.ts(26,12): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/compaction-hooks.test.ts(27,13): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/compaction-settings.test.ts(4,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/conversation-id-types.test.ts(4,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/diagnostics-init-order.test.ts(3,27): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/durable-1.4-courier.test.ts(11,56): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/durable-1.4-courier.test.ts(12,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts(3,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts(120,16): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts(121,16): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts(123,16): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts(124,16): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/durable-event-adapter-indices.test.ts(3,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/extension-ui-context.test.ts(3,42): error TS2307: Cannot find module '../src/extension-bridge.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/extension-ui-context.test.ts(8,40): error TS7006: Parameter 'type' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/extension-ui-context.test.ts(8,46): error TS7006: Parameter 'msg' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/extension-user-message.test.ts(3,40): error TS2307: Cannot find module '../src/extension-bridge.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/extension-user-message.test.ts(10,31): error TS7006: Parameter 'content' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/extension-user-message.test.ts(10,40): error TS7006: Parameter 'deliverAs' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/mcp-prompt-sync.test.ts(3,55): error TS2307: Cannot find module '../src/prompt.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/mcp-prompt-sync.test.ts(4,38): error TS2307: Cannot find module '../src/extension-mount.ts' or its corresponding type declarations.
+packages/adapter-pi-durable/test/mcp-prompt-sync.test.ts(13,47): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/mcp-prompt-sync.test.ts(33,51): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/mcp-prompt-sync.test.ts(84,4): error TS7006: Parameter 'err' implicitly has an 'any' type.
+packages/adapter-pi-durable/test/runner-subagent-ack-restore.test.ts(6,64): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/runtime-cleanup.test.ts(3,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/runtime-graph-ownership.test.ts(6,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(3,47): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(34,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(35,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(36,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(37,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(38,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(39,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(73,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(74,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(93,43): error TS2353: Object literal may only specify known properties, and 'code' does not exist in type 'TaskOutcomeError'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(99,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(100,19): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(153,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(154,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(155,19): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(174,4): error TS2322: Type '{ status: "completed"; }' is not assignable to type 'TaskOutcome<any>'.
+  Property 'result' is missing in type '{ status: "completed"; }' but required in type '{ readonly status: "completed"; readonly result: any; readonly error?: never; readonly reason?: never; }'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(179,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-receipts.test.ts(180,15): error TS18048: 'receipt' is possibly 'undefined'.
+packages/adapter-pi-durable/test/runtime-graph-source.scenarios-2.test.ts(3,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/runtime-graph-source.scenarios-2.test.ts(26,5): error TS2322: Type '{ status: "running"; }' is not assignable to type 'TaskGraphState'.
+  Property 'phase' is missing in type '{ status: "running"; }' but required in type '{ readonly status: "pending" | "running"; readonly phase: string; }'.
+packages/adapter-pi-durable/test/runtime-graph-source.scenarios-2.test.ts(72,5): error TS2322: Type '{ status: "running"; }' is not assignable to type 'TaskGraphState'.
+  Property 'phase' is missing in type '{ status: "running"; }' but required in type '{ readonly status: "pending" | "running"; readonly phase: string; }'.
+packages/adapter-pi-durable/test/runtime-graph-source.scenarios-2.test.ts(112,5): error TS2322: Type '{ status: "running"; }' is not assignable to type 'TaskGraphState'.
+  Property 'phase' is missing in type '{ status: "running"; }' but required in type '{ readonly status: "pending" | "running"; readonly phase: string; }'.
+packages/adapter-pi-durable/test/runtime-graph-source.test.ts(3,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/session-fork.test.ts(7,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/session-lock-eviction.test.ts(7,22): error TS7016: Could not find a declaration file for module 'proper-lockfile'. '/private/var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/dz-closing-audit-XXXXXX.r1mgZI6TtD/node_modules/.pnpm/proper-lockfile@4.1.2/node_modules/proper-lockfile/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/proper-lockfile` if it exists or add a new declaration (.d.ts) file containing `declare module 'proper-lockfile';`
+packages/adapter-pi-durable/test/session-lock-eviction.test.ts(12,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/session-storage-errors.test.ts(3,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/session-storage-pid-safety.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/sqlite-storage.test.ts(6,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(3,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(4,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(20,15): error TS18048: 'Subagent.tools' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(21,15): error TS18048: 'tool' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(22,17): error TS18048: 'tool' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(28,15): error TS18048: 'Subagent.tools' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(68,23): error TS18048: 'tool' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(75,12): error TS18048: 'result.output' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(75,12): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(75,29): error TS2339: Property 'text' does not exist on type 'TextContent | ImageContent'.
+  Property 'text' does not exist on type 'ImageContent'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(82,15): error TS18048: 'Subagent.tools' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(111,23): error TS18048: 'tool' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(118,15): error TS18048: 'result.output' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(118,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(118,32): error TS2339: Property 'text' does not exist on type 'TextContent | ImageContent'.
+  Property 'text' does not exist on type 'ImageContent'.
+packages/adapter-pi-durable/test/subagent-async-envelope.test.ts(122,15): error TS18048: 'Subagent.tools' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-auto-spawn.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-background-lookup.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-background-lookup.test.ts(4,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-background-lookup.test.ts(5,24): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-background-lookup.test.ts(11,3): error TS2322: Type 'number' is not assignable to type 'string'.
+packages/adapter-pi-durable/test/subagent-background-lookup.test.ts(58,29): error TS2339: Property 'conversationId' does not exist on type 'string | number | boolean | JsonValue[] | { [key: string]: JsonValue; }'.
+  Property 'conversationId' does not exist on type 'string'.
+packages/adapter-pi-durable/test/subagent-background-lookup.test.ts(66,29): error TS2339: Property 'conversationId' does not exist on type 'string | number | boolean | JsonValue[] | { [key: string]: JsonValue; }'.
+  Property 'conversationId' does not exist on type 'string'.
+packages/adapter-pi-durable/test/subagent-cascading-abort.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-cascading-abort.test.ts(4,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-courier-lifecycle.test.ts(3,47): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-envelope-generic.test.ts(6,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-envelope.test.ts(8,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-error-handling.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(8,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(9,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(10,69): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(50,16): error TS18048: 'ext.tools' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(58,45): error TS2554: Expected 2 arguments, but got 1.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(61,24): error TS18048: 'tool' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(63,16): error TS18048: 'result.output' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(63,16): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(63,33): error TS2339: Property 'text' does not exist on type 'TextContent | ImageContent'.
+  Property 'text' does not exist on type 'ImageContent'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(67,15): error TS18048: 'state' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(102,16): error TS18048: 'ext.tools' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(110,45): error TS2554: Expected 2 arguments, but got 1.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(113,24): error TS18048: 'tool' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(115,13): error TS18048: 'result.output' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(115,13): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(115,30): error TS2339: Property 'text' does not exist on type 'TextContent | ImageContent'.
+  Property 'text' does not exist on type 'ImageContent'.
+packages/adapter-pi-durable/test/subagent-foreground-record.test.ts(119,15): error TS18048: 'state' is possibly 'undefined'.
+packages/adapter-pi-durable/test/subagent-policy-error-handling.test.ts(3,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-policy-error-handling.test.ts(10,3): error TS2322: Type 'number' is not assignable to type 'string'.
+packages/adapter-pi-durable/test/subagent-policy-error-handling.test.ts(24,31): error TS2339: Property 'error' does not exist on type 'string | number | boolean | JsonValue[] | { [key: string]: JsonValue; }'.
+  Property 'error' does not exist on type 'string'.
+packages/adapter-pi-durable/test/subagent-policy-error-handling.test.ts(29,33): error TS2741: Property 'thinkingLevel' is missing in type '{ model: { provider: string; modelId: string; }; }' but required in type 'SubagentModelProfile'.
+packages/adapter-pi-durable/test/subagent-policy-error-handling.test.ts(31,3): error TS2322: Type 'number' is not assignable to type 'string'.
+packages/adapter-pi-durable/test/subagent-watcher-lifecycle.test.ts(3,70): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-watcher-lifecycle.test.ts(4,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-watcher-lifecycle.test.ts(7,33): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-watcher-lifecycle.test.ts(8,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/subagent-watcher-lifecycle.test.ts(61,5): error TS2322: Type '(_harness: Harness, conversationId: ConversationId) => Promise<{ snapshot: { type: string; entries: never[]; tools: never[]; nestedTools: never[]; compactions: never[]; inbox: never[]; agent: any; usage: any; }; start: (listener: (events: readonly AgentEvent[], ctx: any) => Promise<void>) => void; stop: () => Promis...' is not assignable to type '(harness: Harness, conversationId: ConversationId, ctx: Context) => Promise<AgentEventStream>'.
+  Type 'Promise<{ snapshot: { type: string; entries: never[]; tools: never[]; nestedTools: never[]; compactions: never[]; inbox: never[]; agent: any; usage: any; }; start: (listener: (events: readonly AgentEvent[], ctx: any) => Promise<...>) => void; stop: () => Promise<...>; }>' is not assignable to type 'Promise<AgentEventStream>'.
+    Type '{ snapshot: { type: string; entries: never[]; tools: never[]; nestedTools: never[]; compactions: never[]; inbox: never[]; agent: any; usage: any; }; start: (listener: (events: readonly AgentEvent[], ctx: any) => Promise<void>) => void; stop: () => Promise<...>; }' is not assignable to type 'AgentEventStream'.
+      The types of 'snapshot.type' are incompatible between these types.
+        Type 'string' is not assignable to type '"snapshot"'.
+packages/adapter-pi-durable/test/subagent-watcher-lifecycle.test.ts(82,5): error TS2322: Type '(_harness: Harness, conversationId: ConversationId) => Promise<{ snapshot: { type: string; entries: never[]; tools: never[]; nestedTools: never[]; compactions: never[]; inbox: never[]; agent: any; usage: any; }; start: (listener: (events: readonly AgentEvent[], ctx: any) => Promise<void>) => void; stop: () => Promis...' is not assignable to type '(harness: Harness, conversationId: ConversationId, ctx: Context) => Promise<AgentEventStream>'.
+  Type 'Promise<{ snapshot: { type: string; entries: never[]; tools: never[]; nestedTools: never[]; compactions: never[]; inbox: never[]; agent: any; usage: any; }; start: (listener: (events: readonly AgentEvent[], ctx: any) => Promise<...>) => void; stop: () => Promise<...>; }>' is not assignable to type 'Promise<AgentEventStream>'.
+    Type '{ snapshot: { type: string; entries: never[]; tools: never[]; nestedTools: never[]; compactions: never[]; inbox: never[]; agent: any; usage: any; }; start: (listener: (events: readonly AgentEvent[], ctx: any) => Promise<void>) => void; stop: () => Promise<...>; }' is not assignable to type 'AgentEventStream'.
+      The types of 'snapshot.type' are incompatible between these types.
+        Type 'string' is not assignable to type '"snapshot"'.
+packages/adapter-pi-durable/test/tool-result-routing.test.ts(3,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/tool-result-routing.test.ts(4,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/tool-result-routing.test.ts(5,45): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/view-stream-projector.test.ts(3,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(3,29): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(122,21): error TS2352: Conversion of type '{ type: "message_update"; usage: unknown; changes: readonly MessageChange[]; }[]' to type '{ type: "message_update"; changes: { type: string; delta?: string; contentIndex: number; }[]; }[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ type: "message_update"; usage: unknown; changes: readonly MessageChange[]; }' is not comparable to type '{ type: "message_update"; changes: { type: string; delta?: string; contentIndex: number; }[]; }'.
+    Types of property 'changes' are incompatible.
+      The type 'readonly MessageChange[]' is 'readonly' and cannot be assigned to the mutable type '{ type: string; delta?: string; contentIndex: number; }[]'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(130,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(130,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(131,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(131,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(134,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(134,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(135,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(135,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(138,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(138,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(139,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(139,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(140,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(140,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(143,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(143,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(144,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-compat.test.ts(144,15): error TS2532: Object is possibly 'undefined'.
+packages/adapter-pi-durable/test/watch-events-tools-compat.test.ts(3,29): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/adapter-pi-durable/test/watch-events-tools-compat.test.ts(36,4): error TS2322: Type '({ id: string; model: { role: string; content: { type: string; id: string; name: string; arguments: { command: string; }; }[]; }[]; } | { id: string; model: { role: string; toolCallId: string; toolName: string; content: string; isError: false; }[]; })[]' is not assignable to type '() => ArrayIterator<[number, AgentEvent]>'.
+  Type '({ id: string; model: { role: string; content: { type: string; id: string; name: string; arguments: { command: string; }; }[]; }[]; } | { id: string; model: { role: string; toolCallId: string; toolName: string; content: string; isError: false; }[]; })[]' provides no match for the signature '(): ArrayIterator<[number, AgentEvent]>'.
+packages/adapter-pi-durable/test/watch-events-tools-compat.test.ts(113,4): error TS2322: Type 'never[]' is not assignable to type '() => ArrayIterator<[number, AgentEvent]>'.
+  Type 'never[]' provides no match for the signature '(): ArrayIterator<[number, AgentEvent]>'.
+packages/adapter-pi-durable/test/watcher-compat.test.ts(3,47): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(4,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(5,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(6,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(7,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(8,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(9,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(10,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(11,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(12,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(13,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(14,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/index.ts(15,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/runner-command.ts(2,38): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/runner-event.ts(2,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/runner-event.ts(3,29): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/runner-event.ts(4,34): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/runtime-graph/status.ts(21,4): error TS2375: Type '{ rawStatus: "completing"; label: string; isFinal: false; isCompleting: true; abortRequested: boolean; blockedReason: BlockedTaskReason | undefined; }' is not assignable to type 'ProjectedTaskState' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'blockedReason' are incompatible.
+    Type 'BlockedTaskReason | undefined' is not assignable to type 'BlockedTaskReason'.
+      Type 'undefined' is not assignable to type 'BlockedTaskReason'.
+packages/contracts/src/runtime-graph/status.ts(30,4): error TS2375: Type '{ rawStatus: "running"; label: string; isFinal: false; abortRequested: boolean; blockedReason: BlockedTaskReason | undefined; }' is not assignable to type 'ProjectedTaskState' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'blockedReason' are incompatible.
+    Type 'BlockedTaskReason | undefined' is not assignable to type 'BlockedTaskReason'.
+      Type 'undefined' is not assignable to type 'BlockedTaskReason'.
+packages/contracts/src/runtime-graph/status.ts(38,4): error TS2375: Type '{ rawStatus: "waiting"; label: string; isFinal: false; waitingOn: readonly number[]; abortRequested: boolean; blockedReason: BlockedTaskReason | undefined; }' is not assignable to type 'ProjectedTaskState' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'blockedReason' are incompatible.
+    Type 'BlockedTaskReason | undefined' is not assignable to type 'BlockedTaskReason'.
+      Type 'undefined' is not assignable to type 'BlockedTaskReason'.
+packages/contracts/src/runtime-graph/status.ts(47,4): error TS2375: Type '{ rawStatus: "sleeping"; label: string; isFinal: false; sleepUntil: number; abortRequested: boolean; blockedReason: BlockedTaskReason | undefined; }' is not assignable to type 'ProjectedTaskState' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'blockedReason' are incompatible.
+    Type 'BlockedTaskReason | undefined' is not assignable to type 'BlockedTaskReason'.
+      Type 'undefined' is not assignable to type 'BlockedTaskReason'.
+packages/contracts/src/runtime-graph/status.ts(56,4): error TS2375: Type '{ rawStatus: "pending"; label: string; isFinal: false; abortRequested: boolean; blockedReason: BlockedTaskReason | undefined; }' is not assignable to type 'ProjectedTaskState' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'blockedReason' are incompatible.
+    Type 'BlockedTaskReason | undefined' is not assignable to type 'BlockedTaskReason'.
+      Type 'undefined' is not assignable to type 'BlockedTaskReason'.
+packages/contracts/src/runtime-graph/status.ts(96,2): error TS2375: Type '{ outcome: TaskOutcomeName; isFinal: true; hasToolError: boolean; label: string; preview: string | undefined; endedAt: number; durationMs: number | undefined; }' is not assignable to type 'ProjectedReceiptState' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'preview' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/contracts/src/wire-lifecycle.ts(2,35): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/wire-lifecycle.ts(3,40): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/wire-lifecycle.ts(4,44): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/wire-message.ts(2,35): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/src/wire-tool.ts(2,35): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/contracts/test/wire-host-channels.test.ts(3,56): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(4,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(5,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(6,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(7,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(8,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(9,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(10,1): error TS2308: Module "./prompt.ts" has already exported a member named 'PromptOptions'. Consider explicitly re-exporting to resolve the ambiguity.
+packages/core/src/index.ts(10,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(11,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(12,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(13,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/index.ts(14,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/policy/resolver.ts(1,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/policy/resolver.ts(11,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/policy/schema.ts(49,4): error TS1360: Type 'ZodDiscriminatedUnion<[ZodObject<{ mode: ZodLiteral<"inherit">; configuredProfile: ZodOptional<ZodObject<{ model: ZodObject<{ provider: ZodString; modelId: ZodString; }, $strict>; thinkingLevel: ZodEnum<...>; }, $strict>>; }, $strict>, ZodObject<...>], "mode">' does not satisfy the expected type 'ZodType<SubagentPolicy, unknown, $ZodTypeInternals<SubagentPolicy, unknown>>'.
+  Types of property '_output' are incompatible.
+    Type '{ mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }' is not assignable to type 'SubagentPolicy' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Type '{ mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; }' is not assignable to type 'SubagentPolicy' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Type '{ mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; }' is not assignable to type '{ mode: "inherit"; configuredProfile?: SubagentModelProfile; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Types of property 'configuredProfile' are incompatible.
+            Type '{ model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined' is not assignable to type 'SubagentModelProfile'.
+              Type 'undefined' is not assignable to type 'SubagentModelProfile'.
+packages/core/src/policy/schema.ts(58,13): error TS1360: Type 'ZodObject<{ version: ZodLiteral<1>; revision: ZodNumber; updatedAt: ZodOptional<ZodString>; policy: ZodDiscriminatedUnion<[ZodObject<{ mode: ZodLiteral<"inherit">; configuredProfile: ZodOptional<...>; }, $strict>, ZodObject<...>], "mode">; }, $strict>' does not satisfy the expected type 'ZodType<SubagentPolicyRecord, unknown, $ZodTypeInternals<SubagentPolicyRecord, unknown>>'.
+  The types of '_output.updatedAt' are incompatible between these types.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/core/src/policy/store.ts(5,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/policy/store.ts(10,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/src/policy/store.ts(61,5): error TS2375: Type '{ version: 1; revision: number; policy: { mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }; updatedAt?: string | undefined; }' is not assignable to type 'SubagentPolicyRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'updatedAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/core/src/policy/store.ts(62,5): error TS2322: Type 'SubagentPolicyRecord | null' is not assignable to type 'SubagentPolicyRecord'.
+  Type 'null' is not assignable to type 'SubagentPolicyRecord'.
+packages/core/src/policy/store.ts(98,15): error TS2375: Type '{ mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; } | { ...; }' is not assignable to type 'SubagentPolicy' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Type '{ mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; }' is not assignable to type 'SubagentPolicy' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Type '{ mode: "inherit"; configuredProfile?: { model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined; }' is not assignable to type '{ mode: "inherit"; configuredProfile?: SubagentModelProfile; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'configuredProfile' are incompatible.
+        Type '{ model: { provider: string; modelId: string; }; thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; } | undefined' is not assignable to type 'SubagentModelProfile'.
+          Type 'undefined' is not assignable to type 'SubagentModelProfile'.
+packages/core/src/session/coordinator.ts(10,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/admission-receipt.test.ts(3,29): error TS2307: Cannot find module '../src/runtime.ts' or its corresponding type declarations.
+packages/core/test/admission-receipt.test.ts(4,39): error TS2307: Cannot find module '../src/runtime-types.ts' or its corresponding type declarations.
+packages/core/test/anthropic-image-error.test.ts(12,21): error TS2532: Object is possibly 'undefined'.
+packages/core/test/anthropic-image-error.test.ts(13,21): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries-ast.ts(214,32): error TS2345: Argument of type 'Expression | undefined' is not assignable to parameter of type 'Node'.
+  Type 'undefined' is not assignable to type 'Node'.
+packages/core/test/architecture-boundaries-ast.ts(216,55): error TS2345: Argument of type 'Expression | undefined' is not assignable to parameter of type 'Node'.
+  Type 'undefined' is not assignable to type 'Node'.
+packages/core/test/architecture-boundaries-checker.ts(6,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-checker.ts(7,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-checker.ts(8,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-checker.ts(9,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-checker.ts(10,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-checker.ts(11,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-cli.ts(8,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-cli.ts(95,38): error TS2345: Argument of type 'Expression | undefined' is not assignable to parameter of type 'Node'.
+  Type 'undefined' is not assignable to type 'Node'.
+packages/core/test/architecture-boundaries-cli.ts(95,81): error TS2345: Argument of type 'Expression | undefined' is not assignable to parameter of type 'Node'.
+  Type 'undefined' is not assignable to type 'Node'.
+packages/core/test/architecture-boundaries-cli.ts(242,3): error TS2375: Type '{ isOk: true; targetImport: string; resolvedPath: string; callsMain: true; invokedIdentifier: string | undefined; }' is not assignable to type 'CliServeAuditResult' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'invokedIdentifier' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/core/test/architecture-boundaries-core.ts(8,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-dag.ts(9,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/ext-check/c.cts(1,1): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mock-barrel-cycle-ws/packages/pkg-x/src/index.ts(1,15): error TS2307: Cannot find module '@durable-zero/mock-y' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mock-barrel-cycle-ws/packages/pkg-y/src/index.ts(1,15): error TS2307: Cannot find module '@durable-zero/mock-x' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mock-source-cycle-ws/packages/pkg-a/src/index.ts(1,19): error TS2307: Cannot find module '@durable-zero/mock-b' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mock-source-cycle-ws/packages/pkg-a/src/index.ts(1,43): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mock-source-cycle-ws/packages/pkg-b/src/index.ts(1,19): error TS2307: Cannot find module '@durable-zero/mock-a' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mock-source-cycle-ws/packages/pkg-b/src/index.ts(1,43): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mutated-workspace/packages/core/src/violation.ts(1,10): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+packages/core/test/architecture-boundaries-fixtures/fix-round-1-regressions/mutated-workspace/packages/core/src/violation.ts(2,1): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/negative/cyclic-workspace/pkg-a/index.ts(1,19): error TS2307: Cannot find module '@fixture/pkg-b' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/cyclic-workspace/pkg-a/index.ts(1,37): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/negative/cyclic-workspace/pkg-b/index.ts(1,19): error TS2307: Cannot find module '@fixture/pkg-c' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/cyclic-workspace/pkg-b/index.ts(1,37): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/negative/cyclic-workspace/pkg-c/index.ts(1,19): error TS2307: Cannot find module '@fixture/pkg-a' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/cyclic-workspace/pkg-c/index.ts(1,37): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/negative/forbidden-adapter.ts(2,33): error TS2307: Cannot find module '@durable-zero/adapter-pi-durable' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/forbidden-dynamic-import.ts(3,28): error TS2307: Cannot find module '@durable-zero/adapter-codemode' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/forbidden-import-type.ts(2,63): error TS2694: Namespace '"/private/var/folders/jl/wlqvk7_17hv0_0mcd3pg0br00000gn/T/dz-closing-audit-XXXXXX.r1mgZI6TtD/node_modules/.pnpm/@earendil-works+pi-ai@1.5.0_@aws-sdk+credential-provider-node@3.972.92_@smithy+signatur_4bdc96f33ca8e8cc433b29a43e7247b8/node_modules/@earendil-works/pi-ai/dist/index"' has no exported member 'ModelRuntime'.
+packages/core/test/architecture-boundaries-fixtures/negative/forbidden-relative-escape.ts(2,27): error TS2307: Cannot find module '../../../adapter-pi-durable/src/index.ts' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/forbidden-runner.ts(2,28): error TS2307: Cannot find module '@durable-zero/runner' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/forbidden-type-import.ts(2,15): error TS2305: Module '"@earendil-works/pi-coding-agent"' has no exported member 'DynamicPromptSections'.
+packages/core/test/architecture-boundaries-fixtures/negative/source-cycle-workspace/packages/pkg-alpha/src/index.ts(1,22): error TS2307: Cannot find module '@durable-zero/pkg-beta' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/source-cycle-workspace/packages/pkg-alpha/src/index.ts(1,48): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/negative/source-cycle-workspace/packages/pkg-beta/src/index.ts(1,23): error TS2307: Cannot find module '@durable-zero/pkg-alpha' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/negative/source-cycle-workspace/packages/pkg-beta/src/index.ts(1,50): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/positive/clean-workspace/pkg-adapter/index.ts(1,30): error TS2307: Cannot find module '@fixture/core' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/positive/clean-workspace/pkg-adapter/index.ts(1,47): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-fixtures/positive/clean-workspace/pkg-core/index.ts(1,30): error TS2307: Cannot find module '@fixture/contracts' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/positive/clean-workspace/pkg-runner/index.ts(1,25): error TS2307: Cannot find module '@fixture/adapter' or its corresponding type declarations.
+packages/core/test/architecture-boundaries-fixtures/positive/clean-workspace/pkg-runner/index.ts(1,45): error TS1287: A top-level 'export' modifier cannot be used on value declarations in a CommonJS module when 'verbatimModuleSyntax' is enabled.
+packages/core/test/architecture-boundaries-regressions.test.ts(15,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-regressions.test.ts(488,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries-regressions.test.ts(495,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries-regressions.test.ts(513,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries-regressions.test.ts(520,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries-report.ts(11,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-report.ts(15,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-report.ts(16,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries-report.ts(21,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries.test.ts(20,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/architecture-boundaries.test.ts(97,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(107,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(109,9): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(121,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(122,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(132,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(134,9): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(146,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(147,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(157,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(158,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(168,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(169,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(179,20): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(180,17): error TS2532: Object is possibly 'undefined'.
+packages/core/test/architecture-boundaries.test.ts(194,9): error TS2532: Object is possibly 'undefined'.
+packages/core/test/before-resume.test.ts(3,29): error TS2307: Cannot find module '../src/runtime.ts' or its corresponding type declarations.
+packages/core/test/before-resume.test.ts(28,25): error TS7006: Parameter 'harness' implicitly has an 'any' type.
+packages/core/test/canonical-command.test.ts(3,44): error TS2307: Cannot find module '../src/subagent-policy-state.ts' or its corresponding type declarations.
+packages/core/test/canonical-command.test.ts(4,44): error TS2307: Cannot find module '../src/session-commands.ts' or its corresponding type declarations.
+packages/core/test/canonical-command.test.ts(10,19): error TS7006: Parameter 'rec' implicitly has an 'any' type.
+packages/core/test/canonical-command.test.ts(25,4): error TS2375: Type '{ id: string | undefined; command: string; }' is not assignable to type '{ id?: string; command?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'id' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/core/test/canonical-command.test.ts(28,4): error TS2375: Type '{ id: string | undefined; command: string; message: string; }' is not assignable to type '{ id?: string; command?: string; message?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'id' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/core/test/codemode-canonical-routines.test.ts(3,10): error TS2305: Module '"../src/prompt.ts"' has no exported member 'createPiPrompt'.
+packages/core/test/codemode-canonical-routines.test.ts(3,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/codemode-canonical-routines.test.ts(4,43): error TS2307: Cannot find module '../src/codemode-namespaces.ts' or its corresponding type declarations.
+packages/core/test/codemode-canonical-routines.test.ts(5,38): error TS2307: Cannot find module '../src/harness-setup.ts' or its corresponding type declarations.
+packages/core/test/codemode-canonical-routines.test.ts(16,49): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/codemode-canonical-routines.test.ts(52,49): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/codemode-canonical-routines.test.ts(106,37): error TS7006: Parameter 'n' implicitly has an 'any' type.
+packages/core/test/codemode-canonical-routines.test.ts(111,39): error TS7006: Parameter 'n' implicitly has an 'any' type.
+packages/core/test/codemode-canonical-routines.test.ts(136,47): error TS7006: Parameter 't' implicitly has an 'any' type.
+packages/core/test/codemode-nested-env.test.ts(6,42): error TS2307: Cannot find module '../src/extension-mount.ts' or its corresponding type declarations.
+packages/core/test/codemode-nested-env.test.ts(7,38): error TS2307: Cannot find module '../src/extension-bridge.ts' or its corresponding type declarations.
+packages/core/test/codemode-nested-env.test.ts(8,59): error TS2307: Cannot find module '../src/tool-adapter.ts' or its corresponding type declarations.
+packages/core/test/codemode-sandbox-isolation.test.ts(6,8): error TS2307: Cannot find module '@durable-zero/adapter-codemode' or its corresponding type declarations.
+packages/core/test/codemode-sandbox-isolation.test.ts(7,46): error TS2307: Cannot find module '../src/builtin-extensions/types.ts' or its corresponding type declarations.
+packages/core/test/control-channel.test.ts(6,43): error TS2307: Cannot find module '../src/control-channel.ts' or its corresponding type declarations.
+packages/core/test/control-channel.test.ts(7,38): error TS2307: Cannot find module '../src/runtime-types.ts' or its corresponding type declarations.
+packages/core/test/durable-1.4-migration.test.ts(12,37): error TS2307: Cannot find module '../src/conversation-id.ts' or its corresponding type declarations.
+packages/core/test/durable-engine-facade.test.ts(3,31): error TS2307: Cannot find module '../src/engine.ts' or its corresponding type declarations.
+packages/core/test/durable-subagent.test.ts(4,38): error TS2307: Cannot find module '../src/harness-setup.ts' or its corresponding type declarations.
+packages/core/test/durable-subagent.test.ts(11,46): error TS7006: Parameter 't' implicitly has an 'any' type.
+packages/core/test/execution-env-strategy.test.ts(3,31): error TS2307: Cannot find module '../src/harness-setup.ts' or its corresponding type declarations.
+packages/core/test/execution-env-strategy.test.ts(4,29): error TS2307: Cannot find module '../src/runtime.ts' or its corresponding type declarations.
+packages/core/test/extension-cli-multi.test.ts(3,30): error TS2307: Cannot find module '../src/cli-args.ts' or its corresponding type declarations.
+packages/core/test/fixtures/commands.ts(1,64): error TS2307: Cannot find module '../../src/contracts/runner-command.ts' or its corresponding type declarations.
+packages/core/test/fixtures/cumulative-usage-support.ts(1,34): error TS2307: Cannot find module '../../src/runner/runtime-types.ts' or its corresponding type declarations.
+packages/core/test/fixtures/cumulative-usage-support.ts(2,42): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/fixtures/diagnostics.ts(1,42): error TS2307: Cannot find module '../../src/contracts/diagnostics.ts' or its corresponding type declarations.
+packages/core/test/fixtures/durable.ts(5,53): error TS2307: Cannot find module '../../src/runner/runtime-types.ts' or its corresponding type declarations.
+packages/core/test/fixtures/durable.ts(6,37): error TS2307: Cannot find module '../../src/runner/conversation-id.ts' or its corresponding type declarations.
+packages/core/test/fixtures/durable.ts(26,69): error TS7006: Parameter 'listener' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(1,79): error TS2307: Cannot find module '../../src/host/session-port.ts' or its corresponding type declarations.
+packages/core/test/fixtures/mirror.ts(2,37): error TS2307: Cannot find module '../../src/host/types.ts' or its corresponding type declarations.
+packages/core/test/fixtures/mirror.ts(3,39): error TS2307: Cannot find module '../../src/host/subagent-mirror.ts' or its corresponding type declarations.
+packages/core/test/fixtures/mirror.ts(4,42): error TS2307: Cannot find module '../../src/host/bridge-router.ts' or its corresponding type declarations.
+packages/core/test/fixtures/mirror.ts(24,20): error TS7006: Parameter 'threadId' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(24,30): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(25,22): error TS7006: Parameter 'threadId' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(26,32): error TS7006: Parameter 'threadId' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(27,22): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(28,37): error TS7006: Parameter 'task' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(29,25): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(30,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(31,28): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(32,20): error TS7006: Parameter 'provider' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(32,30): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/core/test/fixtures/mirror.ts(33,28): error TS7006: Parameter 'level' implicitly has an 'any' type.
+packages/core/test/fixtures/runtime-state.ts(4,41): error TS2307: Cannot find module '../../src/runner/runtime-types.ts' or its corresponding type declarations.
+packages/core/test/fixtures/runtime-state.ts(12,13): error TS7006: Parameter 'listener' implicitly has an 'any' type.
+packages/core/test/fixtures/subagent-courier-delivery-support.ts(1,41): error TS2307: Cannot find module '../../src/runner/subagent.ts' or its corresponding type declarations.
+packages/core/test/fixtures/wire.ts(2,35): error TS2307: Cannot find module '@get-bb/plugin-sdk/provider-bridge' or its corresponding type declarations.
+packages/core/test/fixtures/wire.ts(3,53): error TS2307: Cannot find module '../../src/contracts/runner-event.ts' or its corresponding type declarations.
+packages/core/test/fixtures/wire.ts(4,63): error TS2307: Cannot find module '../../src/contracts/wire-message.ts' or its corresponding type declarations.
+packages/core/test/frozen-state-defense.test.ts(3,33): error TS2307: Cannot find module '@durable-zero/adapter-pi-durable' or its corresponding type declarations.
+packages/core/test/mocks/mock-agent-engine.ts(3,2): error TS2459: Module '"../../src/session/engine.ts"' declares 'PromptAdmissionReceipt' locally, but it is not exported.
+packages/core/test/mocks/mock-agent-engine.ts(4,2): error TS2459: Module '"../../src/session/engine.ts"' declares 'PromptInput' locally, but it is not exported.
+packages/core/test/mocks/mock-agent-engine.ts(6,2): error TS2459: Module '"../../src/session/engine.ts"' declares 'RunnerEvent' locally, but it is not exported.
+packages/core/test/mocks/mock-agent-engine.ts(10,2): error TS2459: Module '"../../src/session/engine.ts"' declares 'SubagentPolicyRecord' locally, but it is not exported.
+packages/core/test/mocks/mock-agent-engine.ts(33,25): error TS2379: Argument of type '{ input: PromptInput; options: PromptExecutionOptions | undefined; }' is not assignable to parameter of type '{ input: PromptInput; options?: PromptExecutionOptions; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'options' are incompatible.
+    Type 'PromptExecutionOptions | undefined' is not assignable to type 'PromptExecutionOptions'.
+      Type 'undefined' is not assignable to type 'PromptExecutionOptions'.
+packages/core/test/model-ref-normalization.test.ts(3,60): error TS2307: Cannot find module '../src/shared/model-ref.ts' or its corresponding type declarations.
+packages/core/test/plugin-strategy-wiring.test.ts(3,38): error TS2307: Cannot find module '../src/harness-setup.ts' or its corresponding type declarations.
+packages/core/test/plugin-strategy-wiring.test.ts(4,36): error TS2307: Cannot find module '../src/plugins/types.ts' or its corresponding type declarations.
+packages/core/test/plugin-strategy-wiring.test.ts(15,12): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+packages/core/test/plugin-strategy-wiring.test.ts(42,51): error TS7006: Parameter 'e' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(10,10): error TS2305: Module '"../src/prompt.ts"' has no exported member 'createPiPrompt'.
+packages/core/test/prompt-adapter.test.ts(10,32): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/prompt-adapter.test.ts(30,50): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(36,19): error TS2554: Expected 1-2 arguments, but got 0.
+packages/core/test/prompt-adapter.test.ts(37,20): error TS2554: Expected 1-2 arguments, but got 0.
+packages/core/test/prompt-adapter.test.ts(38,19): error TS2554: Expected 1-2 arguments, but got 0.
+packages/core/test/prompt-adapter.test.ts(39,19): error TS2554: Expected 1-2 arguments, but got 0.
+packages/core/test/prompt-adapter.test.ts(63,50): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(69,19): error TS2554: Expected 1-2 arguments, but got 0.
+packages/core/test/prompt-adapter.test.ts(74,19): error TS2554: Expected 1-2 arguments, but got 0.
+packages/core/test/prompt-adapter.test.ts(95,59): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(113,59): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(141,51): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(155,50): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/prompt-adapter.test.ts(156,50): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/core/test/pure-domain-coordinator.test.ts(3,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/pure-domain-coordinator.test.ts(4,33): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/red-subagent-model-resolution.test.ts(3,51): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/runner-errors.test.ts(11,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/runner-subagent-policy.test.ts(3,44): error TS2307: Cannot find module '../src/subagent-policy-state.ts' or its corresponding type declarations.
+packages/core/test/runner-subagent-policy.test.ts(4,42): error TS2307: Cannot find module '../src/subagent-policy-ack.ts' or its corresponding type declarations.
+packages/core/test/runner-subagent-policy.test.ts(5,44): error TS2307: Cannot find module '../src/session-commands.ts' or its corresponding type declarations.
+packages/core/test/runner-subagent-policy.test.ts(6,37): error TS2307: Cannot find module '../src/conversation-id.ts' or its corresponding type declarations.
+packages/core/test/runner-subagent-policy.test.ts(7,47): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/runner-subagent-policy.test.ts(43,19): error TS7006: Parameter 'rec' implicitly has an 'any' type.
+packages/core/test/runtime-bindings.test.ts(3,33): error TS2307: Cannot find module '../src/runtime-bindings.ts' or its corresponding type declarations.
+packages/core/test/runtime-bindings.test.ts(4,52): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/runtime-bindings.test.ts(5,34): error TS2307: Cannot find module '../src/runtime-types.ts' or its corresponding type declarations.
+packages/core/test/runtime-bindings.test.ts(21,66): error TS7006: Parameter 'patch' implicitly has an 'any' type.
+packages/core/test/runtime-bindings.test.ts(42,66): error TS7006: Parameter 'patch' implicitly has an 'any' type.
+packages/core/test/runtime-bindings.test.ts(58,73): error TS7006: Parameter 'patch' implicitly has an 'any' type.
+packages/core/test/session-abort-lifecycle.test.ts(3,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/session-abort-lifecycle.test.ts(4,33): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/session-socket-daemon.test.ts(7,31): error TS2307: Cannot find module '../src/session-daemon.ts' or its corresponding type declarations.
+packages/core/test/session-socket-daemon.test.ts(19,51): error TS7006: Parameter 'socket' implicitly has an 'any' type.
+packages/core/test/session-socket-daemon.test.ts(20,23): error TS7006: Parameter 'chunk' implicitly has an 'any' type.
+packages/core/test/session-socket-daemon.test.ts(35,24): error TS7006: Parameter 'data' implicitly has an 'any' type.
+packages/core/test/session-store-port.test.ts(4,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/stdio-host-tool-call.test.ts(3,32): error TS2307: Cannot find module '../src/host-rpc.ts' or its corresponding type declarations.
+packages/core/test/stdio-host-tool-call.test.ts(7,34): error TS7006: Parameter 'data' implicitly has an 'any' type.
+packages/core/test/stdio-host-tool-call.test.ts(32,34): error TS7006: Parameter 'data' implicitly has an 'any' type.
+packages/core/test/stdio-host-tool-call.test.ts(61,34): error TS7006: Parameter 'data' implicitly has an 'any' type.
+packages/core/test/subagent-policy-resolver.test.ts(8,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/subagent-policy-resolver.test.ts(12,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/subagent-policy-schema.test.ts(10,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/subagent-policy-store.test.ts(3,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/subagent-policy-store.test.ts(7,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/core/test/tool-context-preservation.test.ts(3,36): error TS2307: Cannot find module '../src/tool-adapter.ts' or its corresponding type declarations.
+packages/core/test/tool-context-preservation.test.ts(13,9): error TS2322: Type '(_callId: string, _args: unknown, _signal: AbortSignal | undefined, _onUpdate: AgentToolUpdateCallback<unknown> | undefined, ctx: ExtensionToolContext) => Promise<...>' is not assignable to type '(toolCallId: string, params: unknown, signal: AbortSignal | undefined, onUpdate: AgentToolUpdateCallback<unknown> | undefined, ctx: ExtensionToolContext) => Promise<...>'.
+  Type 'Promise<{ content: { type: "text"; text: string; }[]; }>' is not assignable to type 'Promise<AgentToolResult<unknown>>'.
+    Property 'details' is missing in type '{ content: { type: "text"; text: string; }[]; }' but required in type 'AgentToolResult<unknown>'.
+packages/execution/src/adapters/local-node-env.ts(65,22): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/execution/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/execution/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/execution/test/execution.test.ts(3,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/extension-pi-resource/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/extension-pi-resource/test/pi-resource.test.ts(3,43): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/index.ts(4,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/index.ts(5,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/index.ts(6,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/jsonrpc/errors.ts(8,5): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/src/jsonrpc/types.ts(6,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/transport/request-dispatcher.ts(5,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/transport/request-dispatcher.ts(9,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/src/transport/stdio-server.ts(5,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/test/host-methods.test.ts(9,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/test/protocol-conformance.test.ts(9,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/protocol/test/protocol-conformance.test.ts(111,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(133,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(161,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(187,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(216,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(243,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(274,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(295,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(312,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(369,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(407,31): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(433,31): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(461,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(519,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(552,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol-conformance.test.ts(584,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/protocol/test/protocol.test.ts(9,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/cli-args.ts(20,51): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(21,60): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(22,52): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(23,57): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(24,54): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(25,57): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(31,4): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(32,4): error TS2322: Type '(string | undefined)[]' is not assignable to type 'string[]'.
+  Type 'string | undefined' is not assignable to type 'string'.
+    Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(35,4): error TS2322: Type '(string | undefined)[]' is not assignable to type 'string[]'.
+  Type 'string | undefined' is not assignable to type 'string'.
+    Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/cli-args.ts(36,14): error TS18048: 'arg' is possibly 'undefined'.
+packages/runner/src/cli-args.ts(37,32): error TS2532: Object is possibly 'undefined'.
+packages/runner/src/cli-args.ts(39,4): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/composition.ts(74,52): error TS2379: Argument of type '{ cwd: string; agentDir: string; settingsManager: SettingsManager; extensionFactories: ExtensionFactory[]; additionalSkillPaths: string[] | undefined; additionalExtensionPaths: string[] | undefined; noExtensions: boolean; }' is not assignable to parameter of type 'DefaultResourceLoaderOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'additionalExtensionPaths' are incompatible.
+    Type 'string[] | undefined' is not assignable to type 'string[]'.
+      Type 'undefined' is not assignable to type 'string[]'.
+packages/runner/src/composition.ts(115,4): error TS2375: Type '{ provider: string | undefined; model: string | undefined; thinking: any; extension: string | undefined; extensions: string[] | undefined; skills: string[] | undefined; noGlobalExtensions: boolean | undefined; }' is not assignable to type '{ readonly provider?: string; readonly model?: string; readonly thinking?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"; readonly skills?: string[]; readonly extension?: string; readonly extensions?: string[]; readonly noGlobalExtensions?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'provider' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/runner/src/composition.ts(134,40): error TS2379: Argument of type '{ stdin: Readable | undefined; stdout: Writable | undefined; handler: (method: string, params: Record<string, unknown>) => Promise<void | PromptAdmissionReceipt | SessionStateDTO | SessionTranscriptDTO | SessionStatsDTO | { ...; }>; }' is not assignable to parameter of type 'StdioJsonRpcServerOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'stdin' are incompatible.
+    Type 'Readable | undefined' is not assignable to type 'Readable'.
+      Type 'undefined' is not assignable to type 'Readable'.
+packages/runner/src/dispatch/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/dispatch/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/dispatch/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/dispatch/normalizers.ts(3,7): error TS2305: Module '"@durable-zero/core"' has no exported member 'PromptContentPart'.
+packages/runner/src/dispatch/session-dispatcher.ts(11,44): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/dispatch/session-dispatcher.ts(16,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/host/host-bridge.ts(7,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/host/host-bridge.ts(70,5): error TS2375: Type '{ content: { type: "text"; text: string; }[]; isError?: boolean | undefined; }' is not assignable to type '{ content: { type: "text"; text: string; }[]; isError?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'isError' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+packages/runner/src/index.ts(1,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/index.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/index.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/main.ts(2,30): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/main.ts(3,37): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/src/main.ts(7,45): error TS2379: Argument of type '{ cwd: string | undefined; session: string | undefined; sessionDir: string | undefined; continueSession: boolean | undefined; provider: string | undefined; model: string | undefined; ... 4 more ...; noGlobalExtensions: boolean | undefined; }' is not assignable to parameter of type 'AssembleDurableZeroOptions' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'cwd' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/runner/test/capability-dispatch.test.ts(7,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/test/capability-dispatch.test.ts(14,7): error TS2305: Module '"@durable-zero/core"' has no exported member 'RunnerEvent'.
+packages/runner/test/capability-dispatch.test.ts(49,25): error TS2379: Argument of type '{ input: PromptInput; options: PromptExecutionOptions | undefined; }' is not assignable to parameter of type '{ input: PromptInput; options?: PromptExecutionOptions; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'options' are incompatible.
+    Type 'PromptExecutionOptions | undefined' is not assignable to type 'PromptExecutionOptions'.
+      Type 'undefined' is not assignable to type 'PromptExecutionOptions'.
+packages/runner/test/capability-dispatch.test.ts(101,31): error TS2379: Argument of type '{ conversationId: string | undefined; limit: number | undefined; }' is not assignable to parameter of type '{ conversationId?: string; limit?: number; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'conversationId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/runner/test/capability-dispatch.test.ts(166,22): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+packages/runner/test/capability-dispatch.test.ts(237,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(238,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(239,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(252,21): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(266,21): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(280,21): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(294,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(295,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(305,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(344,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(345,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(346,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(355,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/capability-dispatch.test.ts(364,29): error TS2339: Property 'isAborted' does not exist on type 'SessionCoordinator'.
+packages/runner/test/composition-root.test.ts(7,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/test/composition-root.test.ts(48,44): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/test/composition-root.test.ts(72,17): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/composition-root.test.ts(73,21): error TS2532: Object is possibly 'undefined'.
+packages/runner/test/e2e-walking-skeleton.test.ts(95,11): error TS18048: 'waiter' is possibly 'undefined'.
+packages/runner/test/e2e-walking-skeleton.test.ts(97,8): error TS18048: 'waiter' is possibly 'undefined'.
+packages/runner/test/fixtures/scripted-provider-extension.ts(69,3): error TS2741: Property 'name' is missing in type '{ resolve: () => Promise<{ auth: { apiKey: string; }; }>; }' but required in type 'ApiKeyAuth'.
+packages/runner/test/fixtures/scripted-provider-extension.ts(74,3): error TS2322: Type '{ id: string; provider: string; name: string; api: "echo-api"; contextWindow: number; maxTokens: number; reasoning: false; }' is not assignable to type 'ProviderModel<"echo-api">'.
+  Type '{ id: string; provider: string; name: string; api: "echo-api"; contextWindow: number; maxTokens: number; reasoning: false; }' is missing the following properties from type 'Model<"echo-api">': baseUrl, input, cost
+packages/runner/test/host-bridge.test.ts(4,36): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+packages/runner/test/host-bridge.test.ts(6,48): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.

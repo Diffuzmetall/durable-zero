@@ -1,7 +1,7 @@
 {
   "capturedAt": "2026-11-05T01:24:06.884289+03:00",
   "head": "ea21bf5a645d148c0767716b099d387bb0bce822",
-  "overall": "NOT ACCEPTED",
+  "overall": "BLOCKED closing strict typecheck and root regression",
   "nativeCandidate": "fc0909602e7969df080259a2e2d4a7114be450b8",
   "dispatcherFixCandidate": "ea21bf5a645d148c0767716b099d387bb0bce822",
   "tasks": [
@@ -49,20 +49,20 @@
     },
     {
       "name": "5 / 6 · Полная чистота и S9",
-      "tone": "neutral",
-      "status": "Общий PASS не выдан",
-      "proof": "Цикл contracts → adapter устранён автором, guard и focused native suite зелёные; это ещё не приёмка всего монорепо.",
-      "remaining": "Чистая сборка, отдельный typecheck, полный набор тестов, capability parity, lifecycle/изоляция и оба независимых контура на одном кандидате."
+      "tone": "bad",
+      "status": "Closing gates FAIL",
+      "proof": "Чистая сборка с нуля PASS, но официальный typecheck отсутствует; strict production diagnostic выявил113 ошибок. Общий root test имеет6 падений, не общийPASS.",
+      "remaining": "Исправить типовые контракты без ослабления strict, объявить source-only typecheck, сохранить/перенести оставшиеся пять тестов и исправить один dispatcher test; повторить независимые closing gates."
     }
   ],
   "remaining": [
     {
       "title": "Закрыть приёмку всего Task1 после миграции",
-      "detail": "Оба независимых native-минимум гейта закрыты на новом кандидате. Открыты оставшиеся consumer/test migration и общий чистый build/typecheck/regression; их нельзя заменить зелёным focused E2E."
+      "detail": "Минимальный Native получил оба scopedPASS, но закрытиеTask1 блокируют typecheck и общийroot regression. В runtime Env factory найдены настоящие несовпадения контрактов, не только формат optional полей."
     },
     {
       "title": "Довести тестовую миграцию",
-      "detail": "Четыре партии native-тестов перенесены; adapter-only113 cases зелёные. Финальный remaining inventory и общий root regression ещё не получены."
+      "detail": "Полный adapter набор140 cases зелёный. Root353:347passed/6failed; оставшиеся пять старых файлов не удаляются без сохранения реальных assertions, один abort-test исправляет владелецRunner."
     },
     {
       "title": "Собрать принятые компоненты в production-путь",
@@ -221,7 +221,7 @@
     "Начата фактическая миграция native-тестов; первая партия зелёная. Старые source snapshots и rejected artifacts не переписаны задним числом.",
     "Независимое native source-review отвергло полную приёмку Slice0: первый happy path реален, но oracle не проверял текст второго ответа и строгий порядок событий. Исправленный dispatcher уже прошёл отдельный compiled component black-box, это не native acceptance."
   ],
-  "reviewUpdateAt": "2026-11-05T02:42:17.219924+03:00",
+  "reviewUpdateAt": "2026-11-05T03:00:19.380313+03:00",
   "nativeMinimumProductVerdict": "PASS fresh compiled R2 76ec1265",
   "nativeSourceVerdict": "PASS scoped ad99873e"
 }

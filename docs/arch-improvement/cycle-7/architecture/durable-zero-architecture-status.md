@@ -38,11 +38,11 @@ Source/component review и независимый compiled black-box PASS; на�
 
 Осталось: Полный clean build/typecheck/regression и whole-Cycle acceptance остаются отдельно; старый неиспользуемый build-script P3 учтён для cleanup.
 
-## 5 / 6 · Полная чистота и S9 — Общий PASS не выдан
+## 5 / 6 · Полная чистота и S9 — Closing gates FAIL
 
-Цикл contracts → adapter устранён автором, guard и focused native suite зелёные; это ещё не приёмка всего монорепо.
+Чистая сборка с нуля PASS, но официальный typecheck отсутствует; strict production diagnostic выявил113 ошибок. Общий root test имеет6 падений, не общийPASS.
 
-Осталось: Чистая сборка, отдельный typecheck, полный набор тестов, capability parity, lifecycle/изоляция и оба независимых контура на одном кандидате.
+Осталось: Исправить типовые контракты без ослабления strict, объявить source-only typecheck, сохранить/перенести оставшиеся пять тестов и исправить один dispatcher test; повторить независимые closing gates.
 
 ## Evidence
 
