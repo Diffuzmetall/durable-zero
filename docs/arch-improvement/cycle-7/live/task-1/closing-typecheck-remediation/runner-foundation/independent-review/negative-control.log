@@ -1,0 +1,38 @@
+▶ Negative Control: Verification Harness Fail-Fast Behavior (Remediation B)
+  ✖ deliberately asserts a false condition to prove runner returns exit code 1 on failure (3.09075ms)
+✖ Negative Control: Verification Harness Fail-Fast Behavior (Remediation B) (4.406875ms)
+ℹ tests 1
+ℹ suites 1
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 165.411375
+
+✖ failing tests:
+
+test at docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/negative-control.test.mjs:5:2
+✖ deliberately asserts a false condition to prove runner returns exit code 1 on failure (3.09075ms)
+  AssertionError [ERR_ASSERTION]: Negative control assertion must fail and trigger exit code 1
+  
+  29 !== 0
+  
+      at TestContext.<anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/independent-review/negative-control.test.mjs:7:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at node:internal/test_runner/test:1617:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 29,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+EXIT_CODE: 1

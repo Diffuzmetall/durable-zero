@@ -1,0 +1,23 @@
+{
+  "recordedAt": "2026-11-05T03:34:34.150494+03:00",
+  "scope": "Lease B type remediation ONLY",
+  "verdict": "PASS bounded source/component",
+  "sourceCommit": "70f4a88c87f9442db82032ddac208edb0df33dfb",
+  "referenceCommit": "ecf7c69868c34b6fb0bc5a30b083f4de8a1ce075",
+  "evidence": {
+    "independentSubsetJUnit": "independent-review/independent-90-subset.junit.xml",
+    "independentProbeJUnit": "independent-review/remediation-b-probes.junit.xml",
+    "parentLiveSubsetJUnit": "parent-check/tests.junit.xml",
+    "sourceHashMatch": "parent-check/frozen-b-source-match.json",
+    "negativeControl": "independent-review/negative-control.log"
+  },
+  "qualifications": [
+    "14 B source/config/test paths match frozenreference exactly at parentcheck",
+    "90 subset tests use real Core coordinator for rootabort; probe4 is mock delegation only",
+    "Tests executed live shared checkout with mixed sibling dependencies, not isolated frozenartifact",
+    "Clean build at ad99873 historical only; no fresh build accepted for this revision",
+    "No inherited fresh NativeCLI product acceptance; whole root typecheck and regression still open"
+  ],
+  "openP0P1P2InB": 0,
+  "remainingGlobal": "Native A type remediation/Env contract and legacy-test closure; source/build/type/full-regression and fresh compiled native gates pending"
+}

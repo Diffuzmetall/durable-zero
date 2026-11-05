@@ -1,0 +1,72 @@
+[
+  {
+    "path": "package.json",
+    "matchesFrozen": true,
+    "frozenSha256": "7fff597c1e677fe49335fdfd4aa2a05077f63ab93f1853bd15c675cc8d87233b"
+  },
+  {
+    "path": "packages/adapter-pi-ai/src/model-provider.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "ff57282de63e7b2f24e88868343d5a54e86bab2f492e3f494615df156d15ecc1"
+  },
+  {
+    "path": "packages/adapter-pi-ai/src/model-setup.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "f2c6e77f750c14b4ab03ba9b9a8913961a4e5305ecae76f7193dfbe56fabba63"
+  },
+  {
+    "path": "packages/contracts/src/cli-args.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "860dfe162b34dd5cb05109e08e40e5e6c71daa5bb2bab62628dc1c223dc61c9f"
+  },
+  {
+    "path": "packages/contracts/src/index.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "dae4efb53502a5e4f073fc154044bd781f86caf6a937867f934a62d6e0b505d9"
+  },
+  {
+    "path": "packages/contracts/src/runtime-graph/status.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "903c3585fac4d5f6f7b8ee5b4623cbc02a4a4406a324e4d6dda87bb4c85554d4"
+  },
+  {
+    "path": "packages/protocol/src/jsonrpc/errors.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "261cc3d83566b4fd75b34e9887e93cb82c3bbdd58a3a8549253168ade9e3f0bc"
+  },
+  {
+    "path": "packages/runner/src/cli-args.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "9a5ff1c2f47d892b3777e1f6ec9cbf4e234edde9b79918dabfd4afacbbcd0dd1"
+  },
+  {
+    "path": "packages/runner/src/composition.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "2def6426690c37183adb393e7e46ad6cb280cabaa17729f1e1143ae519499e08"
+  },
+  {
+    "path": "packages/runner/src/dispatch/normalizers.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "8eb78dfa2a2101269b3205a2e292204577f45e30335f5c8554c1ab1204589986"
+  },
+  {
+    "path": "packages/runner/src/host/host-bridge.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "6018bd4358f33bbcac82cc6f233342ce31452d4020b08a1967bfa70a0f713257"
+  },
+  {
+    "path": "packages/runner/src/main.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "df8e7ca548099cc4542dbf2b652c6562c6f8db404cf555a694710ccb22b3b0d1"
+  },
+  {
+    "path": "packages/runner/test/capability-dispatch.test.ts",
+    "matchesFrozen": true,
+    "frozenSha256": "3b9aa210f9471cb8e67b85233bf126b7ec1daac11630b6f8b714760ae51d0ed8"
+  },
+  {
+    "path": "tsconfig.src.json",
+    "matchesFrozen": true,
+    "frozenSha256": "77268be4dcedac1e6a5a75605ac595ef11baa025db8cd459fc05a8fa504ad29f"
+  }
+]
