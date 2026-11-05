@@ -1,5 +1,6 @@
 import { basename, join, resolve } from "node:path";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import type { JsonValue } from "@earendil-works/chord";
 import {
 	createSession,
 	defineDocFamily,
@@ -14,6 +15,28 @@ import { forkSessionDatabase } from "./session-fork.ts";
 export interface PiDurableSessionStoreOptions {
 	sessionDir: string;
 	cwd?: string;
+}
+
+function toJsonValue(val: unknown, depth = 0): JsonValue {
+	if (depth > 128) throw new TypeError("JSON structure depth limit exceeded");
+	if (val === null || typeof val === "string" || typeof val === "boolean") return val;
+	if (typeof val === "number") {
+		if (!Number.isFinite(val)) throw new TypeError(`Non-finite number cannot be serialized to JsonValue: ${val}`);
+		return val;
+	}
+	if (Array.isArray(val)) {
+		return val.map((item) => toJsonValue(item, depth + 1));
+	}
+	if (typeof val === "object") {
+		const result: JsonObject = {};
+		for (const [k, v] of Object.entries(val)) {
+			if (v !== undefined) {
+				result[k] = toJsonValue(v, depth + 1);
+			}
+		}
+		return result;
+	}
+	throw new TypeError(`Unsupported data type cannot be serialized to JsonValue: ${typeof val}`);
 }
 
 const genericDocFamily = defineDocFamily<JsonObject, null>({
@@ -64,16 +87,17 @@ export class PiDurableSessionStore implements ISessionStore {
 	}
 
 	async saveDocument(collection: string, docId: string, data: unknown): Promise<void> {
+		const jsonVal = toJsonValue(data);
 		const session = await this.getSession();
 		await session.commit(async (tx) => {
 			const doc = await tx.doc(genericDocFamily, `${collection}:${docId}`, null);
 			for (const key of Object.keys(doc)) {
 				delete (doc as Record<string, unknown>)[key];
 			}
-			if (data && typeof data === "object" && !Array.isArray(data)) {
-				Object.assign(doc, structuredClone(data));
+			if (jsonVal !== null && typeof jsonVal === "object" && !Array.isArray(jsonVal)) {
+				Object.assign(doc, jsonVal);
 			} else {
-				doc._value = structuredClone(data) as any;
+				doc._value = jsonVal;
 			}
 		}, BACKGROUND_CONTEXT);
 	}

@@ -155,8 +155,8 @@ export function adaptExtensionTool(
 
 				return {
 					output: result.content,
-					isError: result.isError,
-					details: (result.details ?? undefined) as JsonValue | undefined,
+					...(result.isError !== undefined ? { isError: result.isError } : {}),
+					...(result.details !== undefined && result.details !== null ? { details: result.details as JsonValue } : {}),
 					...(structuredOutput !== undefined ? { structuredOutput: structuredOutput as JsonValue } : {}),
 				};
 			} catch (err: unknown) {

@@ -6,8 +6,8 @@ export class RuntimeBindings implements RuntimeBindingPort {
 	private conversation: Conversation;
 	private view: RuntimeReadBinding<ConversationView>;
 	private unsubscribe: () => void;
-	private tasks?: RuntimeReadBinding<TaskGraph>;
-	private unsubscribeTasks?: () => void;
+	private tasks?: RuntimeReadBinding<TaskGraph> | undefined;
+	private unsubscribeTasks?: (() => void) | undefined;
 	private epoch = 0;
 	private taskEpoch = 0;
 	private closed = false;

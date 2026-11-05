@@ -46,8 +46,8 @@ function buildTerminalSuccess(
 		toolName: event.toolName,
 		rawOutput: decoded.rawOutput,
 		isError: decoded.isError,
-		diagnostics: decoded.status === "result" ? decoded.diagnostics : undefined,
-		retainedOutput: scoped.output,
+		...(decoded.status === "result" && decoded.diagnostics !== undefined ? { diagnostics: decoded.diagnostics } : {}),
+		...(scoped.output !== undefined ? { retainedOutput: scoped.output } : {}),
 	});
 
 	return {

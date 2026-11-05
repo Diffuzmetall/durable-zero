@@ -1,0 +1,7 @@
+$ tsc -p tsconfig.src.json --pretty false
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(151,3): error TS2345: Argument of type '() => IExecutionEnvironment' is not assignable to parameter of type '() => ExecutionEnv | undefined'.
+  Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
+packages/adapter-pi-durable/src/engine/runtime-loader.ts(186,48): error TS2322: Type '({ cwd, conversationId }: EnvTarget) => IExecutionEnvironment' is not assignable to type '(target: EnvTarget, context: Context) => ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
+  Type 'IExecutionEnvironment' is not assignable to type 'ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
+    Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
+[ELIFECYCLE] Command failed with exit code 2.

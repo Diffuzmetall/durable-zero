@@ -15,10 +15,10 @@ export function normalizeUsage(raw: unknown): TaskTokensUsage | undefined {
 
 	return {
 		total: computedTotal,
-		input,
-		output,
-		reasoning,
-		cacheRead,
+		...(input !== undefined ? { input } : {}),
+		...(output !== undefined ? { output } : {}),
+		...(reasoning !== undefined ? { reasoning } : {}),
+		...(cacheRead !== undefined ? { cacheRead } : {}),
 	};
 }
 

@@ -93,8 +93,8 @@ export async function createCodingRegistry(
 		cwd,
 		storageDir: cwd,
 		getSubagentPolicy,
-		prompt: promptOptions,
-		dynamicNamespaces,
+		...(promptOptions !== undefined ? { prompt: promptOptions } : {}),
+		...(dynamicNamespaces !== undefined ? { dynamicNamespaces } : {}),
 	};
 
 	await builtinRegistry.initAll(ctx);
@@ -145,7 +145,11 @@ export async function findInitialAgentModel(
 	cli?: { readonly provider?: string; readonly model?: string; readonly thinking?: ModelThinkingLevel },
 ): Promise<InitialModel> {
 	if (cli?.model !== undefined) {
-		const resolved = resolveCliModel({ cliProvider: cli.provider, cliModel: cli.model, modelRuntime });
+		const resolved = resolveCliModel({
+			...(cli.provider !== undefined ? { cliProvider: cli.provider } : {}),
+			cliModel: cli.model,
+			modelRuntime,
+		});
 		if (resolved.error !== undefined || resolved.model === undefined) {
 			throw new Error(`Could not resolve model: ${resolved.error ?? cli.model}`);
 		}
@@ -171,9 +175,10 @@ export async function findInitialAgentModel(
 	}
 
 	const available = modelRuntime.getAvailableSnapshot();
-	if (available.length > 0) {
+	const first = available[0];
+	if (first) {
 		return {
-			model: { provider: available[0].provider, modelId: available[0].id },
+			model: { provider: first.provider, modelId: first.id },
 			thinkingLevel: "off",
 		};
 	}

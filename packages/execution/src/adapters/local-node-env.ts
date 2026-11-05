@@ -46,6 +46,33 @@ export class LocalNodeExecutionEnv implements IExecutionEnvironment {
       const execEnv = { ...process.env, ...options?.env };
       const timeout = options?.timeoutMs ?? 30_000;
 
+      let child: import("node:child_process").ChildProcess;
+
+      if (typeof argvOrCommand === "string") {
+        if (!argvOrCommand.trim()) {
+          resolve({
+            ok: false,
+            value: { exitCode: 1 },
+            stdout: "",
+            stderr: "Cannot execute empty command string",
+            exitCode: 1,
+          });
+          return;
+        }
+      } else {
+        const [binary] = argvOrCommand;
+        if (!binary) {
+          resolve({
+            ok: false,
+            value: { exitCode: 1 },
+            stdout: "",
+            stderr: "Cannot execute empty command argv",
+            exitCode: 1,
+          });
+          return;
+        }
+      }
+
       let stdout = "";
       let stderr = "";
 
@@ -59,15 +86,17 @@ export class LocalNodeExecutionEnv implements IExecutionEnvironment {
         }
       };
 
-      const child =
-        typeof argvOrCommand === "string"
-          ? exec(argvOrCommand, { cwd: execCwd, env: execEnv, timeout, signal: options?.signal })
-          : execFile(argvOrCommand[0] ?? "", argvOrCommand.slice(1), {
-              cwd: execCwd,
-              env: execEnv,
-              timeout,
-              signal: options?.signal,
-            });
+      if (typeof argvOrCommand === "string") {
+        child = exec(argvOrCommand, { cwd: execCwd, env: execEnv, timeout, signal: options?.signal });
+      } else {
+        const [binary, ...args] = argvOrCommand;
+        child = execFile(binary!, args, {
+          cwd: execCwd,
+          env: execEnv,
+          timeout,
+          signal: options?.signal,
+        });
+      }
 
       child.stdout?.on("data", (chunk) => handleOutput(chunk, false));
       child.stderr?.on("data", (chunk) => handleOutput(chunk, true));

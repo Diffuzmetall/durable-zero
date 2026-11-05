@@ -1,0 +1,8 @@
+{
+  "scope": "Official all-production typecheck on source-quiesced A/B + migrator checkpoint",
+  "exit": 2,
+  "errors": 2,
+  "errorsByPackage": {
+    "adapter-pi-durable": 2
+  }
+}

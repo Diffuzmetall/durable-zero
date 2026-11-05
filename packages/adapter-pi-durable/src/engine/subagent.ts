@@ -70,10 +70,11 @@ export function createSubagentExtension(
 								? await api.models.getAvailable()
 								: [];
 
+						const parentModel = normalizeModelReference(parentAgent?.model);
 						const resolved = resolveSubagentModelConfiguration(
 							policySnapshot,
 							{
-								model: normalizeModelReference(parentAgent?.model),
+								...(parentModel !== undefined ? { model: parentModel } : {}),
 								thinkingLevel: parentAgent?.thinkingLevel ?? "off",
 							},
 							availableModels,

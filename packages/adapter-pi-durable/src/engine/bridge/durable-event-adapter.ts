@@ -21,15 +21,15 @@ interface RawAssistantEntryMessage {
  */
 export class DurableEventAdapter {
 	private readonly output: (event: RunnerEvent) => void;
-	private readonly resolveContextWindow?: (provider?: string, modelId?: string) => number | undefined;
+	private readonly resolveContextWindow?: ((provider?: string, modelId?: string) => number | undefined) | undefined;
 	private readonly submissions = new Map<string | number, { status: string; reason?: string; detail?: string }>();
 	private readonly activeToolNames = new Map<string | number, string>();
 	private readonly toolProjector = new ToolEventProjector();
-	private lastTaskError?: string;
-	private lastAssistantMessage?: AssistantMessage;
-	private lastCheckpointId?: string;
+	private lastTaskError?: string | undefined;
+	private lastAssistantMessage?: AssistantMessage | undefined;
+	private lastCheckpointId?: string | undefined;
 	private readonly contentBlocks = new Map<number, { type: "text" | "thinking"; text?: string; thinking?: string }>();
-	private activeThinkingIndex?: number;
+	private activeThinkingIndex?: number | undefined;
 
 	constructor(output: (event: RunnerEvent) => void, resolveContextWindow?: (p?: string, m?: string) => number | undefined) {
 		this.output = output;
@@ -110,7 +110,9 @@ export class DurableEventAdapter {
 
 			case "message_update": {
 				for (const change of event.changes) {
-					const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
+					const idx = "contentIndex" in change && typeof (change as { contentIndex?: unknown }).contentIndex === "number"
+						? (change as { contentIndex: number }).contentIndex
+						: 0;
 					const thinkDelta = change.type === "thinking_delta" ? change.delta : (change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking) ? change.block.thinking : undefined;
 					const textDelta = change.type === "text_delta" ? change.delta : (change.type === "text_start" && change.block.type === "text" && change.block.text) ? change.block.text : undefined;
 					if (thinkDelta) {
@@ -149,7 +151,7 @@ export class DurableEventAdapter {
 			case "message_end": {
 				this.closeThinkingIfNeeded();
 				const modelItem = event.entry?.model?.[0];
-				const msg = (typeof modelItem === "object" && modelItem !== null) ? (modelItem as RawAssistantEntryMessage) : undefined;
+				const msg = (typeof modelItem === "object" && modelItem !== null) ? (modelItem as unknown as RawAssistantEntryMessage) : undefined;
 				if (msg?.role === "assistant") {
 					const errMsg = typeof msg.errorMessage === "string" ? msg.errorMessage : undefined;
 					const stopReason = msg.stopReason ?? (errMsg ? "error" : "stop");

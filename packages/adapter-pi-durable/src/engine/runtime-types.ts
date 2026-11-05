@@ -1,6 +1,6 @@
 import type { AttachedReplicatedState } from "@earendil-works/chord";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { ModelThinkingLevel } from "@earendil-works/pi-ai";
+import type { ModelThinkingLevel, ImageContent, TextContent } from "@earendil-works/pi-ai";
 import {
 	type AgentState,
 	type ConversationId,
@@ -13,6 +13,8 @@ import {
 	ROOT_CONVERSATION_ID,
 	type TaskGraph,
 } from "@earendil-works/pi-durable";
+export { ROOT_CONVERSATION_ID };
+export type { Cursor, ImageContent, TextContent };
 import type { ModelRuntime, SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
 import type { Provider } from "@earendil-works/pi-ai";
 import type { SubagentPolicyHolder, ExecutionEnvFactory } from "@durable-zero/core";
@@ -60,7 +62,7 @@ export interface DurableView {
 	readonly conversations: readonly ConversationSummary[];
 	readonly models: readonly ModelSummary[];
 	readonly notices: readonly Notice[];
-	readonly tasks?: TaskGraph;
+	readonly tasks?: TaskGraph | undefined;
 }
 
 export interface DurableViewSource {
@@ -87,6 +89,7 @@ export interface AdmissionReceipt {
 	readonly conversationId: string;
 	readonly status: "accepted";
 	readonly sequence?: number;
+	readonly submission?: import("@earendil-works/pi-durable").Submission;
 }
 
 export interface DurableController {

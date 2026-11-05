@@ -51,7 +51,11 @@ export function extractTaskModelMeta(node: TaskGraphNode, current: unknown, root
 	const modelLabel = thinkingLevel && thinkingLevel !== "off"
 		? `assistant turn · ${modelId} (${thinkingLevel})`
 		: `assistant turn · ${modelId}`;
-	return { model, thinkingLevel, modelLabel };
+	return {
+		model,
+		...(thinkingLevel !== undefined ? { thinkingLevel } : {}),
+		modelLabel,
+	};
 }
 
 export function recordSubagentOwnership(conversations: RuntimeGraphConversations, current: unknown, rootConvId: string | number): void {
@@ -95,16 +99,27 @@ export function buildMappedNode(
 		? Number((node as any).startedAt) : nativeStartedAt.get(id);
 	const durationMs = startedAt !== undefined ? Math.max(0, clock() - startedAt) : undefined;
 
+	const liveTokens = extractLiveTokens(node, current);
+	const targetHintVal = callDetails?.targetHint ?? (subMeta ? (subMeta.name || subMeta.task) : undefined);
+	const toolNameVal = callDetails?.toolName ?? (subMeta ? "subagent" : undefined);
+
 	return {
-		id, kind: node.kind, conversationId: convId,
-		owner: node.owner !== undefined ? Number(node.owner) : undefined,
-		background: Boolean(node.background), abortRequested: Boolean(node.abortRequested),
-		state: mapTaskGraphNodeState(node.state), blocked: node.blocked, label,
-		startedAt, durationMs,
-		toolName: callDetails?.toolName ?? (subMeta ? "subagent" : undefined),
-		targetHint: callDetails?.targetHint ?? (subMeta ? (subMeta.name || subMeta.task) : undefined),
-		model: meta.model, thinkingLevel: meta.thinkingLevel,
-		tokens: extractLiveTokens(node, current),
+		id,
+		kind: node.kind,
+		conversationId: convId,
+		...(node.owner !== undefined ? { owner: Number(node.owner) } : {}),
+		background: Boolean(node.background),
+		abortRequested: Boolean(node.abortRequested),
+		state: mapTaskGraphNodeState(node.state),
+		...(node.blocked !== undefined ? { blocked: node.blocked } : {}),
+		label,
+		...(startedAt !== undefined ? { startedAt } : {}),
+		...(durationMs !== undefined ? { durationMs } : {}),
+		...(toolNameVal !== undefined ? { toolName: toolNameVal } : {}),
+		...(targetHintVal !== undefined ? { targetHint: targetHintVal } : {}),
+		...(meta.model !== undefined ? { model: meta.model } : {}),
+		...(meta.thinkingLevel !== undefined ? { thinkingLevel: meta.thinkingLevel } : {}),
+		...(liveTokens !== undefined ? { tokens: liveTokens } : {}),
 	};
 }
 
@@ -126,9 +141,15 @@ export function recordTerminalWithDetails(
 	const rawEntryId = state?.outcome?.result?.entryId;
 	const entryId = rawEntryId !== undefined ? Number(rawEntryId) : undefined;
 
+	const terminalTokens = extractTerminalTokens(task, current, recentEntries);
+	const startedAt = nativeStartedAt.get(id);
+
 	receipts.recordTerminal(task, {
-		preview, toolName, targetHint, entryId,
-		startedAt: nativeStartedAt.get(id),
-		tokens: extractTerminalTokens(task, current, recentEntries),
+		...(preview !== undefined ? { preview } : {}),
+		...(toolName !== undefined ? { toolName } : {}),
+		...(targetHint !== undefined ? { targetHint } : {}),
+		...(entryId !== undefined ? { entryId } : {}),
+		...(startedAt !== undefined ? { startedAt } : {}),
+		...(terminalTokens !== undefined ? { tokens: terminalTokens } : {}),
 	});
 }

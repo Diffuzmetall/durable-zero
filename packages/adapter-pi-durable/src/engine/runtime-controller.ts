@@ -76,7 +76,11 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 						const currentAgent = await ctx.bindings.current.agent(runtimeContext);
 						const activeTools = currentAgent.tools.map((t) => t.name);
 						const hookRes = await ctx.extensionRunner.emitBeforeAgentStart(
-							{ messageType: "user", prompt, images: images?.length ? images : undefined },
+							{
+								messageType: "user",
+								prompt,
+								...(images && images.length > 0 ? { images } : {}),
+							},
 							{
 								cwd: ctx.cwd ?? process.cwd(),
 								selectedTools: activeTools,
@@ -110,6 +114,7 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 					requestId: String(submission.id),
 					conversationId: String(ctx.bindings.current.id),
 					status: "accepted",
+					submission,
 					...(seq !== undefined ? { sequence: seq } : {}),
 				};
 			}),
@@ -125,7 +130,11 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 						await runCompactionSideEffect("session_before_compact", () => extensionRunner.emit({
 							type: "session_before_compact",
 							preparation: { firstKeptEntryId: ctxView.head?.id !== undefined ? String(ctxView.head.id) : "", messagesToSummarize: msgs, turnPrefixMessages: [], isSplitTurn: false, tokensBefore: 0, fileOps: { read: new Set(), written: new Set(), edited: new Set() }, settings: {} as any },
-							branchEntries: entries as any, customInstructions: instructions, reason: "manual", willRetry: false, signal: new AbortController().signal,
+							branchEntries: entries as any,
+							...(instructions !== undefined ? { customInstructions: instructions } : {}),
+							reason: "manual",
+							willRetry: false,
+							signal: new AbortController().signal,
 						}), ctx.notice);
 					}
 				}

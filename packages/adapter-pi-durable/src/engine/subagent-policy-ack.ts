@@ -37,7 +37,7 @@ export async function loadSubagentPolicyHolder(harness: Harness): Promise<Subage
 	}, runtimeContext);
 
 	return createSubagentPolicyHolder({
-		initialRecord,
+		...(initialRecord !== undefined ? { initialRecord } : {}),
 		persist: async (record: SubagentPolicyRecord) => {
 			await harness.commit(async (tx) => {
 				const doc = await tx.doc(SubagentPolicyAckDoc);

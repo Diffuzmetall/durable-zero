@@ -23,7 +23,7 @@ export class RuntimeGraphSource {
 	private readonly maxDebounceMs: number;
 	private readonly clock: () => number;
 	private readonly receipts: RuntimeGraphReceiptsCollector;
-	private readonly harness?: HarnessGraphSource;
+	private readonly harness?: HarnessGraphSource | undefined;
 	private readonly names = new TaskNames();
 	private readonly listeners = new Set<(snapshot: RuntimeGraphSnapshot) => void>();
 	private readonly epoch: string;
@@ -34,10 +34,10 @@ export class RuntimeGraphSource {
 	private revision = 0;
 	private previousNodes = new Map<number, { conversationId: number; kind: string }>();
 	private lastStructuralJson = "";
-	private timer?: ReturnType<typeof setTimeout>;
-	private firstScheduledAt?: number;
-	private unsubscribeView?: () => void;
-	private unsubscribeCommits?: () => void;
+	private timer?: ReturnType<typeof setTimeout> | undefined;
+	private firstScheduledAt?: number | undefined;
+	private unsubscribeView?: (() => void) | undefined;
+	private unsubscribeCommits?: (() => void) | undefined;
 	private isDisposed = false;
 
 	constructor(viewSource: ViewSource, scope: GraphScope, options?: RuntimeGraphSourceOptions) {

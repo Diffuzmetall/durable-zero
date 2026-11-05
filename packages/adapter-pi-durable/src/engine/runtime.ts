@@ -50,7 +50,10 @@ export async function openDurable(options: OpenDurableOptions = {}): Promise<Ope
 				const cli = await findInitialAgentModel(settingsManager, modelRuntime, options.cli);
 				if (cli.model) {
 					activeEnvState.setActiveModelRef(cli.model);
-					await root.configure({ model: cli.model, thinkingLevel: cli.thinkingLevel }, runtimeContext);
+					await root.configure({
+						model: cli.model,
+						...(cli.thinkingLevel !== undefined ? { thinkingLevel: cli.thinkingLevel } : {}),
+					}, runtimeContext);
 				} else if (cli.thinkingLevel !== undefined) {
 					await root.configure({ thinkingLevel: cli.thinkingLevel }, runtimeContext);
 				}
@@ -133,11 +136,11 @@ export async function openDurable(options: OpenDurableOptions = {}): Promise<Ope
 			notice,
 			fail,
 			setActiveModelRef: (ref) => activeEnvState.setActiveModelRef(ref),
-			extensionRunner: activeEnvState.extensionRunner,
-			dynamicSections: activeEnvState.dynamicSections,
+			...(activeEnvState.extensionRunner ? { extensionRunner: activeEnvState.extensionRunner } : {}),
+			...(activeEnvState.dynamicSections ? { dynamicSections: activeEnvState.dynamicSections } : {}),
 			cwd: location.cwd,
-			setActiveTools: activeEnvState.setActiveTools,
-			getActiveTools: activeEnvState.getActiveTools,
+			...(activeEnvState.setActiveTools ? { setActiveTools: activeEnvState.setActiveTools } : {}),
+			...(activeEnvState.getActiveTools ? { getActiveTools: activeEnvState.getActiveTools } : {}),
 		});
 
 		if (activeEnvState.actionsDelegate) {

@@ -8,10 +8,10 @@ import type { DynamicSectionsHolder } from "./prompt.ts";
 import type { DynamicCodemodeNamespaces } from "./codemode-namespaces.ts";
 
 export interface MountedExtensionBridge {
-	readonly extensionRunner?: ExtensionRunner;
+	readonly extensionRunner?: ExtensionRunner | undefined;
 	readonly cleanup: () => Promise<void>;
-	readonly setActiveTools?: (tools: string[]) => void;
-	readonly getActiveTools?: () => string[];
+	readonly setActiveTools?: ((tools: string[]) => void) | undefined;
+	readonly getActiveTools?: (() => string[]) | undefined;
 }
 
 export function createNestedToolExecutor(
@@ -165,13 +165,13 @@ export async function mountExtensionBridge(
 					console.warn("[ExtensionMount] Synchronous error configuring model tools:", err);
 				}
 			},
-			onNotice,
-			settingsManager,
+			...(onNotice ? { onNotice } : {}),
+			...(settingsManager ? { settingsManager } : {}),
 			onAbort: () => actionsDelegate?.onAbort?.(),
 			onCompact: (i) => actionsDelegate?.onCompact?.(i),
 			getContextUsage: () => actionsDelegate?.getContextUsage?.(),
 			isIdle: () => (actionsDelegate?.isIdle ? actionsDelegate.isIdle() : true),
-			onSubmitUserMessage: (c, d) => actionsDelegate?.onSubmitUserMessage?.(c, d),
+			...(actionsDelegate?.onSubmitUserMessage ? { onSubmitUserMessage: (c: string, d?: "steer" | "followUp") => actionsDelegate.onSubmitUserMessage!(c, d) } : {}),
 		});
 
 		if (extensionRunner) {
@@ -184,7 +184,7 @@ export async function mountExtensionBridge(
 				await new Promise((r) => setImmediate(r));
 				const currentTools = extensionRunner.getActiveTools?.() ?? registry.snapshot().tools().map((t) => t.tool.name);
 				const beforeStart = await extensionRunner.emitBeforeAgentStart(
-					{ messageType: "user", prompt: "", images: undefined },
+					{ messageType: "user", prompt: "" },
 					{ cwd: location.cwd, selectedTools: currentTools, sections: dynamicSections?.getSections() ?? {} },
 				);
 				if (beforeStart?.systemPromptOptions?.sections && dynamicSections) {

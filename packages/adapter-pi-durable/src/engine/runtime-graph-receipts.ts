@@ -61,7 +61,7 @@ export class RuntimeGraphReceiptsCollector {
 			}
 			error = {
 				message: rawMsg.length > MAX_ERROR_MESSAGE_LENGTH ? rawMsg.slice(0, MAX_ERROR_MESSAGE_LENGTH) : rawMsg,
-				code: rawCode ? (rawCode.length > MAX_ERROR_CODE_LENGTH ? rawCode.slice(0, MAX_ERROR_CODE_LENGTH) : rawCode) : undefined,
+				...(rawCode ? { code: rawCode.length > MAX_ERROR_CODE_LENGTH ? rawCode.slice(0, MAX_ERROR_CODE_LENGTH) : rawCode } : {}),
 			};
 		} else if ("reason" in taskOutcome && taskOutcome.reason !== undefined && taskOutcome.reason !== null) {
 			const rawReason = String(taskOutcome.reason);
@@ -104,18 +104,18 @@ export class RuntimeGraphReceiptsCollector {
 		const receipt: RuntimeTaskReceipt = {
 			taskId,
 			conversationId: Number(task.conversationId),
-			owner,
+			...(owner !== undefined ? { owner } : {}),
 			kind: task.kind,
 			outcome,
-			isToolError: options?.isToolError,
-			error,
+			...(options?.isToolError !== undefined ? { isToolError: options.isToolError } : {}),
+			...(error !== undefined ? { error } : {}),
 			endedAt: task.endedAt ?? Date.now(),
-			startedAt,
-			durationMs,
-			preview,
-			toolName,
-			targetHint,
-			tokens: options?.tokens,
+			...(startedAt !== undefined ? { startedAt } : {}),
+			...(durationMs !== undefined ? { durationMs } : {}),
+			...(preview !== undefined ? { preview } : {}),
+			...(toolName !== undefined ? { toolName } : {}),
+			...(targetHint !== undefined ? { targetHint } : {}),
+			...(options?.tokens !== undefined ? { tokens: options.tokens } : {}),
 		};
 
 		if (options?.entryId && !options.tokens) {
@@ -147,7 +147,8 @@ export class RuntimeGraphReceiptsCollector {
 	updateReceiptTokens(taskId: number, tokens: TaskTokensUsage): boolean {
 		const existingIndex = this.receipts.findIndex((r) => r.taskId === taskId);
 		if (existingIndex !== -1) {
-			this.receipts[existingIndex] = { ...this.receipts[existingIndex], tokens };
+			const existing = this.receipts[existingIndex]!;
+			this.receipts[existingIndex] = { ...existing, tokens };
 			this.pendingEntryIds.delete(taskId);
 			return true;
 		}

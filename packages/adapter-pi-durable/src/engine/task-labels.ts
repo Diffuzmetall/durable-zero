@@ -83,7 +83,11 @@ export class TaskNames {
 				}
 			}
 			this.names.set(key, preview);
-			this.details.set(key, { toolName, targetHint: hint, preview });
+			this.details.set(key, {
+				preview,
+				...(toolName !== undefined ? { toolName } : {}),
+				...(hint !== undefined ? { targetHint: hint } : {}),
+			});
 		}
 	}
 

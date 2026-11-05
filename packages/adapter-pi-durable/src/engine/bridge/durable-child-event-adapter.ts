@@ -7,12 +7,12 @@ import { resolveChildRunOutcome } from "./child-run-outcome.ts";
 export class DurableChildEventAdapter {
 	private readonly output: (event: RunnerEvent) => void;
 	private readonly parentRef: string;
-	private readonly conversationId?: string | number;
+	private readonly conversationId?: string | number | undefined;
 	private readonly toolProjector = new ToolEventProjector();
 	private readonly submissions = new Map<string | number, { status: string; reason?: string; detail?: string }>();
-	private lastTaskError?: string;
+	private lastTaskError?: string | undefined;
 	private readonly contentBlocks = new Map<number, { type: "text" | "thinking"; text?: string; thinking?: string }>();
-	private activeThinkingIndex?: number;
+	private activeThinkingIndex?: number | undefined;
 
 	constructor(output: (event: RunnerEvent) => void, parentRef: string, conversationId?: string | number) {
 		this.output = output;
@@ -56,7 +56,9 @@ export class DurableChildEventAdapter {
 		switch (event.type) {
 			case "message_update": {
 				for (const change of event.changes) {
-					const idx = typeof change.contentIndex === "number" ? change.contentIndex : 0;
+					const idx = "contentIndex" in change && typeof (change as { contentIndex?: unknown }).contentIndex === "number"
+						? (change as { contentIndex: number }).contentIndex
+						: 0;
 					const thinkDelta = change.type === "thinking_delta" ? change.delta : (change.type === "thinking_start" && change.block.type === "thinking" && change.block.thinking) ? change.block.thinking : undefined;
 					const textDelta = change.type === "text_delta" ? change.delta : (change.type === "text_start" && change.block.type === "text" && change.block.text) ? change.block.text : undefined;
 					if (thinkDelta) {

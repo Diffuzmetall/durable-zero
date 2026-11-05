@@ -15,7 +15,10 @@ export function createExtensionUIContext(
 			return Boolean(res);
 		},
 		input: async (title, placeholder) => {
-			const res = await requestInteraction("input", { title, message: placeholder });
+			const res = await requestInteraction("input", {
+				title,
+				...(placeholder !== undefined ? { message: placeholder } : {}),
+			});
 			return typeof res === "string" ? res : undefined;
 		},
 		notify: (message: string, type: "info" | "warning" | "error" = "info") => {

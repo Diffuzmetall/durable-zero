@@ -150,12 +150,12 @@ export async function setupExtensionRunner(options: SetupExtensionRunnerOptions)
 
 	const actions = createExtensionActions({
 		getRegisteredTools: () => runner.getAllRegisteredTools() as any,
-		getCallableTools: options.getCallableTools,
-		settingsManager: options.settingsManager,
-		onActiveToolsChanged: options.onActiveToolsChanged,
-		onToolsChanged: options.onToolsChanged,
+		...(options.getCallableTools ? { getCallableTools: options.getCallableTools } : {}),
+		...(options.settingsManager ? { settingsManager: options.settingsManager } : {}),
+		...(options.onActiveToolsChanged ? { onActiveToolsChanged: options.onActiveToolsChanged } : {}),
+		...(options.onToolsChanged ? { onToolsChanged: options.onToolsChanged } : {}),
 		sessionManager,
-		onSubmitUserMessage: options.onSubmitUserMessage,
+		...(options.onSubmitUserMessage ? { onSubmitUserMessage: options.onSubmitUserMessage } : {}),
 	}, initialActive);
 
 	const contextActions: ExtensionContextActions = {

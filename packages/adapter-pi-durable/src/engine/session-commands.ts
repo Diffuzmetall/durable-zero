@@ -153,8 +153,16 @@ export async function handleActiveSessionCommand(
 				return;
 			}
 			try {
-				forkSessionDatabase({ sourceDir, targetDir, checkpointId: cmd.checkpointId });
-				respond.success(cmd.id, "session_fork", { sourceDir, targetDir, checkpointId: cmd.checkpointId });
+				forkSessionDatabase({
+					sourceDir,
+					targetDir,
+					...(cmd.checkpointId !== undefined ? { checkpointId: cmd.checkpointId } : {}),
+				});
+				respond.success(cmd.id, "session_fork", {
+					sourceDir,
+					targetDir,
+					...(cmd.checkpointId !== undefined ? { checkpointId: cmd.checkpointId } : {}),
+				});
 			} catch (err) {
 				respond.error(cmd.id, "session_fork", err instanceof Error ? err.message : String(err));
 			}
