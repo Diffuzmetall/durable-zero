@@ -1,0 +1,36 @@
+{
+  "recordedAt": "2026-11-05T04:41:02.774250+03:00",
+  "reason": "Antigravity gemini-3.8-flash-high quota reached",
+  "retryAfterReported": "approximately47minutes at firstfailure; no automated retry or model switch performed",
+  "threads": [
+    "thr_z4wbq3m44p",
+    "thr_4yhrgipwed",
+    "thr_addwwk3xem",
+    "thr_amc6tin52d",
+    "thr_t38ban9s79"
+  ],
+  "preservedResults": {
+    "nativeSourceReplay": "18/18 PASS",
+    "rootSource": "6/6 +4/4 PASS",
+    "cleanBuild": "PASS",
+    "officialTypecheck": "PASS",
+    "compiledProduct": "8/8 PASS includingactualread",
+    "fullRoot": "369PASS/5FAIL outof374"
+  },
+  "remainingTestOnlyOwnership": {
+    "packages/adapter-pi-ai/test/model-provider.test.ts": "thr_4yhrgipwed:4 hermetic catalog/provider seed setup repairs",
+    "packages/adapter-pi-durable/test/execution-env-strategy.test.ts": "thr_t38ban9s79: await actualasync env API +Context preservingdelegation"
+  },
+  "notAuthorized": [
+    "switch worker models/providers/effort",
+    "claimfullsuitePASS",
+    "publish/install/release",
+    "reimplementworkersliceonparent"
+  ],
+  "status": "Operator confirmedquota restored; originalB/migrator contexts retried forEXACT5testonlyrepairs; no modelswitch",
+  "resumedThreads": [
+    "thr_4yhrgipwed",
+    "thr_t38ban9s79"
+  ],
+  "resumeRecordedAt": "2026-11-05T11:00:39.805655+03:00"
+}

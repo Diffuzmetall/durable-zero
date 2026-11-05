@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-11-05T04:41:02.773210+03:00",
+  "verdict": "PASS bounded compiled native CLI/product",
+  "sourceCommit": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "runnerSha256": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136",
+  "cliSha256": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+  "packageVersion": "0.26.31",
+  "runtimeSdkVersion": "1.5.0",
+  "tests": 8,
+  "failures": 0,
+  "nativeReporterReceipt": "r3-final-test-report.junit.xml",
+  "rawConsole": "r3-final-test-execution.log",
+  "rawWire": "r3-final-wire-observations.jsonl",
+  "executedCommands": [
+    {
+      "seq": 1414,
+      "command": "grep -n \"new DurableZeroClient\" /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "seq": 1424,
+      "command": "set -o pipefail\nnode --test \\\n  --test-reporter=junit --test-reporter-destination=/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/r3-final-test-report.junit.xml \\\n  --test-reporter=spec \\\n  /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs 2>&1 | tee /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/r3-final-test-execution.log",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "seq": 1438,
+      "command": "set -o pipefail\nnode --test \\\n  --test-reporter=junit --test-reporter-destination=/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/r3-final-test-report.junit.xml \\\n  --test-reporter=spec --test-reporter-destination=stdout \\\n  /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs 2>&1 | tee /Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/r3-final-test-execution.log",
+      "status": "completed",
+      "exitCode": 0
+    }
+  ],
+  "gates": [
+    "same-PID gated reasoning0/text1 and second fullreply",
+    "restart stable EntryIds/text plus thirdreply inrestartedPID",
+    "parse/unknown error codes",
+    "SIGKILL pending client rejection",
+    "EOF gracefulexit",
+    "abortactive thenreuse",
+    "realnativebuiltinread returns ownedfilesentinel throughHarness"
+  ],
+  "qualifications": [
+    "Only public model-provider seam scripted; application actualcompiled artifact",
+    "Product agent quota failure happened AFTER tests/wire receipts; no final agent narrative substituted for execution",
+    "No realexternalprovider/network/privateDB/originalresources acceptance",
+    "Fullroot regression remains369/374with5testsetup/API failures; wholeTask1/wholeCycle7 notaccepted",
+    "No npm publish/install/merge/release"
+  ]
+}

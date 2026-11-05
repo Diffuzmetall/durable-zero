@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="Journey 1: Happy Path - Cold start, readiness, gated first prompt, and same-process second prompt generation-reset" time="1.582645" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 2: Multi-Process Restart &amp; Persistence - Resumed process verifies historical entries and executes third prompt in same restarted PID" time="2.210218" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 3.1: Malformed JSON returns -32700 Parse error without server crash" time="0.576121" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 3.2: Unrecognized method returns -32601 Method not found" time="0.506269" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 3.3: Consumer harness pending requests rejected on child process exit" time="0.155368" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 4.1: Ready-server stdin EOF closes and exits cleanly with bounded exit code 0" time="0.483809" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 4.2: Root abort-active-turn (session/abort) halts in-flight turn and allows subsequent prompt in same session" time="1.082826" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<testcase name="Journey 5.1: Native builtin I/O tool execution (read) yields owned file sentinel through Harness" time="0.548962" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/native-fix-round-3.test.mjs"/>
+	<!-- tests 8 -->
+	<!-- suites 0 -->
+	<!-- pass 8 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 7223.053833 -->
+</testsuites>

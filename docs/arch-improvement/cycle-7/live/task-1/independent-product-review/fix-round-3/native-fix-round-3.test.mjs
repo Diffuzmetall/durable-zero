@@ -7,12 +7,19 @@ import { DurableZeroClient, createIsolatedEnv, closeAllActiveClients } from "./d
 
 const CLI_PATH = process.env.R3_CLI_PATH || "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/native-fix-round-3/packages/cli/bin/durable-zero.js";
 const FIXTURE_PATH = "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3/fixtures/r3-provider-extension.mjs";
+const OUTPUT_DIR = "/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/independent-product-review/fix-round-3";
+
+const wireLogFile = path.join(OUTPUT_DIR, "r3-final-wire-observations.jsonl");
+// Truncate/create fresh wire log file
+fs.writeFileSync(wireLogFile, "");
+const wireLogStream = fs.createWriteStream(wireLogFile, { flags: "a" });
 
 afterEach(async () => {
   await closeAllActiveClients();
 });
 
 after(async () => {
+  wireLogStream.end();
   await closeAllActiveClients();
 });
 
@@ -33,6 +40,7 @@ test("Journey 1: Happy Path - Cold start, readiness, gated first prompt, and sam
     cwd: tempCwd,
     env,
     sessionId,
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -179,6 +187,7 @@ test("Journey 2: Multi-Process Restart & Persistence - Resumed process verifies 
     cwd: tempCwd,
     env,
     sessionId,
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -226,6 +235,7 @@ test("Journey 2: Multi-Process Restart & Persistence - Resumed process verifies 
     cwd: tempCwd,
     env,
     sessionId,
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -292,6 +302,7 @@ test("Journey 3.1: Malformed JSON returns -32700 Parse error without server cras
     cwd: tempCwd,
     env,
     sessionId: "session-error-probe-fixround3",
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -324,6 +335,7 @@ test("Journey 3.2: Unrecognized method returns -32601 Method not found", async (
     cwd: tempCwd,
     env,
     sessionId: "session-method-probe-fixround3",
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -352,6 +364,7 @@ test("Journey 3.3: Consumer harness pending requests rejected on child process e
     cwd: tempCwd,
     env,
     sessionId: "session-reject-probe-fixround3",
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -388,6 +401,7 @@ test("Journey 4.1: Ready-server stdin EOF closes and exits cleanly with bounded 
     cwd: tempCwd,
     env,
     sessionId: "session-eof-probe-fixround3",
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -427,6 +441,7 @@ test("Journey 4.2: Root abort-active-turn (session/abort) halts in-flight turn a
     cwd: tempCwd,
     env,
     sessionId: "session-abort-probe-fixround3",
+    wireLogStream,
   });
 
   t.after(async () => {
@@ -510,6 +525,7 @@ test("Journey 5.1: Native builtin I/O tool execution (read) yields owned file se
     cwd: tempCwd,
     env,
     sessionId: "session-toolroundtrip-fixround3",
+    wireLogStream,
   });
 
   t.after(async () => {

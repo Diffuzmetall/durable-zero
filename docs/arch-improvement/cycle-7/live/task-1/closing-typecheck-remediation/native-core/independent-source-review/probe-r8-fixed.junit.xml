@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="NEGATIVE CONTROL: Baseline readTextFile on supported Core env returns ok" time="0.000702" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 1.1 (R8-01): flushFile must return err(FileError('not_supported'))" time="0.000081" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 1.2 (R8-01): listFiles must not invent metadata or truncated=false" time="0.000066" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 1.3 (R8-01): Constructor must preserve underlying coreEnv.id" time="0.000048" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 1.4 (R8-01): fileInfo must return not_supported if neither isFile nor isDirectory is true" time="0.000091" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 2.1 (R8-02): readTextFile must preserve permission_denied error" time="0.000145" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 2.2 (R8-02): exists must not return ok(false) on permission denied" time="0.000084" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 2.3 (R8-02): readTextFile must return aborted when context is cancelled" time="0.000098" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 2.4 (R8-02): toFileError must prioritize structured EACCES code over 'not found' text in message" time="0.000076" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 3.1 (R8-03): Concurrent same-key getOrCreate must return the identical instance" time="0.011027" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 3.2 (R8-03): Same Core instance for 2 keys must only have cleanup called once" time="0.000160" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 3.3 (R8-03): Cleanup failure on first env must not prevent cleanup of subsequent envs" time="0.000154" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 3.4 (R8-03): Legacy string ctor without factory must throw configuration error" time="0.000109" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 3.5 (R8-03): In-flight creation during cleanup must be drained and not leak uncleaned env" time="0.000106" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 4.1 (R8-04): exec with onOutput must reject with shell_unavailable" time="0.000085" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 4.2 (R8-04): exec with spill/window must reject with shell_unavailable" time="0.000033" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 4.3 (R8-04): exec must abort when context is cancelled" time="0.000055" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<testcase name="GROUP 4.4 (R8-04): exec must refuse cancellable contexts up front (no signal contract in Core)" time="0.000039" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-fixed.test.ts"/>
+	<!-- tests 18 -->
+	<!-- suites 0 -->
+	<!-- pass 18 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 141.393958 -->
+</testsuites>

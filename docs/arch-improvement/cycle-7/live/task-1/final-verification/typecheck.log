@@ -1,0 +1,2 @@
+$ tsc -p tsconfig.src.json --pretty false
+Exit code: 0

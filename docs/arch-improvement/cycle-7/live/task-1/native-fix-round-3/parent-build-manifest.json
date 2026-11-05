@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-11-05T04:41:02.774496+03:00",
+  "sourceCommit": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+  "artifactScope": "Compiled projectCLI/runner; external publicSDKdependencies are required, notstandalone distribution",
+  "packageVersion": "0.26.31",
+  "runnerSha256": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136",
+  "cliSha256": "dd470565bf3dc889deb7abfcba444b2b1589e5f9152349b339e9de509a0fb190",
+  "sourceInputs": [
+    {
+      "path": "package.json",
+      "sha256": "7fff597c1e677fe49335fdfd4aa2a05077f63ab93f1853bd15c675cc8d87233b"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "056037ab32eae8d7e43f4b444d0e1258c53dff6076242975d4ff11467b4f5eee"
+    },
+    {
+      "path": "tsconfig.src.json",
+      "sha256": "77268be4dcedac1e6a5a75605ac595ef11baa025db8cd459fc05a8fa504ad29f"
+    },
+    {
+      "path": "scripts/build.mjs",
+      "sha256": "22abd4acf52810c050138e0a88c542f14f28bed27295c6abb9f34498550d8e0f"
+    }
+  ],
+  "publicSdkDependencies": [
+    {
+      "name": "@earendil-works/pi-durable",
+      "version": "1.5.0",
+      "resolvedPackagePath": "/Users/vanya/Projects/durable-zero/node_modules/.pnpm/@earendil-works+pi-durable@1.5.0_@aws-sdk+credential-provider-node@3.972.92_@smithy+sig_409ba8d63f127908059ee405f3404d36/node_modules/@earendil-works/pi-durable/package.json"
+    },
+    {
+      "name": "@earendil-works/pi-coding-agent",
+      "version": "1.5.0",
+      "resolvedPackagePath": "/Users/vanya/Projects/durable-zero/node_modules/.pnpm/@earendil-works+pi-coding-agent@1.5.0_@aws-sdk+credential-provider-node@3.972.92_@smith_3d2e82099df153227032a442d6a15816/node_modules/@earendil-works/pi-coding-agent/package.json"
+    },
+    {
+      "name": "@earendil-works/pi-ai",
+      "version": "1.5.0",
+      "resolvedPackagePath": "/Users/vanya/Projects/durable-zero/node_modules/.pnpm/@earendil-works+pi-ai@1.5.0_@aws-sdk+credential-provider-node@3.972.92_@smithy+signatur_4bdc96f33ca8e8cc433b29a43e7247b8/node_modules/@earendil-works/pi-ai/package.json"
+    },
+    {
+      "name": "@earendil-works/chord",
+      "version": "1.5.0",
+      "resolvedPackagePath": "/Users/vanya/Projects/durable-zero/node_modules/.pnpm/@earendil-works+chord@1.5.0_esbuild@0.28.2/node_modules/@earendil-works/chord/package.json"
+    }
+  ],
+  "acceptance": "Cleanbuild/typecheck0 andgenuineproduct8PASS; fullroot5FAILremain",
+  "measurementQualification": "Rounded authored timestamps/durations in priorreport are not adopted as new rawmeasurements; use actualcommand logs/nativeJUnit"
+}

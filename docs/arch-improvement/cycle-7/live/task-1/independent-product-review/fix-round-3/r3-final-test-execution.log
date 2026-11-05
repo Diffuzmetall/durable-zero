@@ -1,0 +1,16 @@
+✔ Journey 1: Happy Path - Cold start, readiness, gated first prompt, and same-process second prompt generation-reset (1582.644666ms)
+✔ Journey 2: Multi-Process Restart & Persistence - Resumed process verifies historical entries and executes third prompt in same restarted PID (2210.21775ms)
+✔ Journey 3.1: Malformed JSON returns -32700 Parse error without server crash (576.120875ms)
+✔ Journey 3.2: Unrecognized method returns -32601 Method not found (506.26875ms)
+✔ Journey 3.3: Consumer harness pending requests rejected on child process exit (155.367709ms)
+✔ Journey 4.1: Ready-server stdin EOF closes and exits cleanly with bounded exit code 0 (483.80925ms)
+✔ Journey 4.2: Root abort-active-turn (session/abort) halts in-flight turn and allows subsequent prompt in same session (1082.826125ms)
+✔ Journey 5.1: Native builtin I/O tool execution (read) yields owned file sentinel through Harness (548.961875ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7223.053833
