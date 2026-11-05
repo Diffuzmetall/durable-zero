@@ -61,6 +61,23 @@ test("GROUP 1.3 (R8-01): Constructor must preserve underlying coreEnv.id", async
 	assert.strictEqual(adapter.id, "core-env-canonical-101", "adapter.id must match coreEnv.id, not a random hash");
 });
 
+test("GROUP 1.4 (R8-01): fileInfo must return not_supported if neither isFile nor isDirectory is true", async () => {
+	const core = createMockCoreEnv({
+		statFile: async () => ({
+			isFile: false,
+			isDirectory: false,
+			sizeBytes: 0,
+			mtimeMs: 1000,
+		}),
+	});
+	const adapter = new CoreExecutionEnvAdapter(core, "/workspace/mock");
+	const res = await adapter.fileInfo("/dev/special", BACKGROUND_CONTEXT);
+	assert.strictEqual(res.ok, false, "fileInfo must not force kind='file' when neither isFile nor isDirectory is true");
+	if (!res.ok) {
+		assert.strictEqual(res.error.code, "not_supported");
+	}
+});
+
 // ----------------------------------------------------------------------------
 // GROUP 2 (R8-02): Permission, cancellation and unknown errors masquerade as not_found
 // ----------------------------------------------------------------------------
@@ -123,6 +140,26 @@ test("GROUP 2.3 (R8-02): readTextFile must return aborted when context is cancel
 	}
 });
 
+test("GROUP 2.4 (R8-02): toFileError must prioritize structured EACCES code over 'not found' text in message", async () => {
+	const mixedError = new Error("Resource not found in private directory; EACCES: access denied");
+	(mixedError as unknown as { code: string }).code = "EACCES";
+	const core = createMockCoreEnv({
+		readFile: async () => {
+			throw mixedError;
+		},
+	});
+	const adapter = new CoreExecutionEnvAdapter(core, "/workspace/mock");
+	const res = await adapter.readTextFile("/private/item", BACKGROUND_CONTEXT);
+	assert.strictEqual(res.ok, false);
+	if (!res.ok) {
+		assert.strictEqual(
+			res.error.code,
+			"permission_denied",
+			`Structured EACCES code must yield permission_denied, not not_found; got: ${res.error.code}`,
+		);
+	}
+});
+
 // ----------------------------------------------------------------------------
 // GROUP 3 (R8-03): Async environment cache and cleanup do not ensure single ownership
 // ----------------------------------------------------------------------------
@@ -156,7 +193,7 @@ test("GROUP 3.2 (R8-03): Same Core instance for 2 keys must only have cleanup ca
 	});
 	const envs = new ExecutionEnvs({
 		defaultCwd: "/workspace/mock",
-		coreFactory: async (target) => {
+		coreFactory: async () => {
 			return core;
 		},
 	});
@@ -204,6 +241,57 @@ test("GROUP 3.3 (R8-03): Cleanup failure on first env must not prevent cleanup o
 	assert.strictEqual(env2Cleaned, true, "Subsequent environment cleanup must still run when earlier environment cleanup throws");
 });
 
+test("GROUP 3.4 (R8-03): Legacy string ctor without factory must throw configuration error", () => {
+	assert.throws(
+		() => {
+			// @ts-expect-error testing legacy constructor invocation without factory
+			new ExecutionEnvs("/workspace/mock");
+		},
+		/ExecutionEnvFactory is required/,
+		"Legacy string constructor without factory must throw fail-fast error",
+	);
+});
+
+test("GROUP 3.5 (R8-03): In-flight creation during cleanup must be drained and not leak uncleaned env", async () => {
+	let coreCleanupCalled = false;
+	const core = createMockCoreEnv({
+		cleanup: async () => {
+			coreCleanupCalled = true;
+		},
+	});
+
+	let resolveFactory: (val: IExecutionEnvironment) => void;
+	const factoryPromise = new Promise<IExecutionEnvironment>((resolve) => {
+		resolveFactory = resolve;
+	});
+
+	const envs = new ExecutionEnvs({
+		defaultCwd: "/workspace/mock",
+		coreFactory: () => factoryPromise,
+	});
+
+	// Start in-flight creation
+	const inFlightGet = envs.getOrCreate({ cwd: "/workspace/mock" }, BACKGROUND_CONTEXT);
+
+	// Concurrently initiate cleanup while factory is still in-flight
+	const cleanupPromise = envs.cleanup(BACKGROUND_CONTEXT);
+
+	// Now settle the factory
+	resolveFactory!(core);
+
+	await cleanupPromise;
+	await inFlightGet.catch(() => {});
+
+	// Post-cleanup getOrCreate must throw or return undefined, never reviving closed cache
+	await assert.rejects(
+		async () => {
+			await envs.getOrCreate({ cwd: "/workspace/mock" }, BACKGROUND_CONTEXT);
+		},
+		/closed/i,
+		"Cannot get or create envs after cleanup has completed",
+	);
+});
+
 // ----------------------------------------------------------------------------
 // GROUP 4 (R8-04): Fake post-hoc stdout/stderr stream + ignored native options/cancellation
 // ----------------------------------------------------------------------------
@@ -245,5 +333,17 @@ test("GROUP 4.3 (R8-04): exec must abort when context is cancelled", async () =>
 	assert.strictEqual(res.ok, false);
 	if (!res.ok) {
 		assert.strictEqual(res.error.code, "aborted");
+	}
+});
+
+test("GROUP 4.4 (R8-04): exec must refuse cancellable contexts up front (no signal contract in Core)", async () => {
+	const core = createMockCoreEnv();
+	const adapter = new CoreExecutionEnvAdapter(core, "/workspace/mock");
+	const { context } = withCancel(BACKGROUND_CONTEXT);
+	// Context is cancellable (has abortSignal)
+	const res = await adapter.exec(["echo", "test"], undefined, context);
+	assert.strictEqual(res.ok, false, "exec on pure Core must refuse cancellable context as shell_unavailable");
+	if (!res.ok) {
+		assert.strictEqual(res.error.code, "shell_unavailable");
 	}
 });
