@@ -1,35 +1,31 @@
-# Cycle 7 Task 1 Consumer Test Migration — Final Closure & Verification Report
+# Cycle 7 Task 1 Consumer Test Migration — Final Closure & Full 374-Test Verification Report
 
 **Date:** November 5, 2026  
 **Branch:** `cycle-7-runtime-adapter-ioc-migration`  
-**Latest Parent Checkpoint Commit:** `b84a585`  
 **Role:** Bounded implementer for REQUIRED residual Task 1 consumer/test migration  
-**Status:** **TASK 1 CONSUMER MIGRATION 100% COMPLETE — ZERO BROKEN IMPORTS IN CORE — ALL 360/360 WORKSPACE TESTS PASSING — QUIESCED AWAITING PARENT PRESERVATION**
+**Status:** **TASK 1 CONSUMER MIGRATION 100% COMPLETE — ZERO BROKEN IMPORTS IN CORE — ALL 374/374 WORKSPACE TESTS PASSING (100% GREEN) — QUIESCED AWAITING PARENT PRESERVATION**
 
 ---
 
-## 1. Executive Summary & Verification of the 3 Requested Test-Only Corrections
+## 1. Executive Summary & Resolution of `execution-env-strategy.test.ts`
 
-All three test-only corrections requested by parent thread `thr_9yjb93iwmn` were implemented, verified, and preserved:
+Following parent thread `thr_9yjb93iwmn`'s directive regarding the single remaining failure on the isolated root test surface:
 
-1. **`codemode-canonical-routines.test.ts` (Test 4):**
-   - Replaced ad-hoc/fake builtin with the real public `createCodemodeBuiltinExtension` from `@durable-zero/adapter-codemode` (`../../adapter-codemode/src/index.ts`).
-   - Delegates `register(ctx)` directly to the real builtin, recording `receivedNamespaces = ctx.dynamicNamespaces`.
-   - Asserts that the actual native `codemode` tool is registered in the snapshot.
-   - Awaits `teardown()` in a guaranteed `finally` block.
-   - **Result:** 4/4 tests PASS (~3.5ms).
-2. **`durable-engine-facade.test.ts` (Dynamic Import & Owned CWD Isolation):**
-   - Eliminated static SDK/engine import; uses `await import("../src/index.ts")` dynamically **after** environment isolation is in effect, preventing module-level caching of global/repo configs.
-   - Creates an owned temporary working directory `isolatedCwd` and passes it explicitly to `PiDurableEngine({ cwd: isolatedCwd, ... })`.
-   - Bounded per-test timeout (30s) and outer process timeout.
-   - Engine variable declared in outer scope; `await engine.close()` guaranteed in outer `finally`.
-3. **`durable-engine-facade.test.ts` (Environment Restoration):**
-   - Saves exact presence state for `HOME`, `XDG_CONFIG_HOME`, `PI_AGENT_DIR`, and `PI_ADDITIONAL_EXTENSIONS`.
-   - In `finally`, explicitly deletes keys that were previously absent (`delete process.env[key]`) rather than leaving them pointing at deleted temporary directories.
-   - Encapsulation assertion preserved as a clean boolean check:
-     `const instanceLeaked = (engine as any).instance !== undefined;`
-     `assert.equal(instanceLeaked, false, "raw SDK instance must be encapsulated and not leaked on facade");`
-   - Following Track A's `#instance` private field encapsulation in `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts`, this test now executes cleanly and **PASSES** in 752ms without leaking raw SDK internals or diffs.
+- **Target File:** `packages/adapter-pi-durable/test/execution-env-strategy.test.ts`
+- **Issue:** Test 1 `delegates environment instantiation to injected ExecutionEnvFactory...` called `envs.env(...)` synchronously. In the R8 collection seam, `envs.env(target, context)` is an async method taking an explicit `Context` and returning `Promise<ExecutionEnv | undefined>`.
+- **Correction Applied (Test-Only):**
+  - Updated test to `async () => { ... }`.
+  - Passed `BACKGROUND_CONTEXT` from `@earendil-works/chord/context` to `await envs.env({ cwd: "/sandbox/dir" }, BACKGROUND_CONTEXT)`.
+  - Preserved exact assertions: `calledWithCwd === "/sandbox/dir"` and `(env as any)?.id === "mock-env"`.
+  - Added guaranteed teardown in `finally { await envs.cleanup(BACKGROUND_CONTEXT); }`.
+- **Result:**
+  ```text
+  ▶ ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072)
+    ✔ delegates environment instantiation to injected ExecutionEnvFactory without depending on concrete adapters (0.653958ms)
+    ✔ fails fast when ExecutionEnvFactory is not provided (AP-012, AP-072, AP-073) (0.164625ms)
+    ✔ fails fast in openDurable when executionEnvFactory is not provided (AP-012, AP-072, AP-073) (0.304334ms)
+  ✔ ExecutionEnvs Strategy Pattern in Core (AP-012, AP-072) (1.612ms)
+  ```
 
 ---
 
@@ -38,19 +34,19 @@ All three test-only corrections requested by parent thread `thr_9yjb93iwmn` were
 - **Command:** `node --test --test-timeout 30000 packages/*/test/*.test.ts`
 - **Output:**
   ```text
-  ℹ tests 360
-  ℹ suites 51
-  ℹ pass 360
+  ℹ tests 374
+  ℹ suites 54
+  ℹ pass 374
   ℹ fail 0
   ℹ cancelled 0
   ℹ skipped 0
   ℹ todo 0
-  ℹ duration_ms 17434.800083
+  ℹ duration_ms 12009.818084
   ```
-- **Total Tests:** 360
-- **Passed:** 360 (100%)
+- **Total Tests:** 374
+- **Passed:** 374 (100% GREEN)
 - **Failed:** 0
-- **Duration:** 17.4 seconds
+- **Duration:** 12.0 seconds
 - **Log Receipt:** `docs/arch-improvement/cycle-7/live/task-1-test-migration/root-test-final.log`
 - **JUnit Receipt:** `docs/arch-improvement/cycle-7/live/task-1-test-migration/root-test-final.junit.xml`
 
@@ -79,5 +75,5 @@ All three test-only corrections requested by parent thread `thr_9yjb93iwmn` were
 - **Task 1 Consumer Migration is 100% COMPLETE.**
 - Zero git commits or pushes executed.
 - Zero shared ledger edits made (`docs/arch-improvement/ledger.md` untouched).
-- Zero production code modified (all work was strictly test harness & migrations).
-- Worker is now **QUIESCED** awaiting parent instructions.
+- Zero production code modified (strictly test-only edits).
+- Worker is now **QUIESCED** and holding for parent review and preservation.
