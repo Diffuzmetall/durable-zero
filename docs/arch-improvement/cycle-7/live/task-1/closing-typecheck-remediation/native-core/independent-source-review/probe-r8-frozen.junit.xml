@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="NEGATIVE CONTROL: Baseline readTextFile on supported Core env returns ok" time="0.000653" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts"/>
+	<testcase name="GROUP 1.1 (R8-01): flushFile must return err(FileError('not_supported'))" time="0.000557" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="flushFile must not return ok on pure Core environment&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="flushFile must not return ok on pure Core environment&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: flushFile must not return ok on pure Core environment
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: flushFile must not return ok on pure Core environment
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:40:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 1.2 (R8-01): listFiles must not invent metadata or truncated=false" time="0.000117" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="listFiles without full FileListing metadata must return not_supported&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="listFiles without full FileListing metadata must return not_supported&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: listFiles without full FileListing metadata must return not_supported
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: listFiles without full FileListing metadata must return not_supported
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:52:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 1.3 (R8-01): Constructor must preserve underlying coreEnv.id" time="0.000238" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="adapter.id must match coreEnv.id, not a random hash&#10;+ actual - expected&#10;&#10;+ 'core-env-cn92hb'&#10;- 'core-env-canonical-101'&#10;             ^&#10;">
+		<failure type="testCodeFailure" message="adapter.id must match coreEnv.id, not a random hash&#10;+ actual - expected&#10;&#10;+ 'core-env-cn92hb'&#10;- 'core-env-canonical-101'&#10;             ^">
+[Error [ERR_TEST_FAILURE]: adapter.id must match coreEnv.id, not a random hash
++ actual - expected
+
++ 'core-env-cn92hb'
+- 'core-env-canonical-101'
+             ^
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: adapter.id must match coreEnv.id, not a random hash
+  + actual - expected
+  
+  + 'core-env-cn92hb'
+  - 'core-env-canonical-101'
+               ^
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:61:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'core-env-cn92hb',
+    expected: 'core-env-canonical-101',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 2.1 (R8-02): readTextFile must preserve permission_denied error" time="0.000110" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="Expected permission_denied, got not_found&#10;+ actual - expected&#10;&#10;+ 'not_found'&#10;- 'permission_denied'&#10;">
+		<failure type="testCodeFailure" message="Expected permission_denied, got not_found&#10;+ actual - expected&#10;&#10;+ 'not_found'&#10;- 'permission_denied'">
+[Error [ERR_TEST_FAILURE]: Expected permission_denied, got not_found
++ actual - expected
+
++ 'not_found'
+- 'permission_denied'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected permission_denied, got not_found
+  + actual - expected
+  
+  + 'not_found'
+  - 'permission_denied'
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:79:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'not_found',
+    expected: 'permission_denied',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 2.2 (R8-02): exists must not return ok(false) on permission denied" time="0.000094" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="exists must return err(FileError('permission_denied')) when stat fails with permission error&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="exists must return err(FileError('permission_denied')) when stat fails with permission error&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: exists must return err(FileError('permission_denied')) when stat fails with permission error
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: exists must return err(FileError('permission_denied')) when stat fails with permission error
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:97:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 2.3 (R8-02): readTextFile must return aborted when context is cancelled" time="0.000134" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="Core readFile must not be called when context is already aborted&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="Core readFile must not be called when context is already aborted&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: Core readFile must not be called when context is already aborted
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Core readFile must not be called when context is already aborted
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:119:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 3.1 (R8-03): Concurrent same-key getOrCreate must return the identical instance" time="0.010989" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="Concurrent calls for same key must return the identical environment instance&#10;+ actual - expected&#10;&#10;  CoreExecutionEnvAdapter {&#10;    cwd: '/workspace/mock',&#10;+   id: 'core-env-l4j5ns'&#10;-   id: 'core-env-0noh94'&#10;  }&#10;">
+		<failure type="testCodeFailure" message="Concurrent calls for same key must return the identical environment instance&#10;+ actual - expected&#10;&#10;  CoreExecutionEnvAdapter {&#10;    cwd: '/workspace/mock',&#10;+   id: 'core-env-l4j5ns'&#10;-   id: 'core-env-0noh94'&#10;  }">
+[Error [ERR_TEST_FAILURE]: Concurrent calls for same key must return the identical environment instance
++ actual - expected
+
+  CoreExecutionEnvAdapter {
+    cwd: '/workspace/mock',
++   id: 'core-env-l4j5ns'
+-   id: 'core-env-0noh94'
+  }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Concurrent calls for same key must return the identical environment instance
+  + actual - expected
+  
+    CoreExecutionEnvAdapter {
+      cwd: '/workspace/mock',
+  +   id: 'core-env-l4j5ns'
+  -   id: 'core-env-0noh94'
+    }
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:146:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { id: 'core-env-l4j5ns', cwd: '/workspace/mock' },
+    expected: { id: 'core-env-0noh94', cwd: '/workspace/mock' },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 3.2 (R8-03): Same Core instance for 2 keys must only have cleanup called once" time="0.000228" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="Core environment cleanup must be called exactly once despite multiple keys&#10;&#10;2 !== 1&#10;">
+		<failure type="testCodeFailure" message="Core environment cleanup must be called exactly once despite multiple keys&#10;&#10;2 !== 1">
+[Error [ERR_TEST_FAILURE]: Core environment cleanup must be called exactly once despite multiple keys
+
+2 !== 1
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Core environment cleanup must be called exactly once despite multiple keys
+  
+  2 !== 1
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:168:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 3.3 (R8-03): Cleanup failure on first env must not prevent cleanup of subsequent envs" time="0.000218" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="Subsequent environment cleanup must still run when earlier environment cleanup throws&#10;&#10;false !== true&#10;">
+		<failure type="testCodeFailure" message="Subsequent environment cleanup must still run when earlier environment cleanup throws&#10;&#10;false !== true">
+[Error [ERR_TEST_FAILURE]: Subsequent environment cleanup must still run when earlier environment cleanup throws
+
+false !== true
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Subsequent environment cleanup must still run when earlier environment cleanup throws
+  
+  false !== true
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:204:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 4.1 (R8-04): exec with onOutput must reject with shell_unavailable" time="0.000105" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="exec with onOutput streaming must return shell_unavailable on pure Core&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="exec with onOutput streaming must return shell_unavailable on pure Core&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: exec with onOutput streaming must return shell_unavailable on pure Core
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: exec with onOutput streaming must return shell_unavailable on pure Core
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:216:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 4.2 (R8-04): exec with spill/window must reject with shell_unavailable" time="0.000071" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="exec with spill must return shell_unavailable on pure Core&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="exec with spill must return shell_unavailable on pure Core&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: exec with spill must return shell_unavailable on pure Core
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: exec with spill must return shell_unavailable on pure Core
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:226:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="GROUP 4.3 (R8-04): exec must abort when context is cancelled" time="0.000088" classname="test" file="/Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts" failure="Core exec must not be called when context is already cancelled&#10;&#10;true !== false&#10;">
+		<failure type="testCodeFailure" message="Core exec must not be called when context is already cancelled&#10;&#10;true !== false">
+[Error [ERR_TEST_FAILURE]: Core exec must not be called when context is already cancelled
+
+true !== false
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Core exec must not be called when context is already cancelled
+  
+  true !== false
+  
+      at TestContext.&lt;anonymous> (file:///Users/vanya/Projects/durable-zero/docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/probe-r8-frozen.test.ts:244:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 13 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 12 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 135.270417 -->
+</testsuites>

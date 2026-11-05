@@ -117,10 +117,18 @@ export class ExecutionEnvs {
 	readonly #nativeFactory?: NativeExecutionEnvFactory | undefined;
 	readonly #coreFactory?: ExecutionEnvFactory | undefined;
 	readonly #envs = new Map<string, ExecutionEnv>();
-	readonly #uniqueEnvs = new Set<ExecutionEnv>();
+	readonly #inFlight = new Map<string, Promise<ExecutionEnv | undefined>>();
+	readonly #coreAdapters = new Map<IExecutionEnvironment, CoreExecutionEnvAdapter>();
+	readonly #ownedCoreEnvs = new Set<IExecutionEnvironment>();
+	readonly #ownedNativeEnvs = new Set<ExecutionEnv>();
+	#isClosing = false;
+	#isClosed = false;
 
 	constructor(options: ExecutionEnvsOptions | string, legacyFactory?: ExecutionEnvFactory) {
 		if (typeof options === "string") {
+			if (typeof legacyFactory !== "function") {
+				throw new Error("ExecutionEnvFactory is required (AP-012, R8: no default host fallback in adapter)");
+			}
 			this.#defaultCwd = options;
 			this.#coreFactory = legacyFactory;
 		} else {
@@ -137,30 +145,57 @@ export class ExecutionEnvs {
 	}
 
 	async getOrCreate(target: EnvTarget, context: Context): Promise<ExecutionEnv | undefined> {
+		if (this.#isClosed || this.#isClosing) {
+			throw new Error("ExecutionEnvs is closed: cannot create or retrieve execution environments after cleanup");
+		}
 		const key = target.cwd ?? this.#defaultCwd;
 		const existing = this.#envs.get(key);
 		if (existing !== undefined) return existing;
 
-		if (this.#nativeFactory) {
-			const created = await this.#nativeFactory(target, context);
-			if (created) {
-				this.#envs.set(key, created);
-				this.#uniqueEnvs.add(created);
-			}
-			return created;
-		}
+		const inFlight = this.#inFlight.get(key);
+		if (inFlight !== undefined) return inFlight;
 
-		if (this.#coreFactory) {
-			const createdCore = await this.#coreFactory({ cwd: key, conversationId: target.conversationId });
-			if (createdCore) {
-				const adapted = new CoreExecutionEnvAdapter(createdCore, key);
-				this.#envs.set(key, adapted);
-				this.#uniqueEnvs.add(adapted);
-				return adapted;
-			}
-		}
+		const createPromise = (async () => {
+			try {
+				if (this.#nativeFactory) {
+					const created = await this.#nativeFactory(target, context);
+					if (this.#isClosed || this.#isClosing) {
+						if (created) await created.cleanup(context).catch(() => {});
+						return undefined;
+					}
+					if (created) {
+						this.#envs.set(key, created);
+						this.#ownedNativeEnvs.add(created);
+					}
+					return created;
+				}
 
-		return undefined;
+				if (this.#coreFactory) {
+					const createdCore = await this.#coreFactory({ cwd: key, conversationId: target.conversationId });
+					if (this.#isClosed || this.#isClosing) {
+						if (createdCore) await createdCore.cleanup(context).catch(() => {});
+						return undefined;
+					}
+					if (createdCore) {
+						let adapter = this.#coreAdapters.get(createdCore);
+						if (!adapter) {
+							adapter = new CoreExecutionEnvAdapter(createdCore, key);
+							this.#coreAdapters.set(createdCore, adapter);
+							this.#ownedCoreEnvs.add(createdCore);
+						}
+						this.#envs.set(key, adapter);
+						return adapter;
+					}
+				}
+
+				return undefined;
+			} finally {
+				this.#inFlight.delete(key);
+			}
+		})();
+
+		this.#inFlight.set(key, createPromise);
+		return createPromise;
 	}
 
 	peek(cwd?: string): ExecutionEnv | undefined {
@@ -172,11 +207,42 @@ export class ExecutionEnvs {
 	};
 
 	async cleanup(context: Context): Promise<void> {
-		const envsToClean = Array.from(this.#uniqueEnvs);
+		this.#isClosing = true;
+
+		// 1. Quiesce all in-flight creations first
+		const pendingInFlight = Array.from(this.#inFlight.values());
+		if (pendingInFlight.length > 0) {
+			await Promise.allSettled(pendingInFlight);
+		}
+
+		this.#isClosed = true;
 		this.#envs.clear();
-		this.#uniqueEnvs.clear();
-		for (const env of envsToClean) {
-			await env.cleanup(context);
+		this.#inFlight.clear();
+		this.#coreAdapters.clear();
+
+		const coreEnvs = Array.from(this.#ownedCoreEnvs);
+		const nativeEnvs = Array.from(this.#ownedNativeEnvs);
+		this.#ownedCoreEnvs.clear();
+		this.#ownedNativeEnvs.clear();
+
+		const errors: unknown[] = [];
+		for (const env of coreEnvs) {
+			try {
+				await env.cleanup(context);
+			} catch (errVal: unknown) {
+				errors.push(errVal);
+			}
+		}
+		for (const env of nativeEnvs) {
+			try {
+				await env.cleanup(context);
+			} catch (errVal: unknown) {
+				errors.push(errVal);
+			}
+		}
+
+		if (errors.length > 0) {
+			throw new AggregateError(errors, "One or more execution environments failed during cleanup");
 		}
 	}
 }

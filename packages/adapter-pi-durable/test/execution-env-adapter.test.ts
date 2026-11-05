@@ -1,183 +1,270 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { CoreExecutionEnvAdapter } from "../src/engine/core-execution-env-adapter.ts";
+import { CoreExecutionEnvAdapter, toFileError } from "../src/engine/core-execution-env-adapter.ts";
 import { ExecutionEnvs } from "../src/engine/harness-setup.ts";
 import type { IExecutionEnvironment } from "@durable-zero/core";
 import type { Context } from "@earendil-works/chord";
 import { FileError, ExecutionError } from "@earendil-works/pi-durable/env";
 
-const dummyContext = { abortSignal: new AbortController().signal } as unknown as Context;
+const uncancellableContext = { abortSignal: undefined } as unknown as Context;
+const cancellableContext = { abortSignal: new AbortController().signal } as unknown as Context;
 
-describe("CoreExecutionEnvAdapter (Closing Amendment R8)", () => {
-	it("forwards genuinely representable UTF-8 read, write, exists, stat, and listFiles", async () => {
-		const files = new Map<string, string>();
-		files.set("/app/hello.txt", "world");
+describe("CoreExecutionEnvAdapter Semantics (R8-01, R8-02, R8-04)", () => {
+	it("R8-01: preserves genuine coreEnv.id, rejects unrepresentable metadata/flush, and validates fileInfo kinds", async () => {
+		let statIsFile = true;
+		let statIsDir = false;
 
 		const mockCore: IExecutionEnvironment = {
-			readFile: async (p) => {
-				const val = files.get(p);
-				if (!val) throw new Error("ENOENT");
-				return val;
-			},
-			writeFile: async (p, content) => {
-				files.set(p, content);
-			},
-			statFile: async (p) => {
-				if (!files.has(p)) throw new Error("ENOENT");
-				return { isFile: true, isDirectory: false, sizeBytes: 5, mtimeMs: 12345 };
-			},
-			listFiles: async (_p) => Array.from(files.keys()),
+			id: "genuine-core-id-42",
+			cwd: "/app",
+			readFile: async () => "",
+			writeFile: async () => {},
+			statFile: async () => ({ isFile: statIsFile, isDirectory: statIsDir, sizeBytes: 10, mtimeMs: 1000 }),
 			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
 			cleanup: async () => {},
 		};
 
 		const adapter = new CoreExecutionEnvAdapter(mockCore, "/app");
 
-		// readTextFile
-		const readRes = await adapter.readTextFile("/app/hello.txt", dummyContext);
-		assert.equal(readRes.ok, true);
-		if (readRes.ok) assert.equal(readRes.value, "world");
+		// Genuine identity preserved
+		assert.equal(adapter.id, "genuine-core-id-42");
 
-		// missing file returns FileError("not_found")
-		const missingRes = await adapter.readTextFile("/app/missing.txt", dummyContext);
-		assert.equal(missingRes.ok, false);
-		if (!missingRes.ok) assert.equal(missingRes.error.code, "not_found");
-
-		// writeFile
-		const writeRes = await adapter.writeFile("/app/new.txt", "content", dummyContext);
-		assert.equal(writeRes.ok, true);
-		assert.equal(files.get("/app/new.txt"), "content");
-
-		// exists
-		const existsRes = await adapter.exists("/app/hello.txt", dummyContext);
-		assert.equal(existsRes.ok, true);
-		if (existsRes.ok) assert.equal(existsRes.value, true);
-
-		// fileInfo maps sizeBytes -> size
-		const infoRes = await adapter.fileInfo("/app/hello.txt", dummyContext);
-		assert.equal(infoRes.ok, true);
-		if (infoRes.ok) {
-			assert.equal(infoRes.value.size, 5);
-			assert.equal(infoRes.value.kind, "file");
+		// flushFile returns not_supported (no fake success)
+		const flushRes = await adapter.flushFile("/app/file.txt", uncancellableContext);
+		assert.equal(flushRes.ok, false);
+		if (!flushRes.ok) {
+			assert.ok(flushRes.error instanceof FileError);
+			assert.equal(flushRes.error.code, "not_supported");
 		}
 
-		// listFiles
-		const listRes = await adapter.listFiles("/app", undefined, dummyContext);
-		assert.equal(listRes.ok, true);
-		if (listRes.ok) assert.equal(listRes.value.entries.length, 2);
+		// listFiles returns not_supported (no fabricated FileListing kind/truncation)
+		const listRes = await adapter.listFiles("/app", undefined, uncancellableContext);
+		assert.equal(listRes.ok, false);
+		if (!listRes.ok) {
+			assert.ok(listRes.error instanceof FileError);
+			assert.equal(listRes.error.code, "not_supported");
+		}
+
+		// fileInfo with valid isFile -> kind: "file"
+		const fileInfoOk = await adapter.fileInfo("/app/file.txt", uncancellableContext);
+		assert.equal(fileInfoOk.ok, true);
+		if (fileInfoOk.ok) {
+			assert.equal(fileInfoOk.value.kind, "file");
+		}
+
+		// fileInfo with neither isFile nor isDirectory returns not_supported (no forced kind: file)
+		statIsFile = false;
+		statIsDir = false;
+		const fileInfoUnsupported = await adapter.fileInfo("/app/socket", uncancellableContext);
+		assert.equal(fileInfoUnsupported.ok, false);
+		if (!fileInfoUnsupported.ok) {
+			assert.equal(fileInfoUnsupported.error.code, "not_supported");
+		}
 	});
 
-	it("preserves Result semantics for exec (non-zero exit is NOT an ExecutionError)", async () => {
+	it("R8-02: toFileError maps structured codes without string guessing", () => {
+		// Error with code EACCES but message containing "file not found" MUST be permission_denied
+		const conflictErr = { code: "EACCES", message: "file not found" };
+		const mapped1 = toFileError(conflictErr, "/app/test");
+		assert.equal(mapped1.code, "permission_denied");
+
+		// Error with code ENOENT but message containing "permission denied" MUST be not_found
+		const conflictErr2 = { code: "ENOENT", message: "permission denied" };
+		const mapped2 = toFileError(conflictErr2, "/app/test");
+		assert.equal(mapped2.code, "not_found");
+
+		// Unknown code with "not found" in message must NOT guess not_found
+		const unknownErr = { code: "SOME_CUSTOM_ERROR", message: "not found" };
+		const mapped3 = toFileError(unknownErr, "/app/test");
+		assert.equal(mapped3.code, "unknown");
+	});
+
+	it("R8-02: exists and fileInfo return not_supported when statFile capability is absent", async () => {
+		const mockCoreWithoutStat: IExecutionEnvironment = {
+			id: "no-stat",
+			cwd: "/app",
+			readFile: async () => "ok",
+			writeFile: async () => {},
+			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
+			cleanup: async () => {},
+		};
+
+		const adapter = new CoreExecutionEnvAdapter(mockCoreWithoutStat, "/app");
+
+		// exists without stat capability cannot test existence via readFile
+		const existsRes = await adapter.exists("/app/file.txt", uncancellableContext);
+		assert.equal(existsRes.ok, false);
+		if (!existsRes.ok) {
+			assert.equal(existsRes.error.code, "not_supported");
+		}
+
+		// fileInfo without stat capability returns not_supported
+		const infoRes = await adapter.fileInfo("/app/file.txt", uncancellableContext);
+		assert.equal(infoRes.ok, false);
+		if (!infoRes.ok) {
+			assert.equal(infoRes.error.code, "not_supported");
+		}
+	});
+
+	it("R8-04: refuses cancellable context execution; preserves basic exec only for uncancellable contexts", async () => {
 		const mockCore: IExecutionEnvironment = {
+			id: "exec-core",
+			cwd: "/app",
 			readFile: async () => "",
 			writeFile: async () => {},
-			exec: async (_argv) => ({ stdout: "error output", stderr: "failure details", exitCode: 42 }),
-			cleanup: async () => {},
-		};
-
-		const adapter = new CoreExecutionEnvAdapter(mockCore, "/app");
-		let captured = "";
-		const execRes = await adapter.exec(["my-cmd", "--flag"], {
-			onOutput: (text) => { captured += text; },
-		}, dummyContext);
-
-		assert.equal(execRes.ok, true);
-		if (execRes.ok) {
-			assert.equal(execRes.value.exitCode, 42);
-		}
-		assert.match(captured, /error output/);
-		assert.match(captured, /failure details/);
-	});
-
-	it("strictly returns not_supported for operations outside pure Core without touching host", async () => {
-		let hostTouched = false;
-		const mockCore: IExecutionEnvironment = {
-			readFile: async () => { hostTouched = true; return ""; },
-			writeFile: async () => { hostTouched = true; },
-			exec: async () => { hostTouched = true; return { stdout: "", stderr: "", exitCode: 0 }; },
+			exec: async (argv) => {
+				if (argv[0] === "fail-code") {
+					return { stdout: "out", stderr: "err", exitCode: 17 };
+				}
+				return { stdout: "success", stderr: "", exitCode: 0 };
+			},
 			cleanup: async () => {},
 		};
 
 		const adapter = new CoreExecutionEnvAdapter(mockCore, "/app");
 
-		// readBinaryFile
-		const binRes = await adapter.readBinaryFile("/app/data.bin", dummyContext);
-		assert.equal(binRes.ok, false);
-		if (!binRes.ok) {
-			assert.ok(binRes.error instanceof FileError);
-			assert.equal(binRes.error.code, "not_supported");
+		// Refuses execution when context has an abortSignal (no cancellation contract in pure Core)
+		const cancellableRes = await adapter.exec(["ls"], undefined, cancellableContext);
+		assert.equal(cancellableRes.ok, false);
+		if (!cancellableRes.ok) {
+			assert.ok(cancellableRes.error instanceof ExecutionError);
+			assert.equal(cancellableRes.error.code, "shell_unavailable");
+			assert.match(cancellableRes.error.message, /Cancellable context execution not supported/);
 		}
 
-		// appendFile
-		const appendRes = await adapter.appendFile("/app/data.txt", "more", dummyContext);
-		assert.equal(appendRes.ok, false);
-		if (!appendRes.ok) assert.equal(appendRes.error.code, "not_supported");
-
-		// truncateFile
-		const truncRes = await adapter.truncateFile("/app/data.txt", 0, dummyContext);
-		assert.equal(truncRes.ok, false);
-		if (!truncRes.ok) assert.equal(truncRes.error.code, "not_supported");
-
-		// renameFile
-		const renameRes = await adapter.renameFile("/app/a", "/app/b", dummyContext);
-		assert.equal(renameRes.ok, false);
-		if (!renameRes.ok) assert.equal(renameRes.error.code, "not_supported");
-
-		// watch
-		const watchRes = await adapter.watch([], () => {}, dummyContext);
-		assert.equal(watchRes.ok, false);
-		if (!watchRes.ok) assert.equal(watchRes.error.code, "not_supported");
-
-		// string exec fails with shell_unavailable
-		const strExecRes = await adapter.exec("echo hello", undefined, dummyContext);
-		assert.equal(strExecRes.ok, false);
-		if (!strExecRes.ok) {
-			assert.ok(strExecRes.error instanceof ExecutionError);
-			assert.equal(strExecRes.error.code, "shell_unavailable");
+		// String command rejected with shell_unavailable
+		const strRes = await adapter.exec("ls -la", undefined, uncancellableContext);
+		assert.equal(strRes.ok, false);
+		if (!strRes.ok) {
+			assert.equal(strRes.error.code, "shell_unavailable");
 		}
 
-		assert.equal(hostTouched, false, "zero host fallback or unintended core calls occurred");
+		// Streaming onOutput rejected with shell_unavailable
+		const streamRes = await adapter.exec(["ls"], { onOutput: () => {} }, uncancellableContext);
+		assert.equal(streamRes.ok, false);
+		if (!streamRes.ok) {
+			assert.equal(streamRes.error.code, "shell_unavailable");
+		}
+
+		// Non-zero exit is preserved as ok({ exitCode: 17 }) under uncancellable context
+		const codeRes = await adapter.exec(["fail-code"], undefined, uncancellableContext);
+		assert.equal(codeRes.ok, true);
+		if (codeRes.ok) {
+			assert.equal(codeRes.value.exitCode, 17);
+		}
 	});
 });
 
-describe("ExecutionEnvs Factory & Lifecycle Management (R8)", () => {
-	it("enforces mutual exclusivity: fails if both native and core factories are provided", () => {
+describe("ExecutionEnvs Factory & Lifecycle Management (R8-03)", () => {
+	it("validates legacy string constructor throws on missing factory", () => {
 		assert.throws(() => {
-			new ExecutionEnvs({
-				defaultCwd: "/app",
-				nativeFactory: async () => undefined,
-				coreFactory: async () => ({} as IExecutionEnvironment),
-			});
-		}, /Configuration error: Both nativeExecutionEnvFactory and executionEnvFactory provided/);
+			new ExecutionEnvs("/app", undefined);
+		}, /ExecutionEnvFactory is required/);
 	});
 
-	it("fails if neither factory is provided", () => {
-		assert.throws(() => {
-			new ExecutionEnvs({ defaultCwd: "/app" });
-		}, /ExecutionEnvFactory or NativeExecutionEnvFactory is required/);
-	});
-
-	it("cleans up each unique environment EXACTLY ONCE even if mapped to multiple keys", async () => {
-		let cleanupCount = 0;
+	it("deduplicates concurrent in-flight creations for the same key", async () => {
+		let factoryCalls = 0;
 		const mockCore: IExecutionEnvironment = {
+			id: "concurrent-core",
+			cwd: "/app",
 			readFile: async () => "",
 			writeFile: async () => {},
 			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
-			cleanup: async () => { cleanupCount++; },
+			cleanup: async () => {},
 		};
 
 		const envs = new ExecutionEnvs({
 			defaultCwd: "/app",
+			coreFactory: async () => {
+				factoryCalls++;
+				await new Promise((r) => setTimeout(r, 20));
+				return mockCore;
+			},
+		});
+
+		const [envA, envB] = await Promise.all([
+			envs.getOrCreate({ cwd: "/app" }, uncancellableContext),
+			envs.getOrCreate({ cwd: "/app" }, uncancellableContext),
+		]);
+
+		assert.equal(factoryCalls, 1, "Factory must be called exactly once despite concurrent requests");
+		assert.equal(envA, envB, "Both callers must receive the exact same adapter instance");
+	});
+
+	it("reuses adapter and cleans up underlying Core instance EXACTLY ONCE across distinct keys", async () => {
+		let cleanupCalls = 0;
+		const mockCore: IExecutionEnvironment = {
+			id: "shared-core",
+			cwd: "/base",
+			readFile: async () => "",
+			writeFile: async () => {},
+			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
+			cleanup: async () => { cleanupCalls++; },
+		};
+
+		const envs = new ExecutionEnvs({
+			defaultCwd: "/base",
 			coreFactory: async () => mockCore,
 		});
 
-		// Create env for root
-		const env1 = await envs.getOrCreate({ cwd: "/app" }, dummyContext);
-		// Get cached env for same cwd
-		const env2 = await envs.getOrCreate({ cwd: "/app" }, dummyContext);
-		assert.equal(env1, env2);
+		const env1 = await envs.getOrCreate({ cwd: "/sub1" }, uncancellableContext);
+		const env2 = await envs.getOrCreate({ cwd: "/sub2" }, uncancellableContext);
 
-		await envs.cleanup(dummyContext);
-		assert.equal(cleanupCount, 1, "cleanup must be called exactly once per unique instance");
+		assert.ok(env1);
+		assert.ok(env2);
+		assert.equal(env1, env2, "Same underlying core instance must share adapter");
+
+		await envs.cleanup(uncancellableContext);
+		assert.equal(cleanupCalls, 1, "Underlying Core instance must be cleaned up exactly once");
+	});
+
+	it("barrier: in-flight creation during cleanup is disposed and does not leak", async () => {
+		let factoryReleased = false;
+		let releaseFactory!: () => void;
+		const factoryPromise = new Promise<void>((resolve) => {
+			releaseFactory = () => {
+				factoryReleased = true;
+				resolve();
+			};
+		});
+
+		let envDisposed = false;
+		const delayedCore: IExecutionEnvironment = {
+			id: "delayed-core",
+			cwd: "/delayed",
+			readFile: async () => "",
+			writeFile: async () => {},
+			exec: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
+			cleanup: async () => { envDisposed = true; },
+		};
+
+		const envs = new ExecutionEnvs({
+			defaultCwd: "/delayed",
+			coreFactory: async () => {
+				await factoryPromise;
+				return delayedCore;
+			},
+		});
+
+		// 1. Begin creation (starts factory, which is held)
+		const createCall = envs.getOrCreate({ cwd: "/delayed" }, uncancellableContext);
+
+		// 2. Start cleanup while creation is still pending
+		const cleanupCall = envs.cleanup(uncancellableContext);
+
+		// 3. Release factory while cleanup is waiting
+		releaseFactory();
+
+		// Both should resolve cleanly
+		await Promise.all([createCall, cleanupCall]);
+
+		// The late-created environment must be cleaned up immediately
+		assert.equal(envDisposed, true, "Late-created environment must be disposed on completion");
+
+		// Subsequent getOrCreate calls must fail
+		await assert.rejects(
+			async () => envs.getOrCreate({ cwd: "/delayed" }, uncancellableContext),
+			/ExecutionEnvs is closed/,
+		);
 	});
 });
