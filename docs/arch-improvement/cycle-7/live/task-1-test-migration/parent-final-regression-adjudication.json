@@ -12,5 +12,7 @@
     "Real codemode factory coverage replaces fake named tool",
     "SDK import and runtime cwd after complete isolation",
     "Restore previously absent environment keys exactly"
-  ]
+  ],
+  "historicalReceiptQualification": "Historical parent parse observed360/1. Worker replaced root-test-final XML/log before backup; b84 actually contains360/0. No preserved raw360/1XML is claimed and no replacement is fabricated. This parent record is historical observation, not current receipt.",
+  "supersededBy": "parent-green-regression-adjudication.json"
 }

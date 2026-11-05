@@ -40,9 +40,9 @@ Source/component review и независимый compiled black-box PASS; на�
 
 ## 5 / 6 · Полная чистота и S9 — Closing gates FAIL
 
-Чистая сборка с нуля PASS, но официальный typecheck отсутствует; strict production diagnostic выявил113 ошибок. Общий root test имеет6 падений, не общийPASS.
+Общий live root regression360/360PASS, безskip. Официальная source-only типизация:exit2, ровно2ошибки единственного Core6/native25 EnvABI. Последняя новая чистая сборка/compiledNative ещё не приняты.
 
-Осталось: Исправить типовые контракты без ослабления strict, объявить source-only typecheck, сохранить/перенести оставшиеся пять тестов и исправить один dispatcher test; повторить независимые closing gates.
+Осталось: Закрыть техническое R8 EnvABI с честными ограничениями Coreадаптера; повторитьsource/build/type/root regression и свежую compiledNative приёмку. ПолныйCycle7 отдельно.
 
 ## Evidence
 
