@@ -1,0 +1,114 @@
+{
+  "contractVersion": "1.0.1-cycle7",
+  "generatedAt": "2026-11-05T13:02:00Z",
+  "features": [
+    {
+      "feature": "readiness",
+      "providerConsumer": "src/host/session.ts:44-50 (waitForReady)",
+      "currentZeroProducer": "packages/runner/src/composition.ts:144-180 (StdioJsonRpcServer starts listening immediately upon launch)",
+      "wireShape": "Legacy: custom { type: 'ready' } frame -> Modern: JSON-RPC readiness probe via session/getState request (or optional agreed session/ready notification)",
+      "gap": "Adapter compatibility gap: Provider expects a legacy custom frame to resolve readyPromise; modern runner is immediately ready for JSON-RPC traffic. Provider should probe via standard public session/getState.",
+      "owner": "bb-plugin-provider-pi-durable",
+      "minimumTest": "Spawn runner, execute JSON-RPC session/getState request, assert valid SessionStateDTO returned within bounded timeout"
+    },
+    {
+      "feature": "model/catalog_probe",
+      "providerConsumer": "src/host/catalog.ts:25-50 (in-process catalog), src/host/session.ts:156-163 (setModel, setThinkingLevel)",
+      "currentZeroProducer": "packages/runner/src/dispatch/session-dispatcher.ts:86-115 (models/list, models/set, models/setThinking); unmounted in composition.ts:147-177",
+      "wireShape": "Legacy: { type: 'set_model', provider, modelId } -> Modern: { jsonrpc: '2.0', id, method: 'models/set', params: { provider, modelId } }",
+      "gap": "session-dispatcher.ts contains models/set and models/setThinking, but composition.ts:147-177 uses an inline handler that omits these methods, returning -32601 Method Not Found.",
+      "owner": "durable-zero",
+      "minimumTest": "Send JSON-RPC models/set with valid provider/modelId, assert { ok: true } and updated model in session state"
+    },
+    {
+      "feature": "prompt/admission",
+      "providerConsumer": "src/host/session.ts:143-148 (prompt, steer)",
+      "currentZeroProducer": "packages/core/src/session/coordinator.ts:48-80, packages/adapter-pi-durable/src/engine/pi-durable-engine.ts:111-195",
+      "wireShape": "Legacy: { type: 'prompt', message, streamingBehavior } -> Modern: { jsonrpc: '2.0', id, method: 'session/prompt', params: { content, options: { deliverAs: 'followUp' | 'steer' } } }",
+      "gap": "Wire envelope and parameter nesting differences (message vs content, streamingBehavior vs options.deliverAs). Prompt returns genuine native admission receipt with accepted status and real request ID.",
+      "owner": "both",
+      "minimumTest": "Submit session/prompt with multi-part text and image, assert response receipt contains non-empty id and status accepted"
+    },
+    {
+      "feature": "deltas_and_block_indexes",
+      "providerConsumer": "src/host/delta-translator.ts:15-180, src/host/session.ts:135-140",
+      "currentZeroProducer": "packages/adapter-pi-durable/src/engine/bridge/durable-event-adapter.ts:10-250, packages/runner/src/composition.ts:181-185",
+      "wireShape": "Legacy: Raw event JSON line -> Modern: { jsonrpc: '2.0', method: 'session/event', params: { event: RunnerEvent } }",
+      "gap": "Real wire events are message_update (carrying assistantMessageEvent: text_delta, thinking_delta, text_start, text_end with contentIndex) and message_end (carrying message: assistantMessageSchema). Modern runner wraps these in session/event notification; provider must unwrap params.event.",
+      "owner": "bb-plugin-provider-pi-durable",
+      "minimumTest": "Stream prompt response, parse session/event notifications with message_update and text_delta, verify delta translator generates ordered BB thread deltas"
+    },
+    {
+      "feature": "abort/reuse",
+      "providerConsumer": "src/host/session.ts:149-152 (abort), server.ts:50-65 (task_abort via control.jsonl)",
+      "currentZeroProducer": "packages/core/src/session/coordinator.ts:88-100, packages/adapter-pi-durable/src/engine/pi-durable-engine.ts:197-210 (abort, abortTask)",
+      "wireShape": "Legacy: { type: 'abort' } or file write to control.jsonl -> Modern: { jsonrpc: '2.0', id, method: 'session/abort' } or { jsonrpc: '2.0', id, method: 'session/abortTask', params: { taskId } }",
+      "gap": "Provider server.ts appends to control.jsonl directly on disk for task abort. Runner has session/abortTask in session-dispatcher.ts:54-61, but dispatcher is unmounted in composition.ts:147-177.",
+      "owner": "both",
+      "minimumTest": "Trigger async task, send session/abortTask via JSON-RPC, verify engine cancels task and emits cancellation delta"
+    },
+    {
+      "feature": "state/transcript/stats",
+      "providerConsumer": "src/host/session.ts:172-176 (getSessionStats), src/host/session-telemetry.ts:30-65",
+      "currentZeroProducer": "packages/core/src/session/coordinator.ts:102-141, packages/adapter-pi-durable/src/engine/pi-durable-engine.ts:250-320",
+      "wireShape": "Legacy: { type: 'get_session_stats' } -> Modern: { jsonrpc: '2.0', id, method: 'session/getStats' }",
+      "gap": "Method name mismatch (get_session_stats vs session/getStats) and JSON-RPC 2.0 result envelope.",
+      "owner": "both",
+      "minimumTest": "Call session/getStats after multi-turn conversation, verify contextTokens and turnCount agree with DB state"
+    },
+    {
+      "feature": "host_tools_and_interaction",
+      "providerConsumer": "src/host/session.ts:120-139, src/host/tool-call-tracker.ts:15-60, src/host/interaction-tracker.ts:15-50",
+      "currentZeroProducer": "packages/runner/src/host/host-bridge.ts:33-85 (HostBridge implementing IHostBridge)",
+      "wireShape": "Legacy: event host_tool_call + request host_tool_result -> Modern: Inbound JSON-RPC request from runner { method: 'host/toolCall', params: { toolName, arguments } } and response from host { id, result: { content, isError } }",
+      "gap": "HostBridge is implemented in runner/src/host/host-bridge.ts but NOT instantiated or wired in composition.ts:144-178. Must be injected into composition root as an owned instance (no global module state).",
+      "owner": "both",
+      "minimumTest": "Register dynamic tool in runner, trigger tool invocation, verify runner sends host/toolCall request and accepts host response"
+    },
+    {
+      "feature": "dynamic_registrations",
+      "providerConsumer": "src/extension/bb-tools-extension.ts:5-25 (reads PI_BB_TOOLS_FILE and registers tools)",
+      "currentZeroProducer": "packages/runner/src/host/host-bridge.ts:33-85",
+      "wireShape": "Host writes JSON schema file to PI_BB_TOOLS_FILE, runner extension invokes injected HostBridge.forwardToolCall",
+      "gap": "bb-tools-extension.ts imported unexported forwardHostToolCall from durable-zero/core. Dynamic tools extension must consume injected IHostBridge instance instead of module-level global forwarder.",
+      "owner": "both",
+      "minimumTest": "Supply PI_BB_TOOLS_FILE with test tool schema, start session, assert tool appears in catalog and routes to HostBridge"
+    },
+    {
+      "feature": "subagent_policy/graph",
+      "providerConsumer": "src/host/session.ts:98-105 (setSubagentPolicy), src/policy/store.ts, src/policy/resolver.ts",
+      "currentZeroProducer": "packages/core/src/policy/store.ts, packages/adapter-pi-durable/src/engine/subagent-policy-state.ts:30, packages/runner/src/dispatch/session-dispatcher.ts:75-84",
+      "wireShape": "Legacy: { type: 'set_subagent_policy', policyRecord } -> Modern: { jsonrpc: '2.0', id, method: 'session/setSubagentPolicy', params: { policyRecord } }",
+      "gap": "composition.ts:166-168 passes raw params directly to coordinator.setSubagentPolicy without unwrapping policyRecord ?? record ?? params, leading to schema parse errors unless session-dispatcher is mounted.",
+      "owner": "both",
+      "minimumTest": "Send session/setSubagentPolicy with updated revision, verify policy persists and is reflected in subagent spawn decisions"
+    },
+    {
+      "feature": "fork/copy/resume",
+      "providerConsumer": "src/host/thread-fork.ts:15-45, src/host/bridge-router.ts:80-95",
+      "currentZeroProducer": "packages/adapter-pi-durable/src/session-fork.ts:8-40 (forkSessionDatabase, exported from durable-zero/adapter-pi-durable)",
+      "wireShape": "In-process library call: forkSessionDatabase({ sourceDir, targetDir, checkpointId })",
+      "gap": "Provider imports from durable-zero/core where it is not exported. Should import from durable-zero/adapter-pi-durable. Note: runner RPC method session/fork is explicitly typed UnsupportedCapabilityError.",
+      "owner": "bb-plugin-provider-pi-durable",
+      "minimumTest": "Execute forkSessionDatabase on active session SQLite DB, verify new database opens with correct conversation and WAL checkpoint"
+    },
+    {
+      "feature": "settings/resources/MCP/skills/extensions",
+      "providerConsumer": "src/host/session-options.ts:10-50, src/host/runner-prompts.ts",
+      "currentZeroProducer": "packages/runner/src/composition.ts:32-47 (SettingsManager, DefaultResourceLoader, McpExtension, PiResourceExtension, CodemodeExtension)",
+      "wireShape": "CLI arguments: --extension <path> --skills <path> --no-global-extensions --session <dir> --cwd <path>",
+      "gap": "Prompt scratch files (systemPrompt, appendSystemPrompt) are passed via custom CLI flags not parsed by latest cli-args.ts.",
+      "owner": "both",
+      "minimumTest": "Pass custom extension and skill directory via CLI args, verify tool definitions and prompt additions load into session"
+    },
+    {
+      "feature": "shutdown/retry/errors",
+      "providerConsumer": "src/host/runner-process.ts:98-115 (closeGracefully, kill), src/host/session-errors.ts",
+      "currentZeroProducer": "packages/runner/src/composition.ts:188-195 (close), packages/runner/src/main.ts:20-35",
+      "wireShape": "Process signals: SIGINT, SIGTERM, stdin close",
+      "gap": "Runner main.ts exit handler should ensure instance.close() completes and flushes SQLite WAL before calling process.exit(0).",
+      "owner": "durable-zero",
+      "minimumTest": "Initiate turn, send SIGTERM, verify runner flushes WAL, closes SQLite, and exits with code 0 within bounded timeout"
+    }
+  ]
+}

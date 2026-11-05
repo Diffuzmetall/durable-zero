@@ -1,0 +1,64 @@
+{
+  "recordedAt": "2026-11-05T15:30:00.000Z",
+  "durableZero": {
+    "path": "/Users/vanya/Projects/durable-zero",
+    "branch": "cycle-7-runtime-adapter-ioc-migration",
+    "head": "1a1a3ac0ac14da6ebccf87aab58ac7c82aad6466",
+    "productionCommitPin": "7e12fa592a7de537ade6424f1b1a8a9aa4e6b648",
+    "testCommitTail": "513d37264c364cdcb733d3da7677911627d8c964",
+    "status": "dirty",
+    "dirtyDistEntries": [
+      "packages/adapter-pi-ai/dist/index.js",
+      "packages/adapter-pi-ai/dist/index.js.map",
+      "packages/adapter-pi-durable/dist/index.js",
+      "packages/adapter-pi-durable/dist/index.js.map",
+      "packages/contracts/dist/index.js",
+      "packages/contracts/dist/index.js.map",
+      "packages/core/dist/index.js.map",
+      "packages/execution/dist/index.js",
+      "packages/execution/dist/index.js.map",
+      "packages/protocol/dist/index.js",
+      "packages/protocol/dist/index.js.map",
+      "packages/runner/dist/index.js",
+      "packages/runner/dist/index.js.map",
+      "packages/runner/dist/main.js",
+      "packages/runner/dist/main.js.map"
+    ],
+    "packageVersion": "0.26.31",
+    "runtimeSdkVersion": "1.5.0",
+    "runnerSha256InStageClosure": "fb8b86fbfa034858c000617d86dc574c5757bc6fdb8b4033eac9ad1eb7d17136"
+  },
+  "bbPluginProviderPiDurable": {
+    "path": "/Users/vanya/Projects/bb-plugin-provider-pi-durable",
+    "branch": "main",
+    "head": "3d005adbc9ba8f162e1dd682366bd24df1864c70",
+    "packageVersion": "0.8.1",
+    "declaredDurableZeroDependency": "github:VanDalkvist/durable-zero#v0.8.1",
+    "installedDurableZeroVersion": "0.8.1",
+    "status": "clean_tracked",
+    "untrackedFiles": [
+      "docs/architecture/Без названия.md"
+    ]
+  },
+  "piUpstream": {
+    "path": "/Users/vanya/Projects/pi",
+    "head": "9ee7586a95f5e653ae279c3b8f20938faf3639a1",
+    "sourcePackages": [
+      "packages/durable",
+      "packages/chord",
+      "packages/ai",
+      "packages/coding-agent"
+    ]
+  },
+  "bbReference": {
+    "path": "/Users/vanya/Projects/bb-reference",
+    "symlinkTarget": "/Applications/bb.app/Contents/Resources/app.asar.unpacked/node_modules/bb-app",
+    "packageVersion": "0.48.1"
+  },
+  "installedCache": {
+    "path": "/Users/vanya/.bb/plugins/cache/git/github.com/VanDalkvist/bb-plugin-provider-pi-durable/3d005adbc9ba8f162e1dd682366bd24df1864c70",
+    "cachedHead": "3d005adbc9ba8f162e1dd682366bd24df1864c70",
+    "observedCacheVersion": "0.8.1",
+    "residentRuntimeGeneration": "unverified"
+  }
+}

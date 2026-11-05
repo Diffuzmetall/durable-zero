@@ -1,0 +1,82 @@
+[
+  {
+    "id": "FND-01",
+    "severity": "P1",
+    "title": "Wire Protocol Framing Incompatibility: Custom Type/Response framing vs Standard JSON-RPC 2.0",
+    "evidence": "durable-zero/packages/protocol/src/transport/stdio-server.ts:13-90 vs bb-plugin-provider-pi-durable/src/host/runner-rpc-channel.ts:40-65 and src/host/session.ts:144-165",
+    "impact": "Projected migration failure: if the BB provider connects directly to the latest durable-zero runner, all requests fail. The runner server expects JSON-RPC 2.0 frames with method names (rejecting custom type-based commands as -32600 Invalid Request), while the provider RunnerRpcChannel drops JSON-RPC responses because msg.type is undefined.",
+    "rule": "AP-026",
+    "fixDecision": "fix-now",
+    "owner": "bb-plugin-provider-pi-durable"
+  },
+  {
+    "id": "FND-02",
+    "severity": "P1",
+    "title": "Runner Readiness Handshake Seam Mismatch",
+    "evidence": "bb-plugin-provider-pi-durable/src/host/session.ts:44-50 (waitForReady blocks on ready frame) vs durable-zero/packages/runner/src/composition.ts:144-180 (starts StdioJsonRpcServer without legacy ready frame)",
+    "impact": "Projected migration failure: provider PiThreadSession.start() blocks on readyPromise for 15,000ms until timeout unless adapted. The runner is ready immediately upon process start, but does not emit the legacy custom frame. Provider should handshake readiness via public session/getState or agree on an explicit RPC readiness event.",
+    "rule": "AP-059",
+    "fixDecision": "fix-now",
+    "owner": "both"
+  },
+  {
+    "id": "FND-03",
+    "severity": "P1",
+    "title": "Split-Brain Runner Asset Discovery: Obsolete core/dist/runner.js vs packages/runner/dist/main.js",
+    "evidence": "bb-plugin-provider-pi-durable/scripts/copy-runner-assets.mjs:7-14 and src/host/runner-lookup.ts:32-38 vs durable-zero/scripts/build.mjs:42-59 and durable-zero/package.json:exports",
+    "impact": "Provider packaging and runtime runner discovery search legacy core/dist/runner.js instead of packages/runner/dist/main.js (or index.js). In fresh builds, runner assets will either be missing or stale.",
+    "rule": "AP-075",
+    "fixDecision": "fix-now",
+    "owner": "both"
+  },
+  {
+    "id": "FND-04",
+    "severity": "P1",
+    "title": "Host Reverse-Tool Continuation Seam Disconnected",
+    "evidence": "bb-plugin-provider-pi-durable/src/extension/bb-tools-extension.ts:2 imports unexported forwardHostToolCall from 'durable-zero/core'; durable-zero/packages/runner/src/composition.ts:144-180 does not instantiate HostBridge",
+    "impact": "Dynamic BB host tools (injected via PI_BB_TOOLS_FILE) fail to compile or route calls. The native IHostBridge implementation in runner/src/host/host-bridge.ts:33-85 is not wired into the composition root.",
+    "rule": "AP-076",
+    "fixDecision": "fix-now",
+    "owner": "both"
+  },
+  {
+    "id": "FND-05",
+    "severity": "P1",
+    "title": "Thread Fork Import Seam Broken: forkSessionDatabase Relocated",
+    "evidence": "bb-plugin-provider-pi-durable/src/host/thread-fork.ts:3 imports forkSessionDatabase from 'durable-zero/core', but packages/core/src/index.ts does not export it (relocated to adapter-pi-durable/src/session-fork.ts)",
+    "impact": "Projected migration failure: thread fork invocations will fail with named export not found if linked against the refactored source.",
+    "rule": "AP-025",
+    "fixDecision": "fix-now",
+    "owner": "both"
+  },
+  {
+    "id": "FND-06",
+    "severity": "P1",
+    "title": "Unmounted SessionDispatcher in Production Runner Bypasses Control Seams",
+    "evidence": "durable-zero/packages/runner/src/composition.ts:147-177 mounts inline 6-method handler instead of createSessionDispatcher from packages/runner/src/dispatch/session-dispatcher.ts",
+    "impact": "Runtime control methods (session/steer, session/compact, models/set, models/setThinking, session/abortTask) return -32601 Method Not Found when called on the production runner.",
+    "rule": "AP-075",
+    "fixDecision": "fix-now",
+    "owner": "durable-zero"
+  },
+  {
+    "id": "FND-07",
+    "severity": "P2",
+    "title": "Subagent Policy RPC Payload Envelope Mismatch",
+    "evidence": "durable-zero/packages/runner/src/composition.ts:166-168 passes raw params to coordinator.setSubagentPolicy vs packages/runner/src/dispatch/session-dispatcher.ts:70-74 (unwraps policyRecord ?? record ?? params) and packages/adapter-pi-durable/src/engine/subagent-policy-state.ts:30",
+    "impact": "If provider sends { policyRecord: record } (its current wire shape in session.ts:101), direct composition handler fails schema validation in subagent-policy-state.ts because revision is expected at top level of the passed record.",
+    "rule": "AP-026",
+    "fixDecision": "fix-now",
+    "owner": "both"
+  },
+  {
+    "id": "FND-08",
+    "severity": "P3",
+    "title": "Unused Legacy Engine Dependencies in Provider package.json",
+    "evidence": "bb-plugin-provider-pi-durable/package.json (dependencies @earendil-works/chord, @earendil-works/pi-codemode, @earendil-works/pi-schema, proper-lockfile, quickjs-wasi are unreferenced in src/)",
+    "impact": "Dependency hygiene smell and maintenance friction; enforces unnecessary version locks in tests/package-integrity.test.ts without runtime usage.",
+    "rule": "AP-011",
+    "fixDecision": "log-only",
+    "owner": "bb-plugin-provider-pi-durable"
+  }
+]
