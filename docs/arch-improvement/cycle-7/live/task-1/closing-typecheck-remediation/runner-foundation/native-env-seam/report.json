@@ -29,15 +29,20 @@
     },
     {
       "rule": "AP-076",
-      "invariant": "NodeExecutionEnv provides all 25 native SDK methods and verified real file effects; Core LocalNodeExecutionEnv does not pose as full SDK environment"
+      "invariant": "Actual production native Root startup invokes custom factories without bypass; NodeExecutionEnv provides 24 required native SDK methods and verified real file effects with Context and Result envelope"
     }
   ],
   "test_execution": {
     "command": "node --test --test-timeout 5000 packages/runner/test/native-env-seam.test.ts",
     "exit_code": 0,
-    "tests_total": 5,
-    "tests_passed": 5,
+    "tests_total": 6,
+    "tests_passed": 6,
     "tests_failed": 0,
-    "duration_ms": 500
+    "duration_ms": 607,
+    "historical_runs": {
+      "run_1_tests": 4,
+      "run_2_tests": 5,
+      "final_run_tests": 6
+    }
   }
 }

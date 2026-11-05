@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
-	<testsuite name="Runner Composition Root — Execution Environment Seam Selection (Parent R8 Amendment)" time="0.006827" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
-		<testcase name="rejects configuration with BOTH executionEnvFactory and nativeExecutionEnvFactory as genuine error (AP-012)" time="0.001175" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
-		<testcase name="accepts custom Core executionEnvFactory without injecting conflicting native default" time="0.000473" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
-		<testcase name="accepts custom Native nativeExecutionEnvFactory without injecting Core executionEnvFactory" time="0.000370" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
-		<testcase name="verifies NodeExecutionEnv provides full 25 native SDK methods and is not partial Core LocalNodeExecutionEnv" time="0.000401" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
-		<testcase name="verifies real file effects on NodeExecutionEnv (writeFile, readTextFile, exists, absolutePath)" time="0.003815" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
+	<testsuite name="Runner Composition Root — Execution Environment Seam Selection (Parent R8 Amendment)" time="0.077651" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="MacBook-Air-Ivan.local">
+		<testcase name="rejects configuration with BOTH executionEnvFactory and nativeExecutionEnvFactory as genuine error (AP-012)" time="0.001733" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
+		<testcase name="actual native Root startup with custom Core executionEnvFactory invokes factory and creates owned file effect" time="0.041416" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
+		<testcase name="actual native Root startup with custom Native nativeExecutionEnvFactory invokes factory and creates owned file effect" time="0.015739" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
+		<testcase name="actual native Root startup with DEFAULT wiring uses NodeExecutionEnv with 24 required native SDK methods" time="0.015760" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
+		<testcase name="verifies real file effects on NodeExecutionEnv with Context and Result envelope" time="0.001384" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
+		<testcase name="preserves MockAgentEngine fast path for unit testing (lazy infra test)" time="0.000961" classname="test" file="/Users/vanya/Projects/durable-zero/packages/runner/test/native-env-seam.test.ts"/>
 	</testsuite>
-	<!-- tests 5 -->
+	<!-- tests 6 -->
 	<!-- suites 1 -->
-	<!-- pass 5 -->
+	<!-- pass 6 -->
 	<!-- fail 0 -->
 	<!-- cancelled 0 -->
 	<!-- skipped 0 -->
 	<!-- todo 0 -->
-	<!-- duration_ms 500.607958 -->
+	<!-- duration_ms 600.45325 -->
 </testsuites>
