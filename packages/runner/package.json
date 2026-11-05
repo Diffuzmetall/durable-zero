@@ -22,6 +22,7 @@
     "@durable-zero/adapter-pi-durable": "workspace:*",
     "@durable-zero/adapter-pi-ai": "workspace:*",
     "@durable-zero/adapter-codemode": "workspace:*",
-    "@durable-zero/extension-pi-resource": "workspace:*"
+    "@durable-zero/extension-pi-resource": "workspace:*",
+    "@earendil-works/pi-durable": "1.5.0"
   }
 }

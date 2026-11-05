@@ -192,6 +192,9 @@ importers:
       '@durable-zero/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@earendil-works/pi-durable':
+        specifier: 1.5.0
+        version: 1.5.0(@aws-sdk/credential-provider-node@3.972.92)(@smithy/signature-v4@5.7.5)(esbuild@0.28.2)(undici@8.12.3)(zod@4.6.7)
 
 packages:
 

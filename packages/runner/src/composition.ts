@@ -7,9 +7,10 @@ import {
 	type IAgentEngine,
 	type ExecutionEnvFactory,
 } from "@durable-zero/core";
-import { LocalNodeExecutionEnv } from "@durable-zero/execution";
+import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import {
 	PiDurableEngine,
+	type NativeExecutionEnvFactory,
 	type PiRuntimeDependencies,
 } from "@durable-zero/adapter-pi-durable";
 import {
@@ -37,6 +38,7 @@ export interface AssembleDurableZeroOptions {
 	stdout?: Writable;
 	onNotification?: (method: string, params: Record<string, unknown>) => void;
 	executionEnvFactory?: ExecutionEnvFactory;
+	nativeExecutionEnvFactory?: NativeExecutionEnvFactory;
 	engine?: IAgentEngine;
 }
 
@@ -50,6 +52,12 @@ export interface DurableZeroInstance {
 export async function assembleDurableZero(
 	options: AssembleDurableZeroOptions = {},
 ): Promise<DurableZeroInstance> {
+	if (options.executionEnvFactory && options.nativeExecutionEnvFactory) {
+		throw new Error(
+			"Invalid composition configuration: cannot specify both executionEnvFactory (Core SPI) and nativeExecutionEnvFactory (Native SDK). Specify at most one (AP-012, AP-074).",
+		);
+	}
+
 	const cwd = resolve(options.cwd ?? process.cwd());
 	const sessionDir = options.sessionDir
 		? resolve(options.sessionDir)
@@ -86,15 +94,17 @@ export async function assembleDurableZero(
 			resourceLoader,
 		});
 
-		const executionEnvFactory: ExecutionEnvFactory =
-			options.executionEnvFactory ??
-			((target) => new LocalNodeExecutionEnv({ cwd: target.cwd ?? cwd }));
-
 		const dependencies: PiRuntimeDependencies = {
-			executionEnvFactory,
 			settingsManager: resourceExt.configProvider,
 			resourceLoader: resourceExt.resourceLoader,
 			builtins: [codemodeBuiltin],
+			...(options.executionEnvFactory
+				? { executionEnvFactory: options.executionEnvFactory }
+				: {
+						nativeExecutionEnvFactory:
+							options.nativeExecutionEnvFactory ??
+							((target) => new NodeExecutionEnv({ cwd: target.cwd ?? cwd })),
+					}),
 		};
 
 		const cli = {

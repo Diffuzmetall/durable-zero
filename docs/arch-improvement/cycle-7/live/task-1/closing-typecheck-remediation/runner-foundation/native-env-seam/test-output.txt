@@ -1,0 +1,15 @@
+▶ Runner Composition Root — Execution Environment Seam Selection (Parent R8 Amendment)
+  ✔ rejects configuration with BOTH executionEnvFactory and nativeExecutionEnvFactory as genuine error (AP-012) (1.325ms)
+  ✔ accepts custom Core executionEnvFactory without injecting conflicting native default (0.657916ms)
+  ✔ accepts custom Native nativeExecutionEnvFactory without injecting Core executionEnvFactory (0.37025ms)
+  ✔ verifies NodeExecutionEnv provides full 25 native SDK methods and is not partial Core LocalNodeExecutionEnv (0.24725ms)
+  ✔ verifies real file effects on NodeExecutionEnv (writeFile, readTextFile, exists, absolutePath) (9.316167ms)
+✔ Runner Composition Root — Execution Environment Seam Selection (Parent R8 Amendment) (12.532042ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 547.434958
