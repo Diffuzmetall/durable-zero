@@ -1,0 +1,15 @@
+{
+  "status": "blocked before verification/publication",
+  "sourceBranch": "cycle-7-runtime-adapter-ioc-migration",
+  "source": "2127b8f7a825618314a79b371a2dd16d9078ff40",
+  "mainBefore": "7b530f353c06306cde05d77c09198788dd2609e2",
+  "localMergeCandidate": "294212ac2d2260f794a4bd351b9e8b5ad077a789",
+  "proposedTag": "v0.27.0-alpha.1",
+  "tagCreated": false,
+  "mainPushed": false,
+  "freshBuildTestsExecuted": false,
+  "independentFriendConsumerProbeExecuted": false,
+  "blocker": "Both required Pi/Gemini workers were denied by Antigravity: service disabled in the account for Terms of Service. No unauthorized model/provider switch. Worker sessions stopped; no retry loop.",
+  "preserved": "Original dirty checkout unchanged; local merged candidate and task handoffs preserved on a separate WIP branch, not represented as a release.",
+  "waitingFor": "Operator decision on continuing without independent audit, authorizing another worker provider/model, or restoring permitted service."
+}
