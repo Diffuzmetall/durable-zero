@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import net from "node:net";
-import { SessionDaemon } from "../src/session-daemon.ts";
+import { SessionDaemon } from "../src/engine/session-daemon.ts";
 
 test("SessionDaemon: Master creates unix socket and client communicates over IPC (BL-DZ-01)", async () => {
 	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "session-daemon-test-"));

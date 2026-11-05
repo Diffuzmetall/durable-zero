@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSubagentPolicyHolder } from "../src/subagent-policy-state.ts";
-import { handleActiveSessionCommand } from "../src/session-commands.ts";
-import type { SubagentPolicyRecord } from "../src/policy/types.ts";
+import { createSubagentPolicyHolder } from "../src/engine/subagent-policy-state.ts";
+import { handleActiveSessionCommand } from "../src/engine/session-commands.ts";
+import type { SubagentPolicyRecord } from "@durable-zero/core";
 
 test("session-commands: canonical set_subagent_policy rejects legacy body and accepts canonical record", async () => {
 	const persisted: SubagentPolicyRecord[] = [];

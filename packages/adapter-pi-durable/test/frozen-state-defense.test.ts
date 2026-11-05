@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { safeCloneRecord } from "@durable-zero/adapter-pi-durable";
+import { safeCloneRecord } from "../src/index.ts";
 
 test("safeCloneRecord: clones frozen objects so downstream mutation does not throw", () => {
 	const frozen = Object.freeze({

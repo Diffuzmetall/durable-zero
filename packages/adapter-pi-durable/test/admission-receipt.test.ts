@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { openDurable } from "../src/runtime.ts";
-import type { AdmissionReceipt } from "../src/runtime-types.ts";
+import { openDurable } from "../src/engine/runtime.ts";
+import type { AdmissionReceipt } from "../src/engine/runtime-types.ts";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mkdtempSync, rmSync } from "node:fs";

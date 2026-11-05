@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { HostRpcManager } from "../src/host-rpc.ts";
+import { HostRpcManager } from "../src/engine/host-rpc.ts";
 
 test("HostRpcManager: forwardToolCall emits host_tool_call event and resolves via handleHostToolResult", async () => {
 	const emitted: any[] = [];

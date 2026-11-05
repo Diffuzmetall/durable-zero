@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import {
 	CodemodeExtension,
 	createCodemodeBuiltinExtension,
-} from "@durable-zero/adapter-codemode";
-import type { BuiltinExtensionContext } from "../src/builtin-extensions/types.ts";
+} from "../src/index.ts";
+import type { BuiltinExtensionContext } from "@durable-zero/adapter-pi-durable";
 
 function createMockContext(): { ctx: BuiltinExtensionContext; installed: any[] } {
 	const installed: any[] = [];

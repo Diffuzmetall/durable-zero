@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSubagentPolicyHolder } from "../src/subagent-policy-state.ts";
-import { loadSubagentPolicyHolder } from "../src/subagent-policy-ack.ts";
-import { handleActiveSessionCommand } from "../src/session-commands.ts";
-import { parseConversationId } from "../src/conversation-id.ts";
-import { SubagentRevisionConflictError } from "../src/policy/errors.ts";
-import type { SubagentPolicyRecord } from "../src/policy/types.ts";
+import { createSubagentPolicyHolder } from "../src/engine/subagent-policy-state.ts";
+import { loadSubagentPolicyHolder } from "../src/engine/subagent-policy-ack.ts";
+import { handleActiveSessionCommand } from "../src/engine/session-commands.ts";
+import { parseConversationId } from "../src/engine/conversation-id.ts";
+import { SubagentRevisionConflictError } from "@durable-zero/core";
+import type { SubagentPolicyRecord } from "@durable-zero/core";
 import { Harness, MemoryStorage, ROOT_CONVERSATION_ID, createRegistry } from "@earendil-works/pi-durable";
 import { BACKGROUND_CONTEXT as ctx } from "@earendil-works/chord/context";
 import { createModels } from "@earendil-works/pi-ai";

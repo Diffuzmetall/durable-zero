@@ -1,0 +1,16 @@
+{
+  "source": "Migrator measured root regression; source A still changes; not frozen global acceptance",
+  "tests": 360,
+  "failures": 1,
+  "passed": 359,
+  "failedNames": [
+    "PiDurableEngine: provides a cohesive in-process facade implementing IAgentEngine"
+  ],
+  "receipt": "root-test-final.junit.xml",
+  "privacyCheck": "No SDK object dump or credential assignment pattern found in accompanying console log; fixture SQLite matches preexisting tracked synthetic blob",
+  "unclosedTestReview": [
+    "Real codemode factory coverage replaces fake named tool",
+    "SDK import and runtime cwd after complete isolation",
+    "Restore previously absent environment keys exactly"
+  ]
+}

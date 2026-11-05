@@ -62,7 +62,7 @@
     },
     {
       "title": "Довести тестовую миграцию",
-      "detail": "Полный adapter набор140 cases зелёный. Root353:347passed/6failed; оставшиеся пять старых файлов не удаляются без сохранения реальных assertions, один abort-test исправляет владелецRunner."
+      "detail": "Новый root прогон360:359passed/1failed. Подтверждено раскрытие raw SDK instance фасадом, передано Native A. Последние тесты перенесены; приёмка миграции ждёт реального codemode builtin вместо одноимённого fake и окончательной SDK/cwd/env изоляции."
     },
     {
       "title": "Собрать принятые компоненты в production-путь",
@@ -238,5 +238,21 @@
       "adapter-pi-durable": 56
     },
     "errors": 56
+  },
+  "currentRootRegression": {
+    "source": "Migrator measured root regression; source A still changes; not frozen global acceptance",
+    "tests": 360,
+    "failures": 1,
+    "passed": 359,
+    "failedNames": [
+      "PiDurableEngine: provides a cohesive in-process facade implementing IAgentEngine"
+    ],
+    "receipt": "root-test-final.junit.xml",
+    "privacyCheck": "No SDK object dump or credential assignment pattern found in accompanying console log; fixture SQLite matches preexisting tracked synthetic blob",
+    "unclosedTestReview": [
+      "Real codemode factory coverage replaces fake named tool",
+      "SDK import and runtime cwd after complete isolation",
+      "Restore previously absent environment keys exactly"
+    ]
   }
 }

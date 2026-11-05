@@ -7,7 +7,7 @@ import {
 	createWriteToolDefinition,
 	SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import { createPiPrompt } from "../src/prompt.ts";
+import { createPiPrompt } from "../src/engine/prompt.ts";
 
 function createMockPromptInput(options: {
 	tools?: string[];

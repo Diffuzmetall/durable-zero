@@ -1,8 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { createPiPrompt } from "../src/prompt.ts";
-import { DynamicCodemodeNamespaces } from "../src/codemode-namespaces.ts";
-import { createCodingRegistry } from "../src/harness-setup.ts";
+import { createPiPrompt } from "../src/engine/prompt.ts";
+import { DynamicCodemodeNamespaces } from "../src/engine/codemode-namespaces.ts";
+import { createCodingRegistry } from "../src/engine/harness-setup.ts";
+import type { BuiltinExtension } from "../src/engine/builtin-extensions/types.ts";
+import { createCodemodeBuiltinExtension } from "../../adapter-codemode/src/index.ts";
 import type { SettingsManager } from "@earendil-works/pi-coding-agent";
 
 describe("Codemode Canonical Routines (Cycle 101)", () => {
@@ -128,12 +130,32 @@ describe("Codemode Canonical Routines (Cycle 101)", () => {
 			getProjectSettings: () => ({}),
 		} as unknown as SettingsManager;
 
-		const defaultPolicy = () => ({ version: 1 as const, revision: 0, policy: { mode: "inherit" as const } });
-		const registry = await createCodingRegistry(mockSettings, "/test/cwd", defaultPolicy, undefined, dynamic);
-		assert.ok(registry, "registry must be created");
+		const realCodemodeBuiltin = createCodemodeBuiltinExtension();
+		let receivedNamespaces: DynamicCodemodeNamespaces | undefined;
+		const spiedCodemodeBuiltin: BuiltinExtension = {
+			id: realCodemodeBuiltin.id,
+			name: realCodemodeBuiltin.name,
+			version: realCodemodeBuiltin.version,
+			register(ctx) {
+				receivedNamespaces = ctx.dynamicNamespaces;
+				return realCodemodeBuiltin.register(ctx);
+			},
+			teardown() {
+				return realCodemodeBuiltin.teardown?.();
+			},
+		};
 
-		const snapshot = registry.snapshot();
-		const codemodeTool = snapshot.tools().find((t) => t.tool.name === "codemode");
-		assert.ok(codemodeTool, "codemode tool must be installed in registry");
+		try {
+			const defaultPolicy = () => ({ version: 1 as const, revision: 0, policy: { mode: "inherit" as const } });
+			const registry = await createCodingRegistry(mockSettings, "/test/cwd", defaultPolicy, undefined, dynamic, [spiedCodemodeBuiltin]);
+			assert.ok(registry, "registry must be created");
+
+			const snapshot = registry.snapshot();
+			const codemodeTool = snapshot.tools().find((t) => t.tool.name === "codemode");
+			assert.ok(codemodeTool, "actual native codemode tool must be installed in registry");
+			assert.equal(receivedNamespaces, dynamic, "dynamic namespaces must be passed to codemode builtin context");
+		} finally {
+			await spiedCodemodeBuiltin.teardown?.();
+		}
 	});
 });

@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { appendFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startRunnerControlChannel } from "../src/control-channel.ts";
-import type { Harness, TaskId } from "../src/runtime-types.ts";
+import { startRunnerControlChannel } from "../src/engine/control-channel.ts";
+import type { Harness, TaskId } from "../src/engine/runtime-types.ts";
 
 test("Cycle 95: startRunnerControlChannel processes abort_task from control.jsonl", async () => {
 	const tempDir = mkdtempSync(join(tmpdir(), "pi-control-test-"));

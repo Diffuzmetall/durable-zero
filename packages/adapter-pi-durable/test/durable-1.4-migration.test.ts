@@ -9,7 +9,7 @@ import { defineDoc, Harness, createRegistry } from "@earendil-works/pi-durable";
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
 import { createModels } from "@earendil-works/pi-ai";
 import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import { parseConversationId } from "../src/conversation-id.ts";
+import { parseConversationId } from "../src/engine/conversation-id.ts";
 
 const Legacy13BindingDoc = defineDoc<{ binding: any }>({
 	kind: "bb.native-child-binding",

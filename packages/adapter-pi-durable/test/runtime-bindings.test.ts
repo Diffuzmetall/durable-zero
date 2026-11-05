@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { RuntimeBindings } from "../src/runtime-bindings.ts";
+import { RuntimeBindings } from "../src/engine/runtime-bindings.ts";
 import { nativeRuntimeState, trackedBinding } from "./fixtures/runtime-state.ts";
-import type { DurableView } from "../src/runtime-types.ts";
+import type { DurableView } from "../src/engine/runtime-types.ts";
 
 test("initial subscription failure releases the newly acquired view", async () => {
  const native = await nativeRuntimeState();
