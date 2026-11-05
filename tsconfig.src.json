@@ -1,0 +1,43 @@
+{
+  "$comment": "Official production source typecheck configuration across all packages/*/src/**/*.ts.",
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "types": [],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@durable-zero/contracts": ["./packages/contracts/src/index.ts"],
+      "@durable-zero/protocol": ["./packages/protocol/src/index.ts"],
+      "@durable-zero/core": ["./packages/core/src/index.ts"],
+      "@durable-zero/execution": ["./packages/execution/src/index.ts"],
+      "@durable-zero/adapter-pi-durable": ["./packages/adapter-pi-durable/src/index.ts"],
+      "@durable-zero/adapter-pi-ai": ["./packages/adapter-pi-ai/src/index.ts"],
+      "@durable-zero/adapter-codemode": ["./packages/adapter-codemode/src/index.ts"],
+      "@durable-zero/extension-pi-resource": ["./packages/extension-pi-resource/src/index.ts"],
+      "@durable-zero/runner": ["./packages/runner/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts"
+  ],
+  "exclude": [
+    "**/test/**",
+    "**/fixtures/**",
+    "**/dist/**",
+    "docs/**"
+  ]
+}

@@ -358,10 +358,15 @@ describe("Capability Dispatcher (Task 4B) — Pure Unit & Protocol Transport", (
 
 	describe("session/abort, session/abortTask, session/compact", () => {
 		it("session/abort: calls coordinator.abort for root", async () => {
+			let abortEventReceived = false;
+			const unsub = coordinator.events((ev: any) => {
+				if (ev?.type === "session/aborted") abortEventReceived = true;
+			});
 			const res = await dispatcher("session/abort", {});
+			unsub();
 			assert.deepEqual(res, { ok: true });
 			assert.deepEqual(engine.abortedConversations, ["1"]);
-			assert.equal(coordinator.isAborted, true);
+			assert.equal(abortEventReceived, true);
 		});
 
 		it("session/abort: forwards child conversationId string", async () => {

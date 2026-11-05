@@ -1,6 +1,6 @@
 export class JsonRpcMethodNotFoundError extends Error {
   public readonly code = -32601 as const;
-  public readonly method?: string;
+  public readonly method?: string | undefined;
 
   constructor(method?: string) {
     super(method ? `Method not found: ${method}` : "Method not found");

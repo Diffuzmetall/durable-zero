@@ -67,7 +67,11 @@ export class HostBridge implements IHostBridge {
       this.timeoutMs,
     );
 
-    return hostToolResultSchema.parse(rawResult);
+    const parsed = hostToolResultSchema.parse(rawResult);
+    return {
+      content: parsed.content,
+      ...(parsed.isError !== undefined ? { isError: parsed.isError } : {}),
+    };
   }
 
   public async requestInteraction(

@@ -39,7 +39,7 @@ export class PiAiModelProvider implements IModelProvider {
 	async resolveModel(ref?: ModelProviderResolveOptions): Promise<{ model?: ModelRef; thinkingLevel?: string }> {
 		if (ref?.model !== undefined) {
 			const resolved = resolveCliModel({
-				cliProvider: ref.provider,
+				...(ref.provider !== undefined ? { cliProvider: ref.provider } : {}),
 				cliModel: ref.model,
 				modelRuntime: this.#modelRuntime,
 			});
@@ -68,9 +68,10 @@ export class PiAiModelProvider implements IModelProvider {
 		}
 
 		const available = this.#modelRuntime.getAvailableSnapshot();
-		if (available.length > 0) {
+		const first = available[0];
+		if (available.length > 0 && first !== undefined) {
 			return {
-				model: { provider: available[0].provider, modelId: available[0].id },
+				model: { provider: first.provider, modelId: first.id },
 				thinkingLevel: "off",
 			};
 		}

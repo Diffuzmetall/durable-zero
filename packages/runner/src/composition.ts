@@ -76,9 +76,9 @@ export async function assembleDurableZero(
 			agentDir,
 			settingsManager,
 			extensionFactories: [createMcpExtension()],
-			additionalSkillPaths: options.skills,
-			additionalExtensionPaths: extPaths.length > 0 ? extPaths : undefined,
 			noExtensions: options.noGlobalExtensions ?? false,
+			...(options.skills !== undefined ? { additionalSkillPaths: options.skills } : {}),
+			...(extPaths.length > 0 ? { additionalExtensionPaths: extPaths } : {}),
 		});
 		const resourceExt = createPiResourceExtension({
 			cwd,
@@ -98,22 +98,22 @@ export async function assembleDurableZero(
 		};
 
 		const cli = {
-			provider: options.provider,
-			model: options.model,
-			thinking: options.thinking as any,
-			extension: options.extension,
-			extensions: options.extensions,
-			skills: options.skills,
-			noGlobalExtensions: options.noGlobalExtensions,
+			...(options.provider !== undefined ? { provider: options.provider } : {}),
+			...(options.model !== undefined ? { model: options.model } : {}),
+			...(options.thinking !== undefined ? { thinking: options.thinking as any } : {}),
+			...(options.extension !== undefined ? { extension: options.extension } : {}),
+			...(options.extensions !== undefined ? { extensions: options.extensions } : {}),
+			...(options.skills !== undefined ? { skills: options.skills } : {}),
+			...(options.noGlobalExtensions !== undefined ? { noGlobalExtensions: options.noGlobalExtensions } : {}),
 		};
 
 		engine = new PiDurableEngine({
 			sessionDir,
-			session: options.session,
 			cwd,
-			continueSession: options.continueSession,
 			cli,
 			dependencies,
+			...(options.session !== undefined ? { session: options.session } : {}),
+			...(options.continueSession !== undefined ? { continueSession: options.continueSession } : {}),
 		});
 	}
 
@@ -132,8 +132,8 @@ export async function assembleDurableZero(
 	}
 
 	const server = new StdioJsonRpcServer({
-		stdin: options.stdin,
-		stdout: options.stdout,
+		...(options.stdin !== undefined ? { stdin: options.stdin } : {}),
+		...(options.stdout !== undefined ? { stdout: options.stdout } : {}),
 		handler: async (method: string, params: Record<string, unknown>) => {
 			if (method === "session/prompt") {
 				return await coordinator.prompt(params.content as any, params.options as any);

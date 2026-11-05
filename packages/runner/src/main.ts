@@ -5,17 +5,17 @@ import { assembleDurableZero } from "./composition.ts";
 async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
 	const args = parseCliArgs(argv);
 	const instance = await assembleDurableZero({
-		cwd: args.cwd,
-		session: args.session,
-		sessionDir: args.sessionDir,
-		continueSession: args.continueSession,
-		provider: args.provider,
-		model: args.model,
-		thinking: args.thinking,
-		extension: args.extension,
-		extensions: args.extensions,
-		skills: args.skills,
-		noGlobalExtensions: args.noGlobalExtensions,
+		...(args.cwd !== undefined ? { cwd: args.cwd } : {}),
+		...(args.session !== undefined ? { session: args.session } : {}),
+		...(args.sessionDir !== undefined ? { sessionDir: args.sessionDir } : {}),
+		...(args.continueSession !== undefined ? { continueSession: args.continueSession } : {}),
+		...(args.provider !== undefined ? { provider: args.provider } : {}),
+		...(args.model !== undefined ? { model: args.model } : {}),
+		...(args.thinking !== undefined ? { thinking: args.thinking } : {}),
+		...(args.extension !== undefined ? { extension: args.extension } : {}),
+		...(args.extensions !== undefined ? { extensions: args.extensions } : {}),
+		...(args.skills !== undefined ? { skills: args.skills } : {}),
+		...(args.noGlobalExtensions !== undefined ? { noGlobalExtensions: args.noGlobalExtensions } : {}),
 	});
 
 	let isExiting = false;

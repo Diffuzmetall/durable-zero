@@ -1,0 +1,68 @@
+{
+  "task": "Closing Typecheck Remediation Lease B (Runner Foundation)",
+  "worker": "thr_4yhrgipwed",
+  "branch": "cycle-7-runtime-adapter-ioc-migration",
+  "status": "REMEDIATION_COMPLETE",
+  "verdict": "PASS",
+  "source_write_quiescence": true,
+  "official_configuration": {
+    "tsconfig": "tsconfig.src.json",
+    "package_json_script": "pnpm run typecheck",
+    "strict_flags_enforced": [
+      "strict",
+      "exactOptionalPropertyTypes",
+      "noUncheckedIndexedAccess",
+      "verbatimModuleSyntax",
+      "isolatedModules",
+      "noEmit",
+      "allowImportingTsExtensions"
+    ]
+  },
+  "typecheck_results": {
+    "lease_b_packages": {
+      "packages/runner": { "before": 18, "after": 0 },
+      "packages/contracts": { "before": 6, "after": 0 },
+      "packages/adapter-pi-ai": { "before": 4, "after": 0 },
+      "packages/protocol": { "before": 1, "after": 0 }
+    },
+    "lease_b_total_errors": {
+      "before": 29,
+      "after": 0
+    },
+    "external_residuals_author_a": {
+      "packages/adapter-pi-durable": 72,
+      "packages/execution": 1,
+      "packages/core": 0
+    }
+  },
+  "test_results": {
+    "total_suites": 20,
+    "total_tests": 90,
+    "passed": 90,
+    "failed": 0,
+    "duration_ms": 1200.8
+  },
+  "root_test_resolution": {
+    "test": "packages/runner/test/capability-dispatch.test.ts: session/abort: calls coordinator.abort for root",
+    "cause": "Core refactor by Author A removed sticky coordinator.isAborted boolean property",
+    "fix": "Asserted genuine behavioral contracts: engine.abortedConversations equals ['1'], result is { ok: true }, and session/aborted event is emitted via coordinator.events"
+  },
+  "shared_dto_coordination": {
+    "type": "CliArgs",
+    "location": "packages/contracts/src/cli-args.ts",
+    "export": "@durable-zero/contracts",
+    "consumers": [
+      "@durable-zero/adapter-pi-ai",
+      "@durable-zero/runner"
+    ]
+  },
+  "artifacts": [
+    "tsconfig.src.json",
+    "package.json",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/tsc-production-diagnostic.log",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/test-output.txt",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/junit.xml",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/report.md",
+    "docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/runner-foundation/report.json"
+  ]
+}

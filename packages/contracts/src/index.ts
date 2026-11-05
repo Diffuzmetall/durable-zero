@@ -12,4 +12,5 @@ export * from "./runtime-graph/types.ts";
 export * from "./runtime-graph/schema.ts";
 export * from "./runtime-graph/scope.ts";
 export * from "./runtime-graph/status.ts";
+export * from "./cli-args.ts";
 export * from "./session-fork.ts";

@@ -1,0 +1,13 @@
+{
+  "source": "live shared checkout; A still active; NOT frozen final acceptance",
+  "exits": {
+    "typecheckExit": 2,
+    "subsetTestExit": 0
+  },
+  "diagnosticCount": 59,
+  "diagnosticsByPackage": {
+    "adapter-pi-durable": 59
+  },
+  "subsetTests": 90,
+  "failed": 0
+}
