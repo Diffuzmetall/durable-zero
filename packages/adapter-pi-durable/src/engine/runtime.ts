@@ -18,11 +18,20 @@ export { hydrateSessionActiveTools } from "./runtime-hydration.ts";
 
 export async function openDurable(options: OpenDurableOptions = {}): Promise<OpenDurableResult> {
 	const executionEnvFactory = options.dependencies?.executionEnvFactory ?? options.executionEnvFactory;
-	if (!executionEnvFactory) {
-		throw new Error("ExecutionEnvFactory is required in openDurable (AP-012, AP-072, AP-073: no fallback in core)");
+	const nativeExecutionEnvFactory = options.dependencies?.nativeExecutionEnvFactory ?? options.nativeExecutionEnvFactory;
+
+	if (executionEnvFactory && nativeExecutionEnvFactory) {
+		throw new Error("Configuration error: Both nativeExecutionEnvFactory and executionEnvFactory provided; they are mutually exclusive.");
+	}
+	if (!executionEnvFactory && !nativeExecutionEnvFactory) {
+		throw new Error("ExecutionEnvFactory or NativeExecutionEnvFactory is required in openDurable (AP-012, R8: no default host fallback in adapter)");
 	}
 	const location = await selectSession(options.cwd ?? process.cwd(), options.continueSession ?? false, options.session ?? options.sessionDir);
-	const envs = new ExecutionEnvs(location.cwd, executionEnvFactory);
+	const envs = new ExecutionEnvs({
+		defaultCwd: location.cwd,
+		...(nativeExecutionEnvFactory ? { nativeFactory: nativeExecutionEnvFactory } : {}),
+		...(executionEnvFactory ? { coreFactory: executionEnvFactory } : {}),
+	});
 	let harness: Harness | undefined;
 	let envState: LoadedHarnessEnvironment | undefined;
 

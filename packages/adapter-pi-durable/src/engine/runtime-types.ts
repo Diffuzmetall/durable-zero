@@ -25,7 +25,13 @@ export interface IHostBridge {
 	// optional pure port in Slice 0
 }
 
+export type NativeExecutionEnvFactory = (
+	target: import("@earendil-works/pi-durable").EnvTarget,
+	context: import("@earendil-works/chord").Context,
+) => import("@earendil-works/pi-durable/env").ExecutionEnv | undefined | Promise<import("@earendil-works/pi-durable/env").ExecutionEnv | undefined>;
+
 export interface PiRuntimeDependencies {
+	readonly nativeExecutionEnvFactory?: NativeExecutionEnvFactory;
 	readonly executionEnvFactory?: ExecutionEnvFactory;
 	readonly hostBridge?: IHostBridge;
 	readonly modelRuntime?: ModelRuntime;
@@ -122,6 +128,7 @@ export interface OpenDurableOptions {
 	readonly plugins?: import("./builtin-extensions/types.ts").BuiltinExtension[];
 	readonly beforeResume?: (harness: Harness) => Promise<void>;
 	readonly executionEnvFactory?: ExecutionEnvFactory;
+	readonly nativeExecutionEnvFactory?: NativeExecutionEnvFactory;
 	readonly dependencies?: PiRuntimeDependencies;
 }
 

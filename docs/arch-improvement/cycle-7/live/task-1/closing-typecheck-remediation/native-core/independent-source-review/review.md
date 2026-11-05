@@ -7,11 +7,13 @@
 **Governing Rules:** `/Users/vanya/Projects/arch-rules/arch-rules.md` (AP-010 ... AP-076), Cycle 7 Canonical Plan, Binding Rulings R1–R8  
 **Artifact Directory:** `docs/arch-improvement/cycle-7/live/task-1/closing-typecheck-remediation/native-core/independent-source-review/`  
 **Review Phase:** PRECHECK of Non-Env Changes while R8 Env Seam Resolution Finishes  
-**Verdict:** **VERDICT: FAIL (PRECHECK - Pending R8 Env ABI Resolution)** (Non-Env architecture invariants: 100% PASS; 2 explicit TS typecheck errors in `runtime-loader.ts` remain active)
+**Verdict:** **VERDICT: FAIL (PRECHECK - Pending R8 Env ABI Resolution)** (Non-Env architecture invariants: 100% PASS with qualified receipt attribution; 2 explicit TS typecheck errors in `runtime-loader.ts` remain active)
 
 ---
 
 ## 1. Candidate Source Inventory & Checksum Provenance
+
+The 12 file SHA-256 hashes below represent the immutable frozen candidate `e855a045ba291fa5d3a505a2c2294f6be8feb5a8` audited at freeze time (parent audit: `parent-hash-audit.json`). Note: independent probe tests use relative path imports against the local checkout whose files matched `e855` at audit time; subsequent active R8 edits in the author working tree are not evaluated as `e855`.
 
 | Target File | SHA-256 Checksum | Architectural Status |
 | :--- | :--- | :--- |
@@ -30,7 +32,7 @@
 
 ---
 
-## 2. Audit of Non-Env Remediation Changes
+## 2. Audit of Non-Env Remediation Changes & Receipt Qualifications
 
 ### 1. Genuine Native Submission Handle Correlation
 - **Observation:** In `PiDurableEngine.submit` (`packages/adapter-pi-durable/src/engine/pi-durable-engine.ts:133-187`), the engine no longer parses `Number(requestId)` or queries the harness by guessed numeric ID.
@@ -39,11 +41,11 @@
 
 ### 2. True `#private` Encapsulation in `PiDurableEngine`
 - **Observation:** Internal engine fields were converted to ECMAScript private fields: `readonly #options`, `#instance`, `#eventAdapter`, `#watcher`, `#graphSource`, `#unsubscribeView`, `readonly #listeners`, `#sessionDir`.
-- **Evidence:** Verified in `probe-closing-precheck.test.ts` (PROBE 1). `(engine as any).instance === undefined` and `Object.getOwnPropertyNames(engine)` contains only `sessionDir` getter. No internal state can leak via property enumeration or reflection.
+- **Evidence:** Verified in `probe-closing-precheck.test.ts` (PROBE 1). `(engine as any).instance === undefined` and `Object.getOwnPropertyNames(engine)` contains only `sessionDir` getter. No internal state leaks via property enumeration or reflection.
 
-### 3. Store JSON Validation & Rejection
+### 3. Store JSON Validation & Rejection (Qualified)
 - **Observation:** `packages/adapter-pi-durable/src/store.ts:17-40` implements `toJsonValue(val, depth)` with a recursion depth limit of 128.
-- **Evidence:** Verified in `probe-closing-precheck.test.ts` (PROBE 2). `store.saveDocument()` throws `TypeError` on functions, `NaN`, `Infinity`, and symbols. Valid data is cleanly persisted to SQLite WAL.
+- **Receipt Qualification:** Independent `probe-closing-precheck.test.ts` (PROBE 2) verifies pre-persistence validation rejection (throwing `TypeError` for functions, `NaN`, and `Infinity`) prior to `getSession()`. Independent SQLite WAL roundtrip persistence is not measured as a separate independent WAL checkpoint here; full roundtrip read/write persistence is attributed to author's test `packages/adapter-pi-durable/test/store-roundtrip.test.ts`. Note: future probe tests allocating real databases must use bounded `fs.mkdtemp` and `try ... finally` cleanup rather than static `/tmp` paths.
 
 ### 4. LocalNodeExecutionEnv Empty Guard
 - **Observation:** `packages/execution/src/adapters/local-node-env.ts:51-74` inspects `argvOrCommand`.
@@ -56,6 +58,12 @@
 ### 6. Optional Field Semantics & Exact Types
 - **Observation:** `runtime-graph-mapper.ts`, `runtime-graph-receipts.ts`, `durable-child-event-adapter.ts`, `durable-event-adapter.ts`.
 - **Evidence:** All optional properties now use conditional object spreads (`...(field !== undefined ? { field } : {})`), ensuring 100% compliance with `exactOptionalPropertyTypes: true`. No `@ts-ignore`, `@ts-expect-error`, or `@ts-nocheck` suppressions were introduced.
+
+### 7. Child & Parent Streaming Re-Verification (Qualified)
+- **Observation & Scope:**
+  - Independent `probe-closing-precheck.test.ts` (PROBE 4) exercises single-turn suffix catchup at index 0, verifying that only the unstreamed suffix delta is emitted with matching `parentRef` and `conversationId`.
+  - Independent `probe-closing-precheck.test.ts` (PROBE 5) exercises parent thinking(0)/text(1) content reconstruction when `entry.model[0].content` is omitted, confirming no undeclared `currentText` properties are accessed.
+  - Multi-turn zero-duplicate guarantees across turns and non-zero index catchup are preserved from historical Round 2 receipts (`packages/adapter-pi-durable/test/durable-child-event-adapter-catchup.test.ts` and `fix-round-2/probe-round-2.test.ts`), not claimed as freshly covered across all indices by these 5 focused probes alone.
 
 ---
 
@@ -83,7 +91,7 @@
       Type 'IExecutionEnvironment' is not assignable to type 'ExecutionEnv | Promise<ExecutionEnv | undefined> | undefined'.
         Type 'IExecutionEnvironment' is missing the following properties from type 'ExecutionEnv': absolutePath, joinPath, readTextFile, openTextLineReader, and 17 more.
     ```
-  - **Impact:** Typecheck fails with 2 diagnostics. Core `IExecutionEnvironment` defines 6 methods (`exec`, `readFile`, `writeFile`, `mkdir`, `exists`, `stat`), whereas Pi SDK harness requires `ExecutionEnv` with 21+ properties.
+  - **Impact:** Typecheck fails with 2 diagnostics. Core `IExecutionEnvironment` defines 6 methods (`readFile`, `writeFile`, `exec`, `statFile?`, `listFiles?`, `cleanup`), whereas Pi SDK harness requires `ExecutionEnv` with 21+ properties.
   - **Rule:** AP-026, AP-029
   - **Status:** In progress by Leaseholder A under canonical plan R8 Section 4 (bridging `IExecutionEnvironment` to `ExecutionEnv` and wiring `NodeExecutionEnv` in composition).
 
@@ -118,7 +126,7 @@
 
 **VERDICT: FAIL (PRECHECK - Pending R8 Env ABI Resolution)**
 
-All 23 non-Env files and remediations in frozen commit `e855a04` are verified architectural passes. All prior blockers (`FND-T1-01` through `FND-T1-11`) remain verified **CLOSED**. 
+All 23 non-Env files and remediations in frozen commit `e855a04` are verified architectural passes with qualified receipt attribution. All prior blockers (`FND-T1-01` through `FND-T1-11`) remain verified **CLOSED**. 
 
 Once Leaseholder A delivers the final R8 Env delta resolving the 2 `runtime-loader.ts` diagnostics, this reviewer is prepared to immediately re-verify the full typecheck and package build in the same context.
 

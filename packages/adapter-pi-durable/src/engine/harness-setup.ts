@@ -21,6 +21,9 @@ import { BuiltinExtensionRegistry } from "./builtin-extensions/registry.ts";
 import { codingToolsExtension } from "./builtin-extensions/coding-tools.ts";
 import { subagentsExtension } from "./builtin-extensions/subagents.ts";
 import type { BuiltinExtension, BuiltinExtensionContext } from "./builtin-extensions/types.ts";
+import type { ExecutionEnv } from "@earendil-works/pi-durable/env";
+import type { NativeExecutionEnvFactory } from "./runtime-types.ts";
+import { CoreExecutionEnvAdapter } from "./core-execution-env-adapter.ts";
 
 export function configureHarnessHttp(settingsManager: SettingsManager): void {
 	const proxy = settingsManager.getGlobalSettings()?.httpProxy?.trim();
@@ -103,33 +106,78 @@ export async function createCodingRegistry(
 	return Object.assign(registry, { builtinRegistry });
 }
 
+export interface ExecutionEnvsOptions {
+	defaultCwd: string;
+	nativeFactory?: NativeExecutionEnvFactory;
+	coreFactory?: ExecutionEnvFactory;
+}
+
 export class ExecutionEnvs {
 	readonly #defaultCwd: string;
-	readonly #factory: ExecutionEnvFactory;
-	readonly #envs = new Map<string, IExecutionEnvironment>();
+	readonly #nativeFactory?: NativeExecutionEnvFactory | undefined;
+	readonly #coreFactory?: ExecutionEnvFactory | undefined;
+	readonly #envs = new Map<string, ExecutionEnv>();
+	readonly #uniqueEnvs = new Set<ExecutionEnv>();
 
-	constructor(defaultCwd: string, factory: ExecutionEnvFactory) {
-		if (typeof factory !== "function") {
-			throw new Error("ExecutionEnvFactory is required (AP-012, AP-072, AP-073: no fallback in core)");
+	constructor(options: ExecutionEnvsOptions | string, legacyFactory?: ExecutionEnvFactory) {
+		if (typeof options === "string") {
+			this.#defaultCwd = options;
+			this.#coreFactory = legacyFactory;
+		} else {
+			if (options.nativeFactory && options.coreFactory) {
+				throw new Error("Configuration error: Both nativeExecutionEnvFactory and executionEnvFactory provided; they are mutually exclusive.");
+			}
+			if (!options.nativeFactory && !options.coreFactory) {
+				throw new Error("ExecutionEnvFactory or NativeExecutionEnvFactory is required (AP-012, R8: no default host fallback in adapter)");
+			}
+			this.#defaultCwd = options.defaultCwd;
+			this.#nativeFactory = options.nativeFactory;
+			this.#coreFactory = options.coreFactory;
 		}
-		this.#defaultCwd = defaultCwd;
-		this.#factory = factory;
 	}
 
-	readonly env = ({ cwd = this.#defaultCwd, conversationId }: EnvTarget): IExecutionEnvironment => {
-		let env = this.#envs.get(cwd);
-		if (env === undefined) {
-			const created = this.#factory({ cwd, conversationId });
-			env = created as IExecutionEnvironment;
-			this.#envs.set(cwd, env);
+	async getOrCreate(target: EnvTarget, context: Context): Promise<ExecutionEnv | undefined> {
+		const key = target.cwd ?? this.#defaultCwd;
+		const existing = this.#envs.get(key);
+		if (existing !== undefined) return existing;
+
+		if (this.#nativeFactory) {
+			const created = await this.#nativeFactory(target, context);
+			if (created) {
+				this.#envs.set(key, created);
+				this.#uniqueEnvs.add(created);
+			}
+			return created;
 		}
-		return env;
+
+		if (this.#coreFactory) {
+			const createdCore = await this.#coreFactory({ cwd: key, conversationId: target.conversationId });
+			if (createdCore) {
+				const adapted = new CoreExecutionEnvAdapter(createdCore, key);
+				this.#envs.set(key, adapted);
+				this.#uniqueEnvs.add(adapted);
+				return adapted;
+			}
+		}
+
+		return undefined;
+	}
+
+	peek(cwd?: string): ExecutionEnv | undefined {
+		return this.#envs.get(cwd ?? this.#defaultCwd);
+	}
+
+	readonly env = (target: EnvTarget, context: Context): Promise<ExecutionEnv | undefined> => {
+		return this.getOrCreate(target, context);
 	};
 
 	async cleanup(context: Context): Promise<void> {
-		const envs = [...this.#envs.values()];
+		const envsToClean = Array.from(this.#uniqueEnvs);
 		this.#envs.clear();
-		for (const env of envs) await env.cleanup(context);
+		this.#uniqueEnvs.clear();
+		for (const env of envsToClean) {
+			await env.cleanup(context);
+		}
 	}
 }
 

@@ -1,3 +1,5 @@
+export type { NativeExecutionEnvFactory } from "./engine/runtime-types.ts";
+export { CoreExecutionEnvAdapter } from "./engine/core-execution-env-adapter.ts";
 export * from "./store.ts";
 export * from "./session-storage.ts";
 export * from "./session-fork.ts";
@@ -28,4 +30,5 @@ export * from "./engine/watcher-compat.ts";
 export * from "./engine/runtime-graph-source.ts";
 export * from "./engine/runtime-graph-mapper.ts";
 export * from "./engine/prompt.ts";
+export * from "./engine/core-execution-env-adapter.ts";
 export * from "./engine/session-daemon.ts";

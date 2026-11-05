@@ -145,10 +145,14 @@ export async function loadHarnessEnvironment(
 
 	let liveNoticeForwarder: ((level: "info" | "warning" | "error", message: string) => void) | undefined;
 	let runnerRef: import("@earendil-works/pi-coding-agent").ExtensionRunner | undefined;
+
+	// Prepare root environment asynchronously before exposing synchronous extension SDK getter (R8)
+	const rootEnv = await envs.getOrCreate({ cwd: location.cwd } as import("@earendil-works/pi-durable").EnvTarget, runtimeContext);
+
 	const executeToolFn = createNestedToolExecutor(
 		registry,
 		() => runnerRef,
-		() => envs.env({ cwd: location.cwd } as unknown as import("@earendil-works/pi-durable").EnvTarget),
+		() => rootEnv ?? envs.peek(location.cwd),
 	);
 	const actionsDelegate: import("./extension-mount.ts").ExtensionActionsDelegate = {};
 	const mounted = await mountExtensionBridge(
@@ -178,6 +182,9 @@ export async function loadHarnessEnvironment(
 			console.warn("[RuntimeLoader] Built-in extension teardown error:", err);
 		});
 		await mounted.cleanup?.();
+		await envs.cleanup(runtimeContext).catch((err) => {
+			console.warn("[RuntimeLoader] Environment cleanup error:", err);
+		});
 	};
 
 	try {

@@ -1,0 +1,34 @@
+[
+  {
+    "severity": "high",
+    "title": "[P1] R8-01: Unsupported operations and metadata are reported as success",
+    "file": "packages/adapter-pi-durable/src/engine/core-execution-env-adapter.ts",
+    "line": 115,
+    "detail": "Evidence: flushFile returns ok(undefined) without any Core flush capability; listFiles labels every entry kind=file and truncated=false; constructor mints random env.id instead of using real Core filesystem identity. Impact: caller receives fabricated durability/completeness/type/identity guarantees despite limited Core capabilities. Rule: AP-026, AP-076 and canonical R8. Fix decision: fix-now; return typed not_supported for unrepresentable operations; preserve genuine identity/metadata only.",
+    "status": "open"
+  },
+  {
+    "severity": "medium",
+    "title": "[P2] R8-02: Permission, cancellation and unknown errors masquerade as missing files",
+    "file": "packages/adapter-pi-durable/src/engine/core-execution-env-adapter.ts",
+    "line": 45,
+    "detail": "Evidence: readTextFile/fileInfo catch every exception as FileError(not_found); exists catches everything and returns ok(false), and may test existence through readFile. Impact: EACCES/abort/unknown failures become false successful absence, hiding actual access/errors and allowing incorrect downstream decisions. Rule: AP-012, AP-022, AP-026. Fix decision: fix-now; preserve known errors/nominal SDK errors; only explicit genuine missing results may yield false/not_found, unsupported capability must be typed.",
+    "status": "open"
+  },
+  {
+    "severity": "medium",
+    "title": "[P2] R8-03: Async environment cache and cleanup do not ensure single ownership",
+    "file": "packages/adapter-pi-durable/src/engine/harness-setup.ts",
+    "line": 139,
+    "detail": "Evidence: getOrCreate checks only completed env map before awaiting factory, so concurrent same-key calls create multiple instances; same Core object for different keys gets different wrappers and cleanup twice; cleanup clears references then stops at first rejection, skipping later environments. Existing multiple-keys test actually repeats SAME /app key. Impact: duplicate physical resources, double disposal or leaked environments. Rule: AP-023, AP-034, AP-074 and R8. Fix decision: fix-now; deduplicate in-flight creation and underlying Core/native identities, retry after failures, finish cleanup of all owned resources and aggregate/propagate failures.",
+    "status": "open"
+  },
+  {
+    "severity": "medium",
+    "title": "[P2] R8-04: Core exec pretends to implement unsupported native Shell semantics",
+    "file": "packages/adapter-pi-durable/src/engine/core-execution-env-adapter.ts",
+    "line": 119,
+    "detail": "Evidence: SDK ShellExecOptions specifies output chunks as they arrive/in arrival order, inheritEnv/spill/window, and Context abort kills only this command. Adapter waits for complete Core result, replays stdout then stderr, ignores inheritEnv/spill/window and cancellation, and labels callback exceptions spawn_error. Impact: false streaming/order/cancellation/isolation guarantees. Rule: AP-023, AP-026, AP-076 and R8. Fix decision: fix-now; use only truly representable semantics; explicitly reject unsupported native requirements/options, do not expand/reimplement Core or silently ignore them. Full native factory preserves full SDK behavior.",
+    "status": "open"
+  }
+]

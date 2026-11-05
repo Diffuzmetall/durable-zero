@@ -72,6 +72,9 @@ export class PiDurableEngine implements IAgentEngine {
 			...(this.#options.continueSession !== undefined ? { continueSession: this.#options.continueSession } : {}),
 			...(this.#options.cli !== undefined ? { cli: this.#options.cli } : {}),
 			...(this.#options.dependencies !== undefined ? { dependencies: this.#options.dependencies } : {}),
+			...(this.#options.dependencies?.nativeExecutionEnvFactory !== undefined
+				? { nativeExecutionEnvFactory: this.#options.dependencies.nativeExecutionEnvFactory }
+				: {}),
 			...(this.#options.dependencies?.executionEnvFactory !== undefined
 				? { executionEnvFactory: this.#options.dependencies.executionEnvFactory }
 				: {}),
