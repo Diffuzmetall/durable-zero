@@ -10,6 +10,28 @@ A host can communicate with the reference runtime over JSON-RPC on stdio, or use
 
 > **Status: developer preview.** The reference assembly pins the Earendil Pi packages to **1.5.0**. Extension and adapter interfaces are still evolving. The current BB provider has not yet been migrated to this runtime.
 
+## Direction: Zero and Durable Zero
+
+The planned split separates **Zero**, the headless/backendless harness foundation, from **Durable Zero**, a concrete Pi Durable-backed reference assembly.
+
+- **Zero:** neutral contracts and independently usable modules with clean APIs. Applications choose implementations and compose them from the outside; modules do not require a shared DI-container SDK.
+- **Durable Zero:** a reference recipe using Pi Durable, native execution/storage and selected module implementations. It is not the mandatory engine or infrastructure for every Zero consumer.
+- **The terminal is optional and outside Core.** CLI, TUI, web and other clients are outer shells. Closing a client must not stop the runtime that owns active work.
+
+This is the architectural direction, not a claim that repository extraction or compatibility of all alternative assemblies is already complete. Classify public contracts before moving packages; do not copy native DTOs into a neutral API and merely rename them. Backendless does not mean there are no processes, compute or storage.
+
+## Architecture guidance for contributors
+
+Use the **[arch-rules repository](https://github.com/ai-meatbags/arch-rules)** and its [full AP-rule scope](https://github.com/ai-meatbags/arch-rules/blob/main/arch-rules.md) as the architectural development reference. Apply rules relevant to the changed boundaries and risks; explain non-applicable database, UI or distributed-system rules instead of applying them mechanically.
+
+**Skills are optional for contributors.** No particular skill installation or workflow is required. Architecture boundaries and behavioral evidence matter, not a specific tooling ritual.
+
+Preserve neutral Core dependencies (AP-020/025), explicit composition/defaults outside modules (AP-073/074), versioned contracts/capabilities (AP-026/046), owned cancellation/cleanup and readiness (AP-023/059), and a real walking skeleton with observable use of injected dependencies (AP-075/076). One native Harness owns execution for each open Durable Zero session. Admission is not completion; disconnect is not shutdown. Add, replace and remove are different operations.
+
+An extension contribution should identify its public entry/contract, an external consumer example without private imports, compatibility requirements, resource ownership/lifecycle and checks of actual outcomes. A public parameter, lower-level seam, absent replacement slot, intentional native owner and unmounted interface have different readiness levels. Do not claim a replacement is supported just because an interface exists.
+
+See the **[architecture atlas and contributor direction](https://zero.vanya-arc.dev/)** for the source-pinned dependency and extension maps. Source tracing, component tests and native acceptance are separate levels of evidence.
+
 ## Local terminal integration
 This checkout also contains three separate workspace packages: `@local-durable/runtime` (independent process host), `@local-durable/terminal` (Unix-socket client), and `@local-durable/terminal-ui` (preserved rich presentation). They compose Zero; they do not replace its native Harness or model loop.
 See [architecture, package boundaries, build/test/install commands and PR scope](docs/arch-improvement/cycle-8/architecture-and-packaging.md) and [latest skills/installed-artifact verification](docs/arch-improvement/cycle-8/capability-followup.md). The primary installation has not switched. Attention, Goal and schedules are deferred in this assembly.
@@ -139,7 +161,10 @@ packages/
 ├── adapter-codemode/      Codemode built-in extension
 ├── extension-pi-resource/ Pi settings and resource-loader integration
 ├── runner/                Reference composition and process entrypoint
-└── cli/                   CLI wrapper
+├── cli/                   CLI wrapper
+├── local-runtime/         Independent session process / Unix-socket host
+├── local-terminal/        Optional terminal client and launcher
+└── terminal-ui/           Optional native rich presentation
 ```
 
 In the default assembly, a request goes through the stdio runner and Core's `SessionCoordinator` to `PiDurableEngine`, then to the native Harness. Runtime execution and persistence stay with Pi Durable; Core remains separate from that implementation.
