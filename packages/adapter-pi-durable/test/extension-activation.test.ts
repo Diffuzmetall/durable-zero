@@ -2,6 +2,31 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createExtensionActions } from "../src/engine/shared/extension-runner.ts";
 
+for (const exposure of ["codemode", "deferred"] as const) {
+  test(`Pi registration removes direct activation after exposure changes to ${exposure}`, () => {
+    const tool = { definition: { name: "dynamic", exposure: "direct" } };
+    let configured = ["bash"];
+    const actions = createExtensionActions({
+      getRegisteredTools: () => [tool],
+      onActiveToolsChanged: names => { configured = names; },
+    }, ["bash"]);
+    actions.refreshTools();
+    assert.deepEqual(configured, ["bash", "dynamic"]);
+    tool.definition.exposure = exposure;
+    actions.refreshTools();
+    assert.deepEqual(actions.getActiveTools(), ["bash"]);
+    assert.deepEqual(configured, ["bash"], "the native model-tools callback must remove stale declarations");
+    if (exposure === "deferred") {
+      actions.setActiveTools(["bash", "dynamic"]);
+      actions.refreshTools();
+      assert.deepEqual(configured, ["bash", "dynamic"], "an unchanged exposure must preserve explicit tool_search activation");
+    }
+    tool.definition.exposure = "direct";
+    actions.refreshTools();
+    assert.deepEqual(configured, ["bash", "dynamic"]);
+  });
+}
+
 test("Pi registration activates direct/model-only tools, not indirect/hidden/opt-out tools", () => {
   const registered: Array<{ definition: { name: string; exposure?: string; defaultActive?: boolean } }> = [];
   const actions = createExtensionActions({ getRegisteredTools: () => registered }, ["bash"]);

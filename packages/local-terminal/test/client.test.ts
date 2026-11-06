@@ -20,6 +20,7 @@ function transport(initial = nativeView(), getView?: () => Promise<unknown>) {
   const closed = new Promise<void>(resolve => { disconnect = resolve; });
   let closeCalls = 0;
   let refusal: string | undefined;
+  const replies = new Map<string, unknown>();
   const connect: RuntimeConnector = async (_sessionDir, listener) => {
     notify = listener;
     return {
@@ -27,6 +28,7 @@ function transport(initial = nativeView(), getView?: () => Promise<unknown>) {
         requests.push({ method, params });
         if (method === "session/getView") return getView ? getView() : { revision: 0, view: initial };
         if (refusal) throw new Error(refusal);
+        if (replies.has(method)) return replies.get(method);
         return { status: "accepted", id: "native-id" };
       },
       closed,
@@ -34,7 +36,8 @@ function transport(initial = nativeView(), getView?: () => Promise<unknown>) {
     };
   };
   return { connect, requests, notify: (method: string, params: Record<string, unknown>) => notify?.(method, params),
-    disconnect, closeCalls: () => closeCalls, refuse: (message: string) => { refusal = message; } };
+    disconnect, closeCalls: () => closeCalls, refuse: (message: string) => { refusal = message; },
+    reply: (method: string, value: unknown) => { replies.set(method, value); } };
 }
 
 test("getView reads the view envelope and adds client-only presentation fields", async () => {
@@ -109,13 +112,25 @@ test("commands use exact runtime method and parameter contracts", async () => {
   client.close(); await client.closed;
 });
 
-test("unsupported operations reject without RPC calls", async () => {
-  const rpc = transport();
+test("session operations use the host catalog and keep display name separate from native identity", async () => {
+  const native = nativeView();
+  const rpc = transport(native);
+  const row = { id: "/server/next", name: "Next", cwd: "/server/workspace" };
+  const descriptor = { ...row, createdAt: 1, extensions: [] };
+  rpc.reply("session/list", [row]); rpc.reply("session/rename", "Renamed");
+  rpc.reply("session/create", descriptor); rpc.reply("session/describe", descriptor);
   const client = await ZeroTerminalClient.open("session", rpc.connect);
-  await assert.rejects(client.renameSession("name"), /Unsupported capability: session rename/);
-  await assert.rejects(client.listSessions(), /Unsupported capability: session list/);
-  assert.equal(rpc.requests.length, 1);
-  client.close(); await client.closed;
+  assert.deepEqual(await client.listSessions(), [row]);
+  assert.equal(await client.renameSession("Renamed"), "Renamed");
+  assert.deepEqual(await client.createSession(), descriptor);
+  assert.deepEqual(await client.describeSession(row.id), descriptor);
+  assert.match(rpc.requests.find(r => r.method === "session/create")!.params.requestId as string, /^[0-9a-f-]{36}$/);
+  rpc.notify("session/view", { revision: 1, view: native, sessionName: "Renamed" });
+  assert.equal(client.current().session.name, "Renamed");
+  assert.equal(native.session.id, "session-one");
+  rpc.disconnect(); await client.closed;
+  assert.equal(client.current().session.name, "Renamed");
+  assert.equal(rpc.requests.filter(r => r.method === "session/prompt").length, 0);
 });
 
 test("RPC refusals propagate and commands are never retried", async () => {

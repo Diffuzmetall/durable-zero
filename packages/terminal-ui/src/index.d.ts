@@ -38,8 +38,8 @@ export interface TerminalController {
   toggleTasks(): Promise<void>;
   switchConversation(id: number): Promise<void>;
   reload(path?: string): Promise<void>;
-  listSessions(): Promise<never>;
-  renameSession(name: string): Promise<never>;
+  listSessions(): Promise<readonly { id: string; name: string; cwd: string }[]>;
+  renameSession(name: string): Promise<string>;
 }
 export interface TerminalSettings {
   getTerminalCapabilityOverrides(): Record<string, boolean>;

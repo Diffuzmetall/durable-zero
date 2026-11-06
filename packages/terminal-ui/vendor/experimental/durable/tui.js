@@ -798,7 +798,7 @@ export async function runDurableTui(source, controller, settings, startupWarning
                 description: row.cwd,
             }));
             view.mount(new ListSelector(items.length ? "Resume session (Esc to cancel):" : "No sessions found (Esc to close)", items, (id) => {
-                if (id === source.current().session.id)
+                if (id === source.current().session.id || id === source.current().session.directory)
                     return view.restoreEditor();
                 selectedSession = id;
                 exit();
@@ -808,7 +808,7 @@ export async function runDurableTui(source, controller, settings, startupWarning
             view.mount(new ListSelector(`Resume unavailable: ${String(error)} (Esc to close)`, [], () => view.restoreEditor(), () => view.restoreEditor()));
         }
     };
-    view = new DurableTui(process.cwd(), source.current().session.directory, {
+    view = new DurableTui(source.current().session.cwd, source.current().session.directory, {
         submit: (text) => {
             const trimmed = text.trim();
             if (!trimmed)
@@ -844,7 +844,8 @@ export async function runDurableTui(source, controller, settings, startupWarning
             if (trimmed === "/quit" || trimmed === "/detach")
                 return exit();
             if (trimmed === "/new" || trimmed === "/clear") {
-                return view.showInputError(text, new Error("Unsupported capability: session creation. Start a runtime separately."));
+                selectedSession = null;
+                return exit();
             }
             if (trimmed === "/reload" || trimmed.startsWith("/reload ")) {
                 return void controller.reload(trimmed.slice("/reload".length).trim() || undefined).then(refreshAutocomplete)

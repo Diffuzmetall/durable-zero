@@ -1,0 +1,45 @@
+Zero session: /tmp/zero-mcp-installed-3dd8ozk6/session
+Runtime PID: 401494 · log: /tmp/zero-mcp-installed-3dd8ozk6/session/.terminal/runtime.log
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx ?
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Exposure of fixture
+ Saved to /tmp/zero-mcp-installed-3dd8ozk6/agent/mcp.json.
+
+→ ✓ codemode                      called from codemode scripts, which find them with searchTools()
+    deferred                      not declared until tool_search loads them, then called directly; no codemode needed
+    direct                        declared to the model like built-in tools
+
+ enter save • escape/ctrl+c back
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

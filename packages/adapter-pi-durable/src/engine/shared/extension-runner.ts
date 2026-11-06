@@ -104,7 +104,8 @@ export function createExtensionActions(
 			const active = new Set(activeToolNames);
 			for (const { definition } of options.getRegisteredTools?.() ?? []) {
 				const exposure = definition.exposure ?? "direct";
-				if (exposure === "hidden") active.delete(definition.name);
+				if (exposure === "hidden" || (registeredExposures.has(definition.name) &&
+					registeredExposures.get(definition.name) !== exposure && exposure !== "direct" && exposure !== "model-only")) active.delete(definition.name);
 				else if (registeredExposures.get(definition.name) !== exposure && definition.defaultActive !== false &&
 					(exposure === "direct" || exposure === "model-only")) active.add(definition.name);
 				registeredExposures.set(definition.name, exposure);

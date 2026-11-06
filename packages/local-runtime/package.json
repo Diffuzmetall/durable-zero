@@ -6,12 +6,13 @@
   "engines": { "node": ">=24" },
   "exports": {
     ".": { "types": "./src/index.ts", "import": "./dist/index.js" },
-    "./client": { "types": "./src/client.ts", "import": "./dist/client.js" }
+    "./client": { "types": "./src/client.ts", "import": "./dist/client.js" },
+    "./sessions": { "types": "./src/sessions.ts", "import": "./dist/sessions.js" }
   },
   "bin": { "pi-zero-runtime": "./bin/runtime.mjs" },
   "files": ["bin", "dist", "src"],
   "scripts": {
-    "build": "esbuild src/index.ts src/client.ts src/main.ts --bundle --packages=external --platform=node --target=node24 --format=esm --outdir=dist",
+    "build": "esbuild src/index.ts src/client.ts src/main.ts src/sessions.ts --bundle --packages=external --platform=node --target=node24 --format=esm --outdir=dist",
     "test": "node --test --test-timeout=20000 test/*.test.ts"
   },
   "dependencies": {

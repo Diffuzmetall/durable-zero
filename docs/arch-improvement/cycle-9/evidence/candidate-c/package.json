@@ -1,0 +1,53 @@
+{
+  "candidate": "/tmp/pi-zero-session-commands-20261106-c",
+  "prefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106-session-commands-c",
+  "symlinks": 460,
+  "externalLinks": 0,
+  "brokenLinks": 0,
+  "hashes": [
+    {
+      "path": "bin/pi-durable-zero.mjs",
+      "sha256": "3fa5d8be100d167569dc210d4689710940cbb96da0c51fec152c87ebeff2e936"
+    },
+    {
+      "path": "dist/launch.js",
+      "sha256": "bf02f47683b34744c964e51701e604b42612b878cd1e08130bdd8c16bea98534"
+    },
+    {
+      "path": "bin/terminal.mjs",
+      "sha256": "acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292"
+    },
+    {
+      "path": "dist/main.js",
+      "sha256": "b5f863c2e7150fbcae204be288ba57f35a3c8bfa3682bdfba2a2967a254364f2"
+    },
+    {
+      "path": "dist/client.js",
+      "sha256": "1383567e8e580372813fc5210438c9910595eb324591c7c669a0586dd97ca6c3"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/index.js",
+      "sha256": "d7bac1e2c3247396381a280349a060ffc7686dd4b76bef2f6aaa5f8e2558312b"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/main.js",
+      "sha256": "ad3e137215a539b0f556c33802898e90b48e5c127d5e60c3b628c913cc32cc97"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/client.js",
+      "sha256": "e78ca90ab81fe22d1af0c0e732ca4c439306910f2c037a89adfe4040d72ace54"
+    },
+    {
+      "path": "node_modules/.pnpm/node_modules/@durable-zero/runner/dist/index.js",
+      "sha256": "838613cdef79c1ecbecb24cb39ef37087abc37305b126057635fc2fa23ee0923"
+    },
+    {
+      "path": "node_modules/@durable-zero/adapter-pi-durable/dist/index.js",
+      "sha256": "6cff237bc521c177f3cf43672ee67f491f2e44f6be71422bcd1ec38785a75927"
+    }
+  ],
+  "presentationRecords": 49,
+  "replacements": 1,
+  "publicUiImport": "pass",
+  "zeroLicense": "present"
+}

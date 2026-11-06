@@ -10,6 +10,7 @@
 
 ## Индекс
 
+- [Cycle 9: исправленные session commands, финальный кандидат и матрица паритета](../cycle-9/README.md).
 - [Оригинальный `/mcp`, исправления P1/P2 из PR № 3, installed-проверки и Astra review](mcp-manager-and-pr3-review.md).
 - [Описание PR: что добавили и что изменили вне наших пакетов](pr-description.md).
 - [Как устроены хост, терминал и UI; сборка пакетов и состав PR](architecture-and-packaging.md).

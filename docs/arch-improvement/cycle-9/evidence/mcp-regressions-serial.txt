@@ -1,0 +1,25 @@
+TAP version 13
+# PASS stalled post-initialize HTTP peer: ready, ordinary turn, abortable discovery, reload, transport cancellation, graceful close and same-session reopen
+# Subtest: optional MCP stalled after initialize cannot block startup/reload; native shutdown cancels its transport
+ok 1 - optional MCP stalled after initialize cannot block startup/reload; native shutdown cancels its transport
+  ---
+  duration_ms: 4428.460737
+  type: 'test'
+  ...
+# PASS original SDK root/server/tools/exposure menus, reconnect, enable/disable, saved configuration, resize, Escape and ownership rejection
+# PASS nested-menu disconnect releases UI; same runtime survives; reloaded native MCP tool executes
+# Subtest: original Pi MCP manager: real menus, control ownership, disconnect cleanup and native calls
+ok 2 - original Pi MCP manager: real menus, control ownership, disconnect cleanup and native calls
+  ---
+  duration_ms: 2742.174981
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9754.211771

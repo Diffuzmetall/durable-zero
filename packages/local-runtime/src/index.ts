@@ -6,6 +6,7 @@ import { once } from "node:events";
 import { runtimeSocketPath } from "./client.ts";
 import { createClientOutput } from "./notifications.ts";
 import { expandSkillCommand } from "./skills.ts";
+import { openSessionCatalog, sessionName, type SessionCatalog } from "./sessions.ts";
 import { createMcpCommandUI, mcpCommandRequest, mcpViewport } from "./mcp-ui.ts";
 export { runtimeSocketPath } from "./client.ts";
 import { z } from "zod";
@@ -27,6 +28,10 @@ const requests = {
   "session/getTranscript": conversation.extend({ limit: z.number().int().positive().optional() }),
   "session/getStats": conversation,
   "session/getView": z.object({}).strict(),
+  "session/list": z.object({}).strict(),
+  "session/describe": z.object({ id: z.string().min(1) }).strict(),
+  "session/rename": z.object({ name: sessionName }).strict(),
+  "session/create": z.object({ requestId: z.uuid() }).strict(),
   "runtime/info": z.object({}).strict(),
   "session/mcpCommand": mcpCommandRequest,
   "session/mcpInput": z.object({ data: z.string() }).strict(),
@@ -65,18 +70,28 @@ export async function startRuntime(options: RuntimeOptions) {
   let instance: DurableZeroInstance | undefined;
   let unsubscribeView: (() => void) | undefined;
   let viewRevision = 0;
+  let catalog: SessionCatalog;
+  let displayName: string;
   let commands: Promise<unknown> = Promise.resolve();
   let activeMcpUI: { socket: Socket; bridge: ReturnType<typeof createMcpCommandUI>; completion: Promise<void> } | undefined;
   let assemblyOptions: AssembleDurableZeroOptions = {
     ...options, sessionDir: resolve(options.sessionDir), noGlobalExtensions: true, stdin: input, stdout: output,
   };
   const attachAssembly = async () => {
+    const environmentExtensions = process.env.PI_ADDITIONAL_EXTENSIONS?.split(",").map(path => path.trim()).filter(Boolean) ?? [];
+    const configuredExtensions = assemblyOptions.extensions !== undefined || assemblyOptions.extension !== undefined || environmentExtensions.length > 0
+      ? [...(assemblyOptions.extensions ?? (assemblyOptions.extension ? [assemblyOptions.extension] : [])), ...environmentExtensions]
+      : undefined;
+    catalog = await openSessionCatalog(assemblyOptions.sessionDir!, assemblyOptions.cwd ?? process.cwd(), configuredExtensions);
+    const descriptor = await catalog.describe(await realpath(assemblyOptions.sessionDir!));
+    assemblyOptions = { ...assemblyOptions, extensions: descriptor.extensions };
     instance = await assembleDurableZero(assemblyOptions);
     if (!instance.view || !instance.controller) throw new Error("The terminal runtime requires native presentation and control ports");
+    displayName = descriptor.name;
     unsubscribeView = instance.view.subscribe(() => { ++viewRevision; notify("session/view", envelope()); });
   };
   const envelope = () => ({
-    view: instance!.view!.current(), revision: viewRevision,
+    view: instance!.view!.current(), revision: viewRevision, sessionName: displayName,
     resources: {
       skills: (instance!.resources?.getSkills() ?? []).map(({ name, description, filePath, baseDir }) => ({ name, description, filePath, baseDir })),
       enableSkillCommands: instance!.resources?.getEnableSkillCommands() ?? false,
@@ -93,7 +108,9 @@ export async function startRuntime(options: RuntimeOptions) {
   });
   bridge.start();
   const server = createServer((socket) => {
-    if (!instance) { socket.destroy(); return; }
+    // Assembly assignment precedes asynchronous catalog loading. Do not admit discovery
+    // or initial views until the complete host envelope is ready.
+    if (!instance || displayName === undefined) { socket.destroy(); return; }
     const transport = createClientOutput(socket);
     const client = new StdioJsonRpcServer({
       stdin: socket,
@@ -151,6 +168,20 @@ export async function startRuntime(options: RuntimeOptions) {
             ++viewRevision;
             notify("session/view", envelope());
             return { ok: true };
+          }
+          case "session/list": return catalog.list();
+          case "session/describe": return catalog.describe((parsed.data as { id: string }).id);
+          case "session/rename": {
+            displayName = await catalog.rename((parsed.data as { name: string }).name);
+            ++viewRevision;
+            notify("session/view", envelope());
+            return displayName;
+          }
+          case "session/create": {
+            const agent = instance!.view!.current().conversation.docs["pi.agent"] as { model?: { provider?: string; id?: string; modelId?: string } } | undefined;
+            return catalog.create((parsed.data as { requestId: string }).requestId, {
+              provider: agent?.model?.provider, model: agent?.model?.modelId ?? agent?.model?.id,
+            });
           }
           case "session/getView": return envelope();
           case "runtime/info": return { pid: process.pid, entrypoint: resolve(process.argv[1]!), cwd: instance!.view!.current().session.cwd };

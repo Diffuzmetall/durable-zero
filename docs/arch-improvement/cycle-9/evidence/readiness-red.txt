@@ -1,0 +1,36 @@
+TAP version 13
+# Subtest: native session catalog: names persist, creation retries reuse one directory, resume stays scoped
+not ok 1 - native session catalog: names persist, creation retries reuse one directory, resume stays scoped
+  ---
+  duration_ms: 1989.507088
+  type: 'test'
+  location: '/home/ubuntu/Projects/pi-durable-zero-playground/packages/local-runtime/test/session-catalog-native.test.ts:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    runtime discovery must wait for catalog readiness
+    + actual - expected
+    
+    + 'undefined'
+    - 'string'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'string'
+  actual: 'undefined'
+  operator: 'strictEqual'
+  stack: |-
+    open (file:///home/ubuntu/Projects/pi-durable-zero-playground/packages/local-runtime/test/session-catalog-native.test.ts:48:16)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async TestContext.<anonymous> (file:///home/ubuntu/Projects/pi-durable-zero-playground/packages/local-runtime/test/session-catalog-native.test.ts:58:20)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2273.92404

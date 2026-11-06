@@ -1,0 +1,48 @@
+✖ session catalog: preserve omitted extensions (30.69621ms)
+✖ session catalog: recover interrupted creation (15.915547ms)
+✔ session catalog: reject occupied destination (13.362161ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 346.973937
+
+✖ failing tests:
+
+test at packages/local-runtime/test/session-catalog.test.ts:10:3
+✖ session catalog: preserve omitted extensions (30.69621ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   '/tmp/zero-catalog-PXmekz/provider.ts'
+  - ]
+  
+      at TestContext.<anonymous> (file:///home/ubuntu/Projects/pi-durable-zero-playground/packages/local-runtime/test/session-catalog.test.ts:18:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ '/tmp/zero-catalog-PXmekz/provider.ts' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages/local-runtime/test/session-catalog.test.ts:10:3
+✖ session catalog: recover interrupted creation (15.915547ms)
+  Error: EEXIST: file already exists, mkdir '/tmp/zero-catalog-cdUP9e/_RAXd6M9SC6Qemo1wxBWgg'
+      at async mkdir (node:internal/fs/promises:916:10)
+      at async Object.create (file:///home/ubuntu/Projects/pi-durable-zero-playground/packages/local-runtime/src/sessions.ts:87:7)
+      at async TestContext.<anonymous> (file:///home/ubuntu/Projects/pi-durable-zero-playground/packages/local-runtime/test/session-catalog.test.ts:28:23)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    errno: -17,
+    code: 'EEXIST',
+    syscall: 'mkdir',
+    path: '/tmp/zero-catalog-cdUP9e/_RAXd6M9SC6Qemo1wxBWgg'
+  }

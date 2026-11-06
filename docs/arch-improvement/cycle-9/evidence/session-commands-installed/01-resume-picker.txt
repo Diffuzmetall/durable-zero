@@ -1,0 +1,45 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+ Resume session (Esc to cancel):
+>
+
+→ Second session                  /tmp/zs-whojojjx/work
+  Original session                /tmp/zs-whojojjx/work
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · work · git unknown · ctx ?

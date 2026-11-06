@@ -19,7 +19,8 @@
     "Load Photon through its native Node module without filesystem monkey-patching",
     "Reject normal model-picker selections when the native selected conversation changes",
     "Show activity unavailable for native summary rows without live evidence; preserve activity styles and use client-enriched selected native live documents",
-    "Route /mcp to the original Pi MCP manager through a command-owned remote terminal; force the existing editor to repaint after manager ownership ends, including runtime notifications received while suspended"
+    "Route /mcp to the original Pi MCP manager through a command-owned remote terminal; force the existing editor to repaint after manager ownership ends, including runtime notifications received while suspended",
+    "Restore the installed TUI new-session result and session picker; the host owns creation, names, runtime launch and resume. Use the native session workspace when switching."
   ],
   "replacements": [
     {
@@ -73,7 +74,7 @@
     {
       "path": "experimental/durable/tui.js",
       "sha256": "a153e03e2c032dc684edb0c6a5ce19fb04896ac4274baaaef818583d16d96e2b",
-      "candidateSha256": "2790f2e49f02d0b75c5206695ecc259022c62edc871c3c8ace9dc98ee603d6f0"
+      "candidateSha256": "a4a9405aea5622f6a8222a0dfb959eb611e4adf262fc134a0fd2ed1c469b6147"
     },
     {
       "path": "experimental/durable/upstream.mjs",

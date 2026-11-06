@@ -99,7 +99,7 @@ Installed driver создаёт отдельный tmux server, HOME, agent conf
 
 Полная независимая приёмка обоих slices не заявляется. Source и installed evidence выполнены владельцем и записаны отдельно. Новые раунды review не запускались.
 
-При согласовании следующего session-среза GrayMountain передал дополнительные source-review предположения о stale active-tool names и удалении child registry metadata. Disposition active-tool refresh передан ему для следующего согласованного коммита; это не объявляется закрытым исправлением h. Штатный сценарий удаления child registry record пока не установлен. Непроверенные предположения не превращены в подтверждённые severity findings.
+Cycle 8 доставлен commit `2147e8d7b7109a7debe663c4b27900bed94bbcda`. Последующий [Cycle 9 candidate d](../cycle-9/session-commands-and-delivery.md) прошёл 79 scoped tests и 48 installed checks. Два ограниченных source reports candidate c завершены; [полные reports и dispositions](../cycle-9/evidence/review-dispositions.md) отделяют подтверждённый activation fix от неподтверждённых сценариев удаления tools/child registry records. Эти результаты не меняют неполный verdict прежних reviewers h.
 
 ## Как повторить
 

@@ -6,11 +6,11 @@
 
 Последний follow-up исправляет оба замечания review: **P1 — зависание startup из-за необязательного MCP**, **P2 — некорректное ожидание пути и cleanup launcher fixture**. Также реализован оригинальный `/mcp` manager, исправлена активация tools после изменения exposure и восстановлен редактор после закрытия manager. Native child names/activity теперь берутся из authoritative документов.
 
-Проверенный source candidate — `pi-zero-pr3-review-20261106-h`, standalone prefix — `20261106T1307-mcp-manager`. Build/typecheck прошли; scoped suite **69/69**, installed rich manager **24/24**, baseline **13/13**, installed startup/alias regressions **2/2**.
+Финальный проверенный source candidate — `pi-zero-session-commands-20261106-d`, standalone prefix — `20261106-session-commands-d`. Build/typecheck прошли; полный scoped suite последовательно **79/79**, installed session commands **11/11**, rich manager **24/24**, baseline **13/13**. Дополнительно исправлены `/new`, `/name`, `/resume`, начальная готовность catalog, длина Unix-сокета, сохранение extensions при restart, атомарное создание сессии и activation при смене exposure. [Cycle 9](../cycle-9/session-commands-and-delivery.md) содержит финальный 33-file manifest и evidence; результаты candidate h ниже сохранены как предыдущий этап. Cycle 8 уже доставлен commit `2147e8d7b7109a7debe663c4b27900bed94bbcda`.
 
 **Изменены не только наши пакеты:** десять существующих runtime/assembly-файлов Zero получили ограниченные изменения публичных границ. Native Harness/SDK, model loop, scheduler и формат SQLite не патчили. Core не получил terminal/BB/iii/storage implementation dependencies.
 
-Полный отчёт: [оригинальный MCP manager и устранение замечаний PR № 3](mcp-manager-and-pr3-review.md). [README цикла](README.md) содержит остальные материалы.
+Актуальный отчёт: [session commands и финальная поставка](../cycle-9/session-commands-and-delivery.md). Предыдущий этап: [оригинальный MCP manager и устранение замечаний PR № 3](mcp-manager-and-pr3-review.md). [Матрица паритета](../cycle-9/terminal-parity.md) отделяет выполненные возможности от ещё не перенесённых.
 
 ## Зачем и что сохраняется
 
@@ -180,23 +180,21 @@ Offline provider заменяет только ответы модели. PTY, H
 
 ## Независимое source review
 
-После installed-приёмки запущены два native Astra reviewers для frozen candidate h. [Scope packet](evidence/mcp-manager-review-packet.md) и [SHA manifest](evidence/mcp-manager-review-scope.json) фиксируют 24 source-файла.
+Для frozen candidate h сохранены [scope packet](evidence/mcp-manager-review-packet.md), [24-file manifest](evidence/mcp-manager-review-scope.json) и исходные verdict:
 
-- [Terminal/projection report](evidence/mcp-manager-astra-terminal.md): подтверждённых дефектов нет, но проверка частичная. Activity, modal input, resize, truthful child status, provenance и часть cleanup не получили полного независимого покрытия. Reviewer не выполнял тесты и не проверял все acceptance logs; сообщил об одном read-only `rg` вопреки no-process ограничению.
-- [Runtime/MCP outcome](evidence/mcp-manager-astra-runtime.md): итоговый отчёт не получен. По указанию пользователя закончить проверки worker остановлен; outcome — `unanswered (aborted)`, не PASS и не дефект продукта.
+- [Terminal/projection report](evidence/mcp-manager-astra-terminal.md): частичная проверка без подтверждённых дефектов, не полный PASS. Activity, modal input, resize, truthful child status, provenance и часть cleanup не получили полного независимого покрытия. Reviewer не выполнял тесты и сообщил об одном read-only `rg` вопреки no-process ограничению.
+- [Runtime/MCP outcome](evidence/mcp-manager-astra-runtime.md): worker остановлен по указанию пользователя; `unanswered (aborted)`, не PASS.
 
-Полная независимая приёмка обоих slices не заявляется. Source и installed evidence выполнены владельцем и записаны отдельно. Новые раунды review не запускались.
-
-При согласовании следующего session-среза GrayMountain передал дополнительные source-review предположения о stale active-tool names и удалении child registry metadata. Disposition active-tool refresh передан ему для следующего согласованного коммита; это не объявляется закрытым исправлением h. Штатный сценарий удаления child registry record пока не установлен. Непроверенные предположения не превращены в подтверждённые severity findings.
+Первый Astra attempt candidate c также остался [incomplete / not accepted](../cycle-9/evidence/review-attempt-incomplete.md). Два меньших frozen-source review завершены: [sessions](../cycle-9/evidence/review-results-sessions.md), [MCP/runtime](../cycle-9/evidence/review-results-mcp.md). [Dispositions](../cycle-9/evidence/review-dispositions.md) содержат три подтверждённых исправления и явные ограничения неподтверждённого удаления tools/child records. Report reviewers не является независимым повторением product tests или проверкой candidate d. После этих reports новых reviewers не запускали.
 
 ## Порядок чтения для reviewer
 
-1. [P1/P2, архитектурные границы и installed evidence](mcp-manager-and-pr3-review.md).
+1. [Session commands, финальный manifest и installed evidence](../cycle-9/session-commands-and-delivery.md), затем [P1/P2 и MCP](mcp-manager-and-pr3-review.md).
 2. [Startup regression](../../../packages/local-runtime/test/mcp-startup-native.test.ts) и [extension mount](../../../packages/adapter-pi-durable/src/engine/extension-mount.ts): readiness против snapshot/permissions.
 3. [Command UI adapter](../../../packages/local-runtime/src/mcp-ui.ts), [runtime ingress](../../../packages/local-runtime/src/index.ts) и [terminal client](../../../packages/local-terminal/src/client.ts): ownership и lifecycle.
 4. [Activation regression](../../../packages/adapter-pi-durable/test/extension-activation.test.ts), [native activity regression](../../../packages/adapter-pi-durable/test/runtime-activity.test.ts), [launcher regression](../../../packages/local-terminal/test/launch-native.test.ts).
 5. [Installed driver](evidence/mcp-reload-installed-check.py), его [24 results](evidence/mcp-manager-installed/results.json), экраны и package manifest.
-6. [Общая архитектура и packaging](architecture-and-packaging.md), [README цикла](README.md), ограничения независимых Astra reports.
+6. [Общая архитектура и packaging](architecture-and-packaging.md), [README цикла](README.md), актуальные независимые reports Cycle 9.
 
 ## Ограничения и разрешённая доставка
 

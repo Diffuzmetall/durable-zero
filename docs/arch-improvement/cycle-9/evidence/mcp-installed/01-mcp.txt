@@ -1,0 +1,45 @@
+
+
+ invoke:{"name":"codemode","arguments":{"code":"text(await searchTools(\"zero_probe\")); text(await tools.mcp__fixture__zero_probe({}));"}}
+
+
+
+╭─ ➔ Codemode ✓ ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                          │
+│                                                                                                                                          │
+├─ Response ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                                          │
+│  Script completed                                                                                                                        │
+│  Wall time 0.2 seconds                                                                                                                   │
+│  Output:                                                                                                                                 │
+│                                                                                                                                          │
+│  ==> text 1/2 <==                                                                                                                        │
+│  [{"name":"mcp__fixture__zero_probe","description":"Return the isolated MCP server generation\n\ncodemode tool declaration:\n```ts\nde…  │
+│  ==> text 2/2 <==                                                                                                                        │
+│  {"content":[{"type":"text","text":"INSTALLED_MCP_V1"}]}                                                                                 │
+│                                                                                                                                          │
+╰─ 0.20s · ~65 words ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+ started:native result: Script completed
+ Wall time 0.2 seconds
+ Output:
+ ==> text 1/2 <==
+ [{"name":"mcp__fixture__zero_probe","description":"Return the isolated MCP server generation\n\ncodemode tool declaration:\nts\ndeclare
+ const tools: { mcp__fixture__zero_probe(args: {}): Promise<{ content: Array<{ data?: string; mimeType?: string; text?: string; type:
+ \"text\" | \"image\" | \"audio\" | \"resource_link\" | \"resource\"; [key: string]: unknown; }>; isError?: boolean; structuredContent?:
+ unknown; [key: string]: unknown; }>; };\n"}]
+ ==> text 2/2 <==
+ {"content":[{"type":"text","text":"INSTALLED_MCP_V1"}]}
+
+
+
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx 0%
+ended 6:01 pm · just now
