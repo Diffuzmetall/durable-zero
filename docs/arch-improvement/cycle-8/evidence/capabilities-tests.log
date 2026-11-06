@@ -1,0 +1,66 @@
+✔ explicit root submission preserves the viewed child and runs hooks against root (10.228449ms)
+✔ explicit root abort targets root and its children, not the viewed conversation (0.843693ms)
+✔ omitted target preserves native selected-conversation behavior (4.662942ms)
+✔ model selection rejects a changed conversation inside the command queue (1.123146ms)
+✔ model selection preserves matching-target and untargeted native behavior (0.690062ms)
+✔ a missing explicit target rejects without touching the selected conversation (11.918281ms)
+✔ watchEvents: emits message_update with incremental text deltas from pi.live.generation (3.444031ms)
+✔ watchEvents: persisted assistant completes a missed live generation (2.12308ms)
+✔ watchEvents: persisted assistant completes a partially observed live generation (0.562333ms)
+PASS runtime ready; private socket; native Harness selected
+PASS competing runtime rejected without removing the active socket
+PASS native tool continued with zero terminal clients
+PASS model selection rejects a stale expected conversation at the native boundary
+PASS reopen restores transcript without prompt resubmission
+PASS streamed output and abort correlate to a native admission ID
+PASS graceful runtime restart preserves native session and entry IDs
+PASS SIGKILL recovery preserves native state and removes only the stale socket
+✔ native Zero: terminal detach, ongoing tool, reconnect, abort and runtime restart (18064.807033ms)
+✔ an available reader receives notifications immediately (9.094773ms)
+✔ a blocked reader retains only the latest view and graph, preserving causal event order (0.94232ms)
+✔ excess causal backlog disconnects the reader instead of growing indefinitely (57.44377ms)
+✔ the full oversized native terminal sequence and a reply can drain together (384.058286ms)
+✔ oversized frame count is bounded (188.489046ms)
+✔ RPC replies share the causal byte bound (26.940937ms)
+✔ a reply and notifications retain their causal queue order (0.736518ms)
+✔ closing a reader discards its pending notifications (0.398431ms)
+✔ native skill catalogue, expansion, rejection and reconnect without replay (2827.229582ms)
+✔ skill command uses the existing catalogue and preserves arguments (40.319531ms)
+✔ ordinary input is unchanged and does not load files (0.657704ms)
+✔ unknown, malformed and unreadable skills reject before admission (7.788954ms)
+✔ skill commands accept picker whitespace and no arguments (5.004145ms)
+✔ getView reads the view envelope and adds client-only presentation fields (14.10364ms)
+✔ session/view notifications update the native view without resubmitting prompts (0.980696ms)
+✔ a view notification during initial request is not overwritten (0.638747ms)
+✔ commands use exact runtime method and parameter contracts (5.328145ms)
+✔ unsupported operations reject without RPC calls (1.813821ms)
+✔ RPC refusals propagate and commands are never retried (1.533266ms)
+✔ disconnect marks the view offline and blocks commands without replay (0.893959ms)
+✔ invalid initial envelopes close transport and reject direct native views (1.987326ms)
+✔ invalid notifications detach rather than fabricating a native view (0.902738ms)
+✔ a newer getView response wins over an older pending notification (1.682448ms)
+✔ only the highest pending revision survives initialization (0.609608ms)
+✔ older and duplicate view revisions cannot replace current native values (0.893355ms)
+✔ view envelopes require a nonnegative integer revision (2.404338ms)
+✔ prompt and abort target only the conversation in the accepted native view (2.817248ms)
+✔ presentation uses selected native live documents without inventing activity for summary rows (0.493984ms)
+✔ runtime resource metadata populates skills and survives disconnect without submission (2.232117ms)
+✔ input validation prevents invalid RPC parameters (1.489613ms)
+✔ probe preserves immediate piped input and uses the complete native history (570.121386ms)
+✔ probe prints message_end text once and appends only an unprinted streamed suffix (446.298811ms)
+[?25h[?2004l[?25h[?2004l[?25h[?2004l✔ editor, message components, themes and tool cards match the installed artifact (165.51665ms)
+✔ installed layout components render native transcript and offline status without opening a session (37.138585ms)
+✔ disconnected optional panels stay hidden without suppressing genuine notices (39.599465ms)
+✔ the installed unknown-tool card hides private arguments (13.966675ms)
+✔ detach before UI start releases presentation resources (5.16026ms)
+✔ native summary rows report unavailable rather than inferred idle (2.137068ms)
+✔ normal model picker rejects a selection after the conversation changes (651.774138ms)
+✔ skill picker inserts only; ordinary Enter forwards the explicit command (789.501608ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18519.215579

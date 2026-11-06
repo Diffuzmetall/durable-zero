@@ -1,0 +1,2 @@
+{"pass": true, "candidate": "/tmp/pi-zero-ui-candidate-20261105T2146", "latestRevision": 7, "stalledViewsReceived": 2, "drainedBytes": 3557269, "causalEvents": ["tool_execution_start", "message_end", "tool_execution_update", "tool_execution_end", "message_end", "turn_complete", "runtime_graph_snapshot"], "nativeBash": "completed", "healthyReader": "connected", "stalledReader": "resumed", "responseFlood": "bounded-disconnect", "responseFloodWireBytes": 219264}
+Evidence: /tmp/zero-pressure-aymg4wb7
