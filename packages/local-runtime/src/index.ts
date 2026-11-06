@@ -6,6 +6,7 @@ import { once } from "node:events";
 import { runtimeSocketPath } from "./client.ts";
 import { createClientOutput } from "./notifications.ts";
 import { expandSkillCommand } from "./skills.ts";
+import { createMcpCommandUI, mcpCommandRequest, mcpViewport } from "./mcp-ui.ts";
 export { runtimeSocketPath } from "./client.ts";
 import { z } from "zod";
 import { assembleDurableZero, type AssembleDurableZeroOptions, type DurableZeroInstance } from "@durable-zero/runner";
@@ -27,6 +28,9 @@ const requests = {
   "session/getStats": conversation,
   "session/getView": z.object({}).strict(),
   "runtime/info": z.object({}).strict(),
+  "session/mcpCommand": mcpCommandRequest,
+  "session/mcpInput": z.object({ data: z.string() }).strict(),
+  "session/mcpResize": mcpViewport.strict(),
   "session/reload": z.object({ path: z.string().trim().min(1).optional() }).strict(),
   "session/compact": z.object({ instructions: z.string().optional() }).strict(),
   "models/set": z.object({
@@ -62,6 +66,7 @@ export async function startRuntime(options: RuntimeOptions) {
   let unsubscribeView: (() => void) | undefined;
   let viewRevision = 0;
   let commands: Promise<unknown> = Promise.resolve();
+  let activeMcpUI: { socket: Socket; bridge: ReturnType<typeof createMcpCommandUI>; completion: Promise<void> } | undefined;
   let assemblyOptions: AssembleDurableZeroOptions = {
     ...options, sessionDir: resolve(options.sessionDir), noGlobalExtensions: true, stdin: input, stdout: output,
   };
@@ -98,11 +103,36 @@ export async function startRuntime(options: RuntimeOptions) {
         const schema = requests[method as keyof typeof requests];
         const parsed = schema.safeParse(params);
         if (!parsed.success) throw new JsonRpcInvalidParamsError(parsed.error.message);
+        if (method === "session/mcpInput" || method === "session/mcpResize") {
+          if (activeMcpUI?.socket !== socket) throw new Error("This connection does not own an MCP manager");
+          if (method === "session/mcpInput") activeMcpUI.bridge.input((parsed.data as { data: string }).data);
+          else activeMcpUI.bridge.resize(parsed.data as z.infer<typeof mcpViewport>);
+          return { ok: true };
+        }
+        if (method === "session/mcpCommand") {
+          // Serialize admission, not the menu's lifetime: other clients can still abort active work.
+          const started = commands.then(() => {
+            if (socket.destroyed) throw new Error("MCP terminal disconnected before admission");
+            if (activeMcpUI) throw new Error("An MCP manager is already open. Close it first.");
+            const request = parsed.data as z.infer<typeof mcpCommandRequest>;
+            const ui = createMcpCommandUI(request,
+              event => transport.notify("session/mcpTerminal", event),
+              event => client.request("session/mcpTerminal", event),
+              (message, level) => transport.notify("session/mcpNotice", { message, level }));
+            const completion = Promise.resolve().then(() => instance!.controller!.executeMcpCommand(request.args, ui.ui))
+              .finally(() => { if (activeMcpUI?.bridge === ui) activeMcpUI = undefined; });
+            activeMcpUI = { socket, bridge: ui, completion };
+            return { completion };
+          });
+          commands = started.then(() => undefined, () => undefined);
+          return (await started).completion.then(() => ({ ok: true }));
+        }
         // Serialize admission with reload so no prompt can slip between the idle check and close.
         const operation = commands.then(async () => {
         const engine = instance!.engine;
         switch (method) {
           case "session/reload": {
+            if (activeMcpUI) throw new Error("Cannot reload: close the MCP manager first.");
             if (!await instance!.isIdle?.()) throw new Error("Cannot reload: active work is running. Wait for completion or abort it first.");
             const { path } = parsed.data as z.infer<typeof requests["session/reload"]>;
             const extensionPath = path ? await realpath(resolve(options.cwd ?? process.cwd(), path)) : undefined;
@@ -147,12 +177,18 @@ export async function startRuntime(options: RuntimeOptions) {
     });
     clients.set(socket, transport.notify);
     socket.on("error", () => socket.destroy());
-    socket.once("close", () => { client.stop(); clients.delete(socket); });
+    socket.once("close", () => {
+      if (activeMcpUI?.socket === socket) activeMcpUI.bridge.disconnect();
+      client.stop(); clients.delete(socket);
+    });
     client.start();
   });
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => closing ??= (async () => {
+    const pendingMcpUI = activeMcpUI;
+    pendingMcpUI?.bridge.disconnect();
     for (const socket of clients.keys()) socket.destroy();
+    await pendingMcpUI?.completion.catch(() => {});
     if (server.listening) await new Promise<void>((done, reject) => server.close((error) => error ? reject(error) : done()));
     unsubscribeView?.();
     bridge.stop();

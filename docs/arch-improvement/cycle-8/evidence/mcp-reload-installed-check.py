@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Installed short-command/rich-PTY acceptance; deterministic model, real MCP and Harness.
 Usage: python3 mcp-reload-installed-check.py PREFIX INSTALLED_PROVIDER INSTALLED_MCP_PEER
+Includes the original SDK /mcp manager controls, editor restoration and UI disconnect.
 Creates only its own tmux server, workspace and session. Never attaches to a user's tab.
 """
 import json
@@ -49,6 +50,30 @@ def screen(label=None):
     if label:
         (base / (label + '.txt')).write_text(value)
     return value
+
+def menu_screen():
+    return tmux('capture-pane', '-p', '-t', pane)
+
+def keys(*values):
+    for value in values:
+        tmux('send-keys', '-t', pane, value)
+        time.sleep(.04)  # Let the real PTY/native selector paint before the next human key.
+
+def choose(label):
+    def selected():
+        for line in menu_screen().splitlines():
+            if line.strip().startswith('→ '):
+                return line.strip()[2:].lstrip('✓ ').split('  ')[0].strip()
+    until(selected, 'native menu selection')
+    keys('PPage')
+    for _ in range(8):
+        current = selected()
+        if current == label:
+            keys('Enter')
+            return
+        keys('Down')
+        until(lambda: selected() and selected() != current, 'native selection advances')
+    raise AssertionError('Native menu item not found: ' + label)
 
 def enter(value):
     tmux('send-keys', '-t', pane, '-l', value)
@@ -118,10 +143,73 @@ try:
     pane_pid = int(tmux('display-message', '-p', '-t', pane, '#{pane_pid}').strip())
     check('launcher uses actual rich PTY', os.readlink(f'/proc/{pane_pid}/fd/0').startswith('/dev/pts/'))
     check('runtime belongs to installed prefix', Path(info['entrypoint']).resolve().is_relative_to(prefix))
+    enter('/mcp')
+    until(lambda: 'MCP servers' in menu_screen() and 'fixture' in menu_screen(), 'original SDK root manager')
+    screen('00a-manager-root')
+    check('bare /mcp opens the original SDK manager in the actual rich PTY', True)
+    keys('Enter')
+    until(lambda: 'Reconnect' in menu_screen() and 'Disable' in menu_screen(), 'original SDK server manager')
+    choose('Exposure')
+    until(lambda: 'deferred' in menu_screen() and 'direct' in menu_screen(), 'native exposure selector')
+    screen('00b-exposure')
+    choose('direct')
+    until(lambda: json.loads((agent / 'mcp.json').read_text())['mcpServers']['fixture'].get('exposure') == 'direct', 'saved direct exposure')
+    check('native exposure control saves direct exposure', True)
+    until(lambda: 'Reconnect' in menu_screen(), 'server menu after exposure change')
+    choose('Exposure')
+    until(lambda: 'deferred' in menu_screen(), 'exposure selector reopened')
+    choose('codemode')
+    until(lambda: json.loads((agent / 'mcp.json').read_text())['mcpServers']['fixture'].get('exposure', 'codemode') == 'codemode', 'restored codemode exposure')
+    until(lambda: 'Reconnect' in menu_screen(), 'server menu after exposure reset')
+    choose('Tools')
+    until(lambda: 'zero_probe' in menu_screen(), 'original offered tools screen')
+    screen('00c-offered-tools')
+    check('native manager displays actual MCP tool schemas', True)
+    keys('Escape')
+    until(lambda: 'Reconnect' in menu_screen(), 'return from tools')
+    reconnects = (base / 'peer.trace').read_text().count('initialize\n')
+    choose('Reconnect')
+    until(lambda: (base / 'peer.trace').read_text().count('initialize\n') > reconnects and 'State: connected' in menu_screen(), 'manager reconnect settled')
+    check('native reconnect reopens the actual peer', True)
+    choose('Disable')
+    until(lambda: json.loads((agent / 'mcp.json').read_text())['mcpServers']['fixture'].get('enabled') is False and 'Enable' in menu_screen(), 'native server disable')
+    screen('00d-disabled')
+    check('native disable saves configuration and refreshes manager', True)
+    choose('Enable')
+    until(lambda: json.loads((agent / 'mcp.json').read_text())['mcpServers']['fixture'].get('enabled') is not False and 'connected' in menu_screen() and 'Tools' in menu_screen(), 'native server enable')
+    check('native enable reconnects the actual peer', True)
+    tmux('resize-window', '-t', pane, '-x', '100', '-y', '38')
+    until(lambda: 'fixture' in menu_screen(), 'manager resize')
+    check('manager remains usable after actual PTY resize', True)
+    keys('Escape')
+    until(lambda: 'MCP servers' in menu_screen(), 'manager returns to root')
+    keys('Escape')
+    until(lambda: 'scripted' in menu_screen() and 'MCP servers' not in menu_screen(), 'Escape restores the rich editor')
+    tmux('resize-window', '-t', pane, '-x', '140', '-y', '45')
+    check('manager commands do not become native user prompts', not any(e.get('role') == 'user' for e in transcript()))
     enter(invocation)
     until(lambda: assistant_has('INSTALLED_MCP_V1'), 'real installed MCP call')
     check('native MCP call reached real server', (base / 'peer.trace').read_text().count('tools/call\n') == 1)
     screen('01-mcp')
+    check('editor resumes after manager Escape and admits a real native MCP call', True)
+    enter('/mcp')
+    until(lambda: 'MCP servers' in menu_screen(), 'manager before terminal disconnection')
+    keys('Enter')
+    until(lambda: 'Reconnect' in menu_screen(), 'nested manager before disconnection')
+    tmux('kill-pane', '-t', pane)
+    def reload_after_disconnect():
+        try:
+            rpc.request('session/reload')
+            return True
+        except AssertionError as error:
+            if 'close the MCP manager' in str(error):
+                return False
+            raise
+    until(reload_after_disconnect, 'disconnected manager released its native UI')
+    check('nested manager disconnect releases only UI and preserves runtime PID', rpc.request('runtime/info')['pid'] == runtime_pid)
+    pane = launch(False)
+    until(lambda: 'scripted' in menu_screen(), 'rich editor reconnects after manager disconnect')
+    check('manager reconnect does not replay prompt', sum(e.get('role') == 'user' for e in transcript()) == 1)
     config('INSTALLED_MCP_V2')
     skill = work / '.pi/skills/reloaded/SKILL.md'
     skill.parent.mkdir(parents=True)
@@ -164,7 +252,10 @@ try:
     check('same command reuses runtime PID without prompt replay', rpc.request('runtime/info')['pid'] == runtime_pid and sum(e.get('role') == 'user' for e in transcript()) == 5)
     screen('04-reconnected')
 except Exception:
-    screen('99-failure')
+    try:
+        screen('99-failure')
+    except AssertionError:
+        pass
     if rpc:
         (base / 'failure-transcript.json').write_text(json.dumps(transcript(), indent=2))
     raise
@@ -176,8 +267,9 @@ finally:
         proc = Path(f'/proc/{runtime_pid}/cmdline')
         if proc.exists():
             args = proc.read_bytes().split(b'\0')
-            expected = str(prefix / 'node_modules/@local-durable/runtime/bin/runtime.mjs').encode()
-            if expected in args and str(session).encode() in args:
+            expected = (prefix / 'node_modules/@local-durable/runtime/bin/runtime.mjs').resolve()
+            if any(arg.endswith(b'/bin/runtime.mjs') and Path(os.fsdecode(arg)).resolve() == expected for arg in args) and str(session).encode() in args:
                 os.kill(runtime_pid, signal.SIGTERM)
+                until(lambda: not proc.exists() or (Path(f'/proc/{runtime_pid}/stat').read_text().split()[2] == 'Z'), 'owned runtime stops after acceptance')
     (base / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     print('EVIDENCE=' + str(base), flush=True)

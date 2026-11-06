@@ -1,0 +1,98 @@
+[
+  {
+    "check": "installed dependency closure",
+    "pass": true
+  },
+  {
+    "check": "fixtures belong to installed prefix",
+    "pass": true
+  },
+  {
+    "check": "short command entry is executable",
+    "pass": true
+  },
+  {
+    "check": "launcher uses actual rich PTY",
+    "pass": true
+  },
+  {
+    "check": "runtime belongs to installed prefix",
+    "pass": true
+  },
+  {
+    "check": "bare /mcp opens the original SDK manager in the actual rich PTY",
+    "pass": true
+  },
+  {
+    "check": "native exposure control saves direct exposure",
+    "pass": true
+  },
+  {
+    "check": "native manager displays actual MCP tool schemas",
+    "pass": true
+  },
+  {
+    "check": "native reconnect reopens the actual peer",
+    "pass": true
+  },
+  {
+    "check": "native disable saves configuration and refreshes manager",
+    "pass": true
+  },
+  {
+    "check": "native enable reconnects the actual peer",
+    "pass": true
+  },
+  {
+    "check": "manager remains usable after actual PTY resize",
+    "pass": true
+  },
+  {
+    "check": "manager commands do not become native user prompts",
+    "pass": true
+  },
+  {
+    "check": "native MCP call reached real server",
+    "pass": true
+  },
+  {
+    "check": "editor resumes after manager Escape and admits a real native MCP call",
+    "pass": true
+  },
+  {
+    "check": "nested manager disconnect releases only UI and preserves runtime PID",
+    "pass": true
+  },
+  {
+    "check": "manager reconnect does not replay prompt",
+    "pass": true
+  },
+  {
+    "check": "rich reload preserves native session and runtime PID",
+    "pass": true
+  },
+  {
+    "check": "reload publishes a newer view revision",
+    "pass": true
+  },
+  {
+    "check": "rich UI accepts the refreshed skill catalogue",
+    "pass": true
+  },
+  {
+    "check": "reload reconnected the actual MCP peer",
+    "pass": true
+  },
+  {
+    "check": "rich reload refuses active work",
+    "pass": true
+  },
+  {
+    "check": "Bash continues after launcher terminal disconnect",
+    "pass": true
+  },
+  {
+    "check": "same command reuses runtime PID without prompt replay",
+    "pass": true
+  }
+]

@@ -1,6 +1,7 @@
 import { createProvider, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { setTimeout as delay } from "node:timers/promises";
+import { writeFile } from "node:fs/promises";
 
 // Only the model is scripted. The Harness, SQLite, tool registry and filesystem execution are real.
 function respond(_model: unknown, context: any, options: any) {
@@ -24,6 +25,7 @@ function respond(_model: unknown, context: any, options: any) {
       stream.push({ type: "toolcall_start", contentIndex: 0, partial: message });
       stream.push({ type: "toolcall_end", contentIndex: 0, toolCall: call, partial: message });
       message.stopReason = "toolUse";
+      if (process.env.ZERO_FIXTURE_TOOL_RESPONSE) await writeFile(process.env.ZERO_FIXTURE_TOOL_RESPONSE, JSON.stringify(call));
       stream.push({ type: "done", reason: "toolUse", message });
       stream.end(message);
       return;

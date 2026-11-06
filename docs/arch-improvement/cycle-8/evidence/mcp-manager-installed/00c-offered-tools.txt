@@ -1,0 +1,45 @@
+Zero session: /tmp/zero-mcp-installed-cl5xb1xk/session
+Runtime PID: 170570 · log: /tmp/zero-mcp-installed-cl5xb1xk/session/.terminal/runtime.log
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx ?
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Tools of fixture
+ Exposure codemode: called from codemode scripts, which find them with searchTools()
+
+→ zero_probe                      Return the isolated MCP server generation
+
+ enter back • escape/ctrl+c back
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

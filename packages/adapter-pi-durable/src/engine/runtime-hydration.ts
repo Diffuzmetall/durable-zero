@@ -1,4 +1,5 @@
-import type { Conversation, ConversationId, ConversationView, Cursor, Harness, TaskGraph } from "@earendil-works/pi-durable";
+import { LiveDoc, InboxDoc, type Conversation, type ConversationId, type ConversationView, type Cursor, type Harness, type TaskGraph } from "@earendil-works/pi-durable";
+import { SubagentsDoc, type SubagentsState } from "./subagent-docs.ts";
 import { firstInput, type ConversationSummary, type RuntimeReadBinding, runtimeContext } from "./runtime-types.ts";
 
 export function hydrateSessionActiveTools(
@@ -66,13 +67,36 @@ export async function createTaskGraphBinding(
 	};
 }
 
+export function applySubagentSummaries(input: readonly ConversationSummary[], parentId: ConversationId, doc: Readonly<SubagentsState>): ConversationSummary[] {
+	return input.map(row => {
+		const found = Object.entries(doc.agents).find(([, agent]) => agent.conversationId === row.id);
+		if (!found) return row;
+		const [key, agent] = found;
+		const sending = doc.sending?.reports.some(report => report.name === agent.name) ?? false;
+		return { ...row, key, parentId, label: agent.name, title: agent.task, role: agent.role,
+			ownerTaskId: agent.ownerTaskId, reporter: agent.reporter,
+			deliveryPending: sending || (doc.outbox?.some(report => report.name === agent.name) ?? false),
+			hold: sending ? doc.deliveryHold?.reason : undefined };
+	});
+}
+
 export async function loadSummaries(harness: Harness, rootId: ConversationId): Promise<ConversationSummary[]> {
-	const summaries: ConversationSummary[] = [];
+	let summaries: ConversationSummary[] = [];
+	const groups: Array<{ id: ConversationId; doc: Readonly<SubagentsState> }> = [];
 	let cursor: Cursor | undefined;
 	do {
 		const page = await harness.commit((tx) => tx.scanConversations({}, 256, cursor), runtimeContext);
-		for (const { id } of page.items) summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...(await firstInput(harness, id)) });
+		for (const { id } of page.items) {
+			const [input, live, inbox, doc] = await Promise.all([
+				firstInput(harness, id), harness.snapshot(LiveDoc, id, runtimeContext),
+				harness.snapshot(InboxDoc, id, runtimeContext), harness.snapshot(SubagentsDoc, id, runtimeContext),
+			]);
+			summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...input,
+				...(live === undefined ? {} : { live }), ...(inbox === undefined ? {} : { inbox }) });
+			if (doc) groups.push({ id, doc });
+		}
 		cursor = page.next;
 	} while (cursor !== undefined);
+	for (const { id, doc } of groups) summaries = applySubagentSummaries(summaries, id, doc);
 	return summaries;
 }

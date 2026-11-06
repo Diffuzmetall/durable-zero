@@ -66,6 +66,14 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 	};
 
 	return {
+		async executeMcpCommand(args, ui) {
+			const runner = ctx.extensionRunner;
+			const registered = runner?.getRegisteredCommands().find(command => command.name === "mcp" && command.sourceInfo.path === "<inline:mcp>");
+			if (!runner || !registered) throw new Error("Native MCP command is unavailable");
+			// Keep the runtime's headless context unchanged. Only this command owns a terminal UI.
+			const context = runner.createCommandContext();
+			await registered.handler(args, { ...context, ui: { ...context.ui, ...ui }, mode: "tui", hasUI: true });
+		},
 		submit: (input, whenBusy, conversationId) =>
 			command(async () => {
 				const target = conversationId === undefined ? ctx.bindings.current : await ctx.opened.conversation(conversationId, runtimeContext);

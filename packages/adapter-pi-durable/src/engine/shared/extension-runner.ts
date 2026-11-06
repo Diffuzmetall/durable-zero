@@ -32,7 +32,7 @@ import { createExtensionUIContext } from "./extension-ui-context.ts";
 export { createExtensionUIContext };
 
 export interface CreateExtensionActionsOptions {
-	getRegisteredTools?: () => Array<{ definition: { name: string; description?: string; parameters?: unknown; promptGuidelines?: string; exposure?: string; namespace?: string; annotations?: unknown }; sourceInfo?: unknown }>;
+	getRegisteredTools?: () => Array<{ definition: { name: string; description?: string; parameters?: unknown; promptGuidelines?: string; exposure?: string; defaultActive?: boolean; namespace?: string; annotations?: unknown }; sourceInfo?: unknown }>;
 	getCallableTools?: () => Array<{ name: string; description: string; parameters: unknown }>;
 	settingsManager?: SettingsManager;
 	onActiveToolsChanged?: (tools: string[]) => void;
@@ -46,6 +46,7 @@ export function createExtensionActions(
 	initialActiveTools: string[] = [],
 ): ExtensionActions {
 	let activeToolNames = [...initialActiveTools];
+	const registeredExposures = new Map<string, string>();
 	let sessionName: string | undefined;
 
 	const sendMessage: ExtensionActions["sendMessage"] = (message: any, sendOptions?: any) => {
@@ -100,6 +101,19 @@ export function createExtensionActions(
 		},
 		refreshTools: () => {
 			options.onToolsChanged?.();
+			const active = new Set(activeToolNames);
+			for (const { definition } of options.getRegisteredTools?.() ?? []) {
+				const exposure = definition.exposure ?? "direct";
+				if (exposure === "hidden") active.delete(definition.name);
+				else if (registeredExposures.get(definition.name) !== exposure && definition.defaultActive !== false &&
+					(exposure === "direct" || exposure === "model-only")) active.add(definition.name);
+				registeredExposures.set(definition.name, exposure);
+			}
+			const next = [...active];
+			if (next.length !== activeToolNames.length || next.some((name, index) => name !== activeToolNames[index])) {
+				activeToolNames = next;
+				options.onActiveToolsChanged?.(next);
+			}
 		},
 		getThinkingLevel: () => (options.settingsManager?.getDefaultThinkingLevel?.() ?? "high") as "off" | "minimal" | "low" | "medium" | "high" | "xhigh",
 		setThinkingLevel: () => {},
@@ -204,6 +218,7 @@ export async function setupExtensionRunner(options: SetupExtensionRunnerOptions)
 	};
 
 	runner.bindCore(actions, contextActions);
+	actions.refreshTools();
 
 	await runner.emit({ type: "session_start", reason: "startup" });
 	return runner;

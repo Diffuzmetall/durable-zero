@@ -18,7 +18,8 @@
     "Support caller-owned detach signal",
     "Load Photon through its native Node module without filesystem monkey-patching",
     "Reject normal model-picker selections when the native selected conversation changes",
-    "Show activity unavailable for native summary rows without live evidence; preserve activity styles and use client-enriched selected native live documents"
+    "Show activity unavailable for native summary rows without live evidence; preserve activity styles and use client-enriched selected native live documents",
+    "Route /mcp to the original Pi MCP manager through a command-owned remote terminal; force the existing editor to repaint after manager ownership ends, including runtime notifications received while suspended"
   ],
   "replacements": [
     {
@@ -72,7 +73,7 @@
     {
       "path": "experimental/durable/tui.js",
       "sha256": "a153e03e2c032dc684edb0c6a5ce19fb04896ac4274baaaef818583d16d96e2b",
-      "candidateSha256": "7227cd3869713ffcd3519da0603b6f3bc47c420380ce1f939665126eb9c0cf27"
+      "candidateSha256": "2790f2e49f02d0b75c5206695ecc259022c62edc871c3c8ace9dc98ee603d6f0"
     },
     {
       "path": "experimental/durable/upstream.mjs",

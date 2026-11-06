@@ -1,0 +1,45 @@
+
+
+ <skill name="example" location="/tmp/zero-capabilities-installed-k5u5_dct/workspace/.pi/skills/example/SKILL.md">
+ References are relative to /tmp/zero-capabilities-installed-k5u5_dct/workspace/.pi/skills/example.
+
+ INSTALLED_SKILL_BODY
+ </skill>
+
+ installed arguments
+
+
+ started:<skill name="example" location="/tmp/zero-capabilities-installed-k5u5_dct/workspace/.pi/skills/example/SKILL.md">
+ References are relative to /tmp/zero-capabilities-installed-k5u5_dct/workspace/.pi/skills/example.
+
+ INSTALLED_SKILL_BODY
+ </skill>
+
+ installed arguments
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+ Cannot submit: Error: Unknown skill: missing (Esc to return)
+>
+
+  No matching commands
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx 0%
+ended 4:06 pm · just now

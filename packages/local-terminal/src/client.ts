@@ -1,6 +1,6 @@
 import type { DurableView as NativeDurableView } from "@durable-zero/adapter-pi-durable";
-import { connectRuntime } from "@local-durable/runtime/client";
-import type { TerminalController, TerminalView, TerminalViewSource } from "@local-durable/terminal-ui";
+import { connectRuntime, mcpTerminalOperation } from "@local-durable/runtime/client";
+import { ProcessTerminal, type McpTerminalHost, type TerminalController, type TerminalView, type TerminalViewSource } from "@local-durable/terminal-ui";
 import { z } from "zod";
 
 // Validate the transport envelope once. Native document and message values remain native values.
@@ -35,11 +35,11 @@ export function presentView(view: NativeDurableView, connection: TerminalView["c
   return {
     ...view,
     session: { ...view.session, name: view.session.id },
-    // Summaries contain identity, not activity. Enrich only the selected row with native documents.
+    // Nonselected activity comes from native summaries; selected documents are the current native view.
     conversations: view.conversations.map(row => row.id === view.conversation.conversation.id ? {
       ...row,
-      ...(view.conversation.docs["pi.live"] === undefined ? {} : { live: view.conversation.docs["pi.live"] }),
-      ...(view.conversation.docs["pi.inbox"] === undefined ? {} : { inbox: view.conversation.docs["pi.inbox"] }),
+      ...(view.conversation.docs["pi.live"] === undefined ? {} : { live: view.conversation.docs["pi.live"] as NativeDurableView["conversations"][number]["live"] }),
+      ...(view.conversation.docs["pi.inbox"] === undefined ? {} : { inbox: view.conversation.docs["pi.inbox"] as NativeDurableView["conversations"][number]["inbox"] }),
     } : row),
     connection,
     automation: { scheduled: 0, failed: 0, unavailable: true },
@@ -63,6 +63,8 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
   #listeners = new Set<() => void>();
   #stopped = false;
   #failure: Error | undefined;
+  #mcpTerminal: ProcessTerminal | undefined;
+  #mcpReady = false;
   readonly closed: Promise<void>;
 
   private constructor(transport: RuntimeConnection, initial: ViewEnvelope) {
@@ -84,6 +86,15 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
     let failure: Error | undefined;
     let transport: RuntimeConnection | undefined;
     transport = await connect(sessionDir, (method, params) => {
+      if (method === "session/mcpTerminal") {
+        if (!client) throw new Error("MCP UI output before client initialization");
+        return client.#terminalOperation(params);
+      }
+      if (method === "session/mcpNotice") {
+        const notice = z.object({ message: z.string(), level: z.enum(["info", "warning", "error"]) }).parse(params);
+        if (client) client.#mcpTerminal?.write(`\r\n${notice.level}: ${notice.message}\r\n`);
+        return;
+      }
       if (method !== "session/view") return;
       try {
         const envelope = parseViewEnvelope(params);
@@ -107,6 +118,39 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
     }
   }
 
+  #terminalOperation(value: unknown): void | Promise<void> {
+    if (!this.#mcpTerminal) throw new Error("No active MCP terminal");
+    const event = mcpTerminalOperation.parse(value);
+    switch (event.op) {
+      case "write": this.#mcpReady = true; return this.#mcpTerminal.write(event.data);
+      case "setTitle": return this.#mcpTerminal.setTitle(event.title);
+      case "setProgress": return this.#mcpTerminal.setProgress(event.active);
+      case "setProgramStatus": return this.#mcpTerminal.setProgramStatus(event.status);
+      case "drainInput": return this.#mcpTerminal.drainInput(event.maxMs, event.idleMs);
+    }
+  }
+  async mcpCommand(args: string, host: McpTerminalHost): Promise<void> {
+    if (this.#stopped) throw new Error("Terminal disconnected");
+    if (this.#mcpTerminal) throw new Error("An MCP manager is already open");
+    host.suspend();
+    const terminal = new ProcessTerminal();
+    this.#mcpTerminal = terminal;
+    const viewport = () => ({ columns: terminal.columns, rows: terminal.rows, kittyProtocolActive: terminal.kittyProtocolActive });
+    this.#mcpReady = false;
+    const resize = () => { if (this.#mcpReady) void this.#request("session/mcpResize", viewport()).catch(() => this.close()); };
+    try {
+      terminal.start(data => {
+        if (this.#mcpReady) void this.#request("session/mcpInput", { data }).catch(() => this.close());
+      }, resize);
+      // The first frame means the remote manager has admitted this terminal; negotiation replies before it are local.
+      await this.#transport.request("session/mcpCommand", { args, colors: host.colors, keybindings: host.keybindings, ...viewport() });
+    } finally {
+      this.#mcpReady = false;
+      terminal.stop();
+      this.#mcpTerminal = undefined;
+      if (!this.#stopped) host.resume();
+    }
+  }
   get failure(): Error | undefined { return this.#failure; }
   current(): TerminalView { return this.#view; }
   subscribe(listener: () => void): () => void {

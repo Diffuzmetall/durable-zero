@@ -1,0 +1,1308 @@
+diff --git a/packages/adapter-pi-durable/src/engine/extension-mount.ts b/packages/adapter-pi-durable/src/engine/extension-mount.ts
+index 5b2c429..1d4b539 100644
+--- a/packages/adapter-pi-durable/src/engine/extension-mount.ts
++++ b/packages/adapter-pi-durable/src/engine/extension-mount.ts
+@@ -1,5 +1,5 @@
+ import { type DefaultResourceLoader, type ModelRuntime, ExtensionRunner } from "@earendil-works/pi-coding-agent";
+-import { defineExtension, hook, ToolTask, type Registry } from "@earendil-works/pi-durable";
++import { defineExtension, hook, GenerationTask, ToolTask, type Registry } from "@earendil-works/pi-durable";
+ import { adaptExtensionTool, installExtensionTools, type NestedToolExecutor } from "./tool-adapter.ts";
+ import { setupExtensionRunner } from "./extension-bridge.ts";
+ import type { SessionLocation } from "@durable-zero/adapter-pi-durable";
+@@ -175,21 +175,28 @@ export async function mountExtensionBridge(
+ 		});
+ 
+ 		if (extensionRunner) {
+-			// The SDK has no public readiness method. Its headless status command waits for initial
+-			// connections, so settle those before Harness.open can pin a task's registry snapshot.
+-			const mcpStatus = extensionRunner.getRegisteredCommands().find(command =>
+-				command.name === "mcp" && command.sourceInfo.path === "<inline:mcp>");
+-			if (mcpStatus) await mcpStatus.handler("", extensionRunner.createCommandContext());
+-			syncToolsToRegistry();
++			// MCP startup belongs to Pi's background connections, cancelled by session_shutdown.
++			// Its status command can wait indefinitely; never make it an assembly readiness barrier.
+ 			extensionRunner.onError((err) => {
+ 				report(err);
+ 				onNotice?.("error", `[Extension Error] ${err.extensionPath} (${err.event}): ${err.error}`);
+ 			});
+ 			syncToolsToRegistry();
+-			// Native discovery tools must run the same readiness and permission hooks as Pi tools.
++			const mcpReadiness = extensionsResult.extensions.find(extension => extension.path === "<inline:mcp>")?.handlers.get("tool_call") ?? [];
+ 			registry.install(defineExtension({
+ 				name: "pi-discovery-hooks",
+-				hooks: [hook(ToolTask, {
++				hooks: [hook(GenerationTask, {
++					async afterResponse(message, _api, context) {
++						// Wait before tool tasks take their immutable registry snapshots, not during startup.
++						// Only the built-in MCP readiness handlers run here; permissions still run beforeTool.
++						for (const call of message.content) {
++							if (call.type !== "toolCall" || (call.name !== "codemode" && call.name !== "tool_search")) continue;
++							for (const ready of mcpReadiness) await ready({
++								type: "tool_call", toolName: call.name, toolCallId: call.id, input: call.arguments,
++							}, { ...extensionRunner!.createContext(), signal: context.abortSignal });
++						}
++					},
++				}), hook(ToolTask, {
+ 					async beforeTool(call) {
+ 						if (call.name !== "codemode" && call.name !== "tool_search") return;
+ 						// Preserve SDK discovery readiness and permission hooks for real native calls.
+diff --git a/packages/adapter-pi-durable/src/engine/runtime-controller.ts b/packages/adapter-pi-durable/src/engine/runtime-controller.ts
+index 895fa9d..93aab6f 100644
+--- a/packages/adapter-pi-durable/src/engine/runtime-controller.ts
++++ b/packages/adapter-pi-durable/src/engine/runtime-controller.ts
+@@ -66,6 +66,14 @@ export function createDurableController(ctx: ControllerContext): DurableControll
+ 	};
+ 
+ 	return {
++		async executeMcpCommand(args, ui) {
++			const runner = ctx.extensionRunner;
++			const registered = runner?.getRegisteredCommands().find(command => command.name === "mcp" && command.sourceInfo.path === "<inline:mcp>");
++			if (!runner || !registered) throw new Error("Native MCP command is unavailable");
++			// Keep the runtime's headless context unchanged. Only this command owns a terminal UI.
++			const context = runner.createCommandContext();
++			await registered.handler(args, { ...context, ui: { ...context.ui, ...ui }, mode: "tui", hasUI: true });
++		},
+ 		submit: (input, whenBusy, conversationId) =>
+ 			command(async () => {
+ 				const target = conversationId === undefined ? ctx.bindings.current : await ctx.opened.conversation(conversationId, runtimeContext);
+diff --git a/packages/adapter-pi-durable/src/engine/runtime-hydration.ts b/packages/adapter-pi-durable/src/engine/runtime-hydration.ts
+index 45a0112..b136666 100644
+--- a/packages/adapter-pi-durable/src/engine/runtime-hydration.ts
++++ b/packages/adapter-pi-durable/src/engine/runtime-hydration.ts
+@@ -1,4 +1,5 @@
+-import type { Conversation, ConversationId, ConversationView, Cursor, Harness, TaskGraph } from "@earendil-works/pi-durable";
++import { LiveDoc, InboxDoc, type Conversation, type ConversationId, type ConversationView, type Cursor, type Harness, type TaskGraph } from "@earendil-works/pi-durable";
++import { SubagentsDoc, type SubagentsState } from "./subagent-docs.ts";
+ import { firstInput, type ConversationSummary, type RuntimeReadBinding, runtimeContext } from "./runtime-types.ts";
+ 
+ export function hydrateSessionActiveTools(
+@@ -66,13 +67,36 @@ export async function createTaskGraphBinding(
+ 	};
+ }
+ 
++export function applySubagentSummaries(input: readonly ConversationSummary[], parentId: ConversationId, doc: Readonly<SubagentsState>): ConversationSummary[] {
++	return input.map(row => {
++		const found = Object.entries(doc.agents).find(([, agent]) => agent.conversationId === row.id);
++		if (!found) return row;
++		const [key, agent] = found;
++		const sending = doc.sending?.reports.some(report => report.name === agent.name) ?? false;
++		return { ...row, key, parentId, label: agent.name, title: agent.task, role: agent.role,
++			ownerTaskId: agent.ownerTaskId, reporter: agent.reporter,
++			deliveryPending: sending || (doc.outbox?.some(report => report.name === agent.name) ?? false),
++			hold: sending ? doc.deliveryHold?.reason : undefined };
++	});
++}
++
+ export async function loadSummaries(harness: Harness, rootId: ConversationId): Promise<ConversationSummary[]> {
+-	const summaries: ConversationSummary[] = [];
++	let summaries: ConversationSummary[] = [];
++	const groups: Array<{ id: ConversationId; doc: Readonly<SubagentsState> }> = [];
+ 	let cursor: Cursor | undefined;
+ 	do {
+ 		const page = await harness.commit((tx) => tx.scanConversations({}, 256, cursor), runtimeContext);
+-		for (const { id } of page.items) summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...(await firstInput(harness, id)) });
++		for (const { id } of page.items) {
++			const [input, live, inbox, doc] = await Promise.all([
++				firstInput(harness, id), harness.snapshot(LiveDoc, id, runtimeContext),
++				harness.snapshot(InboxDoc, id, runtimeContext), harness.snapshot(SubagentsDoc, id, runtimeContext),
++			]);
++			summaries.push({ id, label: id === rootId ? "main" : `subagent ${id}`, ...input,
++				...(live === undefined ? {} : { live }), ...(inbox === undefined ? {} : { inbox }) });
++			if (doc) groups.push({ id, doc });
++		}
+ 		cursor = page.next;
+ 	} while (cursor !== undefined);
++	for (const { id, doc } of groups) summaries = applySubagentSummaries(summaries, id, doc);
+ 	return summaries;
+ }
+diff --git a/packages/adapter-pi-durable/src/engine/runtime-types.ts b/packages/adapter-pi-durable/src/engine/runtime-types.ts
+index 2a64dbf..8ba8f24 100644
+--- a/packages/adapter-pi-durable/src/engine/runtime-types.ts
++++ b/packages/adapter-pi-durable/src/engine/runtime-types.ts
+@@ -1,6 +1,6 @@
+ import type { AttachedReplicatedState } from "@earendil-works/chord";
+ import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+-import type { ModelThinkingLevel, ImageContent, TextContent } from "@earendil-works/pi-ai";
++import type { ModelThinkingLevel, ImageContent, TextContent, AssistantMessage } from "@earendil-works/pi-ai";
+ import {
+ 	type AgentState,
+ 	type ConversationId,
+@@ -15,7 +15,7 @@ import {
+ } from "@earendil-works/pi-durable";
+ export { ROOT_CONVERSATION_ID };
+ export type { Cursor, ImageContent, TextContent };
+-import type { ModelRuntime, SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
++import type { ExtensionUIContext, ModelRuntime, SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
+ import type { Provider } from "@earendil-works/pi-ai";
+ import type { SubagentPolicyHolder, ExecutionEnvFactory } from "@durable-zero/core";
+ import type { PromptOptions, DynamicPromptSections } from "./prompt.ts";
+@@ -60,6 +60,16 @@ export interface ConversationSummary {
+ 	readonly id: ConversationId;
+ 	readonly label: string;
+ 	readonly title?: string;
++	readonly live?: Readonly<import("@earendil-works/pi-durable").LiveState> | undefined;
++	readonly inbox?: Readonly<import("@earendil-works/pi-durable").InboxState> | undefined;
++	readonly lastStop?: AssistantMessage["stopReason"];
++	readonly parentId?: ConversationId;
++	readonly key?: string;
++	readonly role?: string;
++	readonly ownerTaskId?: import("@earendil-works/pi-durable").TaskId;
++	readonly reporter?: import("@earendil-works/pi-durable").TaskId | undefined;
++	readonly deliveryPending?: boolean;
++	readonly hold?: string | undefined;
+ }
+ 
+ export interface DurableView {
+@@ -99,6 +109,7 @@ export interface AdmissionReceipt {
+ }
+ 
+ export interface DurableController {
++	executeMcpCommand(args: string, ui: Pick<ExtensionUIContext, "custom" | "select" | "input" | "notify" | "theme">): Promise<void>;
+ 	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp", conversationId?: ConversationId): Promise<AdmissionReceipt>;
+ 	compact(instructions: string | undefined): Promise<void>;
+ 	abort(conversationId?: ConversationId): Promise<void>;
+@@ -162,15 +173,18 @@ export function titleOf(entry: EntryRecord | undefined): { title?: string } {
+ 	return { title: text.replace(/\s+/g, " ").trim() };
+ }
+ 
+-export async function firstInput(harness: Harness, id: ConversationId): Promise<{ title?: string }> {
++export async function firstInput(harness: Harness, id: ConversationId): Promise<Pick<ConversationSummary, "title" | "lastStop">> {
+ 	if (id === ROOT_CONVERSATION_ID) return {};
+ 	const conversation = (await harness.conversation(id, runtimeContext))!;
+ 	let first: EntryRecord | undefined;
++	let lastStop: AssistantMessage["stopReason"] | undefined;
+ 	let cursor: Cursor | undefined;
+ 	do {
+ 		const page = await conversation.entries({}, 256, cursor, runtimeContext);
+ 		first = [...page.items].reverse().find((entry) => entry.kind === "pi.user") ?? first;
++		const assistant = page.items.find(entry => entry.kind === "pi.assistant")?.model?.[0];
++		if (lastStop === undefined && assistant?.role === "assistant") lastStop = assistant.stopReason;
+ 		cursor = page.next;
+ 	} while (cursor !== undefined);
+-	return titleOf(first);
++	return { ...titleOf(first), ...(lastStop === undefined ? {} : { lastStop }) };
+ }
+diff --git a/packages/adapter-pi-durable/src/engine/runtime.ts b/packages/adapter-pi-durable/src/engine/runtime.ts
+index adc1fde..79d2115 100644
+--- a/packages/adapter-pi-durable/src/engine/runtime.ts
++++ b/packages/adapter-pi-durable/src/engine/runtime.ts
+@@ -12,7 +12,8 @@ import { createDurableController } from "./runtime-controller.ts";
+ import { RuntimeBindings } from "./runtime-bindings.ts";
+ import { closeRuntimeResources } from "./runtime-cleanup.ts";
+ import { loadHarnessEnvironment, type LoadedHarnessEnvironment } from "./runtime-loader.ts";
+-import { hydrateSessionActiveTools, loadSummaries, createConversationBinding } from "./runtime-hydration.ts";
++import { hydrateSessionActiveTools, loadSummaries, createConversationBinding, applySubagentSummaries } from "./runtime-hydration.ts";
++import type { SubagentsState } from "./subagent-docs.ts";
+ 
+ export { hydrateSessionActiveTools } from "./runtime-hydration.ts";
+ 
+@@ -118,13 +119,26 @@ export async function openDurable(options: OpenDurableOptions = {}): Promise<Ope
+ 		const handlePublication = (pub: any) => {
+ 			let convs = state.conversations;
+ 			for (const ch of pub.changes ?? []) {
+-				if (ch.type === "conversation") {
++				if (ch.type === "conversation" && !convs.some(row => row.id === ch.value.id))
+ 					convs = [...convs, { id: ch.value.id, label: ch.value.id === root.id ? "main" : `subagent ${ch.value.id}` }];
+-				} else if (ch.type === "entry" && ch.value.kind === "pi.user") {
++			}
++			for (const ch of pub.changes ?? []) {
++				if (ch.type === "entry" && ch.value.kind === "pi.user") {
+ 					const id = ch.value.conversationId;
+ 					convs = convs.map((s) => s.id === id && !s.title ? { ...s, ...titleOf(ch.value) } : s);
++				} else if (ch.type === "entry" && ch.value.kind === "pi.assistant") {
++					const message = ch.value.model?.[0];
++					if (message?.role === "assistant") convs = convs.map(row => row.id === ch.value.conversationId ? { ...row, lastStop: message.stopReason } : row);
++				} else if (ch.type === "document" && ch.kind === "change" && ch.conversationId !== undefined && ch.record.key === undefined) {
++					if (ch.record.kind === "pi.live") convs = convs.map(row => row.id === ch.conversationId ? { ...row, live: ch.value } : row);
++					if (ch.record.kind === "pi.inbox") convs = convs.map(row => row.id === ch.conversationId ? { ...row, inbox: ch.value } : row);
+ 				}
+ 			}
++			// A publication can create children and update their registry in any change order.
++			for (const ch of pub.changes ?? []) {
++				if (ch.type === "document" && ch.kind === "change" && ch.conversationId !== undefined && ch.record.kind === "durable.subagents" && ch.record.key === undefined)
++					convs = applySubagentSummaries(convs, ch.conversationId, ch.value as SubagentsState);
++			}
+ 			if (convs !== state.conversations) update({ conversations: convs });
+ 		};
+ 
+diff --git a/packages/adapter-pi-durable/src/engine/shared/extension-runner.ts b/packages/adapter-pi-durable/src/engine/shared/extension-runner.ts
+index 70cbefd..1c18af1 100644
+--- a/packages/adapter-pi-durable/src/engine/shared/extension-runner.ts
++++ b/packages/adapter-pi-durable/src/engine/shared/extension-runner.ts
+@@ -32,7 +32,7 @@ import { createExtensionUIContext } from "./extension-ui-context.ts";
+ export { createExtensionUIContext };
+ 
+ export interface CreateExtensionActionsOptions {
+-	getRegisteredTools?: () => Array<{ definition: { name: string; description?: string; parameters?: unknown; promptGuidelines?: string; exposure?: string; namespace?: string; annotations?: unknown }; sourceInfo?: unknown }>;
++	getRegisteredTools?: () => Array<{ definition: { name: string; description?: string; parameters?: unknown; promptGuidelines?: string; exposure?: string; defaultActive?: boolean; namespace?: string; annotations?: unknown }; sourceInfo?: unknown }>;
+ 	getCallableTools?: () => Array<{ name: string; description: string; parameters: unknown }>;
+ 	settingsManager?: SettingsManager;
+ 	onActiveToolsChanged?: (tools: string[]) => void;
+@@ -46,6 +46,7 @@ export function createExtensionActions(
+ 	initialActiveTools: string[] = [],
+ ): ExtensionActions {
+ 	let activeToolNames = [...initialActiveTools];
++	const registeredExposures = new Map<string, string>();
+ 	let sessionName: string | undefined;
+ 
+ 	const sendMessage: ExtensionActions["sendMessage"] = (message: any, sendOptions?: any) => {
+@@ -100,6 +101,19 @@ export function createExtensionActions(
+ 		},
+ 		refreshTools: () => {
+ 			options.onToolsChanged?.();
++			const active = new Set(activeToolNames);
++			for (const { definition } of options.getRegisteredTools?.() ?? []) {
++				const exposure = definition.exposure ?? "direct";
++				if (exposure === "hidden") active.delete(definition.name);
++				else if (registeredExposures.get(definition.name) !== exposure && definition.defaultActive !== false &&
++					(exposure === "direct" || exposure === "model-only")) active.add(definition.name);
++				registeredExposures.set(definition.name, exposure);
++			}
++			const next = [...active];
++			if (next.length !== activeToolNames.length || next.some((name, index) => name !== activeToolNames[index])) {
++				activeToolNames = next;
++				options.onActiveToolsChanged?.(next);
++			}
+ 		},
+ 		getThinkingLevel: () => (options.settingsManager?.getDefaultThinkingLevel?.() ?? "high") as "off" | "minimal" | "low" | "medium" | "high" | "xhigh",
+ 		setThinkingLevel: () => {},
+@@ -204,6 +218,7 @@ export async function setupExtensionRunner(options: SetupExtensionRunnerOptions)
+ 	};
+ 
+ 	runner.bindCore(actions, contextActions);
++	actions.refreshTools();
+ 
+ 	await runner.emit({ type: "session_start", reason: "startup" });
+ 	return runner;
+diff --git a/packages/local-runtime/package.json b/packages/local-runtime/package.json
+index 6f1e316..6893cba 100644
+--- a/packages/local-runtime/package.json
++++ b/packages/local-runtime/package.json
+@@ -19,6 +19,7 @@
+     "@durable-zero/adapter-pi-durable": "workspace:*",
+     "@durable-zero/protocol": "workspace:*",
+     "@earendil-works/pi-coding-agent": "1.5.0",
++    "@earendil-works/pi-tui": "1.5.0",
+     "zod": "^4.6.7"
+   }
+ }
+diff --git a/packages/local-runtime/src/client.ts b/packages/local-runtime/src/client.ts
+index a15852c..0dad9ce 100644
+--- a/packages/local-runtime/src/client.ts
++++ b/packages/local-runtime/src/client.ts
+@@ -2,6 +2,23 @@ import { createConnection } from "node:net";
+ import { once } from "node:events";
+ import { resolve } from "node:path";
+ import { StdioJsonRpcServer } from "@durable-zero/protocol";
++import { z } from "zod";
++
++export const mcpTerminalOperation = z.discriminatedUnion("op", [
++  z.object({ op: z.literal("write"), data: z.string() }),
++  z.object({ op: z.literal("setTitle"), title: z.string() }),
++  z.object({ op: z.literal("setProgress"), active: z.boolean() }),
++  z.object({ op: z.literal("setProgramStatus"), status: z.object({
++    state: z.enum(["idle", "working", "blocked", "done", "error", "clear"]),
++    app: z.string().optional(), kind: z.enum(["permission", "question", "auth"]).optional(), message: z.string().optional(),
++  }).transform(status => ({ state: status.state,
++    ...(status.app === undefined ? {} : { app: status.app }),
++    ...(status.kind === undefined ? {} : { kind: status.kind }),
++    ...(status.message === undefined ? {} : { message: status.message }),
++  })) }),
++  z.object({ op: z.literal("drainInput"), maxMs: z.number().optional(), idleMs: z.number().optional() }),
++]);
++export type McpTerminalOperation = z.infer<typeof mcpTerminalOperation>;
+ 
+ export function runtimeSocketPath(sessionDir: string): string {
+   return resolve(sessionDir, ".terminal", "runtime.sock");
+@@ -9,14 +26,14 @@ export function runtimeSocketPath(sessionDir: string): string {
+ 
+ export async function connectRuntime(
+   sessionDir: string,
+-  onNotification: (method: string, params: Record<string, unknown>) => void = () => {},
++  onNotification: (method: string, params: Record<string, unknown>) => unknown | Promise<unknown> = () => {},
+ ) {
+   const socket = createConnection(runtimeSocketPath(sessionDir));
+   await once(socket, "connect");
+   const rpc = new StdioJsonRpcServer({
+     stdin: socket,
+     stdout: socket,
+-    handler: async (method, params) => { onNotification(method, params); },
++    handler: async (method, params) => onNotification(method, params),
+   });
+   socket.on("error", () => socket.destroy());
+   const closed = new Promise<void>((done) => socket.once("close", () => { rpc.stop(); done(); }));
+diff --git a/packages/local-runtime/src/index.ts b/packages/local-runtime/src/index.ts
+index f2ec1bd..594d945 100644
+--- a/packages/local-runtime/src/index.ts
++++ b/packages/local-runtime/src/index.ts
+@@ -6,6 +6,7 @@ import { once } from "node:events";
+ import { runtimeSocketPath } from "./client.ts";
+ import { createClientOutput } from "./notifications.ts";
+ import { expandSkillCommand } from "./skills.ts";
++import { createMcpCommandUI, mcpCommandRequest, mcpViewport } from "./mcp-ui.ts";
+ export { runtimeSocketPath } from "./client.ts";
+ import { z } from "zod";
+ import { assembleDurableZero, type AssembleDurableZeroOptions, type DurableZeroInstance } from "@durable-zero/runner";
+@@ -27,6 +28,9 @@ const requests = {
+   "session/getStats": conversation,
+   "session/getView": z.object({}).strict(),
+   "runtime/info": z.object({}).strict(),
++  "session/mcpCommand": mcpCommandRequest,
++  "session/mcpInput": z.object({ data: z.string() }).strict(),
++  "session/mcpResize": mcpViewport.strict(),
+   "session/reload": z.object({ path: z.string().trim().min(1).optional() }).strict(),
+   "session/compact": z.object({ instructions: z.string().optional() }).strict(),
+   "models/set": z.object({
+@@ -62,6 +66,7 @@ export async function startRuntime(options: RuntimeOptions) {
+   let unsubscribeView: (() => void) | undefined;
+   let viewRevision = 0;
+   let commands: Promise<unknown> = Promise.resolve();
++  let activeMcpUI: { socket: Socket; bridge: ReturnType<typeof createMcpCommandUI>; completion: Promise<void> } | undefined;
+   let assemblyOptions: AssembleDurableZeroOptions = {
+     ...options, sessionDir: resolve(options.sessionDir), noGlobalExtensions: true, stdin: input, stdout: output,
+   };
+@@ -98,11 +103,36 @@ export async function startRuntime(options: RuntimeOptions) {
+         const schema = requests[method as keyof typeof requests];
+         const parsed = schema.safeParse(params);
+         if (!parsed.success) throw new JsonRpcInvalidParamsError(parsed.error.message);
++        if (method === "session/mcpInput" || method === "session/mcpResize") {
++          if (activeMcpUI?.socket !== socket) throw new Error("This connection does not own an MCP manager");
++          if (method === "session/mcpInput") activeMcpUI.bridge.input((parsed.data as { data: string }).data);
++          else activeMcpUI.bridge.resize(parsed.data as z.infer<typeof mcpViewport>);
++          return { ok: true };
++        }
++        if (method === "session/mcpCommand") {
++          // Serialize admission, not the menu's lifetime: other clients can still abort active work.
++          const started = commands.then(() => {
++            if (socket.destroyed) throw new Error("MCP terminal disconnected before admission");
++            if (activeMcpUI) throw new Error("An MCP manager is already open. Close it first.");
++            const request = parsed.data as z.infer<typeof mcpCommandRequest>;
++            const ui = createMcpCommandUI(request,
++              event => transport.notify("session/mcpTerminal", event),
++              event => client.request("session/mcpTerminal", event),
++              (message, level) => transport.notify("session/mcpNotice", { message, level }));
++            const completion = Promise.resolve().then(() => instance!.controller!.executeMcpCommand(request.args, ui.ui))
++              .finally(() => { if (activeMcpUI?.bridge === ui) activeMcpUI = undefined; });
++            activeMcpUI = { socket, bridge: ui, completion };
++            return { completion };
++          });
++          commands = started.then(() => undefined, () => undefined);
++          return (await started).completion.then(() => ({ ok: true }));
++        }
+         // Serialize admission with reload so no prompt can slip between the idle check and close.
+         const operation = commands.then(async () => {
+         const engine = instance!.engine;
+         switch (method) {
+           case "session/reload": {
++            if (activeMcpUI) throw new Error("Cannot reload: close the MCP manager first.");
+             if (!await instance!.isIdle?.()) throw new Error("Cannot reload: active work is running. Wait for completion or abort it first.");
+             const { path } = parsed.data as z.infer<typeof requests["session/reload"]>;
+             const extensionPath = path ? await realpath(resolve(options.cwd ?? process.cwd(), path)) : undefined;
+@@ -147,12 +177,18 @@ export async function startRuntime(options: RuntimeOptions) {
+     });
+     clients.set(socket, transport.notify);
+     socket.on("error", () => socket.destroy());
+-    socket.once("close", () => { client.stop(); clients.delete(socket); });
++    socket.once("close", () => {
++      if (activeMcpUI?.socket === socket) activeMcpUI.bridge.disconnect();
++      client.stop(); clients.delete(socket);
++    });
+     client.start();
+   });
+   let closing: Promise<void> | undefined;
+   const close = (): Promise<void> => closing ??= (async () => {
++    const pendingMcpUI = activeMcpUI;
++    pendingMcpUI?.bridge.disconnect();
+     for (const socket of clients.keys()) socket.destroy();
++    await pendingMcpUI?.completion.catch(() => {});
+     if (server.listening) await new Promise<void>((done, reject) => server.close((error) => error ? reject(error) : done()));
+     unsubscribeView?.();
+     bridge.stop();
+diff --git a/packages/local-runtime/test/fixtures/provider.ts b/packages/local-runtime/test/fixtures/provider.ts
+index 239ccfe..8e56a9f 100644
+--- a/packages/local-runtime/test/fixtures/provider.ts
++++ b/packages/local-runtime/test/fixtures/provider.ts
+@@ -1,6 +1,7 @@
+ import { createProvider, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
+ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+ import { setTimeout as delay } from "node:timers/promises";
++import { writeFile } from "node:fs/promises";
+ 
+ // Only the model is scripted. The Harness, SQLite, tool registry and filesystem execution are real.
+ function respond(_model: unknown, context: any, options: any) {
+@@ -24,6 +25,7 @@ function respond(_model: unknown, context: any, options: any) {
+       stream.push({ type: "toolcall_start", contentIndex: 0, partial: message });
+       stream.push({ type: "toolcall_end", contentIndex: 0, toolCall: call, partial: message });
+       message.stopReason = "toolUse";
++      if (process.env.ZERO_FIXTURE_TOOL_RESPONSE) await writeFile(process.env.ZERO_FIXTURE_TOOL_RESPONSE, JSON.stringify(call));
+       stream.push({ type: "done", reason: "toolUse", message });
+       stream.end(message);
+       return;
+diff --git a/packages/local-terminal/src/client.ts b/packages/local-terminal/src/client.ts
+index a5ee83b..daa6fbf 100644
+--- a/packages/local-terminal/src/client.ts
++++ b/packages/local-terminal/src/client.ts
+@@ -1,6 +1,6 @@
+ import type { DurableView as NativeDurableView } from "@durable-zero/adapter-pi-durable";
+-import { connectRuntime } from "@local-durable/runtime/client";
+-import type { TerminalController, TerminalView, TerminalViewSource } from "@local-durable/terminal-ui";
++import { connectRuntime, mcpTerminalOperation } from "@local-durable/runtime/client";
++import { ProcessTerminal, type McpTerminalHost, type TerminalController, type TerminalView, type TerminalViewSource } from "@local-durable/terminal-ui";
+ import { z } from "zod";
+ 
+ // Validate the transport envelope once. Native document and message values remain native values.
+@@ -35,11 +35,11 @@ export function presentView(view: NativeDurableView, connection: TerminalView["c
+   return {
+     ...view,
+     session: { ...view.session, name: view.session.id },
+-    // Summaries contain identity, not activity. Enrich only the selected row with native documents.
++    // Nonselected activity comes from native summaries; selected documents are the current native view.
+     conversations: view.conversations.map(row => row.id === view.conversation.conversation.id ? {
+       ...row,
+-      ...(view.conversation.docs["pi.live"] === undefined ? {} : { live: view.conversation.docs["pi.live"] }),
+-      ...(view.conversation.docs["pi.inbox"] === undefined ? {} : { inbox: view.conversation.docs["pi.inbox"] }),
++      ...(view.conversation.docs["pi.live"] === undefined ? {} : { live: view.conversation.docs["pi.live"] as NativeDurableView["conversations"][number]["live"] }),
++      ...(view.conversation.docs["pi.inbox"] === undefined ? {} : { inbox: view.conversation.docs["pi.inbox"] as NativeDurableView["conversations"][number]["inbox"] }),
+     } : row),
+     connection,
+     automation: { scheduled: 0, failed: 0, unavailable: true },
+@@ -63,6 +63,8 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
+   #listeners = new Set<() => void>();
+   #stopped = false;
+   #failure: Error | undefined;
++  #mcpTerminal: ProcessTerminal | undefined;
++  #mcpReady = false;
+   readonly closed: Promise<void>;
+ 
+   private constructor(transport: RuntimeConnection, initial: ViewEnvelope) {
+@@ -84,6 +86,15 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
+     let failure: Error | undefined;
+     let transport: RuntimeConnection | undefined;
+     transport = await connect(sessionDir, (method, params) => {
++      if (method === "session/mcpTerminal") {
++        if (!client) throw new Error("MCP UI output before client initialization");
++        return client.#terminalOperation(params);
++      }
++      if (method === "session/mcpNotice") {
++        const notice = z.object({ message: z.string(), level: z.enum(["info", "warning", "error"]) }).parse(params);
++        if (client) client.#mcpTerminal?.write(`\r\n${notice.level}: ${notice.message}\r\n`);
++        return;
++      }
+       if (method !== "session/view") return;
+       try {
+         const envelope = parseViewEnvelope(params);
+@@ -107,6 +118,39 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
+     }
+   }
+ 
++  #terminalOperation(value: unknown): void | Promise<void> {
++    if (!this.#mcpTerminal) throw new Error("No active MCP terminal");
++    const event = mcpTerminalOperation.parse(value);
++    switch (event.op) {
++      case "write": this.#mcpReady = true; return this.#mcpTerminal.write(event.data);
++      case "setTitle": return this.#mcpTerminal.setTitle(event.title);
++      case "setProgress": return this.#mcpTerminal.setProgress(event.active);
++      case "setProgramStatus": return this.#mcpTerminal.setProgramStatus(event.status);
++      case "drainInput": return this.#mcpTerminal.drainInput(event.maxMs, event.idleMs);
++    }
++  }
++  async mcpCommand(args: string, host: McpTerminalHost): Promise<void> {
++    if (this.#stopped) throw new Error("Terminal disconnected");
++    if (this.#mcpTerminal) throw new Error("An MCP manager is already open");
++    host.suspend();
++    const terminal = new ProcessTerminal();
++    this.#mcpTerminal = terminal;
++    const viewport = () => ({ columns: terminal.columns, rows: terminal.rows, kittyProtocolActive: terminal.kittyProtocolActive });
++    this.#mcpReady = false;
++    const resize = () => { if (this.#mcpReady) void this.#request("session/mcpResize", viewport()).catch(() => this.close()); };
++    try {
++      terminal.start(data => {
++        if (this.#mcpReady) void this.#request("session/mcpInput", { data }).catch(() => this.close());
++      }, resize);
++      // The first frame means the remote manager has admitted this terminal; negotiation replies before it are local.
++      await this.#transport.request("session/mcpCommand", { args, colors: host.colors, keybindings: host.keybindings, ...viewport() });
++    } finally {
++      this.#mcpReady = false;
++      terminal.stop();
++      this.#mcpTerminal = undefined;
++      if (!this.#stopped) host.resume();
++    }
++  }
+   get failure(): Error | undefined { return this.#failure; }
+   current(): TerminalView { return this.#view; }
+   subscribe(listener: () => void): () => void {
+diff --git a/packages/local-terminal/test/launch-native.test.ts b/packages/local-terminal/test/launch-native.test.ts
+index 0226ea8..11ba919 100644
+--- a/packages/local-terminal/test/launch-native.test.ts
++++ b/packages/local-terminal/test/launch-native.test.ts
+@@ -3,14 +3,18 @@ import assert from "node:assert/strict";
+ import { spawn } from "node:child_process";
+ import { createHash } from "node:crypto";
+ import { once } from "node:events";
+-import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
++import { mkdtemp, mkdir, readFile, realpath, rm, symlink } from "node:fs/promises";
+ import { tmpdir } from "node:os";
+ import { join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ import { setTimeout as delay } from "node:timers/promises";
+ import { connectRuntime } from "@local-durable/runtime/client";
+ 
+-const root = fileURLToPath(new URL("../../../", import.meta.url));
++const source = fileURLToPath(new URL("../../../", import.meta.url));
++const root = process.env.ZERO_RUNTIME_ROOT ?? source;
++const installed = process.env.ZERO_INSTALLED_PREFIX;
++const launcherEntry = installed ? join(installed, "bin/pi-durable-zero.mjs") : join(root, "packages/local-terminal/bin/pi-durable-zero.mjs");
++const runtimeEntry = installed ? join(installed, "node_modules/@local-durable/runtime/bin/runtime.mjs") : join(root, "packages/local-runtime/bin/runtime.mjs");
+ async function until(check: () => boolean | Promise<boolean>, label: string) {
+   const deadline = Date.now() + 10000;
+   while (Date.now() < deadline) { if (await check()) return; await delay(25); }
+@@ -19,29 +23,46 @@ async function until(check: () => boolean | Promise<boolean>, label: string) {
+ 
+ test("short launcher starts once, survives detach, reuses its workspace session and reloads", { timeout: 25000 }, async t => {
+   const base = await mkdtemp(join(tmpdir(), "zero-launch-"));
+-  const cwd = join(base, "workspace"); await mkdir(cwd);
++  const rawCwd = join(base, "workspace"); await mkdir(rawCwd);
++  const cwd = await realpath(rawCwd);
++  const aliasCwd = join(base, "workspace-alias"); await symlink(cwd, aliasCwd, "dir");
+   const env = { ...process.env, HOME: join(base, "home"), XDG_STATE_HOME: join(base, "state"), PI_CODING_AGENT_DIR: join(base, "agent"), PI_ADDITIONAL_EXTENSIONS: "" };
+   const sessionDir = join(env.XDG_STATE_HOME, "pi-durable-zero/sessions", createHash("sha256").update(cwd).digest("hex").slice(0, 16));
+   let runtimePid: number | undefined;
+   const children: ReturnType<typeof spawn>[] = [];
++  const ownedRuntimes = new Map<number, string>();
+   t.after(async () => {
+     for (const child of children) if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
+-    if (runtimePid) {
+-      process.kill(runtimePid, "SIGTERM");
+-      await until(async () => { try { const c = await connectRuntime(sessionDir); c.close(); return false; } catch { return true; } }, "owned runtime stopped");
++    for (const [pid, directory] of ownedRuntimes) {
++      const client = await connectRuntime(directory).catch((error: NodeJS.ErrnoException) => {
++        if (error.code === "ENOENT" || error.code === "ECONNREFUSED") return undefined;
++        throw error;
++      });
++      if (!client) continue;
++      try {
++        const info: any = await client.request("runtime/info");
++        assert.equal(info.pid, pid, "test runtime identity changed before cleanup");
++        assert.equal(await realpath(info.entrypoint), await realpath(runtimeEntry));
++        process.kill(pid, "SIGTERM");
++      } finally { client.close(); }
++      await until(async () => { try { const c = await connectRuntime(directory); c.close(); return false; } catch { return true; } }, "owned runtime stopped");
+     }
++    await until(() => children.every(child => child.exitCode !== null || child.signalCode !== null), "owned launcher children stopped");
+     await rm(base, { recursive: true, force: true });
+   });
+   function launch(args: string[]) {
+-    const child = spawn(process.execPath, [join(root, "packages/local-terminal/bin/pi-durable-zero.mjs"), ...args], { env, stdio: "pipe" });
++    const child = spawn(process.execPath, [launcherEntry, ...args], { env, stdio: "pipe" });
+     children.push(child);
+     let stdout = "", stderr = "";
+     child.stdout!.on("data", chunk => { stdout += chunk; });
+-    child.stderr!.on("data", chunk => { stderr += chunk; });
++    child.stderr!.on("data", chunk => {
++      stderr += chunk;
++      for (const match of stderr.matchAll(/Zero session: ([^\n]+)\nRuntime PID: (\d+)/g)) ownedRuntimes.set(Number(match[2]), match[1]!);
++    });
+     const exited = once(child, "exit");
+     return { child, stdout: () => stdout, stderr: () => stderr, exited };
+   }
+-  const first = launch(["--cwd", cwd, "--extension", join(root, "packages/local-runtime/test/fixtures/provider.ts"), "--provider", "local-test", "--model", "scripted"]);
++  const first = launch(["--cwd", cwd, "--extension", process.env.ZERO_PROVIDER_FIXTURE ?? join(source, "packages/local-runtime/test/fixtures/provider.ts"), "--provider", "local-test", "--model", "scripted"]);
+   await until(() => { assert.equal(first.child.exitCode, null, first.stderr()); return first.stdout().includes("> "); }, "launcher opens terminal");
+   runtimePid = Number(first.stderr().match(/Runtime PID: (\d+)/)?.[1]);
+   assert.ok(runtimePid);
+@@ -50,7 +71,7 @@ test("short launcher starts once, survives detach, reuses its workspace session
+   first.child.stdin!.write("/detach\n"); await first.exited;
+   assert.equal(first.child.exitCode, 0, first.stderr());
+   await until(async () => { try { return await readFile(join(cwd, "continued.txt"), "utf8") === "native-work-continued"; } catch { return false; } }, "work continues without launcher or terminal");
+-  const second = launch(["--cwd", cwd]);
++  const second = launch(["--cwd", aliasCwd]);
+   await until(() => second.stdout().includes("> "), "same command reconnects");
+   assert.match(second.stderr(), new RegExp(`Runtime PID: ${runtimePid}\\b`));
+   await until(() => second.stdout().includes("native result:"), "restored native completion");
+diff --git a/packages/terminal-ui/PROVENANCE.json b/packages/terminal-ui/PROVENANCE.json
+index 03ebf75..2dee78c 100644
+--- a/packages/terminal-ui/PROVENANCE.json
++++ b/packages/terminal-ui/PROVENANCE.json
+@@ -18,7 +18,8 @@
+     "Support caller-owned detach signal",
+     "Load Photon through its native Node module without filesystem monkey-patching",
+     "Reject normal model-picker selections when the native selected conversation changes",
+-    "Show activity unavailable for native summary rows without live evidence; preserve activity styles and use client-enriched selected native live documents"
++    "Show activity unavailable for native summary rows without live evidence; preserve activity styles and use client-enriched selected native live documents",
++    "Route /mcp to the original Pi MCP manager through a command-owned remote terminal; force the existing editor to repaint after manager ownership ends, including runtime notifications received while suspended"
+   ],
+   "replacements": [
+     {
+@@ -72,7 +73,7 @@
+     {
+       "path": "experimental/durable/tui.js",
+       "sha256": "a153e03e2c032dc684edb0c6a5ce19fb04896ac4274baaaef818583d16d96e2b",
+-      "candidateSha256": "7227cd3869713ffcd3519da0603b6f3bc47c420380ce1f939665126eb9c0cf27"
++      "candidateSha256": "2790f2e49f02d0b75c5206695ecc259022c62edc871c3c8ace9dc98ee603d6f0"
+     },
+     {
+       "path": "experimental/durable/upstream.mjs",
+diff --git a/packages/terminal-ui/src/index.d.ts b/packages/terminal-ui/src/index.d.ts
+index 1002c32..1891ae9 100644
+--- a/packages/terminal-ui/src/index.d.ts
++++ b/packages/terminal-ui/src/index.d.ts
+@@ -22,7 +22,14 @@ export interface TerminalViewSource {
+   current(): TerminalView;
+   subscribe(listener: () => void): () => void;
+ }
++export interface McpTerminalHost {
++  readonly colors: Record<string, string>;
++  readonly keybindings: Record<string, string | string[]>;
++  suspend(): void;
++  resume(): void;
++}
+ export interface TerminalController {
++  mcpCommand(args: string, host: McpTerminalHost): Promise<void>;
+   submit(content: string, deliverAs: "steer" | "followUp"): Promise<void>;
+   compact(instructions?: string): Promise<void>;
+   abort(): Promise<void>;
+@@ -70,4 +77,5 @@ export { AssistantMessageComponent } from "../vendor/modes/interactive/component
+ export { UserMessageComponent } from "../vendor/modes/interactive/components/user-message.js";
+ export { ToolExecutionComponent } from "../vendor/modes/interactive/components/tool-execution.js";
+ export { toolCardRenderer, resetToolCards } from "../vendor/extensions/tool-cards/renderers.mjs";
+-export { initTheme, theme } from "../vendor/modes/interactive/theme/theme.js";
++export { initTheme, theme, getResolvedThemeColors } from "../vendor/modes/interactive/theme/theme.js";
++export { ProcessTerminal } from "@earendil-works/pi-tui";
+diff --git a/packages/terminal-ui/src/index.js b/packages/terminal-ui/src/index.js
+index a96811a..67b9514 100644
+--- a/packages/terminal-ui/src/index.js
++++ b/packages/terminal-ui/src/index.js
+@@ -5,4 +5,5 @@ export { AssistantMessageComponent } from "../vendor/modes/interactive/component
+ export { UserMessageComponent } from "../vendor/modes/interactive/components/user-message.js";
+ export { ToolExecutionComponent } from "../vendor/modes/interactive/components/tool-execution.js";
+ export { toolCardRenderer, resetToolCards } from "../vendor/extensions/tool-cards/renderers.mjs";
+-export { initTheme, theme } from "../vendor/modes/interactive/theme/theme.js";
++export { initTheme, theme, getResolvedThemeColors } from "../vendor/modes/interactive/theme/theme.js";
++export { ProcessTerminal } from "@earendil-works/pi-tui";
+diff --git a/packages/terminal-ui/vendor/experimental/durable/tui.js b/packages/terminal-ui/vendor/experimental/durable/tui.js
+index d64b569..bd90cf4 100644
+--- a/packages/terminal-ui/vendor/experimental/durable/tui.js
++++ b/packages/terminal-ui/vendor/experimental/durable/tui.js
+@@ -14,7 +14,7 @@ import { keyText } from "../../modes/interactive/components/keybinding-hints.js"
+ import { WorkingStatusIndicator } from "../../modes/interactive/components/status-indicator.js";
+ import { ToolExecutionComponent } from "../../modes/interactive/components/tool-execution.js";
+ import { UserMessageComponent } from "../../modes/interactive/components/user-message.js";
+-import { getEditorTheme, getMarkdownTheme, initTheme, theme } from "../../modes/interactive/theme/theme.js";
++import { getEditorTheme, getMarkdownTheme, getResolvedThemeColors, initTheme, theme } from "../../modes/interactive/theme/theme.js";
+ import { InteractiveThemeController } from "../../modes/interactive/theme/theme-controller.js";
+ import { DcgToolCard } from "../dcg-tool-card.js";
+ import { agentOf } from "../../native-types.js";
+@@ -55,7 +55,7 @@ const DURABLE_COMMANDS = [
+     { name: "quit", description: "Exit Pi Durable · выйти" },
+     { name: "compact", description: "Summarize context · сжать контекст" },
+     { name: "reload", description: "Refresh terminal model/skill catalogues · обновить меню" },
+-    { name: "mcp", description: "Show MCP connection status; on/off · подключения" },
++    { name: "mcp", description: "Open native MCP manager · управление подключениями" },
+ ];
+ export function createDurableAutocomplete(cwd, skills, enableSkills = true, extraCommands = []) {
+     const commands = [
+@@ -819,6 +819,13 @@ export async function runDurableTui(source, controller, settings, startupWarning
+                 return selectSkill(trimmed.slice(15).trim());
+             if (trimmed === "/model")
+                 return selectModel();
++            if (trimmed === "/mcp" || trimmed.startsWith("/mcp "))
++                return command(text, () => controller.mcpCommand(trimmed.slice(4).trim(), {
++                    colors: getResolvedThemeColors(settings.getThemeSetting()),
++                    keybindings: getKeybindings().getResolvedBindings(),
++                    suspend: () => view.ui.stop(),
++                    resume: () => { view.ui.start(); view.restoreEditor(); view.ui.requestRender(true); },
++                }));
+             if (trimmed === "/tasks")
+                 return command(text, () => controller.toggleTasks());
+             if (trimmed === "/agents")
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 012c7d7..89b6533 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -174,6 +174,9 @@ importers:
+       '@earendil-works/pi-coding-agent':
+         specifier: 1.5.0
+         version: 1.5.0(@aws-sdk/credential-provider-node@3.972.92)(@smithy/signature-v4@5.7.5)(ws@8.22.1)(zod@4.6.7)
++      '@earendil-works/pi-tui':
++        specifier: 1.5.0
++        version: 1.5.0
+       zod:
+         specifier: ^4.6.7
+         version: 4.6.7
+diff --git a/packages/adapter-pi-durable/test/extension-activation.test.ts b/packages/adapter-pi-durable/test/extension-activation.test.ts
+new file mode 100644
+index 0000000..6143a05
+--- /dev/null
++++ b/packages/adapter-pi-durable/test/extension-activation.test.ts
+@@ -0,0 +1,25 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { createExtensionActions } from "../src/engine/shared/extension-runner.ts";
++
++test("Pi registration activates direct/model-only tools, not indirect/hidden/opt-out tools", () => {
++  const registered: Array<{ definition: { name: string; exposure?: string; defaultActive?: boolean } }> = [];
++  const actions = createExtensionActions({ getRegisteredTools: () => registered }, ["bash"]);
++  registered.push({ definition: { name: "mcp__fixture__probe", exposure: "direct" } },
++    { definition: { name: "private", exposure: "hidden" } }, { definition: { name: "indirect", exposure: "codemode" } },
++    { definition: { name: "later", exposure: "deferred" } }, { definition: { name: "optout", exposure: "direct", defaultActive: false } },
++    { definition: { name: "model", exposure: "model-only" } });
++  actions.refreshTools();
++  assert.deepEqual(actions.getActiveTools(), ["bash", "mcp__fixture__probe", "model"]);
++  actions.setActiveTools(["bash"]);
++  actions.refreshTools();
++  assert.deepEqual(actions.getActiveTools(), ["bash"], "refresh reactivated an explicitly deselected tool");
++  registered[0].definition.exposure = "hidden";
++  actions.refreshTools();
++  registered[0].definition.exposure = "direct";
++  actions.refreshTools();
++  assert.deepEqual(actions.getActiveTools(), ["bash", "mcp__fixture__probe"]);
++  registered[0].definition.exposure = "hidden";
++  actions.refreshTools();
++  assert.deepEqual(actions.getActiveTools(), ["bash"], "hidden tool stayed declared");
++});
+diff --git a/packages/adapter-pi-durable/test/runtime-activity.test.ts b/packages/adapter-pi-durable/test/runtime-activity.test.ts
+new file mode 100644
+index 0000000..466c99f
+--- /dev/null
++++ b/packages/adapter-pi-durable/test/runtime-activity.test.ts
+@@ -0,0 +1,81 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
++import type { AssistantMessage } from "@earendil-works/pi-ai";
++import { loadSummaries, applySubagentSummaries } from "../src/engine/runtime-hydration.ts";
++import { nativeRuntimeState } from "./fixtures/runtime-state.ts";
++import { SubagentsDoc, type SubagentsState } from "../src/engine/subagent-docs.ts";
++import { LiveDoc, InboxDoc } from "@earendil-works/pi-durable";
++import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
++import { openDurable } from "../src/engine/runtime.ts";
++import { mkdtemp, rm } from "node:fs/promises";
++import { tmpdir } from "node:os";
++import { join } from "node:path";
++
++test("native commit publications update nonselected rows and hydrate the same documents", async () => {
++  const base = await mkdtemp(join(tmpdir(), "zero-native-activity-"));
++  let runtime: Awaited<ReturnType<typeof openDurable>> | undefined;
++  try {
++    runtime = await openDurable({ cwd: base, sessionDir: join(base, "session"), cli: { noGlobalExtensions: true },
++      nativeExecutionEnvFactory: target => new NodeExecutionEnv({ cwd: target.cwd ?? base }) });
++    const selected = runtime.view.current().conversation.conversation.id;
++    // Ownerless, empty native conversation: no task, prompt, agent, or model is launched.
++    const child = await runtime.harness.createConversation({ ownership: { kind: "ownerless" } }, context);
++    await runtime.harness.commit(async tx => {
++      await tx.doc(LiveDoc, child.id);
++      await tx.doc(InboxDoc, child.id);
++      await tx.doc(SubagentsDoc, selected);
++      await tx.appendEntry(child.id, { kind: "pi.user", model: [{ role: "user", content: "NONSELECTED_NATIVE_ROW" }] });
++    }, context);
++    const row = runtime.view.current().conversations.find(row => row.id === child.id)!;
++    assert.ok(row);
++    assert.equal(row.title, "NONSELECTED_NATIVE_ROW");
++    assert.deepEqual(row.live, await runtime.harness.snapshot(LiveDoc, child.id, context));
++    assert.deepEqual(row.inbox, await runtime.harness.snapshot(InboxDoc, child.id, context));
++    assert.ok(row.live && row.inbox, "publication omitted native documents");
++    const hydrated = (await loadSummaries(runtime.harness, selected)).find(row => row.id === child.id)!;
++    assert.deepEqual(hydrated, row);
++    assert.equal(runtime.view.current().conversation.conversation.id, selected, "activity switched the selected conversation");
++    assert.equal(row.lastStop, undefined, "an empty conversation was presented as completed");
++  } finally { await runtime?.close(); await rm(base, { recursive: true, force: true }); }
++});
++
++// Passive native transcript records, not launched subagents or model calls.
++test("nonselected conversation summaries recover actual assistant stop reasons", async () => {
++  const native = await nativeRuntimeState();
++  try {
++    let summaries = await loadSummaries(native.harness, native.root.id);
++    assert.equal(summaries.find(row => row.id === native.child.id)?.lastStop, undefined, "unknown activity became done");
++    const assistant: AssistantMessage = {
++      role: "assistant", content: [{ type: "text", text: "CHILD_REPLY" }], api: "fixture", provider: "fixture", model: "fixture", timestamp: 0,
++      stopReason: "stop", usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
++        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
++    };
++    await native.harness.commit(async tx => {
++      await tx.appendEntry(native.child.id, { kind: "pi.user", model: [{ role: "user", content: "ACTUAL_CHILD_TASK" }] });
++      await tx.appendEntry(native.child.id, { kind: "pi.assistant", model: [assistant] });
++    }, context);
++    summaries = await loadSummaries(native.harness, native.root.id);
++    const row = summaries.find(row => row.id === native.child.id)!;
++    assert.equal(row.title, "ACTUAL_CHILD_TASK");
++    assert.equal(row.lastStop, "stop");
++    await native.harness.commit(tx => tx.appendEntry(native.child.id, { kind: "pi.assistant", model: [{ ...assistant, stopReason: "aborted" }] }), context);
++    assert.equal((await loadSummaries(native.harness, native.root.id)).find(row => row.id === native.child.id)?.lastStop, "aborted");
++  } finally { await native.close(); }
++});
++
++test("native durable.subagents metadata supplies names/tasks; parent prose is not completion evidence", async () => {
++  const native = await nativeRuntimeState();
++  try {
++    const input = [{ id: native.child.id, label: `subagent ${native.child.id}` }];
++    // Minimal metadata fixture: no native task execution or admission receipt is claimed.
++    const doc = { agents: { worker: { name: "named-worker", conversationId: native.child.id, task: "Check the actual file", role: "checker" } } } as SubagentsState;
++    const rows = applySubagentSummaries(input, native.root.id, doc);
++    assert.equal(rows[0].label, "named-worker");
++    assert.equal(rows[0].title, "Check the actual file");
++    assert.equal(rows[0].role, "checker");
++    assert.equal(rows[0].parentId, native.root.id);
++    assert.equal(rows[0].lastStop, undefined);
++    assert.equal(input[0].label, `subagent ${native.child.id}`, "projection mutated native source");
++  } finally { await native.close(); }
++});
+diff --git a/packages/local-runtime/src/mcp-ui.ts b/packages/local-runtime/src/mcp-ui.ts
+new file mode 100644
+index 0000000..1d7345d
+--- /dev/null
++++ b/packages/local-runtime/src/mcp-ui.ts
+@@ -0,0 +1,111 @@
++import { TuiMainScreen, KeybindingsManager, TUI_KEYBINDINGS, getKeybindings, setKeybindings, type TUI, type Component, type Terminal } from "@earendil-works/pi-tui";
++import { Theme, initTheme, ExtensionInputComponent, ExtensionSelectorComponent, type ExtensionUIContext, type KeybindingsManager as PiKeybindingsManager } from "@earendil-works/pi-coding-agent";
++import { z } from "zod";
++import type { McpTerminalOperation } from "./client.ts";
++
++export const mcpViewport = z.object({
++  columns: z.number().int().min(1).max(10000), rows: z.number().int().min(1).max(10000),
++  kittyProtocolActive: z.boolean(),
++});
++export const mcpCommandRequest = mcpViewport.extend({
++  args: z.string(), keybindings: z.record(z.string(), z.union([z.string(), z.array(z.string())])), colors: z.record(z.string(), z.string().regex(/^(?:#[0-9a-f]{6}|)$/i)),
++}).strict();
++
++/** An output device for Pi's real TUI. Rendering and input dispatch remain native Pi code. */
++class RemoteTerminal implements Terminal {
++  #input: ((data: string) => void) | undefined;
++  #resize: (() => void) | undefined;
++  #cancelled = false;
++  #cancelQueued = false;
++  constructor(public viewport: z.infer<typeof mcpViewport>,
++    private send: (operation: McpTerminalOperation) => void,
++    private request: (operation: McpTerminalOperation) => Promise<unknown>) {}
++  get columns() { return this.viewport.columns; }
++  get rows() { return this.viewport.rows; }
++  get kittyProtocolActive() { return this.viewport.kittyProtocolActive; }
++  start(input: (data: string) => void, resize: () => void) {
++    this.#input = input; this.#resize = resize;
++    if (this.#cancelled) this.#cancel();
++  }
++  stop() { this.#input = undefined; this.#resize = undefined; }
++  input(data: string) { if (!this.#cancelled) this.#input?.(data); }
++  resize(viewport: z.infer<typeof mcpViewport>) { this.viewport = viewport; this.#resize?.(); }
++  disconnect() { this.#cancelled = true; this.#cancel(); }
++  #cancel() {
++    if (this.#cancelQueued || !this.#input) return;
++    this.#cancelQueued = true;
++    setImmediate(() => { this.#cancelQueued = false; this.#input?.("\x1b"); });
++  }
++  write(data: string) {
++    if (this.#cancelled) {
++      // Cancel each newly rendered nested menu, until the native manager exits itself.
++      this.#cancel();
++    } else this.send({ op: "write", data });
++  }
++  async drainInput(maxMs?: number, idleMs?: number) {
++    if (!this.#cancelled) await this.request({ op: "drainInput", maxMs, idleMs });
++  }
++  moveBy(lines: number) { if (lines) this.write(`\x1b[${Math.abs(lines)}${lines > 0 ? "B" : "A"}`); }
++  hideCursor() { this.write("\x1b[?25l"); }
++  showCursor() { this.write("\x1b[?25h"); }
++  clearLine() { this.write("\x1b[2K\r"); }
++  clearFromCursor() { this.write("\x1b[J"); }
++  clearScreen() { this.write("\x1b[2J\x1b[H"); }
++  setTitle(title: string) { if (!this.#cancelled) this.send({ op: "setTitle", title }); }
++  setProgress(active: boolean) { if (!this.#cancelled) this.send({ op: "setProgress", active }); }
++  setProgramStatus(status: Parameters<Terminal["setProgramStatus"]>[0]) {
++    if (!this.#cancelled) this.send({ op: "setProgramStatus", status });
++  }
++}
++
++/** One command's UI, not a Harness, MCP client, or replacement manager. */
++export function createMcpCommandUI(options: z.infer<typeof mcpCommandRequest>,
++  send: (operation: McpTerminalOperation) => void,
++  request: (operation: McpTerminalOperation) => Promise<unknown>,
++  notice: (message: string, level: "info" | "warning" | "error") => void) {
++  initTheme();
++  const theme = new Theme(options.colors as ConstructorParameters<typeof Theme>[0],
++    options.colors as ConstructorParameters<typeof Theme>[1], "truecolor");
++  const definitions = { ...TUI_KEYBINDINGS, ...Object.fromEntries(Object.keys(options.keybindings).map(key => [key, { defaultKeys: [] }])) };
++  // MCP uses the public TUI keybinding methods. Pi's additional file-loader class is not a runtime SDK export.
++  const keybindings = new KeybindingsManager(definitions, options.keybindings as ConstructorParameters<typeof KeybindingsManager>[1]) as PiKeybindingsManager;
++  const terminal = new RemoteTerminal(options, send, request);
++  async function custom<T>(
++    factory: (tui: TUI, theme: Theme, keys: PiKeybindingsManager, done: (value: T) => void) => ReturnType<Parameters<ExtensionUIContext["custom"]>[0]>,
++    customOptions?: Parameters<ExtensionUIContext["custom"]>[1],
++  ): Promise<T> {
++    if (customOptions?.overlay) throw new Error("MCP command UI does not support overlay components");
++    const previousKeys = getKeybindings();
++    setKeybindings(keybindings);
++    const tui = new TuiMainScreen(terminal);
++    let done!: (value: T) => void;
++    const result = new Promise<T>(resolve => { done = resolve; });
++    let component: (Component & { dispose?(): void }) | undefined;
++    try {
++      component = await factory(tui, theme, keybindings, done);
++      tui.addChild(component);
++      tui.setFocus(component);
++      tui.start();
++      return await result;
++    } finally {
++      tui.stop();
++      component?.dispose?.();
++      setKeybindings(previousKeys);
++    }
++  }
++  const ui: Pick<ExtensionUIContext, "custom" | "select" | "input" | "notify" | "theme"> = {
++    theme, custom, notify: (message, level = "info") => notice(message, level),
++    select: (title, choices, options) => custom((tui, _theme, _keys, done) =>
++      new ExtensionSelectorComponent(title, choices, done, () => done(undefined), { tui, ...options })),
++    input: (title, placeholder, options) => custom((tui, _theme, _keys, done) =>
++      new ExtensionInputComponent(title, placeholder, done, () => done(undefined), { tui, ...options })),
++  };
++  return { ui, input: (data: string) => terminal.input(data),
++    resize: (viewport: z.infer<typeof mcpViewport>) => terminal.resize(viewport),
++    disconnect: () => {
++      // The terminal is gone: restore a known cancel key on this command-owned manager only.
++      // Native menus must unwind themselves, including their subscriptions and sign-in cancellation.
++      keybindings.setUserBindings({ "tui.select.cancel": "escape" });
++      terminal.disconnect();
++    } };
++}
+diff --git a/packages/local-runtime/test/mcp-startup-native.test.ts b/packages/local-runtime/test/mcp-startup-native.test.ts
+new file mode 100644
+index 0000000..abeba69
+--- /dev/null
++++ b/packages/local-runtime/test/mcp-startup-native.test.ts
+@@ -0,0 +1,120 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import http from "node:http";
++import { spawn } from "node:child_process";
++import { once } from "node:events";
++import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
++import { tmpdir } from "node:os";
++import { join } from "node:path";
++import { fileURLToPath, pathToFileURL } from "node:url";
++import { setTimeout as delay } from "node:timers/promises";
++import { connectRuntime } from "../src/client.ts";
++
++const source = fileURLToPath(new URL("../../../", import.meta.url));
++const root = process.env.ZERO_RUNTIME_ROOT ?? source;
++const installed = process.env.ZERO_INSTALLED_PREFIX;
++const runtimeModule = installed ? join(installed, "node_modules/@local-durable/runtime/dist/index.js") : join(root, "packages/local-runtime/dist/index.js");
++async function until(check: () => boolean | Promise<boolean>, label: string, maxMs = 4000) {
++  const deadline = Date.now() + maxMs;
++  while (!await check()) { assert.ok(Date.now() < deadline, label); await delay(20); }
++}
++
++test("optional MCP stalled after initialize cannot block startup/reload; native shutdown cancels its transport", { timeout: 20000 }, async t => {
++  const base = await mkdtemp(join(tmpdir(), "zero-mcp-startup-"));
++  const agent = join(base, "agent"), cwd = join(base, "workspace"), sessionDir = join(base, "session");
++  await mkdir(agent); await mkdir(cwd);
++  const toolResponse = join(base, "provider-tool-response.json");
++  let initialized = 0, cancelled = 0;
++  const pending = new Set<http.ServerResponse>();
++  const server = http.createServer(async (req, res) => {
++    let body = "";
++    for await (const chunk of req) body += chunk;
++    if (req.method !== "POST") { res.writeHead(405); res.end(); return; }
++    const message = JSON.parse(body);
++    if (message.method === "initialize") {
++      res.writeHead(200, { "content-type": "application/json" });
++      res.end(JSON.stringify({ jsonrpc: "2.0", id: message.id, result: {
++        protocolVersion: message.params.protocolVersion, capabilities: {}, serverInfo: { name: "owned-stalled-peer", version: "1" },
++      } }));
++    } else if (message.method === "notifications/initialized") {
++      initialized++; pending.add(res);
++      res.once("close", () => { pending.delete(res); cancelled++; });
++      // Deliberately never acknowledge this POST: MCP requestTimeoutMs does not cover notifications.
++    } else { res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: message.id, result: { tools: [] } })); }
++  });
++  server.listen(0, "127.0.0.1"); await once(server, "listening");
++  await writeFile(join(agent, "mcp.json"), JSON.stringify({ mcpServers: { stalled: {
++    url: `http://127.0.0.1:${(server.address() as import("node:net").AddressInfo).port}/mcp`,
++    headers: { Authorization: "Bearer isolated-test-fixture" }, exposure: "codemode", timeout: 1,
++  } } }));
++  const workerPath = join(base, "worker.mjs");
++  await writeFile(workerPath, `
++    import { startRuntime } from ${JSON.stringify(pathToFileURL(runtimeModule).href)};
++    const runtime = await startRuntime(${JSON.stringify({ sessionDir, cwd, extensions: [process.env.ZERO_PROVIDER_FIXTURE ?? join(source, "packages/local-runtime/test/fixtures/provider.ts")], provider: "local-test", model: "scripted" })});
++    process.on("message", async message => {
++      if (message !== "close") return;
++      await runtime.close();
++      console.log("NATIVE_RUNTIME_CLOSED");
++      process.disconnect();
++    });
++    console.log("NATIVE_RUNTIME_READY");
++  `);
++  const workers: ReturnType<typeof worker>[] = [];
++  const connections: Awaited<ReturnType<typeof connectRuntime>>[] = [];
++  t.after(async () => {
++    for (const client of connections) client.close();
++    for (const { child, exited } of workers) if (child.exitCode === null && child.signalCode === null) {
++      child.kill("SIGTERM");
++      const watchdog = setTimeout(() => child.kill("SIGKILL"), 1000);
++      try { await exited; } finally { clearTimeout(watchdog); }
++    }
++    server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve()));
++    await rm(base, { recursive: true, force: true });
++  });
++  function worker() {
++    const child = spawn(process.execPath, [workerPath], {
++      env: { ...process.env, HOME: join(base, "home"), PI_CODING_AGENT_DIR: agent, PI_ADDITIONAL_EXTENSIONS: "", ZERO_FIXTURE_TOOL_RESPONSE: toolResponse }, stdio: ["ignore", "pipe", "pipe", "ipc"],
++    });
++    let stdout = "", stderr = "";
++    child.stdout.on("data", data => { stdout += data; }); child.stderr.on("data", data => { stderr += data; });
++    const result = { child, exited: once(child, "exit"), stdout: () => stdout, stderr: () => stderr };
++    workers.push(result); return result;
++  }
++  const first = worker();
++  await until(() => first.stdout().includes("NATIVE_RUNTIME_READY"), "stalled notification blocked runtime readiness");
++  await until(() => initialized === 1, "peer did not reach the stalled post-initialize notification");
++  const client = await connectRuntime(sessionDir); connections.push(client);
++  const identity = await client.request("runtime/info");
++  await client.request("session/prompt", { content: "No external model or MCP call" });
++  await until(async () => (await client.request("session/getTranscript") as any).entries.some((entry: any) => entry.role === "assistant"), "optional stalled peer blocked an ordinary native turn");
++  await client.request("session/prompt", { content: "invoke:" + JSON.stringify({ name: "codemode", arguments: { code: 'text(await searchTools("zero_probe"));' } }) });
++  await until(async () => {
++    try { return JSON.parse(await readFile(toolResponse, "utf8")).name === "codemode"; } catch { return false; }
++  }, "offline provider did not produce the real discovery call");
++  const waiting: any = (await client.request("session/getView") as any).view;
++  assert.ok(waiting.conversation.docs["pi.live"].generation, "generation is not awaiting readiness");
++  assert.ok(!Object.values(waiting.tasks.tasks).some((task: any) => task.kind === "pi.tool"), "tool snapshot was taken before MCP readiness");
++  await Promise.race([client.request("session/abort"), delay(2000).then(() => { throw new Error("MCP readiness ignored native abort"); })]);
++  assert.equal((await client.request("session/getView") as any).view.conversation.docs["pi.live"].run, undefined);
++  assert.equal(pending.size, 1, "turn abort unexpectedly disposed the runtime-owned connection");
++  await Promise.race([client.request("session/reload"), delay(4000).then(() => { throw new Error("stalled notification blocked reload"); })]);
++  assert.deepEqual(await client.request("runtime/info"), identity);
++  await until(() => initialized === 2 && cancelled >= 1, "reload did not cancel the old connection before reopening");
++  client.close();
++  first.child.send("close");
++  await until(() => first.child.exitCode !== null, "native close left owned MCP handles alive");
++  await first.exited;
++  assert.equal(first.child.exitCode, 0, first.stderr());
++  assert.match(first.stdout(), /NATIVE_RUNTIME_CLOSED/);
++  assert.equal(pending.size, 0, "shutdown left an initialized notification transport open");
++  // The same directory can be acquired again only after the first native owner closed.
++  const reopened = worker();
++  await until(() => reopened.stdout().includes("NATIVE_RUNTIME_READY"), "native session owner was not released after close");
++  await until(() => initialized === 3, "reopened MCP connection did not start");
++  reopened.child.send("close");
++  await until(() => reopened.child.exitCode !== null, "reopened native close leaked handles");
++  await reopened.exited;
++  assert.equal(reopened.child.exitCode, 0, reopened.stderr());
++  assert.equal(pending.size, 0);
++  console.log("PASS stalled post-initialize HTTP peer: ready, ordinary turn, abortable discovery, reload, transport cancellation, graceful close and same-session reopen");
++});
+diff --git a/packages/local-runtime/test/mcp-ui.test.ts b/packages/local-runtime/test/mcp-ui.test.ts
+new file mode 100644
+index 0000000..3c45b0e
+--- /dev/null
++++ b/packages/local-runtime/test/mcp-ui.test.ts
+@@ -0,0 +1,128 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { spawn } from "node:child_process";
++import { once } from "node:events";
++import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
++import { tmpdir } from "node:os";
++import { join } from "node:path";
++import { fileURLToPath } from "node:url";
++import { setTimeout as delay } from "node:timers/promises";
++import { stripVTControlCharacters } from "node:util";
++import { connectRuntime } from "../src/client.ts";
++import { getResolvedThemeColors } from "../../terminal-ui/src/index.js";
++
++const source = fileURLToPath(new URL("../../../", import.meta.url));
++const root = process.env.ZERO_RUNTIME_ROOT ?? source;
++const viewport = { columns: 110, rows: 35, kittyProtocolActive: false };
++const colors = getResolvedThemeColors();
++const command = { args: "", colors, keybindings: {}, ...viewport };
++async function until(check: () => boolean | Promise<boolean>, label: string) {
++  const deadline = Date.now() + 10000;
++  while (!await check()) { assert.ok(Date.now() < deadline, label); await delay(20); }
++}
++
++test("original Pi MCP manager: real menus, control ownership, disconnect cleanup and native calls", { timeout: 35000 }, async t => {
++  const base = await mkdtemp(join(tmpdir(), "zero-mcp-menu-"));
++  const cwd = join(base, "workspace"), agent = join(base, "agent"), sessionDir = join(base, "session");
++  await mkdir(cwd); await mkdir(agent);
++  const configPath = join(agent, "mcp.json");
++  await writeFile(configPath, JSON.stringify({ mcpServers: { fixture: {
++    command: process.execPath, args: [join(source, "packages/local-runtime/test/fixtures/mcp-server.mjs"), "MCP_MENU"], exposure: "codemode",
++  } } }));
++  const runtime = spawn(process.execPath, [join(root, "packages/local-runtime/bin/runtime.mjs"),
++    "--session-dir", sessionDir, "--cwd", cwd, "--extension", process.env.ZERO_PROVIDER_FIXTURE ?? join(source, "packages/local-runtime/test/fixtures/provider.ts"),
++    "--provider", "local-test", "--model", "scripted"], {
++    env: { ...process.env, HOME: join(base, "home"), PI_CODING_AGENT_DIR: agent, PI_ADDITIONAL_EXTENSIONS: "" }, stdio: "pipe",
++  });
++  let startup = "", stderr = "", screen = "";
++  runtime.stdout.on("data", data => { startup += data; }); runtime.stderr.on("data", data => { stderr += data; });
++  const exited = once(runtime, "exit");
++  const connections: Awaited<ReturnType<typeof connectRuntime>>[] = [];
++  t.after(async () => {
++    for (const client of connections) client.close();
++    if (runtime.exitCode === null && runtime.signalCode === null) {
++      runtime.kill("SIGTERM");
++      const watchdog = setTimeout(() => runtime.kill("SIGKILL"), 2000);
++      try { await exited; } finally { clearTimeout(watchdog); }
++    }
++    await rm(base, { recursive: true, force: true });
++  });
++  await until(() => { assert.equal(runtime.exitCode, null, stderr); return startup.includes('"status":"ready"'); }, "runtime readiness");
++  const receive = (method: string, params: Record<string, unknown>) => {
++    if (method === "session/mcpTerminal" && params.op === "write") screen += stripVTControlCharacters(String(params.data));
++  };
++  let client = await connectRuntime(sessionDir, receive); connections.push(client);
++  const observer = await connectRuntime(sessionDir); connections.push(observer);
++  const identity = await observer.request("runtime/info");
++  let settled = false;
++  const menu = client.request("session/mcpCommand", command).then(() => { settled = true; });
++  await until(() => screen.includes("MCP servers") && screen.includes("fixture"), `native root menu: ${stderr}`);
++  assert.equal(settled, false);
++  await assert.rejects(observer.request("session/mcpInput", { data: "\r" }), /does not own/);
++  await assert.rejects(observer.request("session/mcpCommand", command), /already open/);
++  await assert.rejects(observer.request("session/reload"), /close the MCP manager/);
++  assert.deepEqual(await observer.request("runtime/info"), identity, "manager blocked ordinary runtime commands");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(() => screen.includes("Reconnect") && screen.includes("Disable"), `native server menu: ${screen}`);
++  await client.request("session/mcpResize", { ...viewport, columns: 85 });
++  // Navigate the real SDK SelectList: Tools, Reconnect, Exposure.
++  screen = "";
++  await client.request("session/mcpInput", { data: "\x1b[B" });
++  await client.request("session/mcpInput", { data: "\x1b[B" });
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(() => screen.includes("deferred") && screen.includes("direct"), `native exposure menu: ${screen}`);
++  await client.request("session/mcpInput", { data: "\x1b[B" });
++  await client.request("session/mcpInput", { data: "\x1b[B" });
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(async () => JSON.parse(await readFile(configPath, "utf8")).mcpServers.fixture.exposure === "direct", "native manager did not save exposure");
++  await until(() => screen.includes("MCP server fixture"), "server menu after exposure change");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(() => screen.includes("zero_probe"), "native offered tools screen");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\x1b" });
++  await until(() => screen.includes("Reconnect"), "return from offered tools");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\x1b[B" });
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(() => screen.includes("Tools") && screen.includes("connected"), "native reconnect did not settle");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\x1b[5~" });
++  for (let i = 0; i < 3; i++) await client.request("session/mcpInput", { data: "\x1b[B" });
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(async () => JSON.parse(await readFile(configPath, "utf8")).mcpServers.fixture.enabled === false && screen.includes("Enable"), "native disable did not save/refresh");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(async () => JSON.parse(await readFile(configPath, "utf8")).mcpServers.fixture.enabled !== false && screen.includes("Tools") && screen.includes("connected"), "native enable did not reconnect");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\x1b" });
++  await until(() => screen.includes("MCP servers"), "return to root menu");
++  await client.request("session/mcpInput", { data: "\x1b" });
++  await menu;
++  console.log("PASS original SDK root/server/tools/exposure menus, reconnect, enable/disable, saved configuration, resize, Escape and ownership rejection");
++  // Disconnect inside a nested menu must close only the UI, not Harness or the MCP connections.
++  screen = "";
++  const disconnectedMenu = client.request("session/mcpCommand", { ...command, keybindings: { "tui.select.cancel": "ctrl+x" } }).catch(() => {});
++  await until(() => screen.includes("MCP servers"), "second root menu");
++  screen = "";
++  await client.request("session/mcpInput", { data: "\r" });
++  await until(() => screen.includes("Reconnect"), "nested menu before disconnect");
++  await observer.request("session/prompt", { content: "slow:abort while manager is open" });
++  await observer.request("session/abort");
++  client.close(); await disconnectedMenu;
++  await until(async () => {
++    try { await observer.request("session/reload"); return true; }
++    catch (error) { if (String(error).includes("close the MCP manager")) return false; throw error; }
++  }, "disconnected manager did not release its command UI");
++  assert.deepEqual(await observer.request("runtime/info"), identity);
++  client = await connectRuntime(sessionDir, receive); connections.push(client);
++  const receipt: any = await client.request("session/prompt", { content: "invoke:" + JSON.stringify({ name: "mcp__fixture__zero_probe", arguments: {} }) });
++  await until(async () => (await client.request("session/getTranscript") as any).entries.some((e: any) => e.role === "assistant" && e.text?.includes("MCP_MENU")), "native MCP call after UI disconnect/reload").catch(async error => {
++    console.error(JSON.stringify({ receipt, entries: (await client.request("session/getTranscript") as any).entries.slice(-4),
++      notices: (await client.request("session/getView") as any).view.notices, stderr }));
++    throw error;
++  });
++  assert.ok(receipt.id);
++  console.log("PASS nested-menu disconnect releases UI; same runtime survives; reloaded native MCP tool executes");
++});
+diff --git a/packages/terminal-ui/test/fixtures/mcp-command.mjs b/packages/terminal-ui/test/fixtures/mcp-command.mjs
+new file mode 100644
+index 0000000..23eb7a5
+--- /dev/null
++++ b/packages/terminal-ui/test/fixtures/mcp-command.mjs
+@@ -0,0 +1,27 @@
++import { runDurableTui } from "@local-durable/terminal-ui";
++const snapshot = {
++  session: { id: "mcp", name: "MCP command", cwd: process.cwd(), directory: "/not-a-session" },
++  conversation: { conversation: { id: 1 }, entries: [], docs: {} },
++  conversations: [{ id: 1, label: "Main" }], models: [], notices: [], connection: "online", skills: [],
++  automation: { scheduled: 0, failed: 0, unavailable: true }, attention: { requests: [], unavailable: true },
++};
++const detached = new AbortController();
++let refresh;
++process.on("message", message => { if (message === "detach") detached.abort(); });
++try {
++  await runDurableTui({ current: () => snapshot, subscribe(listener) { refresh = listener; process.send?.("ready"); return () => {}; } }, {
++    async mcpCommand(args, host) {
++      host.suspend();
++      process.stdout.write("\x1b[2J\x1b[H__MCP_SCREEN_CLEARED__\n");
++      await new Promise(resolve => setTimeout(resolve, 30));
++      refresh();  // Runtime notifications still arrive while the native manager owns the terminal.
++      await new Promise(resolve => setTimeout(resolve, 30));
++      host.resume();
++      process.send?.({ mcp: args });
++    },
++    async submit(content) { process.send?.({ content }); },
++  }, {
++    getTerminalCapabilityOverrides: () => ({}), getEnableSkillCommands: () => true,
++    getAutocompleteMaxVisible: () => 10, getThemeSetting: () => undefined,
++  }, undefined, { signal: detached.signal });
++} finally { process.disconnect(); }
+diff --git a/packages/terminal-ui/test/mcp-command.test.mjs b/packages/terminal-ui/test/mcp-command.test.mjs
+new file mode 100644
+index 0000000..1edb086
+--- /dev/null
++++ b/packages/terminal-ui/test/mcp-command.test.mjs
+@@ -0,0 +1,43 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { fork } from "node:child_process";
++import { once } from "node:events";
++import { mkdtemp, rm } from "node:fs/promises";
++import { join } from "node:path";
++import { tmpdir } from "node:os";
++import { setTimeout as delay } from "node:timers/promises";
++import { stripVTControlCharacters } from "node:util";
++
++test("terminal routes /mcp to native management, never to a model prompt", { timeout: 10000 }, async t => {
++  const agent = await mkdtemp(join(tmpdir(), "zero-mcp-ui-"));
++  const child = fork(new URL("fixtures/mcp-command.mjs", import.meta.url), [], {
++    stdio: ["pipe", "pipe", "pipe", "ipc"], env: { ...process.env, PI_CODING_AGENT_DIR: agent },
++  });
++  const messages = []; let output = ""; let error = "";
++  child.on("message", message => messages.push(message));
++  child.stdout.on("data", chunk => { output += chunk; });
++  child.stderr.on("data", chunk => { error += chunk; });
++  const exited = once(child, "exit");
++  t.after(async () => {
++    if (child.exitCode === null && child.signalCode === null) { child.kill("SIGKILL"); await exited; }
++    await rm(agent, { recursive: true, force: true });
++  });
++  async function until(predicate, label) {
++    const deadline = Date.now() + 2500;
++    while (!predicate()) {
++      assert.ok(Date.now() < deadline, `${label}: ${stripVTControlCharacters(output)} ${error}`);
++      await delay(10);
++    }
++  }
++  await until(() => messages.includes("ready"), "startup");
++  child.stdin.write("/mcp\r");
++  await until(() => messages.some(m => m?.mcp === ""), "MCP manager command not delivered");
++  await until(() => stripVTControlCharacters(output).split("__MCP_SCREEN_CLEARED__").at(-1).includes("ctx ?"), "editor was not repainted after native manager cleared the screen");
++  child.stdin.write("/mcp reconnect fixture\r");
++  await until(() => messages.some(m => m?.mcp === "reconnect fixture"), "MCP command arguments lost");
++  assert.equal(messages.filter(m => m?.content).length, 0);
++  assert.doesNotMatch(stripVTControlCharacters(output), /Unsupported command/);
++  child.send("detach");
++  const [code] = await exited;
++  assert.equal(code, 0, error);
++});

@@ -14,7 +14,7 @@ import { keyText } from "../../modes/interactive/components/keybinding-hints.js"
 import { WorkingStatusIndicator } from "../../modes/interactive/components/status-indicator.js";
 import { ToolExecutionComponent } from "../../modes/interactive/components/tool-execution.js";
 import { UserMessageComponent } from "../../modes/interactive/components/user-message.js";
-import { getEditorTheme, getMarkdownTheme, initTheme, theme } from "../../modes/interactive/theme/theme.js";
+import { getEditorTheme, getMarkdownTheme, getResolvedThemeColors, initTheme, theme } from "../../modes/interactive/theme/theme.js";
 import { InteractiveThemeController } from "../../modes/interactive/theme/theme-controller.js";
 import { DcgToolCard } from "../dcg-tool-card.js";
 import { agentOf } from "../../native-types.js";
@@ -55,7 +55,7 @@ const DURABLE_COMMANDS = [
     { name: "quit", description: "Exit Pi Durable · выйти" },
     { name: "compact", description: "Summarize context · сжать контекст" },
     { name: "reload", description: "Refresh terminal model/skill catalogues · обновить меню" },
-    { name: "mcp", description: "Show MCP connection status; on/off · подключения" },
+    { name: "mcp", description: "Open native MCP manager · управление подключениями" },
 ];
 export function createDurableAutocomplete(cwd, skills, enableSkills = true, extraCommands = []) {
     const commands = [
@@ -819,6 +819,13 @@ export async function runDurableTui(source, controller, settings, startupWarning
                 return selectSkill(trimmed.slice(15).trim());
             if (trimmed === "/model")
                 return selectModel();
+            if (trimmed === "/mcp" || trimmed.startsWith("/mcp "))
+                return command(text, () => controller.mcpCommand(trimmed.slice(4).trim(), {
+                    colors: getResolvedThemeColors(settings.getThemeSetting()),
+                    keybindings: getKeybindings().getResolvedBindings(),
+                    suspend: () => view.ui.stop(),
+                    resume: () => { view.ui.start(); view.restoreEditor(); view.ui.requestRender(true); },
+                }));
             if (trimmed === "/tasks")
                 return command(text, () => controller.toggleTasks());
             if (trimmed === "/agents")

@@ -5,4 +5,5 @@ export { AssistantMessageComponent } from "../vendor/modes/interactive/component
 export { UserMessageComponent } from "../vendor/modes/interactive/components/user-message.js";
 export { ToolExecutionComponent } from "../vendor/modes/interactive/components/tool-execution.js";
 export { toolCardRenderer, resetToolCards } from "../vendor/extensions/tool-cards/renderers.mjs";
-export { initTheme, theme } from "../vendor/modes/interactive/theme/theme.js";
+export { initTheme, theme, getResolvedThemeColors } from "../vendor/modes/interactive/theme/theme.js";
+export { ProcessTerminal } from "@earendil-works/pi-tui";

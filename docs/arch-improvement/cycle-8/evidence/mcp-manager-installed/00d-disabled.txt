@@ -1,0 +1,45 @@
+Zero session: /tmp/zero-mcp-installed-cl5xb1xk/session
+Runtime PID: 170570 · log: /tmp/zero-mcp-installed-cl5xb1xk/session/.terminal/runtime.log
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx ?
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ MCP server fixture
+ /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node
+ /home/ubuntu/.local/share/pi-durable-zero/candidates/20261106T1307-mcp-manager/node_modules/.pnpm/@local-durable+runtime@file+packages+loc
+ al-runtime_@aws-sdk+credential-provider-node@3._e3590c908fe17ed18bd1b51467df9bc1/node_modules/@local-durable/runtime/test-fixtures/mcp-ser
+ ver.mjs INSTALLED_MCP_V1 600
+ global: /tmp/zero-mcp-installed-cl5xb1xk/agent/mcp.json
+ State: disabled
+
+→ Enable                          saved to the global mcp.json
+  Enable in this project          saved to the project mcp.json
+
+ enter select • escape/ctrl+c back
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

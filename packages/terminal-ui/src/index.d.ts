@@ -22,7 +22,14 @@ export interface TerminalViewSource {
   current(): TerminalView;
   subscribe(listener: () => void): () => void;
 }
+export interface McpTerminalHost {
+  readonly colors: Record<string, string>;
+  readonly keybindings: Record<string, string | string[]>;
+  suspend(): void;
+  resume(): void;
+}
 export interface TerminalController {
+  mcpCommand(args: string, host: McpTerminalHost): Promise<void>;
   submit(content: string, deliverAs: "steer" | "followUp"): Promise<void>;
   compact(instructions?: string): Promise<void>;
   abort(): Promise<void>;
@@ -70,4 +77,5 @@ export { AssistantMessageComponent } from "../vendor/modes/interactive/component
 export { UserMessageComponent } from "../vendor/modes/interactive/components/user-message.js";
 export { ToolExecutionComponent } from "../vendor/modes/interactive/components/tool-execution.js";
 export { toolCardRenderer, resetToolCards } from "../vendor/extensions/tool-cards/renderers.mjs";
-export { initTheme, theme } from "../vendor/modes/interactive/theme/theme.js";
+export { initTheme, theme, getResolvedThemeColors } from "../vendor/modes/interactive/theme/theme.js";
+export { ProcessTerminal } from "@earendil-works/pi-tui";
