@@ -1,0 +1,40 @@
+
+
+ plain: installed-short-unique
+
+
+ started:plain: installed-short-unique
+
+
+ slow: installed-live-abort-unique
+
+
+ started:
+
+ [38;5;1mOperation aborted[39m
+
+
+ tool: installed-bash-card-unique
+
+
+
+[2m╭─ [0;1m[38;5;2m➔ Bash[39m ◌[0;2m ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│[0m                                                                                                                      [2m│
+│[0m  [2m$ [0m[38;5;3msleep[39m [38;5;2m1[2m[39m;[0m [38;5;3mprintf[39m [38;5;2m'native-work-continued'[39m [2m>[0m [38;5;2mcontinued.txt[2m[39m;[0m [38;5;3mcat[39m [38;5;2mcontinued.txt[39m                                        [2m│
+│[0m  [2mNo output received yet[0m                                                                                              [2m│
+│[0m                                                                                                                      [2m│
+╰─ ◌ Running[0m · 0.0s[2m ───────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+[1m▾ Agents · 0 working[0m
+[38;5;5mTasks · 2 live (runtime work, not project todos)[39m
+[2m  ◐ Tool #22 · running · execute · conversation 1[0m
+[2m  ○ Model response #20 · waiting for #22 · conversation 1[0m
+ [38;5;3mAttention state unavailable; no answer was sent.[39m
+ [38;5;3mNative automation state unavailable; no state was inferred.
+[2m[39m── ⠙[0m [2mRunning bash... ───────────────────────────────────────────────────────────────────────────────────────── [0m[38;5;5msession[2m[39m ─
+[0m [7m [0m
+[2m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · work · git unknown · [0m[38;5;2mctx 0%[39m

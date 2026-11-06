@@ -1,0 +1,19 @@
+{
+  "sessionId": "session",
+  "cwd": "/tmp/zero-installed.xV2OKa/work",
+  "activeConversationId": "1",
+  "activeModel": {
+    "provider": "local-test",
+    "modelId": "scripted"
+  },
+  "thinkingLevel": "off",
+  "models": [
+    {
+      "provider": "local-test",
+      "modelId": "scripted",
+      "name": "Scripted",
+      "contextWindow": 32000
+    }
+  ],
+  "entryCount": 14
+}

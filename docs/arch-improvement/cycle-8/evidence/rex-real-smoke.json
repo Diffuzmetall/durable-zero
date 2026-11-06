@@ -1,0 +1,10 @@
+{
+  "pass": true,
+  "provider": "openai-codex",
+  "model": "gpt-6.1-sol",
+  "sessionId": "rex-20261105T2146",
+  "revision": 10,
+  "userEntries": 1,
+  "nativeToolOutput": "ZERO_NATIVE_TOOL_READY",
+  "finalAnswer": "ZERO_REX_READY"
+}

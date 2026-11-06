@@ -1,0 +1,108 @@
+{
+  "candidate": "/tmp/pi-zero-capabilities-20261106T0642",
+  "installedPrefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106T0642-capabilities",
+  "node": "24.19.0",
+  "pnpm": "11.25.0",
+  "symlinks": 459,
+  "externalOrBrokenSymlinks": 0,
+  "entryHashes": {
+    "runtime/index.js": {
+      "candidate": "f18581aaeb34520eac9dfceebde4643c2b3cfeb389c4fc14e46942815537f7a2",
+      "installed": "f18581aaeb34520eac9dfceebde4643c2b3cfeb389c4fc14e46942815537f7a2"
+    },
+    "runtime/main.js": {
+      "candidate": "df7a0f2087dd3d1ac540a54e57a3dc783a0abcd48cff5b58d2984e557158b689",
+      "installed": "df7a0f2087dd3d1ac540a54e57a3dc783a0abcd48cff5b58d2984e557158b689"
+    },
+    "runtime/client.js": {
+      "candidate": "c8b018029692aa2f5f19e6fa52637c4110bb1d19daf61213198fa7e9476fd216",
+      "installed": "c8b018029692aa2f5f19e6fa52637c4110bb1d19daf61213198fa7e9476fd216"
+    },
+    "terminal/index": {
+      "candidate": "d994724f733fd680b70140ee225a969f2d60008cfad62062c7770c6b5cd4361b",
+      "installed": "d994724f733fd680b70140ee225a969f2d60008cfad62062c7770c6b5cd4361b"
+    },
+    "terminal/probe.js": {
+      "candidate": "ea19aad81e5d29acdd9e20a2baa895529bf7e493aae65cb037d54aec1fc50bc7",
+      "installed": "ea19aad81e5d29acdd9e20a2baa895529bf7e493aae65cb037d54aec1fc50bc7"
+    },
+    "terminal/client.js": {
+      "candidate": "e908a9f4c7d65fa5165922796dcde003296c1e2fe4d7bb5c30913786fe9dfeaa",
+      "installed": "e908a9f4c7d65fa5165922796dcde003296c1e2fe4d7bb5c30913786fe9dfeaa"
+    },
+    "runner/index.js": {
+      "candidate": "547e3b3a0f83d44470d9100c8438011e9d4da753fa5170e0f7ba511a68d65077",
+      "installed": "547e3b3a0f83d44470d9100c8438011e9d4da753fa5170e0f7ba511a68d65077"
+    },
+    "adapter/index.js": {
+      "candidate": "4fee29b33f284952bf0f7a7f9f209334a2c0fd84626ab13f4e7c17472212e011",
+      "installed": "4fee29b33f284952bf0f7a7f9f209334a2c0fd84626ab13f4e7c17472212e011"
+    }
+  },
+  "uiProvenanceFiles": 49,
+  "replacements": 1,
+  "dependencyScripts": {
+    "@google/genai": false,
+    "protobufjs": false,
+    "esbuild": true
+  },
+  "selfLinkCorrection": "node_modules/.pnpm/node_modules/@local-durable/terminal -> ../../../..",
+  "installedChecks": [
+    {
+      "check": "standalone symlink closure",
+      "pass": true
+    },
+    {
+      "check": "provider fixture belongs to installed prefix",
+      "pass": true
+    },
+    {
+      "check": "installed native catalogue",
+      "pass": true
+    },
+    {
+      "check": "installed rich UI has real PTY",
+      "pass": true
+    },
+    {
+      "check": "optional warning panels hidden",
+      "pass": true
+    },
+    {
+      "check": "picker is insertion-only",
+      "pass": true
+    },
+    {
+      "check": "rich Enter submits expanded skill and arguments",
+      "pass": true
+    },
+    {
+      "check": "skill rejection preserves editor and admits nothing",
+      "pass": true
+    },
+    {
+      "check": "Alt+Enter queues expanded native follow-up",
+      "pass": true
+    },
+    {
+      "check": "native tool is still running before disconnect",
+      "pass": true
+    },
+    {
+      "check": "terminal detach leaves runtime alive",
+      "pass": true
+    },
+    {
+      "check": "native Bash continues without any terminal or observer",
+      "pass": true
+    },
+    {
+      "check": "reconnect does not replay prompts",
+      "pass": true
+    }
+  ],
+  "evidenceDirectory": "/tmp/zero-capabilities-installed-dtk84rjs",
+  "primaryInstallationChanged": false,
+  "existingRexTabUpdated": false,
+  "humanAcceptance": "pending"
+}

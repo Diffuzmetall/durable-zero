@@ -1,0 +1,40 @@
+
+
+ plain: rich-short-unique
+
+
+ started:plain: rich-short-unique
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+ Attention state unavailable; no answer was sent.
+ Native automation state unavailable; no state was inferred.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · work · git unknown · ctx 0%
+ended 12:32 am · just now

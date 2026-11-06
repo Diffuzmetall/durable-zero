@@ -99,12 +99,12 @@ export interface AdmissionReceipt {
 }
 
 export interface DurableController {
-	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp"): Promise<AdmissionReceipt>;
+	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp", conversationId?: ConversationId): Promise<AdmissionReceipt>;
 	compact(instructions: string | undefined): Promise<void>;
-	abort(): Promise<void>;
+	abort(conversationId?: ConversationId): Promise<void>;
 	cycleThinking(): Promise<void>;
 	setThinkingLevel(level: ModelThinkingLevel): Promise<void>;
-	setModel(model: ModelRef): Promise<void>;
+	setModel(model: ModelRef, expectedConversationId?: ConversationId): Promise<void>;
 	toggleTasks(): Promise<void>;
 	switchConversation(id: ConversationId): Promise<void>;
 }

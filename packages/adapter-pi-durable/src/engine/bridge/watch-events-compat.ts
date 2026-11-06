@@ -289,6 +289,9 @@ export async function watchEvents(
 								});
 							}
 						}
+						// Live generation snapshots may coalesce before observers see them. The committed
+						// assistant entry is the authoritative final message, including any missed text.
+						if (modelMsg?.role === "assistant") events.push({ type: "message_end", entry });
 						events.push({ type: "entry_appended", entry });
 					}
 					seenEntriesCount = val.entries.length;

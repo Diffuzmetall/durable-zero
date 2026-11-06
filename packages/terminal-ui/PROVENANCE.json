@@ -1,0 +1,231 @@
+{
+  "sourcePackage": "/home/ubuntu/.local/share/pi-durable-host/releases/delivery-recovery-terminal-20261101/node_modules/dpi-terminal-adapter",
+  "sourceCounterpart": "/home/ubuntu/Projects/pi-durable-host/apps/terminal-adapter",
+  "selection": "Installed compiled presentation artifact, not the checkout",
+  "excluded": [
+    "experimental/durable/runtime.js",
+    "native-types.js",
+    "extensions/session-resume/title.mjs",
+    "utils/photon.js"
+  ],
+  "changes": [
+    "Replace wire-type re-exports with presentation-only helpers",
+    "Use the native public Zero view through a client presentation contract",
+    "Remove local session-title reads and all session-title writes",
+    "Surface unsupported operations and RPC failures in the existing UI",
+    "Forward explicit skill commands to the runtime; picker selection remains insertion-only",
+    "Hide disconnected optional attention and automation panels without suppressing runtime notices",
+    "Support caller-owned detach signal",
+    "Load Photon through its native Node module without filesystem monkey-patching",
+    "Reject normal model-picker selections when the native selected conversation changes",
+    "Show activity unavailable for native summary rows without live evidence; preserve activity styles and use client-enriched selected native live documents"
+  ],
+  "replacements": [
+    {
+      "path": "utils/photon.js",
+      "installedSha256": "ac86160fdb88de658e9d8b298ae58fa1b3c43f6b5ae35857b8229a2fe3122c75",
+      "candidateSha256": "b8f0c6bb7142f3cb6c59a3c12844075ee9d0616ccb7d5ddf005ec43531bf368e",
+      "reason": "Node loads @silvia-odwyer/photon-node and its packaged WASM directly. The installed Bun-specific fs.readFileSync monkey-patch and executable-path fallback were not copied. Original notices and licenses remain unchanged."
+    }
+  ],
+  "files": [
+    {
+      "path": "config.js",
+      "sha256": "2e9e52809093b7731dc1691febc3340fa298a3c1b5a22b803e49455af9cbcbaa"
+    },
+    {
+      "path": "core/keybindings.js",
+      "sha256": "b3dceea1e3ea2eb744a0c34d0f40771174529027fc6fca8ef337ee13f605e5ac"
+    },
+    {
+      "path": "core/tools/render-utils.js",
+      "sha256": "420a938fa6b31c4c8ec42b461732114cd63e5d56cb88e4ff5e6e3f253edf0fbd"
+    },
+    {
+      "path": "experimental/dcg-tool-card.js",
+      "sha256": "b1057431a4a1530d421bfed9238566679e8824423883b697d43fa9109bdfa6ec"
+    },
+    {
+      "path": "experimental/durable/git-footer.js",
+      "sha256": "6575e88247223ae0da64ef08a1a6189507bf4bf4d948503be265b0ab151d6fb1"
+    },
+    {
+      "path": "experimental/durable/model-switch.mjs",
+      "sha256": "30483cd677e9d0bf3cfd020ba934d112a2d40da18d603c85078aef30b2ef8c54"
+    },
+    {
+      "path": "experimental/durable/notices.js",
+      "sha256": "56aef12d76dbec652024e0021811339f619beec3335ed57c5fd93389534f8f06"
+    },
+    {
+      "path": "experimental/durable/program-status.js",
+      "sha256": "e37a3154f02d5be27d3f7ae366ad99e1c4734d43144a89cda8c9ccc14dbc92b8"
+    },
+    {
+      "path": "experimental/durable/skill-picker.mjs",
+      "sha256": "835d6507ae4c6a3a28438b6f43c899a1520f89520765848a811a32dd1181401a"
+    },
+    {
+      "path": "experimental/durable/terminal-diagnostics.js",
+      "sha256": "d19cffd74ef74766eeab1689b7e11e70cf65efee8cc2df520af73ec437777e03"
+    },
+    {
+      "path": "experimental/durable/tui.js",
+      "sha256": "a153e03e2c032dc684edb0c6a5ce19fb04896ac4274baaaef818583d16d96e2b",
+      "candidateSha256": "7227cd3869713ffcd3519da0603b6f3bc47c420380ce1f939665126eb9c0cf27"
+    },
+    {
+      "path": "experimental/durable/upstream.mjs",
+      "sha256": "dbce43a4d9cd684d92c4d44863b3e2076b98748ed0ca61276fa0019811133c4a"
+    },
+    {
+      "path": "extensions/activity-panel/activity.js",
+      "sha256": "d4767cc23f6ed2596252b1f4dc7b888ff3ad4feba237f0ca2f929a18826e9028",
+      "candidateSha256": "edf4deab3a712da2825792f69a8caea35ebb89064f10c7b726c6c8fd5acd5807"
+    },
+    {
+      "path": "extensions/activity-panel/mail-badge.js",
+      "sha256": "d4cc185e627d52535a73fd71b1afa8d3ed7fcb25a258039db9ab3ff3f3e2b5b6"
+    },
+    {
+      "path": "extensions/automation-footer/goal-result.js",
+      "sha256": "8e147f26f2e44d5b05f88ea1cf1883b1ae7e081536f90a21dfa2abcefc6ff894"
+    },
+    {
+      "path": "extensions/automation-footer/goal-view.js",
+      "sha256": "a33a7cb0b64df86affac93bd769059e11e42f57c331425f64d2aeb742ac6f3f8"
+    },
+    {
+      "path": "extensions/tool-cards/renderers.mjs",
+      "sha256": "84074c2c58f9922ebfa8cbd8a35cf975ae83d8245edcb93ed8b60cf65093048e"
+    },
+    {
+      "path": "extensions/tool-cards/syntax.mjs",
+      "sha256": "6d970cac678b29c75ccb01b0441bc5033f401db577af255ceb2d5a9276978c06"
+    },
+    {
+      "path": "extensions/tool-cards/vendor.mjs",
+      "sha256": "6f2f85572e390b28b4bf1c4981391a56fcf94aa40fdcdaae8805aeeff9edc39a"
+    },
+    {
+      "path": "licenses/LICENSE.extensions",
+      "sha256": "f5ad14a91e2ddab0bc02a4dc9676118f2440c2a557aa59490118cd259e8a31e5"
+    },
+    {
+      "path": "licenses/LICENSE.pi",
+      "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48"
+    },
+    {
+      "path": "licenses/LICENSE.pi-style",
+      "sha256": "81c57b0a0a7c7664d4d4ee4211fa34eb8d7bfa98972a75e3f5c528ce31ae438b"
+    },
+    {
+      "path": "licenses/NOTICE.tool-cards.md",
+      "sha256": "01041e117a4b9072c12f9c036cf5b8b64e924a361b28eb3d3da68eb0df5f6b44"
+    },
+    {
+      "path": "licenses/pi-model-switch-MIT.txt",
+      "sha256": "c7199523e61c0d8f84a9e38dc1d4620179b9420bbc69680921f62f281ef2ada0"
+    },
+    {
+      "path": "licenses/pi-skill-selector-MIT.txt",
+      "sha256": "3c6fdeb60f5c1aa5c6e13c7d1fc5a376ff2d821b983740b46b93b69214266cf8"
+    },
+    {
+      "path": "modes/interactive/components/assistant-message.js",
+      "sha256": "4a94d0751e194df46f61c73b9b0634d179c87233ca55d9faaa13dde5f38d52d6"
+    },
+    {
+      "path": "modes/interactive/components/countdown-timer.js",
+      "sha256": "e7a27aa5a9bb4e50c3a89bccbcd5e977e6bd9ff3288cb2280140202c359bc2a7"
+    },
+    {
+      "path": "modes/interactive/components/custom-editor.js",
+      "sha256": "67af93a351b0ce0989a6085695a8c9632d4a144318281da80a53cb1823afc9d9"
+    },
+    {
+      "path": "modes/interactive/components/dynamic-border.js",
+      "sha256": "7f7e81e8719ac28d317cff1766f27d3ed9ba508d12bd4667d178ab9442546444"
+    },
+    {
+      "path": "modes/interactive/components/keybinding-hints.js",
+      "sha256": "d71f969f06735e7022c274f49c34eb3d305ceb1a38c128b2da8ffdb0263faa1d"
+    },
+    {
+      "path": "modes/interactive/components/markdown-transform.js",
+      "sha256": "255f8ab75efe6d163fab6ade4b6b059b0640831dac122857c57c002dd6f0a718"
+    },
+    {
+      "path": "modes/interactive/components/status-indicator.js",
+      "sha256": "e9f97b5f790c844c9708e7fe1cab5f6ee1ca10b1879849e6d9d33e8e6476d7a2"
+    },
+    {
+      "path": "modes/interactive/components/tool-execution.js",
+      "sha256": "406328e1c80aa9e6fcc3523ab20e91bd0989075199fbcbb7e8e1799b0c8f4bc8"
+    },
+    {
+      "path": "modes/interactive/components/user-message.js",
+      "sha256": "1846003b0f5bcbf12f623d8a7ca518966079e44593e1aefe9f5dd48034578b07"
+    },
+    {
+      "path": "modes/interactive/theme/dark.json",
+      "sha256": "c11a588b714d35300293079b425fb09a3693d4b2d453585d211b08163c648b75"
+    },
+    {
+      "path": "modes/interactive/theme/light.json",
+      "sha256": "f590c51c2bc8b238891efd0e983473ed2e2a6487b6692cc1d4b2845165e703f7"
+    },
+    {
+      "path": "modes/interactive/theme/system-theme.js",
+      "sha256": "474c4e983889657455f7f9c17c7ceac2bd3bea1c97e295ce49286fe4f3df2101"
+    },
+    {
+      "path": "modes/interactive/theme/theme-controller.js",
+      "sha256": "20cfc31bb8ccc0219f2338f7703dd4ba6421254186937e79e7743a75e8795230"
+    },
+    {
+      "path": "modes/interactive/theme/theme-schema.json",
+      "sha256": "8787918132dbf7aaee1be2ab30ee6306c715dad609cd85e448df595bb02e2a56"
+    },
+    {
+      "path": "modes/interactive/theme/theme.js",
+      "sha256": "704819b4fcc83b9cc21868c3201caac3c57dac95e9062decafb0c37f1d13ab74"
+    },
+    {
+      "path": "SOURCE.json",
+      "sha256": "e411e5c195cc9f6c163f95e3e90eca225b97954bf9aca08a905f8dd9410b2412"
+    },
+    {
+      "path": "utils/ansi.js",
+      "sha256": "505c488c8ce9f641282a2aab920d5b813310f0417a321ceff1fd6d1281e492cc"
+    },
+    {
+      "path": "utils/exif-orientation.js",
+      "sha256": "b495a5ec85ffeb4ab6e633aa96b847cd7692f3839664bc85d8189f476f25a54c"
+    },
+    {
+      "path": "utils/fs-watch.js",
+      "sha256": "253145029d3df94ac30f7136f2042813efdbd6de3f9da99487f18fe0819249a9"
+    },
+    {
+      "path": "utils/html.js",
+      "sha256": "98977997d0887cc60b4ffff26943f1926b98c35bbf94e3871d75f1a6fb510527"
+    },
+    {
+      "path": "utils/image-convert.js",
+      "sha256": "498a16c2e58a84543aee434b1f9f90484703e2b35f77fd5fc6b3ef463b971031"
+    },
+    {
+      "path": "utils/shell.js",
+      "sha256": "4f9c4b662546ba01fa0f8f79bc69f5d20aade245d7183917c1434c9bf2b5b788"
+    },
+    {
+      "path": "utils/syntax-highlight.js",
+      "sha256": "2c1919def3905ae856c1ea45c162ea00cfa63232313c6aec47aa8f3459a62bbf"
+    },
+    {
+      "path": "utils/text.js",
+      "sha256": "a3d953975da4a47144fae55361da643bbd81492dc0b597ff4fcdf2646ae079fd"
+    }
+  ]
+}

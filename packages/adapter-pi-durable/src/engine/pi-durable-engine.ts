@@ -13,6 +13,8 @@ import { openDurable } from "./runtime.ts";
 import {
 	ROOT_CONVERSATION_ID,
 	type Cursor,
+	type DurableViewSource,
+	type DurableController,
 	type ImageContent,
 	type ModelSummary,
 	type OpenDurableOptions,
@@ -55,6 +57,17 @@ export class PiDurableEngine implements IAgentEngine {
 
 	public get sessionDir(): string {
 		return this.#sessionDir;
+	}
+
+	/** Native presentation/control ports for host adapters; neither port owns a Harness. */
+	public get view(): DurableViewSource {
+		if (!this.#instance) throw new SessionError("SESSION_NOT_STARTED", "Engine not started");
+		return this.#instance.view;
+	}
+
+	public get controller(): DurableController {
+		if (!this.#instance) throw new SessionError("SESSION_NOT_STARTED", "Engine not started");
+		return this.#instance.controller;
 	}
 
 	#emitEvent(event: RunnerEvent): void {
@@ -140,7 +153,7 @@ export class PiDurableEngine implements IAgentEngine {
 		}
 
 		if (convId === ROOT_CONVERSATION_ID) {
-			const receipt = await this.#instance.controller.submit(nativeInput, whenBusy);
+			const receipt = await this.#instance.controller.submit(nativeInput, whenBusy, ROOT_CONVERSATION_ID);
 			requestId = receipt.requestId;
 			conversationId = "1";
 			submissionHandle = receipt.submission;
@@ -200,7 +213,7 @@ export class PiDurableEngine implements IAgentEngine {
 		if (!this.#instance) return;
 		const convId = conversationId ? parseConversationId(conversationId) : ROOT_CONVERSATION_ID;
 		if (convId === ROOT_CONVERSATION_ID) {
-			await this.#instance.controller.abort();
+			await this.#instance.controller.abort(ROOT_CONVERSATION_ID);
 		} else {
 			const conv = await this.#instance.harness.conversation(convId, runtimeContext);
 			await conv?.abort(runtimeContext, { background: true });

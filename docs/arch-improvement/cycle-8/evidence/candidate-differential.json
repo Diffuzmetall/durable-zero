@@ -1,0 +1,224 @@
+[
+  {
+    "mode": "direct",
+    "firstTurn": "plain",
+    "eventTypes": [
+      "message_end",
+      "turn_complete",
+      "runtime_graph_snapshot"
+    ],
+    "textDeltas": [],
+    "messageEnd": [
+      {
+        "atMs": 147.6,
+        "event": {
+          "type": "message_end",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "started:plain: final-message-differential"
+              }
+            ],
+            "stopReason": "stop",
+            "usage": {
+              "input": 1,
+              "output": 1,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "totalTokens": 2,
+              "cost": {
+                "input": 0,
+                "output": 0,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+                "total": 0
+              }
+            }
+          }
+        }
+      }
+    ],
+    "finalText": [
+      "started:plain: final-message-differential"
+    ],
+    "pass": true,
+    "artifact": "/tmp/zero-rich.rQdBvo/diff-direct-plain/wire.jsonl",
+    "exitCode": 0
+  },
+  {
+    "mode": "direct",
+    "firstTurn": "slow",
+    "eventTypes": [
+      "message_update",
+      "runtime_graph_snapshot",
+      "message_end",
+      "turn_complete",
+      "runtime_graph_snapshot",
+      "runtime_graph_snapshot"
+    ],
+    "textDeltas": [
+      {
+        "atMs": 141.3,
+        "event": {
+          "type": "message_update",
+          "assistantMessageEvent": {
+            "type": "text_delta",
+            "contentIndex": 0,
+            "delta": "started:"
+          }
+        }
+      }
+    ],
+    "messageEnd": [
+      {
+        "atMs": 5053.7,
+        "event": {
+          "type": "message_end",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "started:slow: final-message-differential"
+              }
+            ],
+            "stopReason": "stop",
+            "usage": {
+              "input": 1,
+              "output": 1,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "totalTokens": 2,
+              "cost": {
+                "input": 0,
+                "output": 0,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+                "total": 0
+              }
+            }
+          }
+        }
+      }
+    ],
+    "finalText": [
+      "started:slow: final-message-differential"
+    ],
+    "pass": true,
+    "artifact": "/tmp/zero-rich.rQdBvo/diff-direct-slow/wire.jsonl",
+    "exitCode": 0
+  },
+  {
+    "mode": "socket",
+    "firstTurn": "plain",
+    "eventTypes": [
+      "message_end",
+      "turn_complete",
+      "runtime_graph_snapshot"
+    ],
+    "textDeltas": [],
+    "messageEnd": [
+      {
+        "atMs": 151.3,
+        "event": {
+          "type": "message_end",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "started:plain: final-message-differential"
+              }
+            ],
+            "stopReason": "stop",
+            "usage": {
+              "input": 1,
+              "output": 1,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "totalTokens": 2,
+              "cost": {
+                "input": 0,
+                "output": 0,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+                "total": 0
+              }
+            }
+          }
+        }
+      }
+    ],
+    "finalText": [
+      "started:plain: final-message-differential"
+    ],
+    "pass": true,
+    "artifact": "/tmp/zero-rich.rQdBvo/diff-socket-plain/wire.jsonl",
+    "exitCode": 0
+  },
+  {
+    "mode": "socket",
+    "firstTurn": "slow",
+    "eventTypes": [
+      "message_update",
+      "runtime_graph_snapshot",
+      "message_end",
+      "turn_complete",
+      "runtime_graph_snapshot",
+      "runtime_graph_snapshot"
+    ],
+    "textDeltas": [
+      {
+        "atMs": 147.4,
+        "event": {
+          "type": "message_update",
+          "assistantMessageEvent": {
+            "type": "text_delta",
+            "contentIndex": 0,
+            "delta": "started:"
+          }
+        }
+      }
+    ],
+    "messageEnd": [
+      {
+        "atMs": 5047.3,
+        "event": {
+          "type": "message_end",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "started:slow: final-message-differential"
+              }
+            ],
+            "stopReason": "stop",
+            "usage": {
+              "input": 1,
+              "output": 1,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "totalTokens": 2,
+              "cost": {
+                "input": 0,
+                "output": 0,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+                "total": 0
+              }
+            }
+          }
+        }
+      }
+    ],
+    "finalText": [
+      "started:slow: final-message-differential"
+    ],
+    "pass": true,
+    "artifact": "/tmp/zero-rich.rQdBvo/diff-socket-slow/wire.jsonl",
+    "exitCode": 0
+  }
+]

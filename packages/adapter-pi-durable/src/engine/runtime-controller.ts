@@ -66,14 +66,16 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 	};
 
 	return {
-		submit: (input, whenBusy) =>
+		submit: (input, whenBusy, conversationId) =>
 			command(async () => {
+				const target = conversationId === undefined ? ctx.bindings.current : await ctx.opened.conversation(conversationId, runtimeContext);
+				if (!target) throw new Error(`Conversation ${conversationId} does not exist`);
 				const isStr = typeof input === "string";
 				const prompt = isStr ? input : input.filter((c) => c.type === "text").map((c: any) => c.text).join("\n");
 				const images = isStr ? undefined : (input.filter((c) => c.type === "image") as any[]);
 				if (ctx.extensionRunner) {
 					try {
-						const currentAgent = await ctx.bindings.current.agent(runtimeContext);
+						const currentAgent = await target.agent(runtimeContext);
 						const activeTools = currentAgent.tools.map((t) => t.name);
 						const hookRes = await ctx.extensionRunner.emitBeforeAgentStart(
 							{
@@ -98,7 +100,7 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 						const nextActiveTools = handlerEdited ? selectedTools : (ctx.getActiveTools?.() ?? ctx.extensionRunner?.getActiveTools?.() ?? activeTools);
 						if (handlerEdited && ctx.setActiveTools) ctx.setActiveTools(selectedTools);
 						if (nextActiveTools && (nextActiveTools.length !== activeTools.length || nextActiveTools.some((name, i) => name !== activeTools[i]))) {
-							await ctx.bindings.current.configure({ modelTools: nextActiveTools.map((name) => ({ name })) as any }, runtimeContext);
+							await target.configure({ modelTools: nextActiveTools.map((name) => ({ name })) as any }, runtimeContext);
 						}
 					} catch (err) {
 						ctx.notice(
@@ -107,12 +109,12 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 						);
 					}
 				}
-				const submission = await ctx.bindings.current.submit({ type: "input", content: input, whenBusy }, runtimeContext);
+				const submission = await target.submit({ type: "input", content: input, whenBusy }, runtimeContext);
 				watchAnswer(submission);
 				const seq = typeof submission.id === "number" ? submission.id : !isNaN(Number(submission.id)) ? Number(submission.id) : undefined;
 				return {
 					requestId: String(submission.id),
-					conversationId: String(ctx.bindings.current.id),
+					conversationId: String(target.id),
 					status: "accepted",
 					submission,
 					...(seq !== undefined ? { sequence: seq } : {}),
@@ -166,12 +168,14 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 				}).catch(ctx.fail);
 			}),
 
-		abort: () =>
+		abort: (conversationId) =>
 			command(async () => {
-				await ctx.bindings.current.abort(runtimeContext, { background: true });
+				const target = conversationId === undefined ? ctx.bindings.current : await ctx.opened.conversation(conversationId, runtimeContext);
+				if (!target) throw new Error(`Conversation ${conversationId} does not exist`);
+				await target.abort(runtimeContext, { background: true });
 				const childConversationIds: ConversationId[] = [];
-				await ctx.bindings.current.commit(async (tx) => {
-					const doc = await tx.doc(SubagentsDoc, ctx.bindings.current.id);
+				await target.commit(async (tx) => {
+					const doc = await tx.doc(SubagentsDoc, target.id);
 					for (const agent of Object.values(doc?.agents ?? {})) {
 						if (!agent.settled && agent.conversationId) {
 							childConversationIds.push(agent.conversationId as ConversationId);
@@ -213,8 +217,11 @@ export function createDurableController(ctx: ControllerContext): DurableControll
 				await ctx.bindings.current.configure({ thinkingLevel: clampThinkingLevel(model, targetLevel) }, runtimeContext);
 			}),
 
-		setModel: (ref) =>
+		setModel: (ref, expectedConversationId) =>
 			command(async () => {
+				if (expectedConversationId !== undefined && ctx.bindings.current.id !== expectedConversationId) {
+					throw new Error("Conversation changed. Reopen the model picker before selecting a model.");
+				}
 				const model = ctx.modelRuntime.getModel(ref.provider, ref.modelId);
 				if (model === undefined) throw new Error(`Unknown model: ${ref.provider}/${ref.modelId}`);
 				ctx.setActiveModelRef(ref);
