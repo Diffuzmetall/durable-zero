@@ -1,5 +1,5 @@
 import { type DefaultResourceLoader, type ModelRuntime, ExtensionRunner } from "@earendil-works/pi-coding-agent";
-import type { Registry } from "@earendil-works/pi-durable";
+import { defineExtension, hook, GenerationTask, ToolTask, type Registry } from "@earendil-works/pi-durable";
 import { adaptExtensionTool, installExtensionTools, type NestedToolExecutor } from "./tool-adapter.ts";
 import { setupExtensionRunner } from "./extension-bridge.ts";
 import type { SessionLocation } from "@durable-zero/adapter-pi-durable";
@@ -175,11 +175,39 @@ export async function mountExtensionBridge(
 		});
 
 		if (extensionRunner) {
+			// MCP startup belongs to Pi's background connections, cancelled by session_shutdown.
+			// Its status command can wait indefinitely; never make it an assembly readiness barrier.
 			extensionRunner.onError((err) => {
 				report(err);
 				onNotice?.("error", `[Extension Error] ${err.extensionPath} (${err.event}): ${err.error}`);
 			});
 			syncToolsToRegistry();
+			const mcpReadiness = extensionsResult.extensions.find(extension => extension.path === "<inline:mcp>")?.handlers.get("tool_call") ?? [];
+			registry.install(defineExtension({
+				name: "pi-discovery-hooks",
+				hooks: [hook(GenerationTask, {
+					async afterResponse(message, _api, context) {
+						// Wait before tool tasks take their immutable registry snapshots, not during startup.
+						// Only the built-in MCP readiness handlers run here; permissions still run beforeTool.
+						for (const call of message.content) {
+							if (call.type !== "toolCall" || (call.name !== "codemode" && call.name !== "tool_search")) continue;
+							for (const ready of mcpReadiness) await ready({
+								type: "tool_call", toolName: call.name, toolCallId: call.id, input: call.arguments,
+							}, { ...extensionRunner!.createContext(), signal: context.abortSignal });
+						}
+					},
+				}), hook(ToolTask, {
+					async beforeTool(call) {
+						if (call.name !== "codemode" && call.name !== "tool_search") return;
+						// Preserve SDK discovery readiness and permission hooks for real native calls.
+						const decision = await extensionRunner!.emitToolCall({
+							type: "tool_call", toolName: call.name, toolCallId: call.id,
+							input: call.arguments as Record<string, unknown>,
+						});
+						if (decision?.block) return { block: decision.reason ?? "policy" };
+					},
+				})],
+			}));
 			try {
 				await new Promise((r) => setImmediate(r));
 				const currentTools = extensionRunner.getActiveTools?.() ?? registry.snapshot().tools().map((t) => t.tool.name);

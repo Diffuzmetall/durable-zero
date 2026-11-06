@@ -1,6 +1,6 @@
 import {
 	createMcpExtension,
-	type ExtensionFactory,
+	type InlineExtension,
 	type ExtensionRunner,
 	type ExtensionToolContext,
 	type ToolDefinition,
@@ -43,8 +43,8 @@ export function hasOutput(api: unknown): api is { output(text: string): void } {
 }
 
 /** Returns the standard built-in extension factories provided by Pi. */
-export function createStandardExtensionFactories(): ExtensionFactory[] {
-	return [createMcpExtension()];
+export function createStandardExtensionFactories(): InlineExtension[] {
+	return [{ name: "mcp", factory: createMcpExtension() }];
 }
 
 /** Adapts an extension ToolDefinition to a Durable ToolRegistration without type escape hatches. */

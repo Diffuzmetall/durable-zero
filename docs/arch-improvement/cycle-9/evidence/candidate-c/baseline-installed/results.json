@@ -1,0 +1,54 @@
+[
+  {
+    "check": "standalone symlink closure",
+    "pass": true
+  },
+  {
+    "check": "provider fixture belongs to installed prefix",
+    "pass": true
+  },
+  {
+    "check": "installed native catalogue",
+    "pass": true
+  },
+  {
+    "check": "installed rich UI has real PTY",
+    "pass": true
+  },
+  {
+    "check": "optional warning panels hidden",
+    "pass": true
+  },
+  {
+    "check": "picker is insertion-only",
+    "pass": true
+  },
+  {
+    "check": "rich Enter submits expanded skill and arguments",
+    "pass": true
+  },
+  {
+    "check": "skill rejection preserves editor and admits nothing",
+    "pass": true
+  },
+  {
+    "check": "Alt+Enter queues expanded native follow-up",
+    "pass": true
+  },
+  {
+    "check": "native tool is still running before disconnect",
+    "pass": true
+  },
+  {
+    "check": "terminal detach leaves runtime alive",
+    "pass": true
+  },
+  {
+    "check": "native Bash continues without any terminal or observer",
+    "pass": true
+  },
+  {
+    "check": "reconnect does not replay prompts",
+    "pass": true
+  }
+]

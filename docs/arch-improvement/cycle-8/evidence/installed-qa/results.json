@@ -1,0 +1,112 @@
+[
+  {
+    "check": "only installed entry paths",
+    "pass": true,
+    "detail": "{\"/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs\": {\"resolved\": \"/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs\", \"sha256\": \"acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292\"}, \"/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@local-durable/runtime/bin/runtime.mjs\": {\"resolved\": \"/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/.pnpm/@local-durable+runtime@file+packages+local-runtime_@aws-sdk+credential-provider-node@3._e3590c908fe17ed18bd1b51467df9bc1/node_modules/@local-durable/runtime/bin/runtime.mjs\", \"sha256\": \"acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292\"}, \"/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts\": {\"resolved\": \"/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/.pnpm/@durable-zero+adapter-pi-durable@file+packages+adapter-pi-durable_@aws-sdk+credential-p_6222809c93a6b643433b019936ab266b/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts\", \"sha256\": \"f7de1ac4317bc4db48502c11c247e6e064a1b2c2cbf1cb7c159369dabce8bce5\"}}"
+  },
+  {
+    "check": "getView revision envelope",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "installed rich UI on real PTY",
+    "pass": true,
+    "detail": "2599731 /dev/pts/24 node fd0=/dev/pts/24 fd1=/dev/pts/24"
+  },
+  {
+    "check": "short final output and completion",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "live output before completion",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "Escape abort",
+    "pass": true,
+    "detail": "latency_ms=47.8"
+  },
+  {
+    "check": "native Bash running card",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "native Bash completion and Exit 0 card",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "terminal exit leaves runtime alive with zero clients",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "native Bash continues with zero clients",
+    "pass": true,
+    "detail": "marker_after_exit_ms=1005.5"
+  },
+  {
+    "check": "reopen preserves all four user entries without duplicates",
+    "pass": true,
+    "detail": "[('8', 'plain: installed-short-unique'), ('13', 'slow: installed-live-abort-unique'), ('18', 'tool: installed-bash-card-unique'), ('26', 'tool: installed-detached-unique')]"
+  },
+  {
+    "check": "/detach exits rich terminal only",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "graceful runtime stop",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "graceful restart preserves session and entry identities",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "rich UI reopens after graceful restart",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "owned runtime receives SIGKILL during active turn",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "rich UI exits when owned runtime disappears",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "SIGKILL recovery keeps session and user identities",
+    "pass": true,
+    "detail": "[('8', 'plain: installed-short-unique'), ('13', 'slow: installed-live-abort-unique'), ('18', 'tool: installed-bash-card-unique'), ('26', 'tool: installed-detached-unique'), ('34', 'slow: installed-kill-recovery-unique')]"
+  },
+  {
+    "check": "recovered runtime accepts new rich PTY prompt without replay",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "post-recovery /detach leaves runtime alive",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "final owned runtime graceful shutdown",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "real SQLite integrity after recovery",
+    "pass": true,
+    "detail": "ok"
+  }
+]

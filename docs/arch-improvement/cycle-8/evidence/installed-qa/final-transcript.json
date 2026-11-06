@@ -1,0 +1,118 @@
+{
+  "conversationId": "1",
+  "entries": [
+    {
+      "id": "8",
+      "conversationId": "1",
+      "kind": "pi.user",
+      "role": "user",
+      "text": "plain: installed-short-unique"
+    },
+    {
+      "id": "11",
+      "conversationId": "1",
+      "kind": "pi.system"
+    },
+    {
+      "id": "12",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": "started:plain: installed-short-unique"
+    },
+    {
+      "id": "13",
+      "conversationId": "1",
+      "kind": "pi.user",
+      "role": "user",
+      "text": "slow: installed-live-abort-unique"
+    },
+    {
+      "id": "16",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": "started:"
+    },
+    {
+      "id": "18",
+      "conversationId": "1",
+      "kind": "pi.user",
+      "role": "user",
+      "text": "tool: installed-bash-card-unique"
+    },
+    {
+      "id": "21",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": ""
+    },
+    {
+      "id": "23",
+      "conversationId": "1",
+      "kind": "pi.tool-result"
+    },
+    {
+      "id": "25",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": "started:native result: native-work-continued"
+    },
+    {
+      "id": "26",
+      "conversationId": "1",
+      "kind": "pi.user",
+      "role": "user",
+      "text": "tool: installed-detached-unique"
+    },
+    {
+      "id": "29",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": ""
+    },
+    {
+      "id": "31",
+      "conversationId": "1",
+      "kind": "pi.tool-result"
+    },
+    {
+      "id": "33",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": "started:native result: native-work-continued"
+    },
+    {
+      "id": "34",
+      "conversationId": "1",
+      "kind": "pi.user",
+      "role": "user",
+      "text": "slow: installed-kill-recovery-unique"
+    },
+    {
+      "id": "38",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": "started:slow: installed-kill-recovery-unique"
+    },
+    {
+      "id": "39",
+      "conversationId": "1",
+      "kind": "pi.user",
+      "role": "user",
+      "text": "plain: installed-postkill-unique"
+    },
+    {
+      "id": "41",
+      "conversationId": "1",
+      "kind": "pi.assistant",
+      "role": "assistant",
+      "text": "started:plain: installed-postkill-unique"
+    }
+  ]
+}

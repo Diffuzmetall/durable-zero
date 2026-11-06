@@ -12,7 +12,8 @@ import { createDurableController } from "./runtime-controller.ts";
 import { RuntimeBindings } from "./runtime-bindings.ts";
 import { closeRuntimeResources } from "./runtime-cleanup.ts";
 import { loadHarnessEnvironment, type LoadedHarnessEnvironment } from "./runtime-loader.ts";
-import { hydrateSessionActiveTools, loadSummaries, createConversationBinding } from "./runtime-hydration.ts";
+import { hydrateSessionActiveTools, loadSummaries, createConversationBinding, applySubagentSummaries } from "./runtime-hydration.ts";
+import type { SubagentsState } from "./subagent-docs.ts";
 
 export { hydrateSessionActiveTools } from "./runtime-hydration.ts";
 
@@ -118,12 +119,25 @@ export async function openDurable(options: OpenDurableOptions = {}): Promise<Ope
 		const handlePublication = (pub: any) => {
 			let convs = state.conversations;
 			for (const ch of pub.changes ?? []) {
-				if (ch.type === "conversation") {
+				if (ch.type === "conversation" && !convs.some(row => row.id === ch.value.id))
 					convs = [...convs, { id: ch.value.id, label: ch.value.id === root.id ? "main" : `subagent ${ch.value.id}` }];
-				} else if (ch.type === "entry" && ch.value.kind === "pi.user") {
+			}
+			for (const ch of pub.changes ?? []) {
+				if (ch.type === "entry" && ch.value.kind === "pi.user") {
 					const id = ch.value.conversationId;
 					convs = convs.map((s) => s.id === id && !s.title ? { ...s, ...titleOf(ch.value) } : s);
+				} else if (ch.type === "entry" && ch.value.kind === "pi.assistant") {
+					const message = ch.value.model?.[0];
+					if (message?.role === "assistant") convs = convs.map(row => row.id === ch.value.conversationId ? { ...row, lastStop: message.stopReason } : row);
+				} else if (ch.type === "document" && ch.kind === "change" && ch.conversationId !== undefined && ch.record.key === undefined) {
+					if (ch.record.kind === "pi.live") convs = convs.map(row => row.id === ch.conversationId ? { ...row, live: ch.value } : row);
+					if (ch.record.kind === "pi.inbox") convs = convs.map(row => row.id === ch.conversationId ? { ...row, inbox: ch.value } : row);
 				}
+			}
+			// A publication can create children and update their registry in any change order.
+			for (const ch of pub.changes ?? []) {
+				if (ch.type === "document" && ch.kind === "change" && ch.conversationId !== undefined && ch.record.kind === "durable.subagents" && ch.record.key === undefined)
+					convs = applySubagentSummaries(convs, ch.conversationId, ch.value as SubagentsState);
 			}
 			if (convs !== state.conversations) update({ conversations: convs });
 		};

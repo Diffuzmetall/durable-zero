@@ -1,0 +1,20 @@
+{
+  "prefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone",
+  "candidate": "/tmp/pi-zero-ui-candidate-20261105T2146",
+  "symlinksChecked": 458,
+  "escapingSymlinks": [],
+  "checkedHashes": {
+    "bin/terminal.mjs": "acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292",
+    "dist/client.js": "ef4f749c16fa075a0ffce0e593b90d9875b1000e6cf3003e4524d2e8e83e493e",
+    "node_modules/@local-durable/runtime/dist/main.js": "2877f006c7d7f89c5259333cdba105e1116c7a6e6eb2a01dae835b5ab85ec8fe",
+    "node_modules/@local-durable/runtime/dist/index.js": "543b6dbac4d7ae5fb2ea56e6c603585b5954629fe2ed6fc76a30d1bbc7636e7b",
+    "node_modules/@durable-zero/adapter-pi-durable/dist/index.js": "4fee29b33f284952bf0f7a7f9f209334a2c0fd84626ab13f4e7c17472212e011"
+  },
+  "dependencyScriptsDenied": [
+    "@google/genai",
+    "protobufjs"
+  ],
+  "globalSwitch": false,
+  "uiProvenanceRecordsChecked": 49,
+  "deploymentSelfLink": "node_modules/.pnpm/node_modules/@local-durable/terminal -> ../../../.."
+}

@@ -1,0 +1,18 @@
+{
+  "prefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106-session-commands-c",
+  "checks": [
+    "owned runtime identity original",
+    "/name persists and renders without replacing native session id",
+    "owned runtime identity lmsHHVdsRauy_PROwNWWjA",
+    "/new starts one distinct native runtime",
+    "/new has no copied or replayed prompt",
+    "old native work survives switching",
+    "/resume reuses original runtime without abort or second Harness",
+    "other runtime remains alive",
+    "session commands and resume never submit a prompt",
+    "reconnect restores persistent display name",
+    "detach does not stop either runtime"
+  ],
+  "passed": 11,
+  "failed": 0
+}

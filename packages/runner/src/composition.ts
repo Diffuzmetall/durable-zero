@@ -12,12 +12,15 @@ import {
 	PiDurableEngine,
 	type NativeExecutionEnvFactory,
 	type PiRuntimeDependencies,
+	type DurableViewSource,
+	type DurableController,
 } from "@durable-zero/adapter-pi-durable";
 import {
 	SettingsManager,
 	DefaultResourceLoader,
 	createMcpExtension,
 	getAgentDir,
+	type Skill,
 } from "@earendil-works/pi-coding-agent";
 import { createCodemodeBuiltinExtension } from "@durable-zero/adapter-codemode";
 import { createPiResourceExtension } from "@durable-zero/extension-pi-resource";
@@ -46,6 +49,13 @@ export interface DurableZeroInstance {
 	coordinator: SessionCoordinator;
 	engine: IAgentEngine;
 	server: StdioJsonRpcServer;
+	/** Available for the native assembly, absent for an injected generic engine. */
+	view?: DurableViewSource;
+	controller?: DurableController;
+	/** Read-only access to the same resource owner used by native prompting. */
+	resources?: { getSkills(): readonly Skill[]; getEnableSkillCommands(): boolean };
+	/** Native work readiness for a host-managed reload; absent for generic engines. */
+	isIdle?: () => Promise<boolean>;
 	close: () => Promise<void>;
 }
 
@@ -66,6 +76,8 @@ export async function assembleDurableZero(
 			: resolve(cwd, ".durable/sessions/default");
 
 	let engine: IAgentEngine;
+	let nativeEngine: PiDurableEngine | undefined;
+	let resources: DurableZeroInstance["resources"];
 	let codemodeBuiltin: ReturnType<typeof createCodemodeBuiltinExtension> | undefined;
 
 	if (options.engine) {
@@ -83,11 +95,15 @@ export async function assembleDurableZero(
 			cwd,
 			agentDir,
 			settingsManager,
-			extensionFactories: [createMcpExtension()],
+			extensionFactories: [{ name: "mcp", factory: createMcpExtension() }],
 			noExtensions: options.noGlobalExtensions ?? false,
 			...(options.skills !== undefined ? { additionalSkillPaths: options.skills } : {}),
 			...(extPaths.length > 0 ? { additionalExtensionPaths: extPaths } : {}),
 		});
+		resources = {
+			getSkills: () => resourceLoader.getSkills().skills,
+			getEnableSkillCommands: () => settingsManager.getEnableSkillCommands(),
+		};
 		const resourceExt = createPiResourceExtension({
 			cwd,
 			settingsManager,
@@ -117,7 +133,7 @@ export async function assembleDurableZero(
 			...(options.noGlobalExtensions !== undefined ? { noGlobalExtensions: options.noGlobalExtensions } : {}),
 		};
 
-		engine = new PiDurableEngine({
+		engine = nativeEngine = new PiDurableEngine({
 			sessionDir,
 			cwd,
 			cli,
@@ -197,6 +213,8 @@ export async function assembleDurableZero(
 		coordinator,
 		engine,
 		server,
+		...(nativeEngine ? { view: nativeEngine.view, controller: nativeEngine.controller, isIdle: () => nativeEngine!.isIdle() } : {}),
+		...(resources ? { resources } : {}),
 		close,
 	};
 }

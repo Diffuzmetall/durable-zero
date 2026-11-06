@@ -1,0 +1,45 @@
+
+
+ <skill name="example" location="/tmp/zero-capabilities-installed-tletrkg3/workspace/.pi/skills/example/SKILL.md">
+ References are relative to /tmp/zero-capabilities-installed-tletrkg3/workspace/.pi/skills/example.
+
+ INSTALLED_SKILL_BODY
+ </skill>
+
+ installed arguments
+
+
+ started:<skill name="example" location="/tmp/zero-capabilities-installed-tletrkg3/workspace/.pi/skills/example/SKILL.md">
+ References are relative to /tmp/zero-capabilities-installed-tletrkg3/workspace/.pi/skills/example.
+
+ INSTALLED_SKILL_BODY
+ </skill>
+
+ installed arguments
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+ × No MCP servers configured. Add them to /tmp/zero-capabilities-installed-tletrkg3/agent/mcp.json or .pi/mcp.json.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx 0%
+ended 1:37 pm · just now

@@ -1,0 +1,3 @@
+[SessionStorage] unlock warning for /tmp/zero-installed.xV2OKa/session/.terminal: Lock is not acquired/owned by you
+[SessionStorage] unlock warning for /tmp/zero-installed.xV2OKa/session: Lock is not acquired/owned by you
+{"status":"ready","pid":2600145,"socketPath":"/tmp/zero-installed.xV2OKa/session/.terminal/runtime.sock"}

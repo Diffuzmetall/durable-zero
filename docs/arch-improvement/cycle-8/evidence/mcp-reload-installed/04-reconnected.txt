@@ -1,0 +1,45 @@
+
+ started:native result: Script completed
+ Wall time 0.1 seconds
+ Output:
+ ==> text 1/2 <==
+ [{"name":"mcp__fixture__zero_probe","description":"Return the isolated MCP server generation\n\ncodemode tool declaration:\nts\ndeclare
+ const tools: { mcp__fixture__zero_probe(args: {}): Promise<{ content: Array<{ data?: string; mimeType?: string; text?: string; type:
+ \"text\" | \"image\" | \"audio\" | \"resource_link\" | \"resource\"; [key: string]: unknown; }>; isError?: boolean; structuredContent?:
+ unknown; [key: string]: unknown; }>; };\n"}]
+ ==> text 2/2 <==
+ {"content":[{"type":"text","text":"INSTALLED_MCP_V2"}]}
+
+
+ slow: installed busy reload
+
+
+ started:slow: installed busy reload
+
+
+ tool: installed detached launcher
+
+
+
+╭─ ➔ Bash ✓ ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                          │
+│  $ sleep 1; printf 'native-work-continued' > continued.txt; cat continued.txt                                                            │
+│                                                                                                                                          │
+├─ Response ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                                          │
+│  native-work-continued                                                                                                                   │
+│                                                                                                                                          │
+╰─ Exit 0 · -- · ~1 words ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+ started:native result: native-work-continued
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+ × fixture: connected, 1 tools (codemode)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx 0%
+ended 1:37 pm · just now

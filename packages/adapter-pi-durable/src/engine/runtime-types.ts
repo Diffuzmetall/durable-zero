@@ -1,6 +1,6 @@
 import type { AttachedReplicatedState } from "@earendil-works/chord";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { ModelThinkingLevel, ImageContent, TextContent } from "@earendil-works/pi-ai";
+import type { ModelThinkingLevel, ImageContent, TextContent, AssistantMessage } from "@earendil-works/pi-ai";
 import {
 	type AgentState,
 	type ConversationId,
@@ -15,7 +15,7 @@ import {
 } from "@earendil-works/pi-durable";
 export { ROOT_CONVERSATION_ID };
 export type { Cursor, ImageContent, TextContent };
-import type { ModelRuntime, SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
+import type { ExtensionUIContext, ModelRuntime, SettingsManager, DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
 import type { Provider } from "@earendil-works/pi-ai";
 import type { SubagentPolicyHolder, ExecutionEnvFactory } from "@durable-zero/core";
 import type { PromptOptions, DynamicPromptSections } from "./prompt.ts";
@@ -60,6 +60,16 @@ export interface ConversationSummary {
 	readonly id: ConversationId;
 	readonly label: string;
 	readonly title?: string;
+	readonly live?: Readonly<import("@earendil-works/pi-durable").LiveState> | undefined;
+	readonly inbox?: Readonly<import("@earendil-works/pi-durable").InboxState> | undefined;
+	readonly lastStop?: AssistantMessage["stopReason"];
+	readonly parentId?: ConversationId;
+	readonly key?: string;
+	readonly role?: string;
+	readonly ownerTaskId?: import("@earendil-works/pi-durable").TaskId;
+	readonly reporter?: import("@earendil-works/pi-durable").TaskId | undefined;
+	readonly deliveryPending?: boolean;
+	readonly hold?: string | undefined;
 }
 
 export interface DurableView {
@@ -99,12 +109,13 @@ export interface AdmissionReceipt {
 }
 
 export interface DurableController {
-	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp"): Promise<AdmissionReceipt>;
+	executeMcpCommand(args: string, ui: Pick<ExtensionUIContext, "custom" | "select" | "input" | "notify" | "theme">): Promise<void>;
+	submit(content: string | (import("@earendil-works/pi-ai").TextContent | import("@earendil-works/pi-ai").ImageContent)[], whenBusy: "steer" | "followUp", conversationId?: ConversationId): Promise<AdmissionReceipt>;
 	compact(instructions: string | undefined): Promise<void>;
-	abort(): Promise<void>;
+	abort(conversationId?: ConversationId): Promise<void>;
 	cycleThinking(): Promise<void>;
 	setThinkingLevel(level: ModelThinkingLevel): Promise<void>;
-	setModel(model: ModelRef): Promise<void>;
+	setModel(model: ModelRef, expectedConversationId?: ConversationId): Promise<void>;
 	toggleTasks(): Promise<void>;
 	switchConversation(id: ConversationId): Promise<void>;
 }
@@ -162,15 +173,18 @@ export function titleOf(entry: EntryRecord | undefined): { title?: string } {
 	return { title: text.replace(/\s+/g, " ").trim() };
 }
 
-export async function firstInput(harness: Harness, id: ConversationId): Promise<{ title?: string }> {
+export async function firstInput(harness: Harness, id: ConversationId): Promise<Pick<ConversationSummary, "title" | "lastStop">> {
 	if (id === ROOT_CONVERSATION_ID) return {};
 	const conversation = (await harness.conversation(id, runtimeContext))!;
 	let first: EntryRecord | undefined;
+	let lastStop: AssistantMessage["stopReason"] | undefined;
 	let cursor: Cursor | undefined;
 	do {
 		const page = await conversation.entries({}, 256, cursor, runtimeContext);
 		first = [...page.items].reverse().find((entry) => entry.kind === "pi.user") ?? first;
+		const assistant = page.items.find(entry => entry.kind === "pi.assistant")?.model?.[0];
+		if (lastStop === undefined && assistant?.role === "assistant") lastStop = assistant.stopReason;
 		cursor = page.next;
 	} while (cursor !== undefined);
-	return titleOf(first);
+	return { ...titleOf(first), ...(lastStop === undefined ? {} : { lastStop }) };
 }

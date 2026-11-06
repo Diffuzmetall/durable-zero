@@ -1,0 +1,54 @@
+[
+  {
+    "check": "installed dependency closure",
+    "pass": true
+  },
+  {
+    "check": "fixtures belong to installed prefix",
+    "pass": true
+  },
+  {
+    "check": "short command entry is executable",
+    "pass": true
+  },
+  {
+    "check": "launcher uses actual rich PTY",
+    "pass": true
+  },
+  {
+    "check": "runtime belongs to installed prefix",
+    "pass": true
+  },
+  {
+    "check": "native MCP call reached real server",
+    "pass": true
+  },
+  {
+    "check": "rich reload preserves native session and runtime PID",
+    "pass": true
+  },
+  {
+    "check": "reload publishes a newer view revision",
+    "pass": true
+  },
+  {
+    "check": "rich UI accepts the refreshed skill catalogue",
+    "pass": true
+  },
+  {
+    "check": "reload reconnected the actual MCP peer",
+    "pass": true
+  },
+  {
+    "check": "rich reload refuses active work",
+    "pass": true
+  },
+  {
+    "check": "Bash continues after launcher terminal disconnect",
+    "pass": true
+  },
+  {
+    "check": "same command reuses runtime PID without prompt replay",
+    "pass": true
+  }
+]

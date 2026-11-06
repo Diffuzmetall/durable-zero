@@ -1,0 +1,172 @@
+/home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@local-durable/runtime/bin/runtime.mjs --session-dir /tmp/zero-installed.xV2OKa/session --cwd /tmp/zero-installed.xV2OKa/work --extension /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts --provider local-test --model scripted
+env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock new-session -d -P -F '#{pane_id}' -s installed-first -x 120 -y 40 -c /tmp/zero-installed.xV2OKa/work 'env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-option -g exit-empty off
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-window-option -t %0 remain-on-exit on
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock pipe-pane -o -t %0 'tee /tmp/zero-installed.xV2OKa/installed-first.pty.raw >/dev/null'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %0 '#{pane_pid} #{pane_tty} #{pane_current_command}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 -l 'plain: installed-short-unique'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 -l 'slow: installed-live-abort-unique'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 Escape
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 -l 'tool: installed-bash-card-unique'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 -l 'tool: installed-detached-unique'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %0 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %0 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %0 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %0
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %0
+env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock new-session -d -P -F '#{pane_id}' -s installed-reopened -x 120 -y 40 -c /tmp/zero-installed.xV2OKa/work 'env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-option -g exit-empty off
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-window-option -t %1 remain-on-exit on
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock pipe-pane -o -t %1 'tee /tmp/zero-installed.xV2OKa/installed-reopened.pty.raw >/dev/null'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %1 -l /detach
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %1 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %1 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %1 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %1
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %1
+/home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@local-durable/runtime/bin/runtime.mjs --session-dir /tmp/zero-installed.xV2OKa/session --cwd /tmp/zero-installed.xV2OKa/work --extension /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts --provider local-test --model scripted
+env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock new-session -d -P -F '#{pane_id}' -s installed-after-restart -x 120 -y 40 -c /tmp/zero-installed.xV2OKa/work 'env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-option -g exit-empty off
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-window-option -t %2 remain-on-exit on
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock pipe-pane -o -t %2 'tee /tmp/zero-installed.xV2OKa/installed-after-restart.pty.raw >/dev/null'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %2 -l 'slow: installed-kill-recovery-unique'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %2 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %2 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %2 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %2
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %2
+/home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@local-durable/runtime/bin/runtime.mjs --session-dir /tmp/zero-installed.xV2OKa/session --cwd /tmp/zero-installed.xV2OKa/work --extension /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts --provider local-test --model scripted
+env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock new-session -d -P -F '#{pane_id}' -s installed-after-sigkill -x 120 -y 40 -c /tmp/zero-installed.xV2OKa/work 'env -i PATH=/home/ubuntu/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin HOME=/tmp/zero-installed.xV2OKa/home XDG_CONFIG_HOME=/tmp/zero-installed.xV2OKa/config PI_AGENT_DIR=/tmp/zero-installed.xV2OKa/agent PI_ADDITIONAL_EXTENSIONS= TMPDIR=/tmp/zero-installed.xV2OKa TERM=xterm-256color LANG=C.UTF-8 COLORTERM=truecolor /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node /home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs --session-dir /tmp/zero-installed.xV2OKa/session'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-option -g exit-empty off
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock set-window-option -t %3 remain-on-exit on
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock pipe-pane -o -t %3 'tee /tmp/zero-installed.xV2OKa/installed-after-sigkill.pty.raw >/dev/null'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %3 -l 'plain: installed-postkill-unique'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %3 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %3 -l /detach
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock send-keys -t %3 Enter
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %3 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock display-message -p -t %3 '#{pane_dead}'
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -p -S -200 -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock capture-pane -e -p -S -200 -t %3
+tmux -S /tmp/zero-installed.xV2OKa/tmux.sock kill-server

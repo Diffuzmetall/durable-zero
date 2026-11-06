@@ -1,0 +1,24 @@
+
+╭─ ➔ Bash ✓ ───────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│  $ printf ZERO_NATIVE_TOOL_READY                                             │
+│                                                                              │
+├─ Response ───────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ZERO_NATIVE_TOOL_READY                                                      │
+│                                                                              │
+╰─ Exit 0 · 0.07s · ~1 words ──────────────────────────────────────────────────╯
+
+
+ ZERO_REX_READY
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+ Attention state unavailable; no answer was sent.
+ Native automation state unavailable; no state was inferred.
+──────────────────────────────────────────────────────────── rex-20261105T2146 ─
+
+────────────────────────────────────────────────────────────────────────────────
+gpt 6.1-sol · off · rex-20261105T2146 · git unknown · ctx 7%
+ended 1:03 am · 1m ago

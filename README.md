@@ -10,6 +10,9 @@ A host can communicate with the reference runtime over JSON-RPC on stdio, or use
 
 > **Status: developer preview.** The reference assembly pins the Earendil Pi packages to **1.5.0**. Extension and adapter interfaces are still evolving. The current BB provider has not yet been migrated to this runtime.
 
+## Local terminal integration
+This checkout also contains three separate workspace packages: `@local-durable/runtime` (independent process host), `@local-durable/terminal` (Unix-socket client), and `@local-durable/terminal-ui` (preserved rich presentation). They compose Zero; they do not replace its native Harness or model loop.
+See [architecture, package boundaries, build/test/install commands and PR scope](docs/arch-improvement/cycle-8/architecture-and-packaging.md) and [latest skills/installed-artifact verification](docs/arch-improvement/cycle-8/capability-followup.md). The primary installation has not switched. Attention, Goal and schedules are deferred in this assembly.
 ## What the reference assembly includes
 
 - **Native agent execution.** `PiDurableEngine` adapts the upstream Harness; Core does not implement a second model loop.

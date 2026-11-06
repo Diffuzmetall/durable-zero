@@ -1,0 +1,53 @@
+{
+  "candidate": "/tmp/pi-zero-mcp-reload-20261106-g",
+  "prefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106T1026-mcp-reload",
+  "symlinks": 459,
+  "externalLinks": 0,
+  "brokenLinks": 0,
+  "hashes": [
+    {
+      "path": "bin/pi-durable-zero.mjs",
+      "sha256": "3fa5d8be100d167569dc210d4689710940cbb96da0c51fec152c87ebeff2e936"
+    },
+    {
+      "path": "dist/launch.js",
+      "sha256": "14e2df338e98e41d5fe9cdfa6f03041fe9c028100175992d77d0c44555848070"
+    },
+    {
+      "path": "bin/terminal.mjs",
+      "sha256": "acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292"
+    },
+    {
+      "path": "dist/main.js",
+      "sha256": "0d68035ed5aed54ecc8626aa6b28c9fb6f6f25d1615e8f90069f302f3c64d3ad"
+    },
+    {
+      "path": "dist/client.js",
+      "sha256": "faafaabb9a39eb30a83ad52f6e502bb085ac765571ed190e5cb6255bb8d392db"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/index.js",
+      "sha256": "e13177b8483cd21151d7c94e0241d0b68859a4e9be80fa28cd122c9dafeca9a7"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/main.js",
+      "sha256": "5302a910dab24892098f23344c75cc692f3489232f0c032200aec874d5c1f1e6"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/client.js",
+      "sha256": "c8b018029692aa2f5f19e6fa52637c4110bb1d19daf61213198fa7e9476fd216"
+    },
+    {
+      "path": "node_modules/.pnpm/node_modules/@durable-zero/runner/dist/index.js",
+      "sha256": "7d8417555fd5624f4bc3f93b26c0545b2f5a3bfb68b23eeed4943929af00e279"
+    },
+    {
+      "path": "node_modules/@durable-zero/adapter-pi-durable/dist/index.js",
+      "sha256": "9d5b4016a6cc487017925d18490a5d164a6e5a5face366cd86ac22d76c24b5fd"
+    }
+  ],
+  "presentationRecords": 49,
+  "replacements": 1,
+  "publicUiImport": "pass",
+  "zeroLicense": "present"
+}

@@ -1,0 +1,40 @@
+│  native-work-continued                                                                                               │
+│                                                                                                                      │
+╰─ Exit 0 · -- · ~1 words ─────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+ started:native result: native-work-continued
+
+
+ tool: installed-detached-unique
+
+
+
+╭─ ➔ Bash ✓ ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                      │
+│  $ sleep 1; printf 'native-work-continued' > continued.txt; cat continued.txt                                        │
+│                                                                                                                      │
+├─ Response ───────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                      │
+│  native-work-continued                                                                                               │
+│                                                                                                                      │
+╰─ Exit 0 · -- · ~1 words ─────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+ started:native result: native-work-continued
+
+
+ slow: installed-kill-recovery-unique
+
+
+ started:
+
+▾ Agents · 0 working
+Tasks · 1 live (runtime work, not project todos)
+  ◐ Model response #36 · running · request · conversation 1
+ Attention state unavailable; no answer was sent.
+ Native automation state unavailable; no state was inferred.
+── ⠙ Working... ────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · work · git unknown · ctx 0%

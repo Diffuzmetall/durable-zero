@@ -1,0 +1,45 @@
+
+
+ slow: keep original working
+
+
+ started:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 1 live (runtime work, not project todos)
+  ◐ Model response #10 · running · request · conversation 1
+── ⠋ Working... ───────────────────────────────────────────────────────────────────────────────────────────────────────── Original session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · work · git unknown · ctx ?

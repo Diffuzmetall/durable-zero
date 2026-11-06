@@ -1,0 +1,40 @@
+
+
+ plain: installed-short-unique
+
+
+ started:plain: installed-short-unique
+
+
+ slow: installed-live-abort-unique
+
+
+ started:
+
+ Operation aborted
+
+
+ tool: installed-bash-card-unique
+
+
+
+╭─ ➔ Bash ◌ ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                      │
+│  $ sleep 1; printf 'native-work-continued' > continued.txt; cat continued.txt                                        │
+│  No output received yet                                                                                              │
+│                                                                                                                      │
+╰─ ◌ Running · 0.0s ───────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+▾ Agents · 0 working
+Tasks · 2 live (runtime work, not project todos)
+  ◐ Tool #22 · running · execute · conversation 1
+  ○ Model response #20 · waiting for #22 · conversation 1
+ Attention state unavailable; no answer was sent.
+ Native automation state unavailable; no state was inferred.
+── ⠙ Running bash... ───────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · work · git unknown · ctx 0%

@@ -1,0 +1,104 @@
+{
+  "base": "85afe89869e60b887703d215005d4c37bac3c177",
+  "candidate": "/tmp/pi-zero-pr3-review-20261106-h",
+  "installedPrefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106T1307-mcp-manager",
+  "patchSha256": "a37f702a28131033d86a4c7f9890b0bda3f7c138613df153d5edd76f5cbaa16f",
+  "files": [
+    {
+      "path": "packages/adapter-pi-durable/src/engine/extension-mount.ts",
+      "sha256": "bcc5f399b6a8addfccbdb183dbf29ae5c7a60141993ddec8c6d8827488e3f8f5"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime-controller.ts",
+      "sha256": "ff2882f445d89242c2c1f1706ec45424e694f81baef61f6c10bf7471a6ded97c"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime-hydration.ts",
+      "sha256": "2a179ff9b0f4d7450f18616fa213517ea90dd3bf4acd5f85f530c5722aa1792a"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime-types.ts",
+      "sha256": "86b9cc96e870760b397e59d95cd29ce71b85c9f2b58881c994ae1328300ccf4b"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime.ts",
+      "sha256": "5676857b43923ba460f523aa2613632b9c3a8ba83c4c5a2070e37c8140fd4674"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/shared/extension-runner.ts",
+      "sha256": "a7fceb43d163743f712a4bde9ab71eac4c7119b5f41b9861f698c43c6805b75b"
+    },
+    {
+      "path": "packages/local-runtime/package.json",
+      "sha256": "882b7ec2e70d8588f3875b64fa99754e6f3c96f54bc2de37616d009dd1fefb99"
+    },
+    {
+      "path": "packages/local-runtime/src/client.ts",
+      "sha256": "3415fedf9a81f1e49afcac034582ebc786e3bb82c552ebb240cb7577a621eb48"
+    },
+    {
+      "path": "packages/local-runtime/src/index.ts",
+      "sha256": "10841a166e3973e6b8439cb33de73e915e821e51b62f638a8d45f44ab7c4cb19"
+    },
+    {
+      "path": "packages/local-runtime/test/fixtures/provider.ts",
+      "sha256": "127bf3d40c12d4484849c230a443bd745408716c1e05fa37408eadbdb140d63b"
+    },
+    {
+      "path": "packages/local-terminal/src/client.ts",
+      "sha256": "73ea62c26d8558282c52754a5d2467132b3419972fb525a459ddd10f3a74a823"
+    },
+    {
+      "path": "packages/local-terminal/test/launch-native.test.ts",
+      "sha256": "0753a16dff29f39f5e42a83e6b2777dc244b37b98bd92395168f619fa50772f4"
+    },
+    {
+      "path": "packages/terminal-ui/PROVENANCE.json",
+      "sha256": "c03c4ba56b5e862a212b289fde8b19784b589b20ebf0519d6f9c3bc0c5bf7946"
+    },
+    {
+      "path": "packages/terminal-ui/src/index.d.ts",
+      "sha256": "858d84bbf52a1af99fb42ad803c92e7431db3c0d892f8a6f37041b33bc3f0f7e"
+    },
+    {
+      "path": "packages/terminal-ui/src/index.js",
+      "sha256": "48de4f1e17119119192963389629e185e049cc6ece48f7c7f917d2e433394f6c"
+    },
+    {
+      "path": "packages/terminal-ui/vendor/experimental/durable/tui.js",
+      "sha256": "2790f2e49f02d0b75c5206695ecc259022c62edc871c3c8ace9dc98ee603d6f0"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "572f59d1c645bf5e84e32c1469026e8e8e638195825af9eb391dca18c306f9e7"
+    },
+    {
+      "path": "packages/adapter-pi-durable/test/extension-activation.test.ts",
+      "sha256": "454a2260939e963220b25fabedba94793611f2e4fb7b905fc489aad0d646cdac"
+    },
+    {
+      "path": "packages/adapter-pi-durable/test/runtime-activity.test.ts",
+      "sha256": "cf2baff6d8e67015afef6c8d4ee0cdd58b792c5bc3296ce86ab4e4baa6959d01"
+    },
+    {
+      "path": "packages/local-runtime/src/mcp-ui.ts",
+      "sha256": "95d96f06a5fc095ccac978dd781824ac578b202ea09b970ab86a5bef9c9caec3"
+    },
+    {
+      "path": "packages/local-runtime/test/mcp-startup-native.test.ts",
+      "sha256": "9e40d1399cbab4bed5fbd1f9ebb2d278f1b3c4af2174084fbb4daf96f5ea5f00"
+    },
+    {
+      "path": "packages/local-runtime/test/mcp-ui.test.ts",
+      "sha256": "81639bae538a173615eb25e541b312afa8054ae6694cd03caeba6fe4cee5a38f"
+    },
+    {
+      "path": "packages/terminal-ui/test/fixtures/mcp-command.mjs",
+      "sha256": "7286347345a373030bbc2e2ae79ab431c786cbe866e4a040ce1e96f4d65c1fc2"
+    },
+    {
+      "path": "packages/terminal-ui/test/mcp-command.test.mjs",
+      "sha256": "3649e08d1f319b265c5291787cfb7f447caa4d2f5a491f873921baaabbe91715"
+    }
+  ]
+}

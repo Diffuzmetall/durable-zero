@@ -1,0 +1,57 @@
+{
+  "candidate": "/tmp/pi-zero-session-commands-20261106-d",
+  "prefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106-session-commands-d",
+  "symlinks": 460,
+  "externalLinks": 0,
+  "brokenLinks": 0,
+  "hashes": [
+    {
+      "path": "bin/pi-durable-zero.mjs",
+      "sha256": "3fa5d8be100d167569dc210d4689710940cbb96da0c51fec152c87ebeff2e936"
+    },
+    {
+      "path": "dist/launch.js",
+      "sha256": "bf02f47683b34744c964e51701e604b42612b878cd1e08130bdd8c16bea98534"
+    },
+    {
+      "path": "bin/terminal.mjs",
+      "sha256": "acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292"
+    },
+    {
+      "path": "dist/main.js",
+      "sha256": "b5f863c2e7150fbcae204be288ba57f35a3c8bfa3682bdfba2a2967a254364f2"
+    },
+    {
+      "path": "dist/client.js",
+      "sha256": "1383567e8e580372813fc5210438c9910595eb324591c7c669a0586dd97ca6c3"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/index.js",
+      "sha256": "078cdf2c52bfed743f81c23ebbaffc2d2417ed3ce0ee5a82c9267812a44b14ce"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/main.js",
+      "sha256": "9818e4457774b0f04b5db1403d48c52a0a1aaf092618f085b22fbfe0927a8c25"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/client.js",
+      "sha256": "e78ca90ab81fe22d1af0c0e732ca4c439306910f2c037a89adfe4040d72ace54"
+    },
+    {
+      "path": "node_modules/.pnpm/node_modules/@durable-zero/runner/dist/index.js",
+      "sha256": "ea3c438f5549363b8aeb813c6d88632fc3d85ab75ffc1171ad2dc3fc6f57e382"
+    },
+    {
+      "path": "node_modules/@durable-zero/adapter-pi-durable/dist/index.js",
+      "sha256": "e426f1592b93fc359755b4c232b88d5b9547f2eb0ab87521c74b13cab2aabca4"
+    },
+    {
+      "path": "node_modules/@local-durable/runtime/dist/sessions.js",
+      "sha256": "6864a04f06c30fb6cb91a94626d9dcd402de85f7fff6bbdb50b6e58a67233742"
+    }
+  ],
+  "presentationRecords": 49,
+  "replacements": 1,
+  "publicUiImport": "pass",
+  "zeroLicense": "present"
+}

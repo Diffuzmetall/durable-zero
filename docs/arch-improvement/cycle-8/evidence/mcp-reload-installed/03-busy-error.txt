@@ -1,0 +1,45 @@
+
+╭─ ➔ Codemode ✓ ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                          │
+│                                                                                                                                          │
+├─ Response ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                                          │
+│  Script completed                                                                                                                        │
+│  Wall time 0.1 seconds                                                                                                                   │
+│  Output:                                                                                                                                 │
+│                                                                                                                                          │
+│  ==> text 1/2 <==                                                                                                                        │
+│  [{"name":"mcp__fixture__zero_probe","description":"Return the isolated MCP server generation\n\ncodemode tool declaration:\n```ts\nde…  │
+│  ==> text 2/2 <==                                                                                                                        │
+│  {"content":[{"type":"text","text":"INSTALLED_MCP_V2"}]}                                                                                 │
+│                                                                                                                                          │
+╰─ 0.13s · ~65 words ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+ started:native result: Script completed
+ Wall time 0.1 seconds
+ Output:
+ ==> text 1/2 <==
+ [{"name":"mcp__fixture__zero_probe","description":"Return the isolated MCP server generation\n\ncodemode tool declaration:\nts\ndeclare
+ const tools: { mcp__fixture__zero_probe(args: {}): Promise<{ content: Array<{ data?: string; mimeType?: string; text?: string; type:
+ \"text\" | \"image\" | \"audio\" | \"resource_link\" | \"resource\"; [key: string]: unknown; }>; isError?: boolean; structuredContent?:
+ unknown; [key: string]: unknown; }>; };\n"}]
+ ==> text 2/2 <==
+ {"content":[{"type":"text","text":"INSTALLED_MCP_V2"}]}
+
+
+ slow: installed busy reload
+
+
+▾ Agents · 0 working
+Tasks · 1 live (runtime work, not project todos)
+  ◐ Model response #42 · running · request · conversation 1
+ × fixture: connected, 1 tools (codemode)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+ Cannot submit: Error: Cannot reload: active work is running. Wait for completion or abort it first. (Esc to return)
+>
+
+  No matching commands
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx 0%

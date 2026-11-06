@@ -1,0 +1,66 @@
+{
+  "view": {
+    "session": {
+      "id": "session",
+      "directory": "/tmp/zero-installed.xV2OKa/session",
+      "cwd": "/tmp/zero-installed.xV2OKa/work"
+    },
+    "conversation": {
+      "conversation": {
+        "id": 1
+      },
+      "entries": [],
+      "docs": {
+        "pi.agent": {
+          "model": {
+            "provider": "local-test",
+            "modelId": "scripted"
+          },
+          "thinkingLevel": "off",
+          "modelTools": [
+            "read",
+            "write",
+            "edit",
+            "bash",
+            "subagent",
+            "codemode",
+            "pi.codemode.models.classify",
+            "pi.codemode.models.generateImages",
+            "tool_search"
+          ],
+          "cwd": "/tmp/zero-installed.xV2OKa/work"
+        },
+        "pi.live": {},
+        "pi.inbox": {
+          "items": []
+        },
+        "pi.provider": {
+          "sessionId": "01a1adb9-17fa-74eb-81c2-c741611765d8"
+        },
+        "pi.usage": {
+          "models": {},
+          "tools": {}
+        }
+      }
+    },
+    "conversations": [
+      {
+        "id": 1,
+        "label": "main"
+      }
+    ],
+    "models": [
+      {
+        "provider": "local-test",
+        "modelId": "scripted",
+        "name": "Scripted",
+        "contextWindow": 32000
+      }
+    ],
+    "notices": [],
+    "tasks": {
+      "tasks": {}
+    }
+  },
+  "revision": 1
+}

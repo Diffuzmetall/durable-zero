@@ -1,0 +1,139 @@
+{
+  "base": "2147e8d7b7109a7debe663c4b27900bed94bbcda",
+  "sourceCandidate": "/tmp/pi-zero-session-commands-20261106-d",
+  "installedCandidate": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106-session-commands-d",
+  "files": [
+    {
+      "path": "packages/adapter-pi-durable/src/engine/extension-mount.ts",
+      "sha256": "bcc5f399b6a8addfccbdb183dbf29ae5c7a60141993ddec8c6d8827488e3f8f5"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime-controller.ts",
+      "sha256": "ff2882f445d89242c2c1f1706ec45424e694f81baef61f6c10bf7471a6ded97c"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime-hydration.ts",
+      "sha256": "2a179ff9b0f4d7450f18616fa213517ea90dd3bf4acd5f85f530c5722aa1792a"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime-types.ts",
+      "sha256": "86b9cc96e870760b397e59d95cd29ce71b85c9f2b58881c994ae1328300ccf4b"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/runtime.ts",
+      "sha256": "5676857b43923ba460f523aa2613632b9c3a8ba83c4c5a2070e37c8140fd4674"
+    },
+    {
+      "path": "packages/adapter-pi-durable/src/engine/shared/extension-runner.ts",
+      "sha256": "c7ea98d08a02177431a7740a99045c575d8b1e5377d7d3c6051914d846ab61e9"
+    },
+    {
+      "path": "packages/adapter-pi-durable/test/extension-activation.test.ts",
+      "sha256": "00cddb613f975e0527eb52a84db148121fa069b043998d9fda6a272cd27798f2"
+    },
+    {
+      "path": "packages/adapter-pi-durable/test/runtime-activity.test.ts",
+      "sha256": "cf2baff6d8e67015afef6c8d4ee0cdd58b792c5bc3296ce86ab4e4baa6959d01"
+    },
+    {
+      "path": "packages/local-runtime/package.json",
+      "sha256": "3415dfe1d57c3eb281575d2b13277eca072170b2dca17d1a8f8e75c9d3fd4d01"
+    },
+    {
+      "path": "packages/local-runtime/scripts/build-candidate.mjs",
+      "sha256": "1643b9b4f2d2b7192c9dc8cc0a5f84a157dd94f76d3c662ebe71c2ae42e30da3"
+    },
+    {
+      "path": "packages/local-runtime/src/client.ts",
+      "sha256": "3415fedf9a81f1e49afcac034582ebc786e3bb82c552ebb240cb7577a621eb48"
+    },
+    {
+      "path": "packages/local-runtime/src/index.ts",
+      "sha256": "136e80d0b459ff77f318ce98830df9dc5f815895716f9e2b4ef923459126f19e"
+    },
+    {
+      "path": "packages/local-runtime/src/mcp-ui.ts",
+      "sha256": "95d96f06a5fc095ccac978dd781824ac578b202ea09b970ab86a5bef9c9caec3"
+    },
+    {
+      "path": "packages/local-runtime/src/sessions.ts",
+      "sha256": "6da0b6e271442e6a8b3e991978646b8c1de55d229ba5beb2a452a573953a90c7"
+    },
+    {
+      "path": "packages/local-runtime/test/fixtures/provider.ts",
+      "sha256": "127bf3d40c12d4484849c230a443bd745408716c1e05fa37408eadbdb140d63b"
+    },
+    {
+      "path": "packages/local-runtime/test/mcp-startup-native.test.ts",
+      "sha256": "9e40d1399cbab4bed5fbd1f9ebb2d278f1b3c4af2174084fbb4daf96f5ea5f00"
+    },
+    {
+      "path": "packages/local-runtime/test/mcp-ui.test.ts",
+      "sha256": "81639bae538a173615eb25e541b312afa8054ae6694cd03caeba6fe4cee5a38f"
+    },
+    {
+      "path": "packages/local-runtime/test/session-catalog-native.test.ts",
+      "sha256": "cc16b0871772780e343e78e03720f3ed595eae89ef48298e17db8cd8a69e81e9"
+    },
+    {
+      "path": "packages/local-runtime/test/session-catalog.test.ts",
+      "sha256": "ad04960430ff34e9979c7bd60eb5dde62f50e28bd95b8f83cf0d9fee1dfa94cc"
+    },
+    {
+      "path": "packages/local-terminal/src/client.ts",
+      "sha256": "489707c17594b6b9e45f4f451b28171e5250cefea332f25ad2454b5ad156e928"
+    },
+    {
+      "path": "packages/local-terminal/src/launch.ts",
+      "sha256": "19d0ac10f66b37de5bd860db994b6da380289f3b846669e696f024cb9c9cf5d5"
+    },
+    {
+      "path": "packages/local-terminal/src/main.ts",
+      "sha256": "396d531117684f4fc7a77d0c44eb63c2366ee613bea93bc22393049e3de07cc1"
+    },
+    {
+      "path": "packages/local-terminal/test/client.test.ts",
+      "sha256": "a743c792a4070d2b947bcf455c1ba2e41d4d55891b65608d0eef2caad545c8fb"
+    },
+    {
+      "path": "packages/local-terminal/test/launch-native.test.ts",
+      "sha256": "0753a16dff29f39f5e42a83e6b2777dc244b37b98bd92395168f619fa50772f4"
+    },
+    {
+      "path": "packages/terminal-ui/PROVENANCE.json",
+      "sha256": "00b809acffb21daf2341668da283c0e07fca3e06a0381e0ddd44b2a1a3b4315f"
+    },
+    {
+      "path": "packages/terminal-ui/src/index.d.ts",
+      "sha256": "d49c1206a8cbd4b175f7794bff3bfb7f98fed3420a9f2e1521d5c7e129bd96af"
+    },
+    {
+      "path": "packages/terminal-ui/src/index.js",
+      "sha256": "48de4f1e17119119192963389629e185e049cc6ece48f7c7f917d2e433394f6c"
+    },
+    {
+      "path": "packages/terminal-ui/test/fixtures/mcp-command.mjs",
+      "sha256": "7286347345a373030bbc2e2ae79ab431c786cbe866e4a040ce1e96f4d65c1fc2"
+    },
+    {
+      "path": "packages/terminal-ui/test/fixtures/session-commands.mjs",
+      "sha256": "2d23b443407c2ec9b8642fb05182dba02f4188d7d73b2baa9be2e08221dd59b3"
+    },
+    {
+      "path": "packages/terminal-ui/test/mcp-command.test.mjs",
+      "sha256": "3649e08d1f319b265c5291787cfb7f447caa4d2f5a491f873921baaabbe91715"
+    },
+    {
+      "path": "packages/terminal-ui/test/session-commands.test.mjs",
+      "sha256": "492b3d2c3a4af4353bf1c344097f25d38cff877a37ecba75737414fed74f287a"
+    },
+    {
+      "path": "packages/terminal-ui/vendor/experimental/durable/tui.js",
+      "sha256": "a4a9405aea5622f6a8222a0dfb959eb611e4adf262fc134a0fd2ed1c469b6147"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "572f59d1c645bf5e84e32c1469026e8e8e638195825af9eb391dca18c306f9e7"
+    }
+  ]
+}

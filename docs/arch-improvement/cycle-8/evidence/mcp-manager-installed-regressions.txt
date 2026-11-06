@@ -1,0 +1,11 @@
+PASS stalled post-initialize HTTP peer: ready, ordinary turn, abortable discovery, reload, transport cancellation, graceful close and same-session reopen
+✔ optional MCP stalled after initialize cannot block startup/reload; native shutdown cancels its transport (5194.878945ms)
+✔ short launcher starts once, survives detach, reuses its workspace session and reloads (5565.98006ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7132.783045

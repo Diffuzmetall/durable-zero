@@ -1,0 +1,45 @@
+
+
+ invoke:{"name":"codemode","arguments":{"code":"text(await searchTools(\"zero_probe\")); text(await tools.mcp__fixture__zero_probe({}));"}}
+
+
+
+╭─ ➔ Codemode ✓ ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                          │
+│                                                                                                                                          │
+├─ Response ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                                          │
+│  Script completed                                                                                                                        │
+│  Wall time 0.2 seconds                                                                                                                   │
+│  Output:                                                                                                                                 │
+│                                                                                                                                          │
+│  ==> text 1/2 <==                                                                                                                        │
+│  [{"name":"mcp__fixture__zero_probe","description":"Return the isolated MCP server generation\n\ncodemode tool declaration:\n```ts\nde…  │
+│  ==> text 2/2 <==                                                                                                                        │
+│  {"content":[{"type":"text","text":"INSTALLED_MCP_V1"}]}                                                                                 │
+│                                                                                                                                          │
+╰─ 0.19s · ~65 words ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 1 live (runtime work, not project todos)
+  ◐ Model response #20 · running · request · conversation 1
+── ⠙ Working... ────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx 0%

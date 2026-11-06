@@ -1,0 +1,17 @@
+PASS runtime ready; private socket; native Harness selected
+PASS competing runtime rejected without removing the active socket
+PASS native tool continued with zero terminal clients
+PASS model selection rejects a stale expected conversation at the native boundary
+PASS reopen restores transcript without prompt resubmission
+PASS streamed output and abort correlate to a native admission ID
+PASS graceful runtime restart preserves native session and entry IDs
+PASS SIGKILL recovery preserves native state and removes only the stale socket
+✔ native Zero: terminal detach, ongoing tool, reconnect, abort and runtime restart (21144.830295ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21674.596658

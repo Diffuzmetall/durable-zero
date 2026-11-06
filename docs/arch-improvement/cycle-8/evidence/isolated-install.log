@@ -1,0 +1,9 @@
+[WARN] Shared workspace lockfile detected but configuration forces legacy deploy implementation.
+Packages are copied from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/ubuntu/.local/share/pnpm/store/v11
+  Virtual store is at:             ../../home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/.pnpm
+✓ Lockfile passes supply-chain policies (verified 37m ago)
+Progress: resolved 1, reused 0, downloaded 0, added 0
+[WARN] 1 deprecated subdependencies found: node-domexception@1.0.0
+Progress: resolved 167, reused 0, downloaded 0, added 0, done
+.                                        | +141 ++++++++++++++

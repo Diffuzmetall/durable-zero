@@ -1,0 +1,529 @@
+TAP version 13
+# Subtest: CodemodeExtension encapsulates sandbox per instance and does not share module singleton
+ok 1 - CodemodeExtension encapsulates sandbox per instance and does not share module singleton
+  ---
+  duration_ms: 4.74743
+  type: 'test'
+  ...
+# Subtest: CodemodeExtension tracks sandboxes per context when registered with multiple contexts
+ok 2 - CodemodeExtension tracks sandboxes per context when registered with multiple contexts
+  ---
+  duration_ms: 0.583711
+  type: 'test'
+  ...
+# Subtest: CodemodeExtension encapsulates native QuickJS sandbox per instance
+ok 3 - CodemodeExtension encapsulates native QuickJS sandbox per instance
+  ---
+  duration_ms: 3.005204
+  type: 'test'
+  ...
+# Subtest: CodemodeExtension tracks separate sandboxes per context
+ok 4 - CodemodeExtension tracks separate sandboxes per context
+  ---
+  duration_ms: 0.44058
+  type: 'test'
+  ...
+# Subtest: explicit root submission preserves the viewed child and runs hooks against root
+ok 5 - explicit root submission preserves the viewed child and runs hooks against root
+  ---
+  duration_ms: 3.792347
+  type: 'test'
+  ...
+# Subtest: explicit root abort targets root and its children, not the viewed conversation
+ok 6 - explicit root abort targets root and its children, not the viewed conversation
+  ---
+  duration_ms: 0.796851
+  type: 'test'
+  ...
+# Subtest: omitted target preserves native selected-conversation behavior
+ok 7 - omitted target preserves native selected-conversation behavior
+  ---
+  duration_ms: 0.676392
+  type: 'test'
+  ...
+# Subtest: model selection rejects a changed conversation inside the command queue
+ok 8 - model selection rejects a changed conversation inside the command queue
+  ---
+  duration_ms: 1.025669
+  type: 'test'
+  ...
+# Subtest: model selection preserves matching-target and untargeted native behavior
+ok 9 - model selection preserves matching-target and untargeted native behavior
+  ---
+  duration_ms: 0.736072
+  type: 'test'
+  ...
+# Subtest: a missing explicit target rejects without touching the selected conversation
+ok 10 - a missing explicit target rejects without touching the selected conversation
+  ---
+  duration_ms: 0.561354
+  type: 'test'
+  ...
+# Subtest: Pi registration activates direct/model-only tools, not indirect/hidden/opt-out tools
+ok 11 - Pi registration activates direct/model-only tools, not indirect/hidden/opt-out tools
+  ---
+  duration_ms: 3.674043
+  type: 'test'
+  ...
+# Subtest: Extension UI Context Safety (Issue \#14 Defect 1)
+    # Subtest: provides a full SDK-shaped no-op context that prevents TypeError when extensions access ui members
+    ok 1 - provides a full SDK-shaped no-op context that prevents TypeError when extensions access ui members
+      ---
+      duration_ms: 2.839419
+      type: 'test'
+      ...
+    1..1
+ok 12 - Extension UI Context Safety (Issue \#14 Defect 1)
+  ---
+  duration_ms: 4.372314
+  type: 'suite'
+  ...
+# Subtest: ExtensionActions.sendUserMessage: delegates to onSubmitUserMessage in FSM
+ok 13 - ExtensionActions.sendUserMessage: delegates to onSubmitUserMessage in FSM
+  ---
+  duration_ms: 1.906163
+  type: 'test'
+  ...
+# Subtest: D-17: Dynamic System Prompt renders mcp_servers and dynamic sections from before_agent_start
+ok 14 - D-17: Dynamic System Prompt renders mcp_servers and dynamic sections from before_agent_start
+  ---
+  duration_ms: 3.465189
+  type: 'test'
+  ...
+# Subtest: D-16: mountExtensionBridge synchronizes direct MCP servers and dynamic sections at boot
+ok 15 - D-16: mountExtensionBridge synchronizes direct MCP servers and dynamic sections at boot
+  ---
+  duration_ms: 344.064421
+  type: 'test'
+  ...
+# Subtest: native commit publications update nonselected rows and hydrate the same documents
+ok 16 - native commit publications update nonselected rows and hydrate the same documents
+  ---
+  duration_ms: 3482.47392
+  type: 'test'
+  ...
+# Subtest: nonselected conversation summaries recover actual assistant stop reasons
+ok 17 - nonselected conversation summaries recover actual assistant stop reasons
+  ---
+  duration_ms: 11.848847
+  type: 'test'
+  ...
+# Subtest: native durable.subagents metadata supplies names/tasks; parent prose is not completion evidence
+ok 18 - native durable.subagents metadata supplies names/tasks; parent prose is not completion evidence
+  ---
+  duration_ms: 4.922076
+  type: 'test'
+  ...
+# Subtest: watchEvents: emits message_update with incremental text deltas from pi.live.generation
+ok 19 - watchEvents: emits message_update with incremental text deltas from pi.live.generation
+  ---
+  duration_ms: 3.043318
+  type: 'test'
+  ...
+# Subtest: watchEvents: persisted assistant completes a missed live generation
+ok 20 - watchEvents: persisted assistant completes a missed live generation
+  ---
+  duration_ms: 1.701851
+  type: 'test'
+  ...
+# Subtest: watchEvents: persisted assistant completes a partially observed live generation
+ok 21 - watchEvents: persisted assistant completes a partially observed live generation
+  ---
+  duration_ms: 0.445867
+  type: 'test'
+  ...
+# PASS real MCP startup, discovery and native Codemode call
+# PASS reload refreshes MCP/skills without changing the native session or terminal connection
+# PASS native discovery respects SDK permission hooks
+# PASS reload refuses to interrupt active native work
+# Subtest: real MCP codemode discovery/call, safe resource reload and connection continuity
+ok 22 - real MCP codemode discovery/call, safe resource reload and connection continuity
+  ---
+  duration_ms: 8527.951922
+  type: 'test'
+  ...
+# PASS real MCP startup, discovery and native Codemode call
+# PASS reload refreshes MCP/skills without changing the native session or terminal connection
+# PASS native discovery respects SDK permission hooks
+# PASS reload refuses to interrupt active native work
+# Subtest: real MCP direct discovery/call, safe resource reload and connection continuity
+ok 23 - real MCP direct discovery/call, safe resource reload and connection continuity
+  ---
+  duration_ms: 4670.566534
+  type: 'test'
+  ...
+# PASS real MCP startup, discovery and native Codemode call
+# PASS reload refreshes MCP/skills without changing the native session or terminal connection
+# PASS native discovery respects SDK permission hooks
+# PASS reload refuses to interrupt active native work
+# Subtest: real MCP deferred discovery/call, safe resource reload and connection continuity
+ok 24 - real MCP deferred discovery/call, safe resource reload and connection continuity
+  ---
+  duration_ms: 4723.171429
+  type: 'test'
+  ...
+# Subtest: optional MCP stalled after initialize cannot block startup/reload; native shutdown cancels its transport
+not ok 25 - optional MCP stalled after initialize cannot block startup/reload; native shutdown cancels its transport
+  ---
+  duration_ms: 5435.441065
+  type: 'test'
+  location: '/tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/mcp-startup-native.test.ts:22:1'
+  failureType: 'testCodeFailure'
+  error: 'stalled notification blocked runtime readiness'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    until (file:///tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/mcp-startup-native.test.ts:19:35)
+    async TestContext.<anonymous> (file:///tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/mcp-startup-native.test.ts:84:3)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: original Pi MCP manager: real menus, control ownership, disconnect cleanup and native calls
+not ok 26 - original Pi MCP manager: real menus, control ownership, disconnect cleanup and native calls
+  ---
+  duration_ms: 15298.221581
+  type: 'test'
+  location: '/tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/mcp-ui.test.ts:24:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    native exposure menu: ─────────────────────────────────────────────────────────────────────────────────────
+     MCP server fixture                                                                  
+     /home/ubuntu/.nvm/versions/node/v24.19.0/bin/node                                   
+     /tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/fixtures/mcp-s 
+     erver.mjs MCP_MENU                                                                  
+     global: /tmp/zero-mcp-menu-T4OXdR/agent/mcp.json                                    
+     State: connected · 1 tool                                                           
+    
+      Tools                           1 offered
+      Reconnect
+      Exposure                        codemode
+    → Disable                         saved to the global mcp.json
+      Disable in this project         saved to the project mcp.json
+    
+     enter select • escape/ctrl+c back                                                   
+    ─────────────────────────────────────────────────────────────────────────────────────  Disable                         saved to the global mcp.json
+    → Disable in this project         saved to the project mcp.json
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    until (file:///tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/mcp-ui.test.ts:21:35)
+    async TestContext.<anonymous> (file:///tmp/pi-zero-session-commands-20261106-b/packages/local-runtime/test/mcp-ui.test.ts:74:3)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# PASS runtime ready; private socket; native Harness selected
+# PASS competing runtime rejected without removing the active socket
+# PASS native tool continued with zero terminal clients
+# PASS model selection rejects a stale expected conversation at the native boundary
+# PASS reopen restores transcript without prompt resubmission
+# PASS streamed output and abort correlate to a native admission ID
+# PASS graceful runtime restart preserves native session and entry IDs
+# PASS SIGKILL recovery preserves native state and removes only the stale socket
+# Subtest: native Zero: terminal detach, ongoing tool, reconnect, abort and runtime restart
+ok 27 - native Zero: terminal detach, ongoing tool, reconnect, abort and runtime restart
+  ---
+  duration_ms: 16924.154372
+  type: 'test'
+  ...
+# Subtest: an available reader receives notifications immediately
+ok 28 - an available reader receives notifications immediately
+  ---
+  duration_ms: 5.28814
+  type: 'test'
+  ...
+# Subtest: a blocked reader retains only the latest view and graph, preserving causal event order
+ok 29 - a blocked reader retains only the latest view and graph, preserving causal event order
+  ---
+  duration_ms: 1.294341
+  type: 'test'
+  ...
+# Subtest: excess causal backlog disconnects the reader instead of growing indefinitely
+ok 30 - excess causal backlog disconnects the reader instead of growing indefinitely
+  ---
+  duration_ms: 70.584794
+  type: 'test'
+  ...
+# Subtest: the full oversized native terminal sequence and a reply can drain together
+ok 31 - the full oversized native terminal sequence and a reply can drain together
+  ---
+  duration_ms: 342.744221
+  type: 'test'
+  ...
+# Subtest: oversized frame count is bounded
+ok 32 - oversized frame count is bounded
+  ---
+  duration_ms: 473.284628
+  type: 'test'
+  ...
+# Subtest: RPC replies share the causal byte bound
+ok 33 - RPC replies share the causal byte bound
+  ---
+  duration_ms: 73.865643
+  type: 'test'
+  ...
+# Subtest: a reply and notifications retain their causal queue order
+ok 34 - a reply and notifications retain their causal queue order
+  ---
+  duration_ms: 0.790502
+  type: 'test'
+  ...
+# Subtest: closing a reader discards its pending notifications
+ok 35 - closing a reader discards its pending notifications
+  ---
+  duration_ms: 1.664354
+  type: 'test'
+  ...
+# Subtest: native session catalog: names persist, creation retries reuse one directory, resume stays scoped
+ok 36 - native session catalog: names persist, creation retries reuse one directory, resume stays scoped
+  ---
+  duration_ms: 8860.507088
+  type: 'test'
+  ...
+# Subtest: native skill catalogue, expansion, rejection and reconnect without replay
+ok 37 - native skill catalogue, expansion, rejection and reconnect without replay
+  ---
+  duration_ms: 4623.536103
+  type: 'test'
+  ...
+# Subtest: skill command uses the existing catalogue and preserves arguments
+ok 38 - skill command uses the existing catalogue and preserves arguments
+  ---
+  duration_ms: 59.519966
+  type: 'test'
+  ...
+# Subtest: ordinary input is unchanged and does not load files
+ok 39 - ordinary input is unchanged and does not load files
+  ---
+  duration_ms: 0.670283
+  type: 'test'
+  ...
+# Subtest: unknown, malformed and unreadable skills reject before admission
+ok 40 - unknown, malformed and unreadable skills reject before admission
+  ---
+  duration_ms: 11.907939
+  type: 'test'
+  ...
+# Subtest: skill commands accept picker whitespace and no arguments
+ok 41 - skill commands accept picker whitespace and no arguments
+  ---
+  duration_ms: 42.289951
+  type: 'test'
+  ...
+# Subtest: getView reads the view envelope and adds client-only presentation fields
+ok 42 - getView reads the view envelope and adds client-only presentation fields
+  ---
+  duration_ms: 19.233762
+  type: 'test'
+  ...
+# Subtest: session/view notifications update the native view without resubmitting prompts
+ok 43 - session/view notifications update the native view without resubmitting prompts
+  ---
+  duration_ms: 2.073131
+  type: 'test'
+  ...
+# Subtest: a view notification during initial request is not overwritten
+ok 44 - a view notification during initial request is not overwritten
+  ---
+  duration_ms: 0.978544
+  type: 'test'
+  ...
+# Subtest: commands use exact runtime method and parameter contracts
+ok 45 - commands use exact runtime method and parameter contracts
+  ---
+  duration_ms: 4.029047
+  type: 'test'
+  ...
+# Subtest: session operations use the host catalog and keep display name separate from native identity
+ok 46 - session operations use the host catalog and keep display name separate from native identity
+  ---
+  duration_ms: 5.833753
+  type: 'test'
+  ...
+# Subtest: RPC refusals propagate and commands are never retried
+ok 47 - RPC refusals propagate and commands are never retried
+  ---
+  duration_ms: 2.265653
+  type: 'test'
+  ...
+# Subtest: disconnect marks the view offline and blocks commands without replay
+ok 48 - disconnect marks the view offline and blocks commands without replay
+  ---
+  duration_ms: 8.734015
+  type: 'test'
+  ...
+# Subtest: invalid initial envelopes close transport and reject direct native views
+ok 49 - invalid initial envelopes close transport and reject direct native views
+  ---
+  duration_ms: 5.457822
+  type: 'test'
+  ...
+# Subtest: invalid notifications detach rather than fabricating a native view
+ok 50 - invalid notifications detach rather than fabricating a native view
+  ---
+  duration_ms: 1.540852
+  type: 'test'
+  ...
+# Subtest: a newer getView response wins over an older pending notification
+ok 51 - a newer getView response wins over an older pending notification
+  ---
+  duration_ms: 1.566716
+  type: 'test'
+  ...
+# Subtest: only the highest pending revision survives initialization
+ok 52 - only the highest pending revision survives initialization
+  ---
+  duration_ms: 1.12648
+  type: 'test'
+  ...
+# Subtest: older and duplicate view revisions cannot replace current native values
+ok 53 - older and duplicate view revisions cannot replace current native values
+  ---
+  duration_ms: 0.908639
+  type: 'test'
+  ...
+# Subtest: view envelopes require a nonnegative integer revision
+ok 54 - view envelopes require a nonnegative integer revision
+  ---
+  duration_ms: 2.200334
+  type: 'test'
+  ...
+# Subtest: prompt and abort target only the conversation in the accepted native view
+ok 55 - prompt and abort target only the conversation in the accepted native view
+  ---
+  duration_ms: 2.362879
+  type: 'test'
+  ...
+# Subtest: presentation uses selected native live documents without inventing activity for summary rows
+ok 56 - presentation uses selected native live documents without inventing activity for summary rows
+  ---
+  duration_ms: 1.28826
+  type: 'test'
+  ...
+# Subtest: runtime resource metadata populates skills and survives disconnect without submission
+ok 57 - runtime resource metadata populates skills and survives disconnect without submission
+  ---
+  duration_ms: 3.980587
+  type: 'test'
+  ...
+# Subtest: input validation prevents invalid RPC parameters
+ok 58 - input validation prevents invalid RPC parameters
+  ---
+  duration_ms: 3.238002
+  type: 'test'
+  ...
+# Subtest: short launcher starts once, survives detach, reuses its workspace session and reloads
+ok 59 - short launcher starts once, survives detach, reuses its workspace session and reloads
+  ---
+  duration_ms: 6911.833406
+  type: 'test'
+  ...
+# Subtest: probe preserves immediate piped input and uses the complete native history
+ok 60 - probe preserves immediate piped input and uses the complete native history
+  ---
+  duration_ms: 2071.082239
+  type: 'test'
+  ...
+# Subtest: probe prints message_end text once and appends only an unprinted streamed suffix
+ok 61 - probe prints message_end text once and appends only an unprinted streamed suffix
+  ---
+  duration_ms: 1424.834996
+  type: 'test'
+  ...
+# Subtest: terminal routes /mcp to native management, never to a model prompt
+ok 62 - terminal routes /mcp to native management, never to a model prompt
+  ---
+  duration_ms: 2076.090807
+  type: 'test'
+  ...
+# [?25h
+# [?2004l
+# [?25h
+# [?2004l
+# [?25h[?2004l
+# Subtest: editor, message components, themes and tool cards match the installed artifact
+ok 63 - editor, message components, themes and tool cards match the installed artifact
+  ---
+  duration_ms: 26.971857
+  type: 'test'
+  ...
+# Subtest: installed layout components render native transcript and offline status without opening a session
+ok 64 - installed layout components render native transcript and offline status without opening a session
+  ---
+  duration_ms: 46.904155
+  type: 'test'
+  ...
+# Subtest: disconnected optional panels stay hidden without suppressing genuine notices
+ok 65 - disconnected optional panels stay hidden without suppressing genuine notices
+  ---
+  duration_ms: 45.641664
+  type: 'test'
+  ...
+# Subtest: the installed unknown-tool card hides private arguments
+ok 66 - the installed unknown-tool card hides private arguments
+  ---
+  duration_ms: 13.483964
+  type: 'test'
+  ...
+# Subtest: detach before UI start releases presentation resources
+ok 67 - detach before UI start releases presentation resources
+  ---
+  duration_ms: 6.095371
+  type: 'test'
+  ...
+# Subtest: native summary rows report unavailable rather than inferred idle
+ok 68 - native summary rows report unavailable rather than inferred idle
+  ---
+  duration_ms: 2.160568
+  type: 'test'
+  ...
+# Subtest: normal model picker rejects a selection after the conversation changes
+ok 69 - normal model picker rejects a selection after the conversation changes
+  ---
+  duration_ms: 634.012608
+  type: 'test'
+  ...
+# Subtest: rich terminal session command /new
+ok 70 - rich terminal session command /new
+  ---
+  duration_ms: 560.62666
+  type: 'test'
+  ...
+# Subtest: rich terminal session command /clear
+ok 71 - rich terminal session command /clear
+  ---
+  duration_ms: 469.69733
+  type: 'test'
+  ...
+# Subtest: rich terminal session command /name New name
+ok 72 - rich terminal session command /name New name
+  ---
+  duration_ms: 468.950157
+  type: 'test'
+  ...
+# Subtest: rich terminal session command /resume
+ok 73 - rich terminal session command /resume
+  ---
+  duration_ms: 432.015595
+  type: 'test'
+  ...
+# Subtest: skill picker inserts only; ordinary Enter forwards the explicit command
+ok 74 - skill picker inserts only; ordinary Enter forwards the explicit command
+  ---
+  duration_ms: 482.322946
+  type: 'test'
+  ...
+1..74
+# tests 74
+# suites 1
+# pass 72
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18405.057428

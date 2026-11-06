@@ -1,0 +1,30 @@
+✔ explicit root submission preserves the viewed child and runs hooks against root (3.924588ms)
+✔ explicit root abort targets root and its children, not the viewed conversation (0.910366ms)
+✔ omitted target preserves native selected-conversation behavior (0.432704ms)
+✖ model selection rejects a changed conversation inside the command queue (1.769385ms)
+✔ model selection preserves matching-target and untargeted native behavior (0.485ms)
+✔ a missing explicit target rejects without touching the selected conversation (0.918498ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 574.919798
+
+✖ failing tests:
+
+test at packages/adapter-pi-durable/test/controller-targeting.test.ts:66:1
+✖ model selection rejects a changed conversation inside the command queue (1.769385ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///home/ubuntu/Projects/pi-durable-zero-playground/packages/adapter-pi-durable/test/controller-targeting.test.ts:70:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Conversation changed/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

@@ -1,0 +1,14 @@
+{
+  "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs": {
+    "resolved": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/bin/terminal.mjs",
+    "sha256": "acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292"
+  },
+  "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@local-durable/runtime/bin/runtime.mjs": {
+    "resolved": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/.pnpm/@local-durable+runtime@file+packages+local-runtime_@aws-sdk+credential-provider-node@3._e3590c908fe17ed18bd1b51467df9bc1/node_modules/@local-durable/runtime/bin/runtime.mjs",
+    "sha256": "acbdcfc6cb7d32797be9fe6c312c1e3dfd8bb3df9624d114dbeebbe183057292"
+  },
+  "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts": {
+    "resolved": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261105T2146-standalone/node_modules/.pnpm/@durable-zero+adapter-pi-durable@file+packages+adapter-pi-durable_@aws-sdk+credential-p_6222809c93a6b643433b019936ab266b/node_modules/@durable-zero/adapter-pi-durable/test-fixtures/provider.ts",
+    "sha256": "f7de1ac4317bc4db48502c11c247e6e064a1b2c2cbf1cb7c159369dabce8bce5"
+  }
+}

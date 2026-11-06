@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { watchEvents } from "../src/engine/bridge/watch-events-compat.ts";
 import type { AgentEvent } from "../src/engine/bridge/durable-contracts.ts";
+import { DurableEventAdapter } from "../src/engine/bridge/durable-event-adapter.ts";
 
 test("watchEvents: emits message_update with incremental text deltas from pi.live.generation", async () => {
 	let streamListener: ((events: any, ctx: any) => Promise<void>) | undefined;
@@ -143,3 +144,30 @@ test("watchEvents: emits message_update with incremental text deltas from pi.liv
 	assert.equal(msgUpdates[3].changes[0].type, "text_delta");
 	assert.equal(msgUpdates[3].changes[0].delta, "Second turn reply");
 });
+
+for (const prefix of [undefined, "started:"]) {
+	test(`watchEvents: persisted assistant completes a ${prefix ? "partially observed" : "missed"} live generation`, async () => {
+		let notify: (value: unknown, ctx: unknown) => Promise<void>;
+		const historical = { id: 1, model: [{ role: "assistant", content: [{ type: "text", text: "old answer" }] }] };
+		const conversation = { watch: async () => ({
+			value: { entries: [historical], docs: { "pi.live": {} } },
+			start: (listener: typeof notify) => { notify = listener; },
+			stop: async () => {},
+		}) };
+		const stream = await watchEvents({ conversation: async () => conversation }, 1, {});
+		const output: any[] = [];
+		const adapter = new DurableEventAdapter((event) => output.push(event));
+		stream.start(async (batch) => adapter.handleBatch(batch, {} as any));
+		if (prefix) await notify!({ entries: [historical], docs: { "pi.live": {
+			generation: { attempt: 0, message: { role: "assistant", content: [{ type: "text", text: prefix }] } },
+		} } }, {});
+		const final = { id: 2, model: [{ role: "assistant", content: [{ type: "text", text: "started:complete answer" }], stopReason: "stop" }] };
+		const committed = { entries: [historical, final], docs: { "pi.live": {} } };
+		await notify!(committed, {});
+		await notify!(committed, {});
+		const ended = output.filter((event) => event.type === "message_end");
+		assert.equal(ended.length, 1, "emit the new committed message once without replaying history");
+		assert.deepEqual(ended[0].message.content, final.model[0]!.content);
+		await stream.stop();
+	});
+}

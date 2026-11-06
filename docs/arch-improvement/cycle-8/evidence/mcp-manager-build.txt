@@ -1,0 +1,29 @@
+Building durable-zero packages...
+- Built packages/contracts/dist/index.js
+- Built packages/protocol/dist/index.js
+- Built packages/core/dist/index.js
+- Built packages/execution/dist/index.js
+- Built packages/adapter-pi-durable/dist/index.js
+- Built packages/adapter-pi-ai/dist/index.js
+- Built packages/adapter-codemode/dist/index.js
+- Built packages/extension-pi-resource/dist/index.js
+- Built packages/runner/dist/index.js
+- Built packages/runner/dist/main.js
+- Copied quickjs.wasm to packages/core/dist/ and packages/runner/dist/
+durable-zero build complete!
+
+  dist/main.js    20.3kb
+  dist/index.js   18.9kb
+  dist/client.js   2.0kb
+
+⚡ Done in 10ms
+
+  dist/main.js    16.3kb
+  dist/probe.js   12.9kb
+  dist/client.js   8.2kb
+  dist/launch.js   5.2kb
+
+⚡ Done in 10ms
+PASS public UI entry and 49 installed presentation assets. Editor, theme, layout components, and cards retain source hashes except declared presentation changes.
+Candidate built: /tmp/pi-zero-pr3-review-20261106-h
+Dependencies link to the source workspace. This is an isolated test candidate, not a standalone installation.
