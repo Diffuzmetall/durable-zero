@@ -1,0 +1,45 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+▾ Agents · 0 working
+Tasks · 0 live (runtime work, not project todos)
+  No live runtime tasks
+ × No MCP servers configured. Add them to /tmp/zero-capabilities-installed-tletrkg3/agent/mcp.json or .pi/mcp.json.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── session ─
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+scripted · off · workspace · git unknown · ctx ?

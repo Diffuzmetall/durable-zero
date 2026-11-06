@@ -54,6 +54,8 @@ export interface DurableZeroInstance {
 	controller?: DurableController;
 	/** Read-only access to the same resource owner used by native prompting. */
 	resources?: { getSkills(): readonly Skill[]; getEnableSkillCommands(): boolean };
+	/** Native work readiness for a host-managed reload; absent for generic engines. */
+	isIdle?: () => Promise<boolean>;
 	close: () => Promise<void>;
 }
 
@@ -93,7 +95,7 @@ export async function assembleDurableZero(
 			cwd,
 			agentDir,
 			settingsManager,
-			extensionFactories: [createMcpExtension()],
+			extensionFactories: [{ name: "mcp", factory: createMcpExtension() }],
 			noExtensions: options.noGlobalExtensions ?? false,
 			...(options.skills !== undefined ? { additionalSkillPaths: options.skills } : {}),
 			...(extPaths.length > 0 ? { additionalExtensionPaths: extPaths } : {}),
@@ -211,7 +213,7 @@ export async function assembleDurableZero(
 		coordinator,
 		engine,
 		server,
-		...(nativeEngine ? { view: nativeEngine.view, controller: nativeEngine.controller } : {}),
+		...(nativeEngine ? { view: nativeEngine.view, controller: nativeEngine.controller, isIdle: () => nativeEngine!.isIdle() } : {}),
 		...(resources ? { resources } : {}),
 		close,
 	};

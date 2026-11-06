@@ -46,7 +46,7 @@ function run(args, cwd = target) {
 run(["scripts/build.mjs"]);
 for (const [pkg, entries] of [
   ["local-runtime", ["src/index.ts", "src/client.ts", "src/main.ts"]],
-  ["local-terminal", ["src/main.ts", "src/probe.ts", "src/client.ts"]],
+  ["local-terminal", ["src/main.ts", "src/probe.ts", "src/client.ts", "src/launch.ts"]],
 ]) {
   run([join(root, "node_modules/esbuild/bin/esbuild"), ...entries, "--bundle", "--packages=external", "--platform=node", "--target=node24", "--format=esm", "--outdir=dist"], join(target, "packages", pkg));
 }

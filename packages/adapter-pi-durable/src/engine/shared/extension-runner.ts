@@ -70,7 +70,7 @@ export function createExtensionActions(
 						description: t.description,
 						parameters: t.parameters,
 						exposure: "direct",
-						reachesTools: t.name === "codemode" || t.name === "tool_search",
+						...((t.name === "codemode" || t.name === "tool_search") ? { reachesTools: () => "all" as const } : {}),
 					});
 				}
 			}

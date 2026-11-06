@@ -1,0 +1,71 @@
+{
+  "prefix": "/home/ubuntu/.local/share/pi-durable-zero/candidates/20261106T1026-mcp-reload",
+  "isolatedUnindexedWorkspace": true,
+  "provider": "deterministic local-test (no paid model call)",
+  "externalToolCalls": 0,
+  "status": [
+    {
+      "server": "timewebCloud",
+      "state": "failed"
+    },
+    {
+      "server": "open-design",
+      "state": "failed"
+    },
+    {
+      "server": "radius",
+      "state": "needs sign-in"
+    },
+    {
+      "server": "kanso",
+      "state": "connected",
+      "tools": 15
+    },
+    {
+      "server": "codegraph",
+      "state": "connected",
+      "tools": 0
+    },
+    {
+      "server": "mcp-agent-mail",
+      "state": "connected",
+      "tools": 45
+    },
+    {
+      "server": "railway",
+      "state": "connected",
+      "tools": 36
+    },
+    {
+      "server": "paper",
+      "state": "disabled"
+    },
+    {
+      "server": "context-mode",
+      "state": "connected",
+      "tools": 9
+    },
+    {
+      "server": "langfuse",
+      "state": "connected",
+      "tools": 95
+    },
+    {
+      "server": "pi-lens",
+      "state": "connected",
+      "tools": 17
+    },
+    {
+      "server": "shadcn",
+      "state": "disabled"
+    },
+    {
+      "server": "exa",
+      "state": "connected",
+      "tools": 3
+    }
+  ],
+  "codegraphVisible": false,
+  "exaVisible": true,
+  "scope": "Catalogue only; connected does not prove real external tool execution. CodeGraph intentionally lists no tools in an unindexed workspace."
+}

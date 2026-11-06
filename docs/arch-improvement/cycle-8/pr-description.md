@@ -4,11 +4,13 @@
 
 Добавлены три workspace-пакета для запуска существующего rich-терминала поверх штатной композиции Zero. Native Pi Durable Harness остаётся единственным владельцем исполнения, инструментов и SQLite-сессии. Закрытие терминала не останавливает работу; повторное подключение не отправляет старый prompt заново.
 
-**Сам native Harness / SDK не патчили. Но изменения не ограничены нашими новыми пакетами:** пять существующих runtime/assembly-файлов Zero получили узкие изменения публичной границы, адресации команд и доставки финальных событий. Также добавлены regression-тесты, dependency lock entries и документация.
+**Сам native Harness / SDK не патчили. Но изменения не ограничены нашими новыми пакетами:** восемь существующих runtime/assembly-файлов Zero получили узкие изменения публичной границы, адресации команд, доставки финальных событий и MCP readiness/policy bridge. Также добавлены regression-тесты, dependency lock entries и документация.
 
 ## Что было нужно
 
 Собрать локальный Durable на общей основе Zero, а не копировать отдельные внутренние части Zero в старый Host. Сохранить привычные редактор, layout, темы и tool cards. Разделить процесс исполнения и терминальный клиент, чтобы работа продолжалась без подключённых клиентов.
+
+Последующий follow-up исправляет первоначальную гонку MCP discovery, реализует idle-only `/reload` и добавляет отдельную команду `pi-durable-zero`. Установленный кандидат прошёл 60 scoped-тестов и два rich PTY-прогона по 13 проверок. Внешние MCP authentication/server failures не выдаются за исправленные. Подробности и инвентаризация недостающих основ — в [MCP/reload-отчёте](mcp-reload-and-launcher.md).
 
 Дополнительно исправлен рабочий путь навыков: в раннем кандидате каталог был пустым, autocomplete отключён, а обычный Enter отклонял `/skill:…` как неизвестную команду. Отключённые Attention/Automation-панели показывали предупреждения, хотя соответствующие возможности ещё не подключены.
 
@@ -22,6 +24,7 @@
 - Управляет соединениями и ограниченной причинной выходной очередью. Disconnect клиента не вызывает `Harness.close()`.
 - Передаёт native view с монотонной ревизией и отдельными metadata ресурсов.
 - Раскрывает явный `/skill:имя аргументы` на RPC ingress до native admission.
+- Сериализует admission и `session/reload`; при idle переоткрывает ту же сборку, сохраняя PID/session и терминальное соединение. Активные задачи не прерывает.
 
 ### `@local-durable/terminal` — клиент
 
@@ -30,6 +33,7 @@
 - Передаёт адрес conversation и отклоняет действия после disconnect без автоматического retry.
 - При подключении получает историю и состояние, не повторяя предыдущий ввод.
 - Запускает rich UI при настоящем TTY; readline остаётся диагностическим probe для pipe/`--probe`.
+- Добавляет opt-in `pi-durable-zero`: detached runtime, отдельная сессия для рабочей папки, подключение без replay и отказ от автоматической замены чужого runtime.
 
 ### `@local-durable/terminal-ui` — существующее представление
 
@@ -48,11 +52,14 @@ UI использует совместимую с этим сохранённы
 
 | Файл | Изменение | Причина и граница |
 | --- | --- | --- |
-| `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts` | Публичные getters `view`/`controller`; явный root target для root submit/abort | Хост получает уже существующие native-порты. Команда root не должна случайно попасть в просматриваемого child |
+| `packages/adapter-pi-durable/src/engine/pi-durable-engine.ts` | Публичные getters `view`/`controller`, read-only `isIdle()` через native task graph; явный root target для root submit/abort | Хост использует существующие native-порты и authoritative idle. Команда root не должна случайно попасть в просматриваемого child |
 | `packages/adapter-pi-durable/src/engine/runtime-types.ts` | Опциональные conversation IDs для submit/abort и expected ID для setModel | Контракт выражает адресацию явно; вызовы без новых аргументов сохраняют native selected-conversation поведение |
 | `packages/adapter-pi-durable/src/engine/runtime-controller.ts` | Выбор target внутри существующей command queue; hooks, receipts и cascade abort используют этот target; stale model target отклоняется до изменения модели | Исправление адресации и race на границе adapter/controller, не изменение native scheduler или Harness |
 | `packages/adapter-pi-durable/src/engine/bridge/watch-events-compat.ts` | `message_end` из committed assistant entry | Live snapshots могут объединиться раньше, чем наблюдатель увидит весь текст. Persisted entry даёт подтверждённое финальное сообщение; генерация модели не меняется |
-| `packages/runner/src/composition.ts` | Экспорт native view/controller и read-only facade существующего resource loader/settings | Хост использует штатную композицию, а не создаёт второй loader и не обращается к приватным полям |
+| `packages/runner/src/composition.ts` | Экспорт native view/controller/isIdle и read-only facade loader/settings; именованная inline-фабрика MCP | Хост использует штатную композицию; явная source identity отличает штатный MCP status handler от чужой команды |
+| `packages/adapter-pi-durable/src/engine/extension-mount.ts` | Startup readiness до Harness snapshot и публичные native `ToolTask.beforeTool` hooks для discovery | Первый Codemode-вызов видит MCP; настоящие SDK permission blocks не обходятся |
+| `packages/adapter-pi-durable/src/engine/shared/extension-runner.ts` | `reachesTools: () => "all"` для discovery metadata | Использует публичный контракт, а не boolean |
+| `packages/adapter-pi-durable/src/engine/tool-adapter.ts` | Именованная inline MCP descriptor вместо анонимной фабрики | Общая native-композиция получает ту же явную границу readiness |
 
 Публичные native view/controller types уже экспортировались adapter-пакетом. Core ports и `IAgentEngine` не получили терминальных зависимостей; необязательные native-порты относятся к конкретной композиции. Injected generic engine не обязан их реализовывать.
 
@@ -82,7 +89,7 @@ Unknown/malformed/unreadable skill возвращает ошибку до admiss
 ```sh
 node packages/local-runtime/scripts/build-candidate.mjs /tmp/pi-zero-review-candidate
 cd /tmp/pi-zero-review-candidate
-node --test --test-timeout=40000 \
+node --test --test-concurrency=2 --test-timeout=60000 \
   packages/local-runtime/test/*.test.ts \
   packages/local-terminal/test/*.test.ts \
   packages/terminal-ui/test/*.test.mjs \
@@ -98,7 +105,9 @@ pnpm legacy deploy оставлял одну внешнюю self-link на build
 
 ## Проверки и доказательства
 
-Проверенная source/build identity: `pi-zero-capabilities-20261106T0642`. Проверенный standalone prefix: `20261106T0642-capabilities`.
+Актуальная source/build identity: `pi-zero-mcp-reload-20261106-g`; standalone prefix: `20261106T1026-mcp-reload`. Build/typecheck — PASS, scoped regressions **60/60**, MCP/reload installed rich PTY **13/13**, прежний rich baseline **13/13**. Standalone: **459** внутренних symlink, **0** внешних/сломанных, **10/10** entry hashes. Команда `~/.local/bin/pi-durable-zero` указывает на этот кандидат; `--help` проверен через PATH. Полные команды, манифест, экраны, реальные MCP calls и границы — в [новом отчёте](mcp-reload-and-launcher.md).
+
+Ниже сохранены результаты предыдущего этапа `pi-zero-capabilities-20261106T0642`, standalone prefix `20261106T0642-capabilities`; они не подменяют актуальную installed-проверку:
 
 - Сборка Zero + runtime + terminal, production typecheck — PASS.
 - Scoped source/native/UI/adapter regressions — **50/50**, без skipped.
@@ -114,10 +123,12 @@ Deterministic provider заменяет только ответы модели. 
 ## Ограничения и что не входит в PR
 
 - Attention/supervisor, Goal и schedules отложены; скрытие панели не означает реализацию её backend.
-- Нет переноса всей коллекции extensions, BB/iii adapters или hot reload ресурсов.
+- Нет переноса всей коллекции extensions и BB/iii adapters. Idle-only reload ресурсов реализован; обновление executable работающего runtime на месте не реализовано.
+- Общий dispatch команд расширений, MCP login UI и session creation/list/rename из терминала не реализованы. У timewebCloud, open-design и radius остаются внешние connection/auth failures; CodeGraph намеренно отдаёт пустой каталог в неиндексированном workspace.
+- DeLM, Attention, Goal и schedules не запускаются этим follow-up.
 - Child-targeting покрыт scoped adapter/client regressions; installed driver не доказывает полный subagent UI roundtrip.
 - Основная команда Pi Durable и уже открытая вкладка Rex не переключены. Старые сессии не мигрировали.
 - Совместная пользовательская приёмка нового кандидата и глобальное переключение остаются отдельными шагами.
 - Source/regression/installed evidence не подменяется утверждением, что весь test suite репозитория или GitHub CI прошёл. Полный suite в рамках этого этапа не запускался.
 
-PR не должен merge автоматически. Текущий запрос разрешает commit, push и создание PR, но не глобальное переключение, migration, npm publication или production deployment.
+PR не должен merge автоматически. Согласованный follow-up разрешает исправления, отдельную opt-in команду, commit/push и обновление PR № 3, но не основное глобальное переключение, migration, npm publication или production deployment.

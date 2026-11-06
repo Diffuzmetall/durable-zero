@@ -152,7 +152,10 @@ export class ZeroTerminalClient implements TerminalController, TerminalViewSourc
     z.number().int().positive().parse(id);
     return this.#request("session/switchConversation", { conversationId: String(id) });
   }
-  async reload(_path?: string): Promise<never> { throw new Error("Unsupported capability: runtime reload"); }
+  reload(path?: string): Promise<void> {
+    z.string().trim().min(1).optional().parse(path);
+    return this.#request("session/reload", path === undefined ? {} : { path });
+  }
   async listSessions(): Promise<never> { throw new Error("Unsupported capability: session list"); }
   async renameSession(_name: string): Promise<never> { throw new Error("Unsupported capability: session rename"); }
   close(): void {

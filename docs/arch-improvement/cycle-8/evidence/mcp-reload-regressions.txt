@@ -1,0 +1,90 @@
+✔ CodemodeExtension encapsulates sandbox per instance and does not share module singleton (2.742273ms)
+✔ CodemodeExtension tracks sandboxes per context when registered with multiple contexts (0.438954ms)
+✔ CodemodeExtension encapsulates native QuickJS sandbox per instance (2.722387ms)
+✔ CodemodeExtension tracks separate sandboxes per context (0.501908ms)
+✔ explicit root submission preserves the viewed child and runs hooks against root (3.769614ms)
+✔ explicit root abort targets root and its children, not the viewed conversation (0.858009ms)
+✔ omitted target preserves native selected-conversation behavior (0.443673ms)
+✔ model selection rejects a changed conversation inside the command queue (1.000793ms)
+✔ model selection preserves matching-target and untargeted native behavior (0.706592ms)
+✔ a missing explicit target rejects without touching the selected conversation (0.460036ms)
+▶ Extension UI Context Safety (Issue #14 Defect 1)
+  ✔ provides a full SDK-shaped no-op context that prevents TypeError when extensions access ui members (3.017573ms)
+✔ Extension UI Context Safety (Issue #14 Defect 1) (4.723898ms)
+✔ ExtensionActions.sendUserMessage: delegates to onSubmitUserMessage in FSM (1.852681ms)
+✔ watchEvents: emits message_update with incremental text deltas from pi.live.generation (3.072355ms)
+✔ watchEvents: persisted assistant completes a missed live generation (1.772363ms)
+✔ watchEvents: persisted assistant completes a partially observed live generation (0.463595ms)
+PASS real MCP startup, discovery and native Codemode call
+PASS reload refreshes MCP/skills without changing the native session or terminal connection
+PASS native discovery respects SDK permission hooks
+PASS reload refuses to interrupt active native work
+✔ real MCP codemode discovery/call, safe resource reload and connection continuity (4596.568982ms)
+PASS real MCP startup, discovery and native Codemode call
+PASS reload refreshes MCP/skills without changing the native session or terminal connection
+PASS native discovery respects SDK permission hooks
+PASS reload refuses to interrupt active native work
+✔ real MCP direct discovery/call, safe resource reload and connection continuity (4611.094737ms)
+PASS real MCP startup, discovery and native Codemode call
+PASS reload refreshes MCP/skills without changing the native session or terminal connection
+PASS native discovery respects SDK permission hooks
+PASS reload refuses to interrupt active native work
+✔ real MCP deferred discovery/call, safe resource reload and connection continuity (4537.529498ms)
+PASS runtime ready; private socket; native Harness selected
+PASS competing runtime rejected without removing the active socket
+PASS native tool continued with zero terminal clients
+PASS model selection rejects a stale expected conversation at the native boundary
+PASS reopen restores transcript without prompt resubmission
+PASS streamed output and abort correlate to a native admission ID
+PASS graceful runtime restart preserves native session and entry IDs
+PASS SIGKILL recovery preserves native state and removes only the stale socket
+✔ native Zero: terminal detach, ongoing tool, reconnect, abort and runtime restart (13142.113533ms)
+✔ an available reader receives notifications immediately (3.990075ms)
+✔ a blocked reader retains only the latest view and graph, preserving causal event order (0.824602ms)
+✔ excess causal backlog disconnects the reader instead of growing indefinitely (54.99134ms)
+✔ the full oversized native terminal sequence and a reply can drain together (235.030914ms)
+✔ oversized frame count is bounded (139.509987ms)
+✔ RPC replies share the causal byte bound (27.682514ms)
+✔ a reply and notifications retain their causal queue order (0.784258ms)
+✔ closing a reader discards its pending notifications (0.336484ms)
+✔ native skill catalogue, expansion, rejection and reconnect without replay (2202.099468ms)
+✔ skill command uses the existing catalogue and preserves arguments (19.58754ms)
+✔ ordinary input is unchanged and does not load files (0.495311ms)
+✔ unknown, malformed and unreadable skills reject before admission (5.255228ms)
+✔ skill commands accept picker whitespace and no arguments (3.962107ms)
+✔ getView reads the view envelope and adds client-only presentation fields (15.503641ms)
+✔ session/view notifications update the native view without resubmitting prompts (1.370875ms)
+✔ a view notification during initial request is not overwritten (1.147958ms)
+✔ commands use exact runtime method and parameter contracts (5.963286ms)
+✔ unsupported operations reject without RPC calls (1.374635ms)
+✔ RPC refusals propagate and commands are never retried (1.370774ms)
+✔ disconnect marks the view offline and blocks commands without replay (1.132044ms)
+✔ invalid initial envelopes close transport and reject direct native views (2.936705ms)
+✔ invalid notifications detach rather than fabricating a native view (1.507608ms)
+✔ a newer getView response wins over an older pending notification (1.203057ms)
+✔ only the highest pending revision survives initialization (0.880871ms)
+✔ older and duplicate view revisions cannot replace current native values (0.865736ms)
+✔ view envelopes require a nonnegative integer revision (2.133552ms)
+✔ prompt and abort target only the conversation in the accepted native view (2.168909ms)
+✔ presentation uses selected native live documents without inventing activity for summary rows (0.655488ms)
+✔ runtime resource metadata populates skills and survives disconnect without submission (2.790746ms)
+✔ input validation prevents invalid RPC parameters (2.231272ms)
+✔ short launcher starts once, survives detach, reuses its workspace session and reloads (4530.987698ms)
+✔ probe preserves immediate piped input and uses the complete native history (328.495039ms)
+✔ probe prints message_end text once and appends only an unprinted streamed suffix (308.760252ms)
+[?25h[?2004l[?25h[?2004l[?25h[?2004l✔ editor, message components, themes and tool cards match the installed artifact (85.639126ms)
+✔ installed layout components render native transcript and offline status without opening a session (38.939647ms)
+✔ disconnected optional panels stay hidden without suppressing genuine notices (38.901031ms)
+✔ the installed unknown-tool card hides private arguments (10.899824ms)
+✔ detach before UI start releases presentation resources (5.792752ms)
+✔ native summary rows report unavailable rather than inferred idle (1.652618ms)
+✔ normal model picker rejects a selection after the conversation changes (415.819145ms)
+✔ skill picker inserts only; ordinary Enter forwards the explicit command (464.528292ms)
+ℹ tests 60
+ℹ suites 1
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23840.657593

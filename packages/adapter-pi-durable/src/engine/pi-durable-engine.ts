@@ -374,6 +374,14 @@ export class PiDurableEngine implements IAgentEngine {
 		};
 	}
 
+	/** Read the authoritative task graph, including non-selected conversations and background work. */
+	public async isIdle(): Promise<boolean> {
+		if (!this.#instance) throw new SessionError("SESSION_NOT_STARTED", "Engine not started");
+		const observation = await this.#instance.harness.observeTaskGraph({ advance() {}, end() {} }, runtimeContext);
+		try { return Object.keys(observation.value.tasks).length === 0; }
+		finally { observation.detach(); }
+	}
+
 	public events(listener: (event: RunnerEvent) => void): () => void {
 		this.#listeners.add(listener);
 		return () => {

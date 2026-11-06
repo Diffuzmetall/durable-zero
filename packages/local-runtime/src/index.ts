@@ -1,5 +1,5 @@
 import { createServer, createConnection, type Socket } from "node:net";
-import { chmod, mkdir, lstat, unlink } from "node:fs/promises";
+import { chmod, mkdir, lstat, realpath, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { PassThrough } from "node:stream";
 import { once } from "node:events";
@@ -26,6 +26,8 @@ const requests = {
   "session/getTranscript": conversation.extend({ limit: z.number().int().positive().optional() }),
   "session/getStats": conversation,
   "session/getView": z.object({}).strict(),
+  "runtime/info": z.object({}).strict(),
+  "session/reload": z.object({ path: z.string().trim().min(1).optional() }).strict(),
   "session/compact": z.object({ instructions: z.string().optional() }).strict(),
   "models/set": z.object({
     provider: z.string().trim().min(1), modelId: z.string().trim().min(1),
@@ -59,6 +61,15 @@ export async function startRuntime(options: RuntimeOptions) {
   let instance: DurableZeroInstance | undefined;
   let unsubscribeView: (() => void) | undefined;
   let viewRevision = 0;
+  let commands: Promise<unknown> = Promise.resolve();
+  let assemblyOptions: AssembleDurableZeroOptions = {
+    ...options, sessionDir: resolve(options.sessionDir), noGlobalExtensions: true, stdin: input, stdout: output,
+  };
+  const attachAssembly = async () => {
+    instance = await assembleDurableZero(assemblyOptions);
+    if (!instance.view || !instance.controller) throw new Error("The terminal runtime requires native presentation and control ports");
+    unsubscribeView = instance.view.subscribe(() => { ++viewRevision; notify("session/view", envelope()); });
+  };
   const envelope = () => ({
     view: instance!.view!.current(), revision: viewRevision,
     resources: {
@@ -87,9 +98,32 @@ export async function startRuntime(options: RuntimeOptions) {
         const schema = requests[method as keyof typeof requests];
         const parsed = schema.safeParse(params);
         if (!parsed.success) throw new JsonRpcInvalidParamsError(parsed.error.message);
+        // Serialize admission with reload so no prompt can slip between the idle check and close.
+        const operation = commands.then(async () => {
         const engine = instance!.engine;
         switch (method) {
+          case "session/reload": {
+            if (!await instance!.isIdle?.()) throw new Error("Cannot reload: active work is running. Wait for completion or abort it first.");
+            const { path } = parsed.data as z.infer<typeof requests["session/reload"]>;
+            const extensionPath = path ? await realpath(resolve(options.cwd ?? process.cwd(), path)) : undefined;
+            const selected = instance!.view!.current().conversation.conversation.id;
+            unsubscribeView?.();
+            await instance!.close();
+            assemblyOptions = { ...assemblyOptions };
+            // Preserve the model selected in the persisted session instead of reapplying startup overrides.
+            delete assemblyOptions.provider;
+            delete assemblyOptions.model;
+            if (extensionPath) assemblyOptions.extensions = [...(assemblyOptions.extensions ?? []), extensionPath];
+            try {
+              await attachAssembly();
+              await instance!.controller!.switchConversation(selected);
+            } catch (error) { await close(); throw error; }
+            ++viewRevision;
+            notify("session/view", envelope());
+            return { ok: true };
+          }
           case "session/getView": return envelope();
+          case "runtime/info": return { pid: process.pid, entrypoint: resolve(process.argv[1]!), cwd: instance!.view!.current().session.cwd };
           case "session/prompt": {
             const prompt = parsed.data as z.infer<typeof requests["session/prompt"]>;
             const content = await expandSkillCommand(prompt.content, instance!.resources?.getSkills() ?? []);
@@ -106,6 +140,9 @@ export async function startRuntime(options: RuntimeOptions) {
           case "session/switchConversation": await instance!.controller!.switchConversation(parseConversationId((parsed.data as z.infer<typeof requests["session/switchConversation"]>).conversationId)); return { ok: true };
           default: return bridge.request(method, parsed.data);
         }
+        });
+        commands = operation.then(() => undefined, () => undefined);
+        return operation;
       },
     });
     clients.set(socket, transport.notify);
@@ -144,17 +181,7 @@ export async function startRuntime(options: RuntimeOptions) {
     server.listen(socketPath);
     await listening;
     await chmod(socketPath, 0o600);
-    const assemblyOptions: AssembleDurableZeroOptions = {
-      ...options,
-      sessionDir: resolve(options.sessionDir),
-      noGlobalExtensions: true,
-      stdin: input,
-      stdout: output,
-    };
-    instance = await assembleDurableZero(assemblyOptions);
-    if (!instance.view || !instance.controller) throw new Error("The terminal runtime requires native presentation and control ports");
-    const view = instance.view;
-    unsubscribeView = view.subscribe(() => { ++viewRevision; notify("session/view", envelope()); });
+    await attachAssembly();
     return { socketPath, close };
   } catch (error) {
     await close();

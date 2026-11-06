@@ -41,7 +41,7 @@ test("native Zero: terminal detach, ongoing tool, reconnect, abort and runtime r
   const sessionDir = join(base, "session");
   const cwd = join(base, "workspace");
   await mkdir(cwd);
-  const env = { ...process.env, HOME: join(base, "home"), XDG_CONFIG_HOME: join(base, "config"), PI_AGENT_DIR: join(base, "agent"), PI_ADDITIONAL_EXTENSIONS: "" };
+  const env = { ...process.env, HOME: join(base, "home"), XDG_CONFIG_HOME: join(base, "config"), PI_CODING_AGENT_DIR: join(base, "agent"), PI_ADDITIONAL_EXTENSIONS: "" };
   const children: ChildProcessWithoutNullStreams[] = [];
   const connections: Awaited<ReturnType<typeof connectRuntime>>[] = [];
   t.after(async () => {

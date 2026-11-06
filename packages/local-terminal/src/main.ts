@@ -6,7 +6,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     "session-dir": { type: "string" }, probe: { type: "boolean" }, help: { type: "boolean" },
   } });
   if (values.help) {
-    console.log("pi-zero-terminal --session-dir PATH [--probe]\nThe installed rich UI is the normal TTY interface. Piped input uses the readline probe.\n/quit or /detach disconnects this terminal only. Start pi-zero-runtime separately.\nCommands: /model, /thinking, /compact [instructions], /tasks, /agents, /abort.\nReload, session creation, session listing and session rename are unsupported.");
+    console.log("pi-zero-terminal --session-dir PATH [--probe]\nThe installed rich UI is the normal TTY interface. Piped input uses the readline probe.\n/quit or /detach disconnects this terminal only. Start pi-zero-runtime separately.\nCommands: /model, /thinking, /compact [instructions], /tasks, /agents, /abort, /reload [extension].\nReload refuses active work. Session creation, session listing and session rename are unsupported.");
     return;
   }
   if (!values["session-dir"]) throw new Error("--session-dir is required. Start pi-zero-runtime with the same path first.");

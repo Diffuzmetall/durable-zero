@@ -91,6 +91,8 @@ test("commands use exact runtime method and parameter contracts", async () => {
   await client.cycleThinking();
   await client.toggleTasks();
   await client.switchConversation(42);
+  await client.reload();
+  await client.reload("./extension.ts");
   assert.deepEqual(rpc.requests.slice(1), [
     { method: "session/prompt", params: { content: "  original body  ", options: { deliverAs: "steer", conversationId: "1" } } },
     { method: "session/prompt", params: { content: "later", options: { deliverAs: "followUp", conversationId: "1" } } },
@@ -101,6 +103,8 @@ test("commands use exact runtime method and parameter contracts", async () => {
     { method: "models/cycleThinking", params: {} },
     { method: "session/toggleTasks", params: {} },
     { method: "session/switchConversation", params: { conversationId: "42" } },
+    { method: "session/reload", params: {} },
+    { method: "session/reload", params: { path: "./extension.ts" } },
   ]);
   client.close(); await client.closed;
 });
@@ -108,7 +112,6 @@ test("commands use exact runtime method and parameter contracts", async () => {
 test("unsupported operations reject without RPC calls", async () => {
   const rpc = transport();
   const client = await ZeroTerminalClient.open("session", rpc.connect);
-  await assert.rejects(client.reload(), /Unsupported capability: runtime reload/);
   await assert.rejects(client.renameSession("name"), /Unsupported capability: session rename/);
   await assert.rejects(client.listSessions(), /Unsupported capability: session list/);
   assert.equal(rpc.requests.length, 1);

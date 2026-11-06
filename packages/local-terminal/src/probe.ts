@@ -75,7 +75,12 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       if (command === "/detach") break;
       if (command === "/abort") { await client.abort(); continue; }
       if (command === "/history") { await showHistory(); continue; }
-      if (command.startsWith("/")) { console.error("Unknown command. Use /abort, /history or /detach."); continue; }
+      if (command === "/reload" || command.startsWith("/reload ")) {
+        try { await client.reload(command.slice("/reload".length).trim() || undefined); console.log("Reloaded runtime resources."); }
+        catch (error) { console.error(error instanceof Error ? error.message : String(error)); }
+        continue;
+      }
+      if (command.startsWith("/")) { console.error("Unknown command. Use /abort, /history, /reload or /detach."); continue; }
       const admission = admissionSchema.parse(await transport.request("session/prompt", {
         content: line, options: { conversationId: String(client.current().conversation.conversation.id) },
       }));

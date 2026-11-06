@@ -6,7 +6,8 @@ import { setTimeout as delay } from "node:timers/promises";
 function respond(_model: unknown, context: any, options: any) {
   const stream = createAssistantMessageEventStream();
   void (async () => {
-    const last = context.messages.at(-1);
+    // MCP/resource changes may append system entries after a user prompt.
+    const last = context.messages.findLast((message: any) => message.role !== "system");
     const prompt = typeof last?.content === "string" ? last.content : (last?.content ?? []).map((part: any) => part.text ?? "").join("");
     const message: any = {
       role: "assistant", content: [], api: "local-test-api", provider: "local-test", model: "scripted",
@@ -14,10 +15,11 @@ function respond(_model: unknown, context: any, options: any) {
       stopReason: "pending", timestamp: Date.now(),
     };
     stream.push({ type: "start", partial: message });
-    if (last?.role !== "toolResult" && prompt.startsWith("tool:")) {
-      const call = { type: "toolCall", id: `native-tool-${Date.now()}`, name: "bash", arguments: {
-        command: "sleep 1; printf 'native-work-continued' > continued.txt; cat continued.txt",
-      } };
+    if (last?.role !== "toolResult" && (prompt.startsWith("tool:") || prompt.startsWith("invoke:"))) {
+      const invocation = prompt.startsWith("invoke:") ? JSON.parse(prompt.slice("invoke:".length)) : {
+        name: "bash", arguments: { command: "sleep 1; printf 'native-work-continued' > continued.txt; cat continued.txt" },
+      };
+      const call = { type: "toolCall", id: `native-tool-${Date.now()}`, ...invocation };
       message.content = [call];
       stream.push({ type: "toolcall_start", contentIndex: 0, partial: message });
       stream.push({ type: "toolcall_end", contentIndex: 0, toolCall: call, partial: message });

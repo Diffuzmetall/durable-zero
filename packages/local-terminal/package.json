@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "engines": { "node": ">=24" },
-  "bin": { "pi-zero-terminal": "./bin/terminal.mjs", "pi-zero-terminal-probe": "./bin/probe.mjs" },
+  "bin": { "pi-durable-zero": "./bin/pi-durable-zero.mjs", "pi-zero-terminal": "./bin/terminal.mjs", "pi-zero-terminal-probe": "./bin/probe.mjs" },
   "exports": { ".": { "types": "./src/client.ts", "import": "./dist/client.js" } },
   "files": ["bin", "dist", "src"],
   "scripts": {
-    "build": "esbuild src/main.ts src/probe.ts src/client.ts --bundle --packages=external --platform=node --target=node24 --format=esm --outdir=dist",
+    "build": "esbuild src/main.ts src/probe.ts src/client.ts src/launch.ts --bundle --packages=external --platform=node --target=node24 --format=esm --outdir=dist",
     "check": "tsc --noEmit --strict --target es2024 --module nodenext --moduleResolution nodenext --allowImportingTsExtensions --skipLibCheck src/*.ts",
     "test": "node --test --test-timeout=20000 test/*.test.ts"
   },

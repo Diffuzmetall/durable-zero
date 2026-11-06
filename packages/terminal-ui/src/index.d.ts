@@ -30,7 +30,7 @@ export interface TerminalController {
   setModel(model: { provider: string; modelId: string }): Promise<void>;
   toggleTasks(): Promise<void>;
   switchConversation(id: number): Promise<void>;
-  reload(path?: string): Promise<never>;
+  reload(path?: string): Promise<void>;
   listSessions(): Promise<never>;
   renameSession(name: string): Promise<never>;
 }

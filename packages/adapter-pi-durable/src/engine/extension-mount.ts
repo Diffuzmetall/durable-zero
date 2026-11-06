@@ -1,5 +1,5 @@
 import { type DefaultResourceLoader, type ModelRuntime, ExtensionRunner } from "@earendil-works/pi-coding-agent";
-import type { Registry } from "@earendil-works/pi-durable";
+import { defineExtension, hook, ToolTask, type Registry } from "@earendil-works/pi-durable";
 import { adaptExtensionTool, installExtensionTools, type NestedToolExecutor } from "./tool-adapter.ts";
 import { setupExtensionRunner } from "./extension-bridge.ts";
 import type { SessionLocation } from "@durable-zero/adapter-pi-durable";
@@ -175,11 +175,32 @@ export async function mountExtensionBridge(
 		});
 
 		if (extensionRunner) {
+			// The SDK has no public readiness method. Its headless status command waits for initial
+			// connections, so settle those before Harness.open can pin a task's registry snapshot.
+			const mcpStatus = extensionRunner.getRegisteredCommands().find(command =>
+				command.name === "mcp" && command.sourceInfo.path === "<inline:mcp>");
+			if (mcpStatus) await mcpStatus.handler("", extensionRunner.createCommandContext());
+			syncToolsToRegistry();
 			extensionRunner.onError((err) => {
 				report(err);
 				onNotice?.("error", `[Extension Error] ${err.extensionPath} (${err.event}): ${err.error}`);
 			});
 			syncToolsToRegistry();
+			// Native discovery tools must run the same readiness and permission hooks as Pi tools.
+			registry.install(defineExtension({
+				name: "pi-discovery-hooks",
+				hooks: [hook(ToolTask, {
+					async beforeTool(call) {
+						if (call.name !== "codemode" && call.name !== "tool_search") return;
+						// Preserve SDK discovery readiness and permission hooks for real native calls.
+						const decision = await extensionRunner!.emitToolCall({
+							type: "tool_call", toolName: call.name, toolCallId: call.id,
+							input: call.arguments as Record<string, unknown>,
+						});
+						if (decision?.block) return { block: decision.reason ?? "policy" };
+					},
+				})],
+			}));
 			try {
 				await new Promise((r) => setImmediate(r));
 				const currentTools = extensionRunner.getActiveTools?.() ?? registry.snapshot().tools().map((t) => t.tool.name);
